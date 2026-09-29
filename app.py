@@ -342,9 +342,9 @@ BANKS_LIST_AR = [
     "بنك أبوظبي التجاري ADCB",
     "بنك ناصر الاجتماعي",
     "بنك الاستثمار القومي",
-    "البنك الأهلي المتحد",
+    "البنك الأهلي المتحد KFH",
     "بنوك بلوم BLOM",
-    "البنك الأهلي اليوناني",
+    "البنك الأهلي اليوناني أو البنك الوطني اليوناني",
     "بنك سيتي بنك CITIBANK"
 ]
 
@@ -364,9 +364,9 @@ if "simulated_results_dict" not in st.session_state:
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 
-# تهيئة متغير حالة صندوق النص للأسئلة
-if "query_text_val" not in st.session_state:
-    st.session_state.query_text_val = ""
+# تهيئة حالة صندوق الاستعلام النصي
+if "ask_query_text_field" not in st.session_state:
+    st.session_state.ask_query_text_field = ""
 
 # ==============================================================================
 # الهيدر والشريط الإخباري
@@ -459,13 +459,12 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # حقل الإدخال النصي مع ربطه المباشر بمتغير الجلسة المستقل
+        # صندوق إدخال السؤال (مربوط مباشرة بـ st.session_state.ask_query_text_field للتحديث الفوري)
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
-            value=st.session_state.query_text_val,
             placeholder="مثال: عرف الحوكمة؟ أو ما هي جهود تمكين المرأة والشمول المالي؟",
             height=120,
-            key="ask_query_textarea_key"
+            key="ask_query_text_field"
         )
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
@@ -481,7 +480,7 @@ with tab1:
             ]
             for q in ig_questions:
                 if st.button(q, key=f"btn_ig_{hash(q)}"):
-                    st.session_state.query_text_val = q
+                    st.session_state.ask_query_text_field = q
                     st.rerun()
 
         # المحور الثاني: تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)
@@ -495,7 +494,7 @@ with tab1:
             ]
             for q in sr_questions:
                 if st.button(q, key=f"btn_sr_{hash(q)}"):
-                    st.session_state.query_text_val = q
+                    st.session_state.ask_query_text_field = q
                     st.rerun()
 
         # المحور الثالث: المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)
@@ -509,7 +508,7 @@ with tab1:
             ]
             for q in sip_questions:
                 if st.button(q, key=f"btn_sip_{hash(q)}"):
-                    st.session_state.query_text_val = q
+                    st.session_state.ask_query_text_field = q
                     st.rerun()
 
         ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
@@ -518,15 +517,13 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
-            # استخدام النص الحالي للمربع أو المتغير
-            active_q = user_question if user_question.strip() else st.session_state.query_text_val
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
-            elif not active_q.strip():
+            elif not user_question.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
                 with st.spinner("⏳ جاري استرجاع مستندات البنك ومعالجة الإجابة..."):
-                    response_html = process_rag_gemini_query(ask_bank_sel, active_q)
+                    response_html = process_rag_gemini_query(ask_bank_sel, user_question)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق المستمد من مستودعات التقارير.")
