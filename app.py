@@ -56,7 +56,7 @@ div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.
     text-align: right !important;
 }}
 
-/* فرض محاذاة اليمين على القوائم المنسدلة */
+/* فرض محاذاة اليمين على القوائم المنسدلة والعناصر */
 div[data-baseweb="select"] *, 
 div[data-baseweb="popover"] *, 
 ul[data-baseweb="menu"] *, 
@@ -319,8 +319,9 @@ if "simulated_results_dict" not in st.session_state:
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 
-if "selected_query" not in st.session_state:
-    st.session_state.selected_query = ""
+# تهيئة حالة النص في صندوق الاستعلام
+if "query_text_state" not in st.session_state:
+    st.session_state.query_text_state = ""
 
 # ==============================================================================
 # الهيدر والشريط الإخباري
@@ -356,7 +357,7 @@ def process_rag_gemini_query(bank_name, question):
         if "الأهلي المصري" in bank_name:
             resp = "الحوكمة في البنك الأهلي المصري تعكس التعاون الوثيق بين مجلس الإدارة والإدارة العليا، حيث يتم تحديد السلطات والمهام بشكل واضح لضمان الإرشاد والقيادة الفعّالة، مع متابعة الأداء واتخاذ القرارات الاستراتيجية. ويعد مجلس الإدارة عنصرًا أساسيًا في توجيه السياسات والمبادرات، ورصد المخاطر، وضمان توافق العمليات مع القوانين والمعايير التنظيمية."
         elif "التجاري الدولي" in bank_name:
-            resp = "تعتمد الحوكمة في البنك التجاري الدولي (CIB) على أطر مؤسسية رصينة للقطاع الخاص الرائد، متضمنة لجان مراجعة مستقلة، وإفصاحات شفافة وفق معايير (GRI و ISSB)، مع وجود آليات متطورة لإدارة المخاطر وتعارض المصالح وتفعيل الرقابة الداخلية."
+            resp = "تعتمد الحوكمة في البنك التجاري الدولي (CIB) على أطر مؤسسية رصينة للقطاع الخاص الرائد، متضمنة لجان مراجعة مستقلة، وإفصاحات شفافة وفق معايير (GRI و ISSB), مع وجود آليات متطورة لإدارة المخاطر وتعارض المصالح وتفعيل الرقابة الداخلية."
         elif "إسلامي" in bank_name:
             resp = f"تستند الحوكمة في {bank_name} إلى الالتزام التام بضوابط الشريعة الإسلامية بجانب المعايير المصرفية المؤسسية، مع وجود هيئة رقابة شرعية مستقلة تشرف على كافة الصيغ التمويلية والاستثمارية وتضمن سلامة الأصول."
         else:
@@ -369,9 +370,9 @@ def process_rag_gemini_query(bank_name, question):
         else:
             resp = f"يعكس سجل {bank_name} التزاماً مؤسسياً بتكافؤ الفرص وتمكين الكوادر النسائية في مختلف الإدارات، بما يتوافق مع أهداف التنمية المستدامة ورؤية مصر 2030."
     elif "المناخ" in question or "الأخضر" in question or "المخاطر" in question:
-        resp = f"استناداً إلى تقارير الاستدامة والحوكمة الخاصة بـ {bank_name}، يدمج البنك مخاطر المناخ والاستدامة (ESG Risks) ضمن استراتيجية الائتمان ومحفظة الاستثمار، مع التوسع في تمويل المشروعات الخضراء وقياس البصمة الكربونية."
+        resp = f"استناداً إلى تقارير الاستدامة والحوكمة الخاصة بـ {bank_name}, يدمج البنك مخاطر المناخ والاستدامة (ESG Risks) ضمن استراتيجية الائتمان ومحفظة الاستثمار، مع التوسع في تمويل المشروعات الخضراء وقياس البصمة الكربونية."
     else:
-        resp = f"بناءً على التعدين النصي والتحليل الدلالي لتقارير الاستدامة والحوكمة الخاصة بـ {bank_name}، يتبين أن البنك يطبق أطراً تنظيمية ومؤسسية تتناسب مع طبيعة نشاطه وانتشاره، مما يضمن كفاءة التشغيل والالتزام بالمعايير الرقابية وتحقيق التوازن بين الأبعاد الاقتصادية والبيئية والمجتمعية."
+        resp = f"بناءً على التعدين النصي والتحليل الدلالي لتقارير الاستدامة والحوكمة الخاصة بـ {bank_name}, يتبين أن البنك يطبق أطراً تنظيمية ومؤسسية تتناسب مع طبيعة نشاطه وانتشاره، مما يضمن كفاءة التشغيل والالتزام بالمعايير الرقابية وتحقيق التوازن بين الأبعاد الاقتصادية والبيئية والمجتمعية."
 
     formatted_output = f"""
     <div dir="rtl" style="text-align: right; line-height: 1.8; color: {CBE_NAVY}; background: #FFFFFF; padding: 22px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
@@ -414,13 +415,13 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # حقل النص المعتمَد مع ربطه بـ session_state لتحديثه تلقائياً عند اختيار سؤال مقترح
+        # حقل الإدخال النصي مع ربطه بحالة الجلسة
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
-            value=st.session_state.selected_query,
+            value=st.session_state.query_text_state,
             placeholder="مثال: عرف الحوكمة؟ أو ما هي جهود تمكين المرأة والشمول المالي؟",
             height=120,
-            key="ask_query_text"
+            key="ask_query_text_field"
         )
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة:</b>", unsafe_allow_html=True)
@@ -428,60 +429,59 @@ with tab1:
         # المحور الأول: الحوكمة ومجلس الإدارة والضبط الرقابي (IG) - 5 أسئلة
         with st.expander("🏛️ محور الحوكمة ومجلس الإدارة والضبط الرقابي (IG)"):
             ig_questions = [
-                "عرف الحوكمة وتكوين مجلس الإدارة",
-                "ما هي آليات استقلالية أعضاء مجلس الإدارة وتعارض المصالح؟",
-                "كيف يتم تقييم فاعلية لجان التدقيق والمراجعة الداخلية بالبنك؟",
-                "ما هي سياسات الشفافية، المساءلة، ومكافحة الفساد المؤسسي المعتمدة؟",
-                "كيف يلتزم البنك بضوابط ومعايير الحوكمة الرقابية الصادرة عن البنك المركزي؟"
+                "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
+                "ما هي نسبة الأعضاء المستقلين وسياسات تجنب تعارض المصالح؟",
+                "كيف يفصح البنك عن سياسات الشفافية والمساءلة ومكافحة الفساد؟",
+                "ما هي آليات فاعلية الرقابة والتدقيق الداخلي وحماية حقوق المودعين؟",
+                "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"
             ]
             for q in ig_questions:
-                if st.button(q, key=f"btn_ig_{q}", use_container_width=True):
-                    st.session_state.selected_query = q
+                if st.button(q, key=f"btn_ig_{hash(q)}", use_container_width=True):
+                    st.session_state.query_text_state = q
                     st.rerun()
 
         # المحور الثاني: تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG) - 5 أسئلة
         with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
             sr_questions = [
+                "ما هي جهود البنك في تمكين المرأة والشمول المالي؟",
                 "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-                "ما هي نسبة الأصول الخضراء (GAR) ومستهدفات محفظة الائتمان المستدام؟",
-                "كيف يمتثل البنك لمعايير الإفصاح المالي الدولية (GRI و ISSB - IFRS S1/S2)؟",
-                "ما هي برامج الشمول المالي ومبادرات تمكين المرأة ودعم رائدات الأعمال؟",
-                "كيف يقيس البنك بصمته الكربونية المباشرة وغير المباشرة (النطاق 1 و 2 و 3)؟"
+                "ما هي نسبة الأصول الخضراء والمشروعات المستدامة ضمن محفظة الائتمان؟",
+                "كيف يمتثل البنك للمعايير الدولية للإفصاح المالي (GRI و ISSB)؟",
+                "ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟"
             ]
             for q in sr_questions:
-                if st.button(q, key=f"btn_sr_{q}", use_container_width=True):
-                    st.session_state.selected_query = q
+                if st.button(q, key=f"btn_sr_{hash(q)}", use_container_width=True):
+                    st.session_state.query_text_state = q
                     st.rerun()
 
         # المحور الثالث: المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech) - 5 أسئلة
         with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
             sip_questions = [
-                "ما هي آليات حوكمة البيانات والامتثال لقانون حماية البيانات الشخصية؟",
+                "ما هي آليات حوكمة البيانات والامتثال الرقابي وتأمينها؟",
                 "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟",
-                "ما هي البنية التحتية لتقنيات التنظيم الرقابي (RegTech) وتدفق البيانات الآلي؟",
-                "كيف يتم دمج واجهات برمجة التطبيقات (APIs) لربط الأنظمة البنكية بمنصة الاستدامة؟",
-                "ما هي سياسات أمن المعلومات وسيادة البيانات الرقمية المؤسسية بالبنك؟"
+                "ما هي جاهزية البنية التحتية الرقمية ومنصات المعلومات (SIP)؟",
+                "كيف يوظف البنك تقنيات الرقابة التنظيمية (RegTech) واسترجاع المعطيات؟",
+                "ما مدى التوافق مع قانون حماية البيانات الشخصية والسيادة الرقمية؟"
             ]
             for q in sip_questions:
-                if st.button(q, key=f"btn_sip_{q}", use_container_width=True):
-                    st.session_state.selected_query = q
+                if st.button(q, key=f"btn_sip_{hash(q)}", use_container_width=True):
+                    st.session_state.query_text_state = q
                     st.rerun()
 
-        st.markdown("<br>", unsafe_allow_html=True)
         ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
-            current_q = st.session_state.get("ask_query_text", user_question)
+            active_q = user_question if user_question.strip() else st.session_state.query_text_state
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
-            elif not current_q.strip():
+            elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
                 with st.spinner("⏳ جاري استرجاع مستندات البنك ومعالجة الإجابة..."):
-                    response_html = process_rag_gemini_query(ask_bank_sel, current_q)
+                    response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق المستمد من مستودعات التقارير.")
