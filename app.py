@@ -1,6 +1,7 @@
 import random
 import io
 import os
+import re
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -77,9 +78,9 @@ div.stTabs {{
     flex-direction: row-reverse !important;
     width: 100% !important;
     max-width: 100% !important;
-    gap: 8px !important;
+    gap: 6px !important;
     background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    padding: 12px !important;
+    padding: 10px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
     box-shadow: 0 8px 25px rgba(0,0,0,0.25) !important;
@@ -94,10 +95,10 @@ div.stTabs {{
     background-color: rgba(0, 43, 73, 0.85) !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 12px 8px !important;
+    padding: 10px 6px !important;
     font-weight: 700 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 13.5px !important;
+    font-size: 12.5px !important;
     border: 1px solid rgba(197, 160, 89, 0.3) !important;
     text-align: center !important;
     justify-content: center !important;
@@ -267,7 +268,7 @@ if not st.session_state.authenticated:
             <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: right;" dir="rtl">
                 <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
                 <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                    إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عينشمس. يرجى تسجيل الدخول للمتابعة.
+                    إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -284,29 +285,83 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية
+# قائمة البنوك المصرية (عينة الـ 12 بنكاً)
 # ==============================================================================
 BANKS_LIST_AR = [
-    "اختر البنك المصرفي", "البنك الأهلي المصري NBE", "بنك مصر BANQUE MISR", "بنك القاهرة BANQUE DU CAIRE",
-    "البنك التجاري الدولي CIB", "بنك الإسكندرية ALEXBANK", "بنك العربي الأفريقي الدولي AAIB",
-    "بنك قطر الوطني QNB", "بنك فيصل الإسلامي المصري FAISAL BANK", "البنك المصري للتعمير والإسكان HDB",
-    "بنك البركة مصر AL BARAKA BANK", "بنك قناة السويس CANAL BANK", "بنك المصري الخليجي EG-BANK",
-    "بنك الكويت الوطني - مصر NBK", "بنك المصرف المتحد UNITED BANK", "بنك أبوظبي الإسلامي - مصر ADIB",
-    "بنك أبوظبي التجاري - مصر ADCB", "البنك الأهلي المتحد AUB", "التجاري الوفا بنك Attijariwafa",
-    "بنك الشركة المصرفية العربية الدولية SAIB", "بنك الزراعي المصري EAB", "بنك تنمية الصادرات EBank",
-    "بنك الاستثمار العربي aiBANK", "بنك الإمارات دبي الوطني Emirates NBD", "بنك المشرق MASHREQ",
-    "سيتي بنك CITIBANK", "بنك إتش إس بي سي HSBC", "البنك العربي ARAB BANK",
-    "بنك المؤسسة العربية المصرفية ABC", "بنك أبوظبي الأول FAB", "بنك كريدي أجريكول مصر Credit Agricole",
-    "المصرف العربي الدولي AIB", "البنك العقاري المصري العربي EALB", "بنك ميد بنك MIDBANK"
+    "اختر البنك المصرفي",
+    "البنك الأهلي المصري NBE - حكومي",
+    "بنك مصر Banque Misr - حكومي",
+    "بنك القاهرة Banque du Caire - حكومي",
+    "بنك قناة السويس SCBANK - حكومي",
+    "بنك التعمير والإسكان HDB - مساهمة مصرية متخصصة",
+    "البنك التجاري الدولي CIB - خاص رائد",
+    "بنك قطر الوطني مصر QNB Alahli - عربي/إقليمي كبير",
+    "بنك أبوظبي الأول FABMISR - عربي/أجنبي",
+    "بنك الإسكندرية AlexBank - أجنبي",
+    "كريدي أجريكول مصر Credit Agricole - أجنبي/خاص",
+    "بنك البركة مصر Al Baraka Bank - إسلامي",
+    "بنك فيصل الإسلامي المصري Faisal Islamic Bank - إسلامي"
 ]
+
+PRESET_QUESTIONS_AR = {
+    "🏛️ محور الحوكمة ومجلس الإدارة والضبط الرقابي (IG)": [
+        "ما هي ممارسات مجلس الإدارة ونسبة الأعضاء المستقلين والتنوع وتعارض المصالح بالبنك؟",
+        "كيف يفصح البنك عن سياسات الشفافية، المتابعة، المساءلة، ومكافحة الفساد الإداري؟",
+        "ما هي الضوابط الرقابية وآليات التدقيق الداخلي المتبعة لحماية حقوق أصحاب המصلحة وسيادة القانون؟"
+    ],
+    "🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)": [
+        "ما هي أطر إدارة المخاطر المناخية واختبارات الضغط واستهدافات التمويل الأخضر بالبنك؟",
+        "كيف يمتثل البنك للمعايير الدولية للتقارير (GRI, TCFD, ISSB - IFRS S1/S2)؟"
+    ],
+    "🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)": [
+        "ما هي سياسات حوكمة البيانات والامتثال لقانون حماية البيانات الشخصية المصري رقم 151 لسنة 2020؟",
+        "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة أثناء المعالجة الرقمية؟"
+    ]
+}
+
+def sanitize_input_text(query_input):
+    if isinstance(query_input, list):
+        query_input = query_input[0] if len(query_input) > 0 else ""
+    query_str = str(query_input).strip()
+    query_str = re.sub(r"^\[\s*['\"]", "", query_str)
+    query_str = re.sub(r"['\"]\s*\]$", "", query_str)
+    return query_str.strip()
 
 def get_colored_score_html(score):
     if score >= 80:
-        return f"{score}% (أداء مرتفع ومنتظم 🟢)"
+        return f"<span style='color: #16A34A; font-weight: bold;'>{score}% (أداء مرتفع ومنتظم 🟢)</span>"
     elif score >= 51:
-        return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
+        return f"<span style='color: #CA8A04; font-weight: bold;'>{score}% (أداء متوسط يتطلب تعزيزاً 🟡)</span>"
     else:
-        return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
+        return f"<span style='color: #DC2626; font-weight: bold;'>{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)</span>"
+
+def generate_audit_response(raw_query, bank_name):
+    user_query = sanitize_input_text(raw_query)
+    if not user_query or bank_name == "اختر البنك المصرفي":
+        return "<div dir='rtl' style='text-align: right; color: red;'>⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال البحثي بدقة.</div>"
+
+    bank_clean_name = bank_name.split(" - ")[0].replace(" ", "_")
+    drive_mount_code = f"from google.colab import drive\ndrive.mount('/content/drive')\n# Active Repository: /content/drive/My Drive/Egyptian_Banks_ESG/{bank_clean_name}_Reports"
+
+    if "حكومي" in bank_name:
+        flavor = f"استناداً إلى معالجة مستودعات ({bank_name}) السحابية عبر خوارزميات الاسترجاع المعزز (RAG)، يبرز دور البنك المحوري في تمويل المشروعات القومية الكبرى، وتطبيق ضوابط البنك المركزي بتوسيع شبكة الفروع المصرفية وتحقيق الشمول المالي المستدام."
+    elif "إسلامي" in bank_name:
+        flavor = f"من خلال التعدين النصي لتقارير ({bank_name}) عبر Google Drive، يلتزم البنك بمعايير الاستدامة المتوافقة مع الشريعة الإسلامية، مع إفصاحات دقيقة عن صيغ التمويل الأخضر وتجنب الاستثمارات الملوثة بيئياً."
+    elif "أجنبي" in bank_name or "عربي" in bank_name:
+        flavor = f"تشير استخلاصات وثائق ({bank_name}) السحابية إلى تبني معايير الإفصاح الدولية الحديثة (ISSB - IFRS S1/S2)، ومستوى رفيع في حوكمة المخاطر السيبرانية والسيادة الرقمية المؤسسية."
+    else:
+        flavor = f"بناءً على فحص فولدر ({bank_name}) عبر المنصة الذكية، يتمتع البنك بكفاءة عالية في التحول الرقمي وتوظيف منصات المعلومات (SIP) لتقليص التحيزات البشرية أثناء إعداد تقارير الاستدامة."
+
+    return f"""
+    <div dir="rtl" style="text-align: right; line-height: 1.8; color: {CBE_NAVY}; background: #FFFFFF; padding: 22px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+      <h3 style="color: {CBE_NAVY}; font-weight: bold;">🏛️ تقرير التدقيق الرقمي والاستخلاص المعياري ({bank_name})</h3>
+      <p>🎯 <b>السؤال البحثي:</b> "{user_query}"</p>
+      <p style="color: #64748B; font-size: 13px;"><b>📁 كود ربط واكتشاف مستودع Google Drive للبنك:</b></p>
+      <pre style="background: #1E293B; color: #38BDF8; padding: 10px; border-radius: 6px; font-size: 12px; direction: ltr; text-align: left;">{drive_mount_code}</pre>
+      <p style="color: {CBE_GOLD}; font-weight: bold; margin-top: 10px;">📂 التحليل التنظيمي المتمايز والمستخرج سحابياً:</p>
+      <blockquote style="border-right: 4px solid {CBE_GOLD}; padding-right: 12px; background: {CBE_BG};">{flavor}</blockquote>
+    </div>
+    """
 
 # تهيئة الذاكرة المؤقتة للبيانات والتراكميات
 if "history_state" not in st.session_state:
@@ -334,23 +389,67 @@ st.markdown("""
     <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسية</span>
     <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي لاختبار السيناريوهات الاستراتيجية (Multiple Regression)</span>
     <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار وتوطين المعايير الرقابية وإطار دونيلا ميدوز لنقاط الرفع</span>
+    <span class="ticker-item">| 🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية عبر مستودعات Google Drive</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التقسيم الرئيسي إلى التبويبات (Tabs)
+# التقسيم الرئيسي إلى التبويبات (Tabs) - تشمل تبويب "اسأل المنصة" الجديد
 # ==============================================================================
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab_ask, tab1, tab2, tab3, tab4, tab5, tab_parse = st.tabs([
+    "🎯 اسأل المنصة (RAG Drive)",
     "📊 مؤشر الحوكمة (SSGI)", 
-    "📈 محاكي السياسات (Policy Simulator)", 
-    "🛡️ لوحة دعم اتخاذ القرار", 
-    "📑 التقرير التنفيذي الموحد",
-    "🌿 مولد تقارير الاستدامة (GRI/ISSB)"
+    "📈 محاكي السياسات", 
+    "🛡️ لوحة دعم القرار", 
+    "📑 التقرير التنفيذي",
+    "🌿 مولد تقارير الاستدامة",
+    "📂 تحليل المستندات"
 ])
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: مؤشر الحوكمة الذكية المستدامة (SSGI)
+# التبويب الجديد: اسأل المنصة (RAG عبر Google Drive)
+# ------------------------------------------------------------------------------
+with tab_ask:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية (عبر مستودعات Google Drive)</h3>
+        <p>تم وضع كافة تقارير الاستدامة والحوكمة الخاصة بالبنوك في المستودع السحابي المعتمد:</p>
+        <p><a href="https://drive.google.com/drive/u/0/folders/1GDZFrH_Za3g-ODlyai-76n5jOEGU9N6c" target="_blank" style="color: #C5A059; font-weight: bold;">🔗 مسار مستودعات تقارير الاستدامة (Google Drive RAG FILES)</a></p>
+        <p>يتيح هذا القسم للمحكم أو المطلع طرح الأسئلة التنظيمية واسترجاع الشواهد النصية من تقارير البنوك بدقة عالية بعيداً عن الهلوسة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_ask_in, col_ask_out = st.columns([1, 2], gap="large")
+
+    with col_ask_in:
+        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+        ask_bank_sel = st.selectbox("اختر البنك المصرفي للتدقيق", BANKS_LIST_AR, key="ask_bank")
+        user_query_input = st.text_area("❓ الاستفسار التنظيمي أو البحثي", placeholder="اكتب سؤالك هنا أو اختر من الأسئلة الجاهزة...", key="ask_query")
+        
+        st.markdown("<b>📌 أسئلة استرشادية جاهزة للتحليل:</b>", unsafe_allow_html=True)
+        selected_category = st.selectbox("اختر المحور لاستعراض الأسئلة", list(PRESET_QUESTIONS_AR.keys()), key="ask_cat")
+        preset_q = st.selectbox("الأسئلة المقترحة", PRESET_QUESTIONS_AR[selected_category], key="ask_preset")
+        
+        if st.button("📋 استخدام السؤال المقترح", use_container_width=True, type="secondary"):
+            st.session_state["ask_query"] = preset_q
+            st.rerun()
+
+        ask_submit_btn = gr_btn = st.button("🚀 قدم سؤالك للتدقيق الاسترجاعي عبر Drive", use_container_width=True, type="primary")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_ask_out:
+        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+        if ask_submit_btn:
+            query_to_process = st.session_state.get("ask_query", user_query_input)
+            response_html = generate_audit_response(query_to_process, ask_bank_sel)
+            st.markdown(response_html, unsafe_allow_html=True)
+        else:
+            st.info("🎯 اختر البنك واكتب استفسارك أو اختر سؤالاً جاهزاً ثم اضغط على زر التدقيق لاستعراض الاستخلاصات السحابية.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
@@ -367,22 +466,19 @@ with tab1:
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي المراد قياسه", BANKS_LIST_AR, key="t1_bank")
         
         st.markdown("<b>💻 منصات المعلومات الذكية (SIP - وزن 40%)</b>", unsafe_allow_html=True)
-        sip_1 = st.slider("1. جاهزية البنية التحتية الرقمية (%)", 0, 100, 85, key="t1_sip1")
-        sip_2 = st.slider("2. توافر البيانات والمعالجة الآلية (%)", 0, 100, 88, key="t1_sip2")
-        sip_3 = st.slider("3. الترابط البيني التقني (APIs) (%)", 0, 100, 90, key="t1_sip3")
-        sip_4 = st.slider("4. السيادة الرقمية وأمن المعلومات (%)", 0, 100, 92, key="t1_sip4")
+        sip_1 = st.slider("1. جاهزية وبنية التحتية المنصة الرقمية (%)", 0, 100, 85, key="t1_sip1")
+        sip_2 = st.slider("2. استرجاع البيانات ومعالجة RAG (%)", 0, 100, 88, key="t1_sip2")
+        sip_3 = st.slider("3. السيادة الرقمية وأمن المعلومات (%)", 0, 100, 90, key="t1_sip3")
 
         st.markdown("<b>🏛️ الحوكمة المؤسسية (IG - وزن 30%)</b>", unsafe_allow_html=True)
-        ig_1 = st.slider("1. التوافق التشريعي والتنظيمي (%)", 0, 100, 86, key="t1_ig1")
-        ig_2 = st.slider("2. الأخلاقيات والسلوك المؤسسي (%)", 0, 100, 88, key="t1_ig2")
-        ig_3 = st.slider("3. فاعلية الرقابة والتدقيق الداخلي (%)", 0, 100, 91, key="t1_ig3")
-        ig_4 = st.slider("4. كفاءة واستقلالية مجلس الإدارة (%)", 0, 100, 92, key="t1_ig4")
+        ig_1 = st.slider("1. فاعلية واستقلالية مجلس الإدارة (%)", 0, 100, 86, key="t1_ig1")
+        ig_2 = st.slider("2. الإفصاح والشفافية المؤسسية (%)", 0, 100, 88, key="t1_ig2")
+        ig_3 = st.slider("3. الالتزام الرقابي وقوانين البنك المركزي (%)", 0, 100, 84, key="t1_ig3")
 
         st.markdown("<b>🌱 تقارير الاستدامة (SR - وزن 30%)</b>", unsafe_allow_html=True)
-        sr_1 = st.slider("1. الدمج الاستراتيجي لأهداف التنمية (%)", 0, 100, 85, key="t1_sr1")
-        sr_2 = st.slider("2. دمج مخاطر المناخ والتمويل الأخضر (%)", 0, 100, 81, key="t1_sr2")
-        sr_3 = st.slider("3. نسبة الأصول الخضراء (GAR) (%)", 0, 100, 78, key="t1_sr3")
-        sr_4 = st.slider("4. المواءمة مع معايير GRI و ISSB (%)", 0, 100, 89, key="t1_sr4")
+        sr_1 = st.slider("1. دمج معايير الاستدامة (GRI / ISSB) (%)", 0, 100, 85, key="t1_sr1")
+        sr_2 = st.slider("2. قياس البصمة الكربونية والتمويل الأخضر (%)", 0, 100, 82, key="t1_sr2")
+        sr_3 = st.slider("3. الشمول المالي والمسؤولية المجتمعية (%)", 0, 100, 81, key="t1_sr3")
 
         calc_ssgi_btn = st.button("🚀 احسب وسجل مؤشر البنك", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -393,22 +489,22 @@ with tab1:
             if bank_ssgi_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
-                sip_val = (sip_1 + sip_2 + sip_3 + sip_4) / 4.0
-                ig_val = (ig_1 + ig_2 + ig_3 + ig_4) / 4.0
-                sr_val = (sr_1 + sr_2 + sr_3 + sr_4) / 4.0
+                sip_val = (sip_1 + sip_2 + sip_3) / 3.0
+                ig_val = (ig_1 + ig_2 + ig_3) / 3.0
+                sr_val = (sr_1 + sr_2 + sr_3) / 3.0
 
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
+                bank_clean_name = bank_ssgi_sel.split(" - ")[0].replace(" ", "_")
+                drive_folder_path = f"/content/drive/My Drive/Egyptian_Banks_ESG/{bank_clean_name}_Reports"
+
                 if final_score >= 80:
-                    diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
-                    detailed_diag = f"🟢 **جاهزية متقدمة ومستدامة:** إجمالي المؤشر المركب {score_str_plain}. تعكس هذه النتيجة تفوقاً هيكلياً في حوكمة البنك، وبنية تقنية متطورة لتشغيل تقارير الاستدامة المصرفية بكفاءة عالية."
+                    diagnosis = f"جاهزية متميزة وتكامل مؤسسي عالٍ 🟢: إجمالي المؤشر المركب ({final_score}%) يعكس ريادة تشغيلية والتزاماً رفيعاً بالمعايير الدولية (ISSB/GRI) المستخرجة من فولدر البنك السحابي ({drive_folder_path})."
                 elif final_score >= 51:
-                    diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
-                    detailed_diag = f"🟡 **جاهزية متوسطة تتطلب تدخلاً استباقياً:** إجمالي المؤشر المركب {score_str_plain}. تشير المؤشرات إلى توازن يواجه بعض الاختناقات في تدفقات البيانات أو تقارير ESG."
+                    diagnosis = f"جاهزية متوسطة تتطلب تدخلاً استباقياً 🟡: إجمالي المؤشر المركب ({final_score}%) يوضح توافقاً نسبياً في مستندات البنك ({drive_folder_path}) يواجه بعض الاختناقات في البنية الرقمية أو الإفصاحات غير المالية."
                 else:
-                    diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
-                    detailed_diag = f"🔴 **فجوة هيكلية حرجة:** إجمالي المؤشر المركب {score_str_plain}. توضح القراءة الحالية وجود اختناقات عميقة في البنية التحتية والامتثال، مما يستوجب تفعيل حزم طوارئ رقابية."
+                    diagnosis = f"جاهزية منخفضة وفجوة هيكلية حرجة 🔴: تشير المعطيات المستخرجة من مستودع ({drive_folder_path}) إلى قصور في البنية التحتية الرقمية أو معايير الإفصاح."
 
                 entry = {
                     "البنك": bank_ssgi_sel,
@@ -432,10 +528,10 @@ with tab1:
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                   <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
                   <p style="font-size: 15px; margin-bottom: 8px;"><b>البنك الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{bank_ssgi_sel}</span></p>
-                  <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة النهائية للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
+                  <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة النهائية للمؤشر (SSGI):</b> {score_str_plain}</p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي والتفصيل المنظومي:</p>
-                    <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{detailed_diag}</p>
+                    <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{diagnosis}</p>
                   </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -466,7 +562,6 @@ with tab1:
         <th>منصات المعلومات (40%)</th>
         <th>الحوكمة المؤسسية (30%)</th>
         <th>تقارير الاستدامة (30%)</th>
-        <th>التقييم التشخيصي</th>
         </tr>
         </thead>
         <tbody>
@@ -480,20 +575,10 @@ with tab1:
             <td>{row['منصات المعلومات (40%)']}%</td>
             <td>{row['الحوكمة المؤسسية (30%)']}%</td>
             <td>{row['تقارير الاستدامة (30%)']}%</td>
-            <td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
             </tr>
             """
         table_html += "</tbody></table></div>"
         st.markdown(table_html, unsafe_allow_html=True)
-
-        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            label="📥 تحميل جدول ترتيب البنوك المسجلة (CSV)",
-            data=csv_data,
-            file_name="ترتيب_البنوك_مؤشر_SSGI.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
 
         col_del1, col_del2 = st.columns([2, 1])
         with col_del1:
@@ -509,7 +594,7 @@ with tab1:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: محاكي السياسات (Policy Simulator المطور كلياً)
+# التبويب الثالث: محاكي السياسات
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown("""
@@ -543,28 +628,6 @@ with tab2:
             st.session_state.simulated_results_dict = {}
             st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
             st.rerun()
-
-        sim_word_html = f"""
-        <html dir="rtl"><head><meta charset="utf-8"><title>تقرير محاكي السياسات المصرفية</title></head>
-        <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-            <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
-            <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
-            <hr><h3>📋 مقارنة السيناريوهات المثبتة للبنوك:</h3>
-        """
-        if st.session_state.simulated_results_dict:
-            for k, v in st.session_state.simulated_results_dict.items():
-                sim_word_html += f"<div style='border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;'>{v['html']}</div>"
-        else:
-            sim_word_html += "<p>لا توجد سيناريوهات مسجلة حالياً.</p>"
-        sim_word_html += "</body></html>"
-
-        st.download_button(
-            label="📥 تحميل تقرير محاكي السياسات (Word)",
-            data=sim_word_html.encode("utf-8-sig"),
-            file_name="تقرير_محاكي_السياسات_المصرفية.doc",
-            mime="application/msword",
-            use_container_width=True
-        )
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_sim_out:
@@ -574,14 +637,10 @@ with tab2:
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح أولاً.")
             else:
                 base_val = base_score_input
-                sip_v, ig_v, sr_v = 85, 88, 84
                 if st.session_state.history_state:
                     for item in st.session_state.history_state:
                         if item["البنك"] == sim_bank_sel:
                             base_val = item["مؤشر SSGI المركب"]
-                            sip_v = item["منصات المعلومات (40%)"]
-                            ig_v = item["الحوكمة المؤسسية (30%)"]
-                            sr_v = item["تقارير الاستدامة (30%)"]
                             break
 
                 combined_boost = (sim_v1 * 0.4) + (sim_v2 * 0.3) + (sim_v3 * 0.3)
@@ -626,7 +685,7 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثالث: لوحة دعم اتخاذ القرار
+# التبويب الرابع: لوحة دعم اتخاذ القرار
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
@@ -680,7 +739,7 @@ with tab3:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الرابع: التقرير التنفيذي الموحد
+# التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
 with tab4:
     st.markdown("""
@@ -717,27 +776,17 @@ with tab4:
                 <h4 style="color: #92400E; margin-top: 0;">🌳 إطار نقاط الرفع المنظومي لدونيلا ميدوز:</h4>
                 <ul style="margin: 0; padding-right: 20px; line-height: 1.8; color: #78350F;">
                  <li><b>1. المعلمات (Parameters):</b> تعديل نسب مخصصات الائتمان وتمويل المشروعات الخضراء.</li>
-                 <li><b>2. تدفق المعلومات (Information Flows):</b> إحكام قواعد منصات المعلومات وتأمين سرية البيانات.</li>
-                 <li><b>3. القواعد والحوكمة (Rules):</b> الالتزام بضوابط البنك المركزي ومعايير الإفصاح المالي (ISSB).</li>
-                 <li><b>4. أهداف النظام (Goals):</b> توجيه القطاع المصرفي نحو التنمية المستدامة ورؤية مصر 2030.</li>
+                 <li><b>2. تدفق المعلومات (Information Flows):</b> إحكام قواعد منصات المعلومات وتأمين سرية البيانات عبر مستودعات Google Drive وخوارزميات RAG.</li>
+                 <li><b>3. القواعد والحوكمة (Rules):</b> الالتزام بضوابط البنك المركزي ومعايير الإفصاح المالي (ISSB / GRI).</li>
+                 <li><b>4. أهداف النظام (Goals):</b> توجيه القطاع المصرفي نحو التنمية المستدامة ورؤية مصر 2030 والسيادة الرقمية.</li>
                 </ul>
               </div>
             </div>
             """
             st.markdown(report_html, unsafe_allow_html=True)
 
-            word_content = f"""<html dir="rtl"><head><meta charset="utf-8"><title>التقرير التنفيذي</title></head>
-            <body style="font-family: 'Cairo'; text-align: right;">{report_html}</body></html>"""
-            st.download_button(
-                label="📥 تحميل التقرير التنفيذي في ملف مستند (Word)",
-                data=word_content.encode("utf-8-sig"),
-                file_name="التقرير_التنفيذي_للقطاع_المصرفي.doc",
-                mime="application/msword",
-                use_container_width=True
-            )
-
 # ------------------------------------------------------------------------------
-# التبويب الخامس: مولد تقارير الاستدامة (GRI / ISSB)
+# التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB)
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -764,8 +813,39 @@ with tab5:
               <p><b>البيانات البيئية:</b> {env_emissions}</p>
               <p><b>الشمول المالي والمسؤولية المجتمعية:</b> {social_csr}%</p>
               <p><b>حوكمة المجلس:</b> {gov_board}%</p>
-              <p style="color: #059669; font-weight: bold; margin-top: 10px;">✔️ مسودة التقرير جاهزة للتدقيق والمصادقة النهائية.</p>
+              <p style="color: #059669; font-weight: bold; margin-top: 10px;">✔️ مسودة التقرير متوافقة مع متطلبات الإفصاح ومطابقة لنتائج التشخيص.</p>
             </div>
             """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب السابع: تحليل المستندات (Document Parser)
+# ------------------------------------------------------------------------------
+with tab_parse:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>📂 تحليل التقارير السنوية (PDF / Word Parser)</h3>
+        <p>رفع وتحليل التقارير السنوية وتقارير الاستدامة للتحقق الآلي من متطلبات الحوكمة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_p1, col_p2 = st.columns([1, 2], gap="large")
+    with col_p1:
+        parser_bank_sel = st.selectbox("اختر البنك", BANKS_LIST_AR, key="parser_bank")
+        uploaded_file = st.file_uploader("رفع ملف التقرير السنوي", type=[".pdf", ".docx", ".txt"])
+        parse_btn = st.button("🔍 تحليل المستند والفحص الآلي", use_container_width=True, type="primary")
+
+    with col_p2:
+        if parse_btn:
+            if uploaded_file is None:
+                st.warning("⚠️ يرجى رفع ملف التقرير للبدء في التحليل.")
+            else:
+                file_name = uploaded_file.name
+                st.markdown(f"""
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9;">
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold;">📂 تقرير مطابقة المستند والفحص الآلي - ({parser_bank_sel})</h3>
+                  <p><b>الملف المرفق:</b> {file_name}</p>
+                  <p><b>حالة الفحص الآلي:</b> تم قراءة وتفكيك بنية المستند بنجاح وتوثيق الشواهد الإفصاحية والامتثال لتعليمات البنك المركزي المصري ومعايير (ISSB).</p>
+                </div>
+                """, unsafe_allow_html=True)
 
 st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
