@@ -268,7 +268,7 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# إدارة جلسة الدخول (Authentication) - يطلب user / 123
+# إدارة جلسة الدخول (Authentication)
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -328,7 +328,7 @@ BANKS_LIST_AR = [
     "ستاندرد تشارترد – مصر",
     "البنك العقاري المصري العربي EALB",
     "بنك الكويت الوطني NBK",
-    "البنك المصري الخليجي EG BANK",
+    "بنك المصري الخليجي EG BANK",
     "المصرف المتحد UN",
     "ميد بنك MIDBANK",
     "بنك التنمية الصناعية IDB",
@@ -364,14 +364,13 @@ if "simulated_results_dict" not in st.session_state:
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 
-# تهيئة حالة صندوق الاستعلام النصي
+# تهيئة حالة صندوق الاستعلام النصي الموحد والمضمون النقل الفوري
 if "selected_query_text" not in st.session_state:
     st.session_state.selected_query_text = ""
 
 def is_valid_arabic_question(text):
     if not text or len(text.strip()) < 5:
         return False
-    # التحقق من أن النص يحتوي على أحرف عربية كافية وليس مجرد رموز أو أرقام أو حروف إنجليزية عشوائية
     arabic_chars = re.findall(r'[\u0600-\u06FF]', text)
     if len(arabic_chars) < 4:
         return False
@@ -407,7 +406,7 @@ def process_rag_gemini_query(bank_name, question):
         return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل المستند لتقارير الاستدامة."
     
     if not is_valid_arabic_question(question):
-        return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية يتعلق بالحوكمة، الاستدامة، أو البنوك لكي تتمكن المنصة من تحليله والرد عليه بدقة."
+        return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية (وليس رموزاً أو حروفاً أجنبية عشوائية) لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
     if "الحوكمة" in question or "مجلس" in question or "الضبط" in question:
         if "الأهلي المصري" in bank_name:
@@ -471,7 +470,7 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # صندوق إدخال السؤال المعزول عن التضارب عبر الـ Session State
+        # ربط صندوق النص مباشرة بمتغير الـ session_state لضمان التحديث والمسح الفوري
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
             value=st.session_state.selected_query_text,
@@ -479,6 +478,8 @@ with tab1:
             height=120,
             key="ask_query_text_input"
         )
+        # مزامنة التعديلات اليدوية المباشرة في صندوق النص
+        st.session_state.selected_query_text = user_question
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
 
@@ -530,7 +531,7 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
-            active_q = user_question if user_question.strip() else st.session_state.selected_query_text
+            active_q = st.session_state.selected_query_text
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
             elif not active_q.strip():
