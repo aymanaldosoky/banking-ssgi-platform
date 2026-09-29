@@ -334,7 +334,7 @@ BANKS_LIST_AR = [
     "بنك التنمية الصناعية IDB",
     "بنك المشرق",
     "بنك بيت التمويل الكويتي KFH",
-    "البنك الأهلي الكويتي مصر ABK",
+    "بنك الأهلي الكويتي مصر ABK",
     "بنك تنمية الصادرات EBANK",
     "بنك سيب SAIB",
     "البنك العربي",
@@ -365,8 +365,17 @@ if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 
 # تهيئة حالة صندوق الاستعلام النصي
-if "ask_query_text_field" not in st.session_state:
-    st.session_state.ask_query_text_field = ""
+if "selected_query_text" not in st.session_state:
+    st.session_state.selected_query_text = ""
+
+def is_valid_arabic_question(text):
+    if not text or len(text.strip()) < 5:
+        return False
+    # التحقق من أن النص يحتوي على أحرف عربية كافية وليس مجرد رموز أو أرقام أو حروف إنجليزية عشوائية
+    arabic_chars = re.findall(r'[\u0600-\u06FF]', text)
+    if len(arabic_chars) < 4:
+        return False
+    return True
 
 # ==============================================================================
 # الهيدر والشريط الإخباري
@@ -391,24 +400,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# دالة التحقق من منطقية السؤال
-# ==============================================================================
-def is_valid_question(text):
-    cleaned = text.strip()
-    # إذا كان النص أقل من 4 أحرف أو مكوناً من حرف واحد أو رموز غير معبرة
-    if len(cleaned) < 4 or not re.search(r'[\u0600-\u06FFa-zA-Z]{3,}', cleaned):
-        return False
-    return True
-
-# ==============================================================================
 # محرك "اسأل المنصة" (RAG عبر المستودعات السحابية + Gemini) للردود المتمايزة
 # ==============================================================================
 def process_rag_gemini_query(bank_name, question):
     if bank_name == "اختر البنك المصرفي" or not question.strip():
         return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل المستند لتقارير الاستدامة."
     
-    if not is_valid_question(question):
-        return "⚠️ تنبيه: يرجى كتابة سؤال أو استفسار منطقي وواضح (أكثر من 3 أحرف معبرة) لكي تتمكن المنصة من استخلاص وتحليل البيانات التنظيمية بدقة."
+    if not is_valid_arabic_question(question):
+        return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية يتعلق بالحوكمة، الاستدامة، أو البنوك لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
     if "الحوكمة" in question or "مجلس" in question or "الضبط" in question:
         if "الأهلي المصري" in bank_name:
@@ -472,12 +471,13 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # صندوق إدخال السؤال (مربوط مباشرة بـ st.session_state.ask_query_text_field للتحديث الفوري)
+        # صندوق إدخال السؤال المعزول عن التضارب عبر الـ Session State
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
+            value=st.session_state.selected_query_text,
             placeholder="مثال: عرف الحوكمة؟ أو ما هي جهود تمكين المرأة والشمول المالي؟",
             height=120,
-            key="ask_query_text_field"
+            key="ask_query_text_input"
         )
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
@@ -493,7 +493,7 @@ with tab1:
             ]
             for q in ig_questions:
                 if st.button(q, key=f"btn_ig_{hash(q)}"):
-                    st.session_state.ask_query_text_field = q
+                    st.session_state.selected_query_text = q
                     st.rerun()
 
         # المحور الثاني: تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)
@@ -507,7 +507,7 @@ with tab1:
             ]
             for q in sr_questions:
                 if st.button(q, key=f"btn_sr_{hash(q)}"):
-                    st.session_state.ask_query_text_field = q
+                    st.session_state.selected_query_text = q
                     st.rerun()
 
         # المحور الثالث: المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)
@@ -521,7 +521,7 @@ with tab1:
             ]
             for q in sip_questions:
                 if st.button(q, key=f"btn_sip_{hash(q)}"):
-                    st.session_state.ask_query_text_field = q
+                    st.session_state.selected_query_text = q
                     st.rerun()
 
         ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
@@ -530,15 +530,14 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
+            active_q = user_question if user_question.strip() else st.session_state.selected_query_text
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
-            elif not user_question.strip():
+            elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
-            elif not is_valid_question(user_question):
-                st.warning("⚠️ عذراً، يرجى كتابة سؤالاً منطقياً وواضحاً (أكثر من 3 أحرف) لكي تتمكن المنصة من الإجابة بدقة.")
             else:
                 with st.spinner("⏳ جاري استرجاع مستندات البنك ومعالجة الإجابة..."):
-                    response_html = process_rag_gemini_query(ask_bank_sel, user_question)
+                    response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق المستمد من مستودعات التقارير.")
