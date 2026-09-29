@@ -318,6 +318,8 @@ if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
+if "selected_query_text" not in st.session_state:
+    st.session_state.selected_query_text = ""
 
 # ==============================================================================
 # الهيدر والشريط الإخباري
@@ -411,38 +413,73 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
+        # صندوق إدخال السؤال المرتبط بالحالة
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
+            value=st.session_state.selected_query_text,
             placeholder="مثال: عرف الحوكمة؟ أو ما هي جهود تمكين المرأة والشمول المالي؟",
             height=120,
-            key="ask_query_text"
+            key="ask_query_text_box"
         )
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة:</b>", unsafe_allow_html=True)
-        preset_q = st.selectbox("اختر سؤالاً", [
-            "اختر سؤالاً مقترحاً...",
-            "عرف الحوكمة وتكوين مجلس الإدارة",
-            "ما هي جهود البنك في تمكين المرأة والشمول المالي؟",
-            "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-            "ما هي آليات حوكمة البيانات والامتثال الرقابي؟"
-        ], key="preset_q_box")
 
-        if preset_q != "اختر سؤالاً مقترحاً...":
-            user_question = preset_q
+        # المحور الأول: الحوكمة ومجلس الإدارة والضبط الرقابي (IG) - 5 أسئلة
+        with st.expander("🏛️ محور الحوكمة ومجلس الإدارة والضبط الرقابي (IG)"):
+            ig_questions = [
+                "عرف الحوكمة وتكوين مجلس الإدارة بالبنك وتوزيع الاختصاصات والمهام القيادية؟",
+                "ما هي سياسات الإفصاح عن تعارض المصالح ومعايير الشفافية المالية المتبعة؟",
+                "كيف يتم تقييم كفاءة واستقلالية لجان التدقيق الداخلي والمراجعة؟",
+                "ما هي أطر إدارة المخاطر المؤسسية والالتزام بالقوانين الرقابية الصادرة عن البنك المركزي؟",
+                "كيف يضمن البنك حماية حقوق أصحاب المصلحة والمساهمين الرئيسيين والأقلية؟"
+            ]
+            for idx, q in enumerate(ig_questions):
+                if st.button(q, key=f"ig_btn_{idx}", use_container_width=True):
+                    st.session_state.selected_query_text = q
+                    st.rerun()
 
-        ask_submit_btn = st.button(" تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
+        # المحور الثاني: تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG) - 5 أسئلة
+        with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
+            sr_questions = [
+                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر وضوابط الائتمان المستدام؟",
+                "ما هي نسب الأصول الخضراء (GAR) ومستهدفات تمويل المشروعات الصديقة للبيئة؟",
+                "ما هي جهود البنك في تعزيز الشمول المالي وتمكين المرأة ودعم رائدات الأعمال؟",
+                "كيف يمتثل البنك لمعايير الإفصاح الدولية الحديثة مثل (GRI) و(ISSB - IFRS S1/S2)؟",
+                "ما هي سياسات المسؤولية المجتمعية والإنفاق التنموي الموجه للمجتمعات المحلية؟"
+            ]
+            for idx, q in enumerate(sr_questions):
+                if st.button(q, key=f"sr_btn_{idx}", use_container_width=True):
+                    st.session_state.selected_query_text = q
+                    st.rerun()
+
+        # المحور الثالث: المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech) - 5 أسئلة
+        with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
+            sip_questions = [
+                "ما هي آليات حوكمة البيانات والامتثال لقانون حماية البيانات الشخصية المصري؟",
+                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة أثناء المعالجة الرقمية؟",
+                "ما هي كفاءة البنية التحتية الرقمية ومنصات المعلومات الذكية (SIP) في معالجة تقارير الرقابة؟",
+                "كيف تساهم تقنيات الاسترجاع المعزز (RAG) في تسريع عمليات التدقيق الآلي للتقارير؟",
+                "ما هي خطط البنك للتحول الرقمي الكامل واعتماد تقنيات التكنولوجيا التنظيمية (RegTech)؟"
+            ]
+            for idx, q in enumerate(sip_questions):
+                if st.button(q, key=f"sip_btn_{idx}", use_container_width=True):
+                    st.session_state.selected_query_text = q
+                    st.rerun()
+
+        ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
+            active_query = st.session_state.get("ask_query_text_box", user_question)
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
-            elif not user_question.strip():
+            elif not active_query.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
                 with st.spinner("⏳ جاري استرجاع مستندات البنك ومعالجة الإجابة..."):
-                    response_html = process_rag_gemini_query(ask_bank_sel, user_question)
+                    response_html = process_rag_gemini_query(ask_bank_sel, active_query)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق المستمد من مستودعات التقارير.")
