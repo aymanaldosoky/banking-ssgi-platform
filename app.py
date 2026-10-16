@@ -275,7 +275,6 @@ LOG_FILE = "visitors_log.csv"
 
 def log_visitor_action(username, role):
     try:
-        # استخراج عناوين IP ومعلومات الجلسة المتاحة في ترويسات Streamlit
         ctx = st.context
         headers = getattr(ctx, "headers", {})
         client_ip = headers.get("X-Forwarded-For", headers.get("X-Real-Ip", "127.0.0.1"))
@@ -292,7 +291,6 @@ def log_visitor_action(username, role):
         
         if os.path.exists(LOG_FILE):
             df_log = pd.read_csv(LOG_FILE)
-            # تجنب التكرار الفوري لنفس المستخدم والـ IP في نفس الدقيقة
             if not ((df_log["اسم المستخدم"] == username) & (df_log["عنوان IP"] == client_ip) & (df_log["التاريخ والوقت"].str.startswith(timestamp[:16]))).any():
                 df_log = pd.concat([df_log, new_row], ignore_index=True)
                 df_log.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
@@ -343,7 +341,8 @@ if not st.session_state.authenticated:
                     log_visitor_action("user", "مستخدم عادي")
                     st.rerun()
                 else:
-                    st.error("⚠️ اسم المستخدم أو كلمة المرور غير صحيحة. (تجريبي: admin / admin123 أو user / 123)")
+                    # تم إزالة رسالة الخطأ التحذيرية هنا تماماً
+                    pass
     st.stop()
 
 # ==============================================================================
@@ -403,7 +402,6 @@ def get_colored_score_html(score):
     else:
         return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
 
-# تهيئة الذاكرة المؤقتة للبيانات والتراكميات
 if "history_state" not in st.session_state:
     st.session_state.history_state = []
 if "simulated_results_dict" not in st.session_state:
@@ -411,7 +409,6 @@ if "simulated_results_dict" not in st.session_state:
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 
-# تهيئة حالة صندوق الاستعلام النصي
 if "user_query_text" not in st.session_state:
     st.session_state.user_query_text = ""
 
@@ -423,9 +420,6 @@ def is_valid_arabic_question(text):
         return False
     return True
 
-# ==============================================================================
-# الهيدر والشريط الإخباري مع أداة تسجيل الخروج وصلاحيات المشرف
-# ==============================================================================
 col_h1, col_h2 = st.columns([4, 1])
 with col_h2:
     st.markdown(f"<div style='text-align: left; font-size: 13px; color: #475569; padding-top: 10px;'>👤 مسجل باسم: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
@@ -454,9 +448,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==============================================================================
-# محرك "اسأل المنصة" (RAG عبر المستودعات السحابية + Gemini) للردود المتمايزة
-# ==============================================================================
 def process_rag_gemini_query(bank_name, question):
     if bank_name == "اختر البنك المصرفي" or not question.strip():
         return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل المستند لتقارير الاستدامة."
@@ -497,9 +488,6 @@ def process_rag_gemini_query(bank_name, question):
     """
     return formatted_output
 
-# ==============================================================================
-# التقسيم الرئيسي إلى التبويبات (تتضمن لوحة تحكم المشرف إذا كان الرتبة admin)
-# ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "🎯 اسأل المنصة",
@@ -521,9 +509,6 @@ else:
     ])
     tab7 = None
 
-# ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة
-# ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -610,9 +595,6 @@ with tab1:
             st.info("🎯 قم باختيار البنك وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق المستمد من مستودعات التقارير.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI)
-# ------------------------------------------------------------------------------
 with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -769,9 +751,6 @@ with tab2:
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
-# ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
-# ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -882,9 +861,6 @@ with tab3:
             st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة السيناريوهات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار
-# ------------------------------------------------------------------------------
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -936,9 +912,6 @@ with tab4:
             st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد
-# ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -993,9 +966,6 @@ with tab5:
                 use_container_width=True
             )
 
-# ------------------------------------------------------------------------------
-# التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB)
-# ------------------------------------------------------------------------------
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
@@ -1025,9 +995,6 @@ with tab6:
             </div>
             """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف وتتبع الزوار (يظهر لمشرف النظام Admin فقط)
-# ------------------------------------------------------------------------------
 if tab7 is not None:
     with tab7:
         st.markdown("""
