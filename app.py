@@ -387,7 +387,7 @@ BANKS_LIST_AR = [
     "بنك أبوظبي التجاري ADCB",
     "بنك ناصر الاجتماعي",
     "بنك الاستثمار القومي",
-    "بنك الأهلي المتحد KFH",
+    "البنك الأهلي المتحد KFH",
     "بنوك بلوم BLOM",
     "البنك الأهلي اليوناني أو البنك الوطني اليوناني",
     "بنك سيتي بنك CITIBANK"
@@ -545,14 +545,17 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # حقل النص المرتبط مباشرة بـ session_state.user_query_text
+        # حقل النص المرتبط بقيمة session_state مباشرة دون تعارض مع key
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
             value=st.session_state.user_query_text,
             placeholder="مثال: متى تأسس بنك مصر ومن هو مؤسسه؟ أو ما هي جهود الاستدامة؟",
             height=120,
-            key="user_query_text"
+            key="query_input_box"
         )
+        # مزامنة قيمة حقل الإدخال مع الـ session_state
+        if user_question != st.session_state.user_query_text:
+            st.session_state.user_query_text = user_question
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
 
