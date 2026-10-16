@@ -373,7 +373,7 @@ BANKS_LIST_AR = [
     "ستاندرد تشارترد – مصر",
     "البنك العقاري المصري العربي EALB",
     "بنك الكويت الوطني NBK",
-    "بنك المصري الخليجي EG BANK",
+    "البنك المصري الخليجي EG BANK",
     "المصرف المتحد UN",
     "ميد بنك MIDBANK",
     "بنك التنمية الصناعية IDB",
@@ -387,7 +387,7 @@ BANKS_LIST_AR = [
     "بنك أبوظبي التجاري ADCB",
     "بنك ناصر الاجتماعي",
     "بنك الاستثمار القومي",
-    "بنك الأهلي المتحد KFH",
+    "البنك الأهلي المتحد KFH",
     "بنوك بلوم BLOM",
     "البنك الأهلي اليوناني أو البنك الوطني اليوناني",
     "بنك سيتي بنك CITIBANK"
@@ -545,20 +545,21 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
-        # حقل النص المرتبط بحالة الجلسة المستقلة لمنع تعارض المفاتيح
+        def update_text_area():
+            st.session_state.user_query_text = st.session_state.temp_text_input
+
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
             value=st.session_state.user_query_text,
             placeholder="مثال: متى تأسس بنك مصر ومن هو مؤسسه؟ أو ما هي جهود الاستدامة؟",
             height=120,
-            key="query_text_input"
+            key="temp_text_input",
+            on_change=update_text_area
         )
-        # تحديث حالة الجلسة بناءً على إدخال المستخدم اليدوي
-        st.session_state.user_query_text = user_question
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
 
-        with st.expander("🏛️ محور الحوكمة والتأسيس والتاريخ (IG & History)"):
+        with st.expander("🏛️ محور التأسيس والتاريخ والحوكمة (IG & History)"):
             ig_questions = [
                 "متى تأسس بنك مصر ومن هو مؤسسه وما هي ملكيته؟",
                 "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
