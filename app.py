@@ -1060,10 +1060,3 @@ if tab7 is not None:
             st.info("📂 لا توجد سجلات زيارات مسجلة حتى الآن.")
 
 st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
-
-<FollowUp>
-هل ترغب في إضافة أي صلاحيات أخرى أو تخصيص حقول إضافية لتسجيل الزوار في لوحة تحكم المشرف؟
-</FollowUp>
-
-<ElicitationsGroup>
-</ElicitationsGroup>
