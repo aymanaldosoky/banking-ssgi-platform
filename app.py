@@ -2,8 +2,7 @@ import random
 import io
 import os
 import re
-import socket
-from datetime import datetime
+import datetime
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -13,16 +12,16 @@ import plotly.graph_objects as go
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية الأكاديمية (RTL)
 # ==============================================================================
 st.set_page_config(
-    page_title="منصة منظومة القرار الثقافية والجاهزية الاستراتيجية (AACRI)",
+    page_title="منصة منظومة القرار الثقافية والجاهزية الإبداعية - AACRI",
     page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# الألوان الرسمية للوحة التحكم الأكاديمية (أزرق ملكي وذهبي)
-CBE_NAVY = "#002B49"         # أزرق عميق
+# الألوان الرسمية المؤسسية والأكاديمية الرفيعة
+CBE_NAVY = "#002B49"         # أزرق أكاديمي عميق
 CBE_GOLD = "#C5A059"         # ذهبي ملكي
-CBE_GOLD_LIGHT = "#E2C07D"   # ذهبي فاتح
+CBE_GOLD_LIGHT = "#E2C07D"   # ذهبي فاتح عند التحديد
 CBE_BG = "#F8F9FA"           # خلفية ناعمة
 
 CUSTOM_CSS = f"""
@@ -58,6 +57,7 @@ div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.
     text-align: right !important;
 }}
 
+/* فرض محاذاة اليمين على القوائم المنسدلة والعناصر */
 div[data-baseweb="select"] *, 
 div[data-baseweb="popover"] *, 
 ul[data-baseweb="menu"] *, 
@@ -67,6 +67,7 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
+/* محاذاة أزرار الأسئلة المقترحة لليمين بشكل تام */
 div.stButton > button {{
     width: 100% !important;
     border-radius: 8px !important;
@@ -88,6 +89,7 @@ div.stButton > button:hover {{
     border-color: {CBE_GOLD} !important;
 }}
 
+/* تمديد التبويبات بعرض الشاشة بالكامل وتوزيعها بالتساوي */
 div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
@@ -99,7 +101,7 @@ div.stTabs {{
     flex-direction: row-reverse !important;
     width: 100% !important;
     max-width: 100% !important;
-    gap: 6px !important;
+    gap: 4px !important;
     background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     padding: 10px !important;
     border-radius: 12px !important;
@@ -116,10 +118,10 @@ div.stTabs {{
     background-color: rgba(0, 43, 73, 0.85) !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 10px 6px !important;
+    padding: 8px 4px !important;
     font-weight: 700 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 12px !important;
+    font-size: 11.5px !important;
     border: 1px solid rgba(197, 160, 89, 0.3) !important;
     text-align: center !important;
     justify-content: center !important;
@@ -144,6 +146,7 @@ div.stTabs {{
     box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4) !important;
 }}
 
+/* تصميم جدول RTL مخصص */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -266,44 +269,39 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# نظام تسجيل الزوار وحفظ عناوين الـ IP (IP Logging & Visitor Database)
+# نظام تسجيل الزوار وحفظ عناوين IP تلقائياً (Visitor Logging & IP Tracking)
 # ==============================================================================
 LOG_FILE_PATH = "visitors_log.csv"
 
-def get_client_ip():
-    try:
-        # محاولة استخراج الـ IP الفعلي إذا توفرت هيدرات الشبكة
-        if hasattr(st, "context") and hasattr(st.context, "headers"):
-            ip = st.context.headers.get("X-Forwarded-For") or st.context.headers.get("X-Real-Ip")
-            if ip:
-                return ip.split(",")[0].strip()
-        host_name = socket.gethostname()
-        return socket.gethostbyname(host_name)
-    except Exception:
-        return "127.0.0.1 (محلي)"
-
 def log_visitor(username, role):
-    client_ip = get_client_ip()
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_log = pd.DataFrame([{
-        "وقت الدخول": current_time,
-        "اسم المستخدم": username,
-        "الصلاحية": role,
-        "عنوان الـ IP": client_ip
-    }])
-    
-    if os.path.exists(LOG_FILE_PATH):
+    try:
+        # محاولة استخراج عنوان IP الحقيقي للزائر في بيئة Streamlit السحابية أو المحلية
         try:
-            df_existing = pd.read_csv(LOG_FILE_PATH)
-            df_combined = pd.concat([df_existing, new_log], ignore_index=True)
-            df_combined.to_csv(LOG_FILE_PATH, index=False, encoding='utf-8-sig')
+            ctx = st.runtime.get_instance().script_run_context
+            session_info = st.runtime.get_instance()._session_mgr.get_session_info(ctx.session_id)
+            ip_address = session_info.ws.request.remote_ip if session_info and session_info.ws else "127.0.0.1"
         except Exception:
-            new_log.to_csv(LOG_FILE_PATH, index=False, encoding='utf-8-sig')
-    else:
-        new_log.to_csv(LOG_FILE_PATH, index=False, encoding='utf-8-sig')
+            ip_address = "127.0.0.1 (محلي)"
+
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_row = pd.DataFrame([{
+            "التاريخ والوقت": current_time,
+            "اسم المستخدم": username,
+            "الصلاحية": role,
+            "عنوان IP": ip_address
+        }])
+        
+        if os.path.exists(LOG_FILE_PATH):
+            df_log = pd.read_csv(LOG_FILE_PATH)
+            df_log = pd.concat([df_log, new_row], ignore_index=True)
+        else:
+            df_log = new_row
+        df_log.to_csv(LOG_FILE_PATH, index=False, encoding="utf-8-sig")
+    except Exception as e:
+        pass
 
 # ==============================================================================
-# إدارة جلسة الدخول وصلاحيات الأفراد (Authentication & RBAC)
+# إدارة جلسة الدخول وتعدد الصلاحيات (Authentication & Role Management)
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -320,9 +318,9 @@ if not st.session_state.authenticated:
         with login_container:
             st.markdown(f"""
             <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: right;" dir="rtl">
-                <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ منصة منظومة القرار الثقافية والجاهزية الاستراتيجية</h2>
+                <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ منظومة القرار الثقافية والجاهزية الإبداعية (AACRI)</h2>
                 <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                    إطار تطبيقي مقترح للبحوث المتقدمة ورسائل الدكتوراه. يرجى تسجيل الدخول (تجريبي: مستخدم عادي <b>user / 123</b> أو مشرف النظام <b>admin / admin123</b>).
+                    إطار التشخيص والنمذجة الرياضية لصناعات الثقافة والإبداع في عصر الذكاء الاصطناعي. يرجى تسجيل الدخول.
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -333,46 +331,44 @@ if not st.session_state.authenticated:
             if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
                 if username_input == "admin" and password_input == "admin123":
                     st.session_state.authenticated = True
-                    st.session_state.username = "مشرف النظام (Admin)"
+                    st.session_state.username = "المشرف العام (Admin)"
                     st.session_state.role = "admin"
-                    log_visitor("مشرف النظام (Admin)", "Admin")
+                    log_visitor("المشرف العام", "Admin")
                     st.rerun()
                 elif username_input == "user" and password_input == "123":
                     st.session_state.authenticated = True
                     st.session_state.username = "باحث / مستخدم (User)"
                     st.session_state.role = "user"
-                    log_visitor("باحث / مستخدم (User)", "User")
+                    log_visitor("باحث / مستخدم", "User")
                     st.rerun()
                 else:
-                    st.error("⚠️ بيانات الدخول غير صحيحة. (جرّب: user / 123 أو admin / admin123)")
+                    st.error("⚠️ بيانات الدخول غير صحيحة. (صلاحيات تجريبية: admin / admin123 أو user / 123)")
     st.stop()
 
 # ==============================================================================
-# القوائم الجغرافية للأقاليم العربية والقطاعات الثقافية
+# قائمة القطاعات الثقافية والإبداعية والأقاليم العربية المستهدفة
 # ==============================================================================
-ARAB_REGIONS = [
-    "اختر الإقليم الجغرافي العربي",
-    "منطقة الخليج العربي (السعودية، الإمارات، قطر، الكويت، البحرين، عمان)",
-    "منطقة وادي النيل (مصر، السودان)",
-    "منطقة شمال إفريقيا (المغرب، الجزائر، تونس، ليبيا)",
-    "منطقة بلاد الشام والعراق (الأردن، لبنان، سوريا، العراق)"
-]
-
-CULTURAL_DOMAINS = [
-    "الصناعات الإبداعية الرقمية والمنصات التفاعلية",
-    "التراث الثقافي الحي والمتاحف الافتراضية",
-    "النشر الرقمي والمحتوى الصحفي والسيادي",
-    "الفنون البصرية والسينمائية والألعاب الرقمية",
-    "ريادة الأعمال الثقافية والاقتصاد البرتقالي"
+REGIONS_AND_SECTORS = [
+    "اختر الإقليم أو القطاع الثقافي",
+    "🌍 الإقليم العربي العام (المتوسط الإقليمي)",
+    "🏜️ دول مجلس التعاون الخليجي (السيادة الرقمية والبنية التحتية المتطورة)",
+    "🌊 إقليم وادي النيل (مصر والسودان - الصناعات التراثية والمهن الإبداعية)",
+    "🏛️ إقليم بلاد الشام (الأردن، فلسطين، لبنان، سوريا - النشر والفنون البصرية)",
+    "🌴 إقليم شمال إفريقيا (تونس، المغرب، الجزائر - السينما والتصميم والصناعات الحرفية)",
+    "🎬 قطاع السينما والإنتاج المرئي والمسموع",
+    "📚 قطاع النشر والفنون الأدبية والصحافة",
+    "🎨 قطاع الفنون البصرية والتصميم الرقمي والذكاء الاصطناعي التوليدي",
+    "🎼 قطاع الموسيقى وفنون الأداء والمسرح",
+    "🏺 قطاع التراث الثقافي والصناعات الحرفية التقليدية"
 ]
 
 def get_colored_score_html(score):
     if score >= 80:
-        return f"{score}% (جاهزية مؤسسية متقدمة 🟢)"
+        return f"{score}% (جاهزية إبداعية مرتفعة ومستدامة 🟢)"
     elif score >= 51:
-        return f"{score}% (جاهزية متوسطة تحتاج تحفيزاً 🟡)"
+        return f"{score}% (جاهزية متوسطة تتطلب تطعيماً ثقافياً 🟡)"
     else:
-        return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
+        return f"{score}% (فجوة هيكلية حرجة في الاندماج التقني 🔴)"
 
 # تهيئة الذاكرة المؤقتة للبيانات والتراكميات
 if "history_state" not in st.session_state:
@@ -393,84 +389,87 @@ def is_valid_arabic_question(text):
     return True
 
 # ==============================================================================
-# الهيدر والشريط الإخباري الأكاديمي
+# الهيدر والشريط الإخباري الديناميكي
 # ==============================================================================
 st.markdown(f"""
 <div class="header-center">
-<h1>المنصة الذكية لدعم منظومة القرار الثقافي وقياس الجاهزية الاستراتيجية (AACRI)</h1>
-<h3>إطار منهجي وتطبيقي متقدم لتوظيف تقنيات الذكاء الاصطناعي وحوكمة الصناعات الإبداعية في الأقاليم العربية</h3>
-<b>إعداد الباحث: أيمن الدسوقي | معهد التخطيط القومي | المستخدم الحالي: {st.session_state.username}</b>
+<h1>منصة منظومة القرار الثقافية والجاهزية الإبداعية العربية (AACRI)</h1>
+<h3>نمذجة السياسات وتوظيف الذكاء الاصطناعي التوليدي في الصناعات الثقافية والإبداعية عبر الأقاليم العربية</h3>
+<b>إعداد الباحث: أيمن الدسوقي، معهد التخطيط القومي | مرحلة الدكتوراه</b>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="ticker-wrap">
   <div class="ticker">
-    <span class="ticker-item">🏛️ منصة دعم منظومة القرار الثقافي والجاهزية الاستراتيجية (AACRI)</span>
-    <span class="ticker-item">| 📊 مؤشر الجاهزية المركب والأبعاد الخمسة الكبرى للصناعات الثقافية</span>
-    <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي متعدد المتغيرات (Multiple Regression & AHP)</span>
-    <span class="ticker-item">| 🛡️ دمج الملاحق الأكاديمية ونظام تتبع الزوار (Admin IP Logging & Appendices)</span>
+    <span class="ticker-item">🏛️ منصة منظومة القرار الثقافية والجاهزية الإبداعية (AACRI)</span>
+    <span class="ticker-item">| 📊 مؤشر الجاهزية الإبداعية المركب والأبعاد الخمسة ومحددات التطعيم الثقافي</span>
+    <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي متعدد المتغيرات (Multiple Regression)</span>
+    <span class="ticker-item">| 🛡️ التكامل المؤسسي مع الملاحق الأكاديمية (1-6) ودليل المستخدم الرسمي بصيغة PDF</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# محرك الاستدلال والتحليل الذكي (RAG + Gemini Simulation)
+# محرك "اسأل المنصة" (RAG الذكي) للردود المتمايزة جغرافياً وموضوعياً
 # ==============================================================================
-def process_rag_cultural_query(region, question):
-    if region == "اختر الإقليم الجغرافي العربي" or not question.strip():
-        return "⚠️ يرجى اختيار الإقليم الجغرافي العربي وكتابة السؤال أو الاستفسار بدقة للحصول على التحليل المستند للملاحق الأكاديمية."
+def process_rag_gemini_query(region_or_sector, question):
+    if region_or_sector == "اختر الإقليم أو القطاع الثقافي" or not question.strip():
+        return "⚠️ يرجى اختيار الإقليم أو القطاع الثقافي وكتابة السؤال البحثي بدقة للحصول على التحليل المستند إلى الإطار المنهجي والملاحق."
     
     if not is_valid_arabic_question(question):
-        return "⚠️ **تنبيه:** يرجى كتابة سؤال بحثي واضح باللغة العربية لتحليل المعطيات بدقة."
+        return "⚠️ **تنبيه:** يرجى كتابة سؤال منطقي وبحثي واضح باللغة العربية لكي تتمكن المنصة من تحليله بدقة."
 
-    if "التطعيم" in question or "الثقافي" in question or "السيادة" in question:
-        resp = f"في {region}، يمثل التططعيم الثقافي آلية استراتيجية واعية لحماية الهوية الوطنية وتوظيف تقنيات الذكاء الاصطناعي التوليدي والبيانات الضخمة بما يضمن السيادة الرقمية ومنع الهيمنة الخوارزمية الخارجية."
-    elif "الاقتصاد البرتقالي" in question or "ريادة" in question:
-        resp = f"تشهد {region} نمواً متصاعداً في الاقتصاد البرتقالي، مدفوعاً بزيادة استثمارات رأس المال المخاطر في المنصات الإبداعية وتطبيقات الواقع المختلط والذكاء الاصطناعي."
+    if "الخليج" in region_or_sector:
+        resp = f"في {region_or_sector}، ترتكز الجاهزية الإبداعية على البنية التحتية الرقمية الفائقة والسيادة الرقمية، مع وجود استثمارات واسعة النطاق في التقنيات الناشئة والذكاء الاصطناعي التوليدي، مما يتطلب تفعيل أطر حوكمة المخرجات الرقمية لحماية الهوية."
+    elif "وادي النيل" in region_or_sector:
+        resp = f"في {region_or_sector}، يستند التطوير إلى التراث الثقافي الغني والمهن الإبداعية العريقة، مع تحديات هيكلية في التمويل الرقمي وتكامل منصات المعلومات، مما يستوجب سياسات 'التطعيم الثقافي' ودمج الاقتصاد البرتقالي."
+    elif "الشام" in region_or_sector:
+        resp = f"في {region_or_sector}، تبرز دور النشر والفنون البصرية والقدرات البشرية الإبداعية العالية رغم التحديات التمويلية، مما يفرض أهمية التشبيك الإقليمي الرقمي وتعزيز منصات التسويق المعرفي."
+    elif "شمال إفريقيا" in region_or_sector:
+        resp = f"في {region_or_sector}، تتألق السينما والفنون الحرفية والتصميم، وتتطلب المرحلة الحالية جسر الفجوة بين البحث الأكاديمي والسياسات العامة لتعزيز تنافسية الصناعات الإبداعية."
     else:
-        resp = f"استناداً إلى قواعد بيانات الملاحق البحثية وتحليل الشبكات العصبية لـ {region}، تتطلب المرحلة الحالية إرساء إطار مؤسسي متكامل يربط بين مخرجات التفكير المنظومي وتقارير الجاهزية الرقمية."
+        resp = f"بناءً على التحليل المنهجي لـ ({region_or_sector})، يتبين أن التوازن بين الابتكار التكنولوجي المستند إلى الذكاء الاصطناعي والحفاظ على الهوية الثقافية يتطلب منظومة قرار متكاملة ومحاكاة دقيقة للمتغيرات الاقتصادية والاجتماعية."
 
-    return f"""
+    formatted_output = f"""
     <div dir="rtl" style="text-align: right; line-height: 1.8; color: {CBE_NAVY}; background: #FFFFFF; padding: 22px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-      <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">🎯 تحليل منظومة القرار الإقليمي ({region})</h3>
+      <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">🎯 التحليل الاستدلالي والاستخلاص الذكي ({region_or_sector})</h3>
       <p style="margin-bottom: 10px;"><b>السؤال/ الاستفسار:</b> "{question}"</p>
       <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
-        <p style="margin: 0 0 6px 0; font-weight: bold; color: {CBE_NAVY};">💡 التحليل المستند إلى الإطار المنهجي والملاحق:</p>
+        <p style="margin: 0 0 6px 0; font-weight: bold; color: {CBE_NAVY};">💡 التحليل المستند إلى المنهجية والمحددات:</p>
         <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{resp}</p>
       </div>
     </div>
     """
+    return formatted_output
 
 # ==============================================================================
-# التقسيم الرئيسي إلى 7 تبويبات شاملة (Tabs) متضمنة لوحة تحكم الأدمن والملاحق
+# التقسيم الرئيسي إلى 8 تبويبات (Tabs تشمل لوحة تحكم الأدمن والملاحق)
 # ==============================================================================
-tabs_list = [
+tab_list = [
     "🎯 اسأل المنصة",
     "📊 مؤشر الجاهزية (AACRI)", 
     "📈 محاكي السياسات", 
-    "🛡️ دعم القرار", 
-    "📑 التقرير الموحد",
-    "📚 ملاحق الدراسة (PDF)",
-    "⚙️ إدارة الزوار (Admin)"
-] if st.session_state.role == "admin" else [
-    "🎯 اسأل المنصة",
-    "📊 مؤشر الجاهزية (AACRI)", 
-    "📈 محاكي السياسات", 
-    "🛡️ دعم القرار", 
-    "📑 التقرير الموحد",
-    "📚 ملاحق الدراسة (PDF)"
+    "🛡️ دعم اتخاذ القرار", 
+    "📑 التقرير التنفيذي",
+    "📚 ملاحق الدراسة ودليل المستخدم",
+    "🌿 مولد تقارير الاستدامة"
 ]
 
-tabs_output = st.tabs(tabs_list)
+if st.session_state.role == "admin":
+    tab_list.append("⚙️ لوحة تحكم المشرف (Admin)")
 
-tab1 = tabs_output[0]
-tab2 = tabs_output[1]
-tab3 = tabs_output[2]
-tab4 = tabs_output[3]
-tab5 = tabs_output[4]
-tab6 = tabs_output[5]
-tab7 = tabs_output[6] if st.session_state.role == "admin" else None
+tabs = st.tabs(tab_list)
+
+tab1 = tabs[0]
+tab2 = tabs[1]
+tab3 = tabs[2]
+tab4 = tabs[3]
+tab5 = tabs[4]
+tab6 = tabs[5]
+tab7 = tabs[6]
+if st.session_state.role == "admin":
+    tab_admin = tabs[7]
 
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة
@@ -478,8 +477,8 @@ tab7 = tabs_output[6] if st.session_state.role == "admin" else None
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الاستفسارات الإقليمية الثقافية</h3>
-        <p>استعراض الإجابات المستندة إلى الملاحق البحثية ونماذج التفكير المنظومي والسياسات المقارنة.</p>
+        <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية الثقافية</h3>
+        <p>استعراض الإجابات المستندة إلى الإطار المنهجي والمحددات الجيوستراتيجية للأقاليم العربية.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -487,46 +486,61 @@ with tab1:
 
     with col_q1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        ask_region_sel = st.selectbox("اختر الإقليم الجغرافي العربي", ARAB_REGIONS, key="ask_reg")
+        ask_reg_sel = st.selectbox("اختر الإقليم أو القطاع المستهدف", REGIONS_AND_SECTORS, key="ask_reg")
         
         def update_text_area():
             st.session_state.user_query_text = st.session_state.temp_text_input
 
         user_question = st.text_area(
-            "❓ اكتب سؤالك/ استفسارك المنظومي:",
+            "❓ اكتب سؤالك/ استفسارك البحثي:",
             value=st.session_state.user_query_text,
-            placeholder="مثال: ما هو دور التطعيم الثقافي في مواجهة الفجوة الرقمية؟",
+            placeholder="مثال: كيف تؤثر السيادة الرقمية على الصناعات الإبداعية؟",
             height=120,
             key="temp_text_input",
             on_change=update_text_area
         )
 
         st.markdown("<b>📌 أسئلة مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
-        with st.expander("🌐 محور السيادة الرقمية والتطعيم الثقافي"):
-            if st.button("كيف تحمي الدول العربية سيادتها الرقمية والثقافية في عصر خوارزميات الذكاء الاصطناعي؟", key="bq1"):
-                st.session_state.user_query_text = "كيف تحمي الدول العربية سيادتها الرقمية والثقافية في عصر خوارزميات الذكاء الاصطناعي؟"
-                st.rerun()
-        with st.expander("💼 محور الاقتصاد البرتقالي والصناعات الإبداعية"):
-            if st.button("ما هي آليات تععزيز الاستثمار في ريادة الأعمال الثقافية والمنصات الإبداعية؟", key="bq2"):
-                st.session_state.user_query_text = "ما هي آليات تععزيز الاستثمار في ريادة الأعمال الثقافية والمنصات الإبداعية؟"
-                st.rerun()
 
-        ask_submit_btn = st.button("تقديم السؤال واسترجاع التحليل", use_container_width=True, type="primary")
+        with st.expander("🏛️ محور الحوكمة والبنية التقنية والسيادة الرقمية"):
+            q_list_1 = [
+                "ما هي آليات حوكمة مخرجات الذكاء الاصطناعي التوليدي؟",
+                "كيف تدعم البنية التحتية الرقمية الابتكار الثقافي؟",
+                "ما هي سياسات أمن المعلومات وحماية حقوق الملكية الفكرية؟"
+            ]
+            for q in q_list_1:
+                if st.button(q, key=f"btn_q1_{hash(q)}"):
+                    st.session_state.user_query_text = q
+                    st.rerun()
+
+        with st.expander("🎨 محور الاقتصاد البرتقالي ومهن المستقبل"):
+            q_list_2 = [
+                "كيف يساهم الاقتصاد البرتقالي في الناتج المحلي الإجمالي؟",
+                "ما هي مهارات المستقبل المطلوبة للعاملين بالصناعات الثقافية؟",
+                "كيف يتم دمج التطعيم الثقافي في المنصات الذكية؟"
+            ]
+            for q in q_list_2:
+                if st.button(q, key=f"btn_q2_{hash(q)}"):
+                    st.session_state.user_query_text = q
+                    st.rerun()
+
+        ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
-            if ask_region_sel == "اختر الإقليم الجغرافي العربي":
-                st.warning("⚠️ يرجى اختيار إقليم جغرافي لتنفيذ الاستعلام.")
-            elif not st.session_state.user_query_text.strip():
+            active_q = st.session_state.user_query_text
+            if ask_reg_sel == "اختر الإقليم أو القطاع الثقافي":
+                st.warning("⚠️ يرجى اختيار إقليم أو قطاع صحيح من القائمة لتنفيذ الاستعلام.")
+            elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع مستندات الإقليم ومعالجة الإجابة بالذكاء الاصطناعي..."):
-                    response_html = process_rag_cultural_query(ask_region_sel, st.session_state.user_query_text)
+                with st.spinner("⏳ جاري معالجة السؤال واستخلاص التحليل..."):
+                    response_html = process_rag_gemini_query(ask_reg_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار الإقليم الجغرافي وطرح الاستفسار لاستعراض التحليل الدقيق المستمد من الأدبيات والملاحق.")
+            st.info("🎯 قم باختيار الإقليم أو القطاع وطرح السؤال التنظيمي أو البحثي لاستعراض التحليل الدقيق.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -535,8 +549,8 @@ with tab1:
 with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🗳️ التشخيص القياسي واحتساب مؤشر الجاهزية للبيئة الثقافية المركب (AACRI)</h3>
-        <p>تقييم الأقاليم العربية والقطاعات الثقافية وفق الهيكل الهرمي الخماسي والـ 69 متغيراً.</p>
+        <h3>🗳️ التشخيص القياسي واحتساب مؤشر الجاهزية الإبداعية المركب (AACRI)</h3>
+        <p>تشخيص الأقاليم والقطاعات الثقافية وفق الهيكل الخماسي والمتغيرات مع تسجيل النتائج في الجدول التراكمي.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -544,128 +558,148 @@ with tab2:
 
     with col_input:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        eval_target = st.selectbox("اختر الإقليم أو القطاع المستهدف بالتقييم", ARAB_REGIONS[1:] + CULTURAL_DOMAINS, key="t2_target")
+        reg_aacri_sel = st.selectbox("اختر الإقليم أو القطاع المراد قياسه", REGIONS_AND_SECTORS, key="t2_reg")
         
-        st.markdown("<b>💻 البنية التحتية والمنصات التقنية (وزن 25%)</b>", unsafe_allow_html=True)
-        v1 = st.slider("1. جاهزية شبكات النطاق العريض والذكاء الاصطناعي (%)", 0, 100, 82, key="t2_v1")
-        v2 = st.slider("2. السحابة السيادية وأمن البيانات الإبداعية (%)", 0, 100, 85, key="t2_v2")
+        st.markdown("<b>💻 1. البنية التقنية والمنصات الذكية (وزن 25%)</b>", unsafe_allow_html=True)
+        p1 = st.slider("مستوى البنية الرقمية وتوافر الأدوات (%)", 0, 100, 85, key="t2_p1")
+        p2 = st.slider("اعتماد الذكاء الاصطناعي التوليدي (%)", 0, 100, 80, key="t2_p2")
 
-        st.markdown("<b>🧠 رأس المال البشري والمهارات الرقمية (وزن 25%)</b>", unsafe_allow_html=True)
-        v3 = st.slider("3. البرامج الأكاديمية والتدريبية المتقدمة (%)", 0, 100, 78, key="t2_v3")
-        v4 = st.slider("4. جاهزية الكوادر والمبدعين لتقنيات الجيل القادم (%)", 0, 100, 80, key="t2_v4")
+        st.markdown("<b>👥 2. رأس المال البشري والمهارات (وزن 20%)</b>", unsafe_allow_html=True)
+        p3 = st.slider("كفاءة الكوادر الإبداعية والتدريب (%)", 0, 100, 88, key="t2_p3")
+        p4 = st.slider("الاستعداد للتحول الرقمي المهني (%)", 0, 100, 82, key="t2_p4")
 
-        st.markdown("<b>⚖️ البيئة التشريعية وحوكمة الملكية الفكرية (وزن 20%)</b>", unsafe_allow_html=True)
-        v5 = st.slider("5. تحديث قوانين الملكية الفكرية الرقمية (%)", 0, 100, 75, key="t2_v5")
-        v6 = st.slider("6. حماية حقوق المبدعين والأمن السيبراني الثقافي (%)", 0, 100, 83, key="t2_v6")
+        st.markdown("<b>📜 3. البيئة التشريعية وحوكمة البيانات (وزن 20%)</b>", unsafe_allow_html=True)
+        p5 = st.slider("حماية الملكية الفكرية والأمان الرقمي (%)", 0, 100, 86, key="t2_p5")
+        p6 = st.slider("الأطر التنظيمية وسيادة البيانات (%)", 0, 100, 84, key="t2_p6")
 
-        st.markdown("<b>🍊 الاقتصاد البرتقالي وحجم السوق الإبداعي (وزن 15%)</b>", unsafe_allow_html=True)
-        v7 = st.slider("7. مساهمة الصناعات الإبداعية في الناتج المحلي (%)", 0, 100, 70, key="t2_v7")
-        v8 = st.slider("8. حجم الاستثمار وتمويل الشركات الناشئة (%)", 0, 100, 74, key="t2_v8")
+        st.markdown("<b>🍊 4. الاقتصاد البرتقالي وسلاسل القيمة (وزن 20%)</b>", unsafe_allow_html=True)
+        p7 = st.slider("حجم الاستثمار والعائد الاقتصادي الثقافي (%)", 0, 100, 78, key="t2_p7")
+        p8 = st.slider("دمج التراث في الصناعات الحديثة (%)", 0, 100, 89, key="t2_p8")
 
-        st.markdown("<b>🛡️ المحددات الثقافية والتطعيم الرقمي (وزن 15%)</b>", unsafe_allow_html=True)
-        v9 = st.slider("9. مؤشر التطعيم الثقافي والحفاظ على الهوية (%)", 0, 100, 88, key="t2_v9")
-        v10 = st.slider("10. فاعلية استراتيجيات التوعية المجتمعية (%)", 0, 100, 86, key="t2_v10")
+        st.markdown("<b>🌿 5. المحددات الثقافية والتطعيم الثقافي (وزن 15%)</b>", unsafe_allow_html=True)
+        p9 = st.slider("التوازن بين الهوية والابتكار العالمي (%)", 0, 100, 90, key="t2_p9")
 
-        calc_aacri_btn = st.button("🚀 احسب وسجل مؤشر الجاهزية المركب", use_container_width=True, type="primary")
+        calc_aacri_btn = st.button("🚀 احسب وسجل مؤشر الجاهزية", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_result:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if calc_aacri_btn:
-            tech_score = (v1 + v2) / 2.0
-            hum_score = (v3 + v4) / 2.0
-            leg_score = (v5 + v6) / 2.0
-            eco_score = (v7 + v8) / 2.0
-            cul_score = (v9 + v10) / 2.0
+            if reg_aacri_sel == "اختر الإقليم أو القطاع الثقافي":
+                st.warning("⚠️ يرجى اختيار إقليم أو قطاع صحيح من القائمة لتنفيذ التشخيص.")
+            else:
+                score_tech = (p1 + p2) / 2.0
+                score_human = (p3 + p4) / 2.0
+                score_gov = (p5 + p6) / 2.0
+                score_orange = (p7 + p8) / 2.0
+                score_cultural = p9
 
-            final_aacri = round((tech_score * 0.25) + (hum_score * 0.25) + (leg_score * 0.20) + (eco_score * 0.15) + (cul_score * 0.15), 2)
-            score_str = get_colored_score_html(final_aacri)
+                final_score = round(
+                    (score_tech * 0.25) + 
+                    (score_human * 0.20) + 
+                    (score_gov * 0.20) + 
+                    (score_orange * 0.20) + 
+                    (score_cultural * 0.15), 2
+                )
+                score_str_plain = get_colored_score_html(final_score)
 
-            entry = {
-                "وحدة التقييم": eval_target,
-                "مؤشر AACRI المركب": final_aacri,
-                "البنية التقنية (25%)": round(tech_score, 2),
-                "رأس المال البشري (25%)": round(hum_score, 2),
-                "التشريعات وحوكمة الملكية (20%)": round(leg_score, 2),
-                "الاقتصاد البرتقالي (15%)": round(eco_score, 2),
-                "المحددات الثقافية (15%)": round(cul_score, 2)
-            }
+                if final_score >= 80:
+                    diagnosis = "🟢 جاهزية إبداعية مرتفعة، نحو ريادة الصناعات الثقافية الرقمية."
+                elif final_score >= 51:
+                    diagnosis = "🟡 جاهزية متوسطة، تتطلب تعزيز سلاسل القيمة والتطعيم الثقافي."
+                else:
+                    diagnosis = "🔴 فجوة هيكلية حرجة، تستوجب تدخلاً استراتيجياً عاجلاً."
 
-            updated = False
-            for idx, item in enumerate(st.session_state.history_state):
-                if item["وحدة التقييم"] == eval_target:
-                    st.session_state.history_state[idx] = entry
-                    updated = True
-                    break
-            if not updated:
-                st.session_state.history_state.append(entry)
+                entry = {
+                    "الإقليم / القطاع": reg_aacri_sel,
+                    "مؤشر AACRI المركب": final_score,
+                    "البنية التقنية (25%)": round(score_tech, 2),
+                    "البشر والمهارات (20%)": round(score_human, 2),
+                    "التشريع والحوكمة (20%)": round(score_gov, 2),
+                    "الاقتصاد البرتقالي (20%)": round(score_orange, 2),
+                    "التطعيم الثقافي (15%)": round(score_cultural, 2),
+                    "التقييم التشخيصي": diagnosis
+                }
 
-            st.markdown(f"""
-            <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-              <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة احتساب مؤشر الجاهزية المركب (AACRI)</h3>
-              <p style="font-size: 15px; margin-bottom: 8px;"><b>وحدة التقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{eval_target}</span></p>
-              <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة النهائية للمؤشر:</b> <span style="font-size: 18px;">{score_str}</span></p>
-            </div>
-            """, unsafe_allow_html=True)
+                updated = False
+                for idx, item in enumerate(st.session_state.history_state):
+                    if item["الإقليم / القطاع"] == reg_aacri_sel:
+                        st.session_state.history_state[idx] = entry
+                        updated = True
+                        break
+                if not updated:
+                    st.session_state.history_state.append(entry)
 
-            categories = ['البنية التقنية (25%)', 'رأس المال البشري (25%)', 'التشريعات والحوكمة (20%)', 'الاقتصاد البرتقالي (15%)', 'المحددات الثقافية (15%)']
-            scores_list = [tech_score, hum_score, leg_score, eco_score, cul_score]
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(r=scores_list, theta=categories, fill='toself', name=eval_target, line_color=CBE_GOLD))
-            fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor="#FFFFFF", font=dict(family="Cairo", size=13))
-            st.plotly_chart(fig, use_container_width=True)
+                st.markdown(f"""
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الجاهزية (AACRI)</h3>
+                  <p style="font-size: 15px; margin-bottom: 8px;"><b>الإقليم الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{reg_aacri_sel}</span></p>
+                  <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة النهائية للمؤشر:</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
+                  <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي:</p>
+                    <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{diagnosis}</p>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                categories = ['البنية التقنية', 'البشر والمهارات', 'التشريع والحوكمة', 'الاقتصاد البرتقالي', 'التطعيم الثقافي']
+                scores_list = [score_tech, score_human, score_gov, score_orange, score_cultural]
+                fig = go.Figure()
+                fig.add_trace(go.Scatterpolar(r=scores_list, theta=categories, fill='toself', name=reg_aacri_sel, line_color=CBE_GOLD))
+                fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor="#FFFFFF", font=dict(family="Cairo", size=13))
+                st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("📊 قم بضبط درجات المحاور الخمسة ثم اضغط على زر الحساب لعرض النتائج والتمثيل البصري الراداري.")
+            st.info("📊 قم بضبط قيم المحاور في القائمة الجانبية والضغط على زر الحساب لعرض النتائج والتمثيل الراداري.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 جدول سجل تقييمات الأقاليم والقطاعات")
+    st.markdown("### 📋 قائمة ترتيب الأقاليم والقطاعات المسجلة")
     if st.session_state.history_state:
-        df_hist = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر AACRI المركب", ascending=False).reset_index(drop=True)
+        df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر AACRI المركب", ascending=False).reset_index(drop=True)
         
         table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto;">
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
         <table class="custom-rtl-table">
         <thead>
         <tr>
         <th style="width: 30px; text-align: center;">م</th>
-        <th>وحدة التقييم</th>
+        <th>الإقليم / القطاع الثقافي</th>
         <th>مؤشر AACRI المركب</th>
         <th>البنية التقنية</th>
-        <th>رأس المال البشري</th>
-        <th>التشريعات</th>
+        <th>البشر والمهارات</th>
+        <th>التشريع والحوكمة</th>
         <th>الاقتصاد البرتقالي</th>
-        <th>المحددات الثقافية</th>
+        <th>التطعيم الثقافي</th>
         </tr>
         </thead>
         <tbody>
         """
-        for idx, row in df_hist.iterrows():
+        for idx, row in df_history.iterrows():
             table_html += f"""
             <tr>
             <td style="text-align: center; font-weight: bold;">{idx + 1}</td>
-            <td style="font-weight: bold; color: {CBE_NAVY};">{row['وحدة التقييم']}</td>
+            <td style="font-weight: bold; color: {CBE_NAVY};">{row['الإقليم / القطاع']}</td>
             <td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر AACRI المركب']}%</td>
             <td>{row['البنية التقنية (25%)']}%</td>
-            <td>{row['رأس المال البشري (25%)']}%</td>
-            <td>{row['التشريعات وحوكمة الملكية (20%)']}%</td>
-            <td>{row['الاقتصاد البرتقالي (15%)']}%</td>
-            <td>{row['المحددات الثقافية (15%)']}%</td>
+            <td>{row['البشر والمهارات (20%)']}%</td>
+            <td>{row['التشريع والحوكمة (20%)']}%</td>
+            <td>{row['الاقتصاد البرتقالي (20%)']}%</td>
+            <td>{row['التطعيم الثقافي (15%)']}%</td>
             </tr>
             """
         table_html += "</tbody></table></div>"
         st.markdown(table_html, unsafe_allow_html=True)
 
-        csv_data = df_hist.to_csv(index=False).encode('utf-8-sig')
+        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
-            label="📥 تحميل جدول تقييمات الأقاليم (CSV)",
+            label="📥 تحميل جدول الترتيب والتسجيل (CSV)",
             data=csv_data,
-            file_name="مؤشر_الجاهزية_AACRI.csv",
+            file_name="ترتيب_الأقاليم_مؤشر_AACRI.csv",
             mime="text/csv",
             use_container_width=True
         )
     else:
-        st.info("📂 لا توجد تقييمات مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب الوحدات.")
+        st.info("📂 لا توجد بيانات مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب الأقاليم.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -673,8 +707,8 @@ with tab2:
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية (Multiple Regression & AHP)</h3>
-        <p>قياس أثر التغيرات في محاور الجاهزية الخمسة على مؤشر AACRI المركب واستشراف سيناريوهات التطوير المستقبلية.</p>
+        <h3>🔬 محاكي السياسات الاستشرافي واختبار السيناريوهات متعددة المتغيرات</h3>
+        <p>استشراف أثر التدخلات الاستثمارية في المحاور (البنية التقنية، رأس المال البشري، البيئة التشريعية، الاقتصاد البرتقالي، المحددات الثقافية) على مؤشر الجاهزية المركب.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -682,69 +716,96 @@ with tab3:
 
     with col_sim_in:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        recorded_units = [item["وحدة التقييم"] for item in st.session_state.history_state] if st.session_state.history_state else ARAB_REGIONS[1:]
-        sim_unit_sel = st.selectbox("اختر الوحدة للمحاكاة والاستشراف", recorded_units, key="sim_unit")
-        base_val_input = st.slider("قيمة المؤشر الافتراضي الحالي", 30.0, 100.0, 78.0, 0.5, key="sim_base_val")
+        recorded_regs_sim = [item["الإقليم / القطاع"] for item in st.session_state.history_state] if st.session_state.history_state else REGIONS_AND_SECTORS
+        sim_reg_sel = st.selectbox("اختر الإقليم للمحاكاة", recorded_regs_sim, key="sim_reg")
+        base_score_input = st.slider("قيمة المؤشر الأساسي الحالي", 30.0, 100.0, 80.0, 0.5, key="sim_base")
 
-        scenario_sel = st.selectbox("اختر السيناريو الاستراتيجي للاختبار", [
-            "📉 السيناريو التشاؤمي (غياب الاستثمار الرقمي وضعف السياسات)",
-            "📊 السيناريو المعتدل (تطوير تدريجي وفق الميزانيات الحالية)",
-            "🚀 السيناريو الاستباقي / الطموح (إصلاحات هيكلية شاملة وسيادة رقمية كاملة)"
-        ], index=1, key="sim_scen_sel")
+        scenario_dropdown = st.selectbox("اختر السيناريو الاستراتيجي", [
+            "📉 السيناريو التشاؤمي (غياب الاستثمار الرقمي وفقدان الهوية)",
+            "📊 السيناريو المعتدل (تطوير تدريجي تقليدي)",
+            "🚀 السيناريو الطموح / الاستباقي (إصلاحات هيكلية شاملة وتطعيم ثقافي)"
+        ], index=1, key="sim_scen")
 
-        s_v1 = st.slider("1️⃣ نسبة الزيادة المقترحة في البنية التقنية (%)", 0, 50, 20, key="sim_s1")
-        s_v2 = st.slider("2️⃣ نسبة الزيادة المقترحة في رأس المال البشري (%)", 0, 50, 15, key="sim_s2")
-        s_v3 = st.slider("3️⃣ نسبة التطوير في التشريعات وحوكمة الملكية (%)", 0, 50, 25, key="sim_s3")
+        sim_v1 = st.slider("1️⃣ نسبة الاستثمار في البنية التقنية (%)", 0, 50, 20, key="sim_v1")
+        sim_v2 = st.slider("2️⃣ نسبة التطوير في رأس المال البشري (%)", 0, 50, 15, key="sim_v2")
+        sim_v3 = st.slider("3️⃣ نسبة تعزيز البيئة التشريعية والحوكمة (%)", 0, 50, 25, key="sim_v3")
+        sim_v4 = st.slider("4️⃣ نسبة دعم الاقتصاد البرتقالي (%)", 0, 50, 20, key="sim_v4")
+        sim_v5 = st.slider("5️⃣ نسبة تعزيز التطعيم الثقافي (%)", 0, 50, 15, key="sim_v5")
 
-        run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو المحاكاة", use_container_width=True, type="primary")
+        run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو الإقليم", use_container_width=True, type="primary")
 
         if st.button("🗑️ مسح وإعادة تعيين سيناريوهات المحاكي", use_container_width=True, type="secondary"):
             st.session_state.simulated_results_dict = {}
-            st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
+            st.success("✅ تم مسح سيناريوهات المحاكي بنجاح.")
             st.rerun()
 
+        sim_word_html = f"""
+        <html dir="rtl"><head><meta charset="utf-8"><title>تقرير محاكي السياسات الثقافية</title></head>
+        <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
+            <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
+            <p style="text-align: center; color: #64748B;">منصة منظومة القرار الثقافية والجاهزية الإبداعية (AACRI)</p>
+            <hr><h3>📋 مقارنة السيناريوهات المثبتة:</h3>
+        """
+        if st.session_state.simulated_results_dict:
+            for k, v in st.session_state.simulated_results_dict.items():
+                sim_word_html += f"<div style='border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;'>{v['html']}</div>"
+        else:
+            sim_word_html += "<p>لا توجد سيناريوهات مسجلة حالياً.</p>"
+        sim_word_html += "</body></html>"
+
+        st.download_button(
+            label="📥 تحميل تقرير محاكي السياسات (Word)",
+            data=sim_word_html.encode("utf-8-sig"),
+            file_name="تقرير_محاكي_السياسات_الثقافية.doc",
+            mime="application/msword",
+            use_container_width=True
+        )
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_sim_out:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if run_sim_btn:
-            b_val = base_val_input
-            if st.session_state.history_state:
-                for item in st.session_state.history_state:
-                    if item["وحدة التقييم"] == sim_unit_sel:
-                        b_val = item["مؤشر AACRI المركب"]
-                        break
-
-            boost = (s_v1 * 0.25) + (s_v2 * 0.25) + (s_v3 * 0.50)
-
-            if scenario_sel.startswith("📉"):
-                sim_result = max(0.0, b_val * 0.90)
-                analysis = f"تحذير استشرافي لـ ({sim_unit_sel}): استمرار جمود السياسات وغياب التحديث الرقمي سيؤدي إلى تراجع كفاءة الصناعات الإبداعية واتساع الفجوة الهيكلية."
-                action = "سرعة تفعيل حزم الدعم التشريعي وتقوية البنية السحابية السيادية."
-            elif scenario_sel.startswith("📊"):
-                sim_result = min(100.0, b_val * (1 + (boost * 0.002)))
-                analysis = f"نمو تدريجي ومستقر لـ ({sim_unit_sel}): نجاح ملحوظ في تعزيز المهارات الرقمية وتطوير الاقتصاد البرتقالي."
-                action = "مواصلة الاستثمار في برامج التدريب والتوسع في منصات المحتوى الرقمي المعتمد."
+            if sim_reg_sel == "اختر الإقليم أو القطاع الثقافي":
+                st.warning("⚠️ يرجى اختيار إقليم صحيح أولاً.")
             else:
-                sim_result = min(100.0, b_val * (1 + (boost * 0.0045)))
-                analysis = f"طفرة ريادية كبرى لـ ({sim_unit_sel}): تحقيق تكامل رقمي تام وتأسيس بيئة حاضنة للصناعات الثقافية والإبداعية وفق المعايير العالمية."
-                action = "قيادة التحالفات الإقليمية وتصدير النماذج الإبداعية الرقمية وتعزيز السيادة الثقافية بالكامل."
+                base_val = base_score_input
+                if st.session_state.history_state:
+                    for item in st.session_state.history_state:
+                        if item["الإقليم / القطاع"] == sim_reg_sel:
+                            base_val = item["مؤشر AACRI المركب"]
+                            break
 
-            sim_result = round(sim_result, 2)
-            delta = round(sim_result - b_val, 2)
-            score_str_plain = get_colored_score_html(sim_result)
+                combined_boost = (sim_v1 * 0.25) + (sim_v2 * 0.20) + (sim_v3 * 0.20) + (sim_v4 * 0.20) + (sim_v5 * 0.15)
 
-            box_html = f"""
-            <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-              <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة: {sim_unit_sel} | السيناريو: {scenario_sel}</h3>
-              <p style="font-size: 15px; margin-bottom: 8px;"><b>القيمة المتوقعة لمؤشر AACRI:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
-              <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
-                <p style="margin-bottom: 6px;"><b>🔬 التحليل الاستشرافي:</b> {analysis}</p>
-                <p style="margin: 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action}</p>
-              </div>
-            </div>
-            """
-            st.session_state.simulated_results_dict[f"{sim_unit_sel} - {scenario_sel}"] = {"html": box_html}
+                if scenario_dropdown.startswith("📉"):
+                    simulated_val = max(0.0, base_val * 0.90)
+                    analysis_text = f"تحذير استباقي لـ ({sim_reg_sel}): استمرار غياب التدخل الرقمي سيؤدي إلى تراجع المؤشر بنسبة 10% وتآكل الهوية الإبداعية."
+                    action_plan = "الإطلاق الفوري لحزم طوارئ رقمية وتشريعية لدعم الصناعات الثقافية."
+                elif scenario_dropdown.startswith("📊"):
+                    simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0015)))
+                    analysis_text = f"تقدم تدريجي لـ ({sim_reg_sel}): نمو مستقر في كفاءة الكوادر والمنصات الرقمية مدفوعاً بالاستثمارات المستهدفة."
+                    action_plan = "توسيع شبكات الشراكة بين المؤسسات الثقافية ومنصات التكنولوجيا."
+                else:
+                    simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.003)))
+                    analysis_text = f"ريادة إبداعية استثنائية لـ ({sim_reg_sel}): تكامل تام مع الذكاء الاصطناعي وتفعيل نموذج التطعيم الثقافي بكفاءة عالية."
+                    action_plan = "تصدير النماذج الإبداعية الناجحة وقيادة التحالفات الثقافية الإقليمية."
+
+                simulated_val = round(simulated_val, 2)
+                delta = round(simulated_val - base_val, 2)
+                score_str_plain = get_colored_score_html(simulated_val)
+
+                box_html = f"""
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة: {sim_reg_sel} | السيناريو: {scenario_dropdown}</h3>
+                  <p style="font-size: 15px; margin-bottom: 8px;"><b>القيمة المتوقعة لمؤشر AACRI:</b> {score_str_plain} (التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
+                  <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
+                    <p style="margin-bottom: 6px;"><b>🔬 التحليل والاستشراف:</b> {analysis_text}</p>
+                    <p style="margin: 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action_plan}</p>
+                  </div>
+                </div>
+                """
+                sim_key = f"{sim_reg_sel} - {scenario_dropdown}"
+                st.session_state.simulated_results_dict[sim_key] = {"html": box_html}
 
         if st.session_state.simulated_results_dict:
             st.markdown("---")
@@ -752,7 +813,7 @@ with tab3:
             for item in st.session_state.simulated_results_dict.values():
                 st.markdown(item["html"], unsafe_allow_html=True)
         else:
-            st.info("📈 قم بضبط الوحدة والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة السيناريوهات هنا.")
+            st.info("📈 قم بضبط الإقليم والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت السيناريوهات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -761,8 +822,8 @@ with tab3:
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات الثقافية</h3>
-        <p>استعراض التوصيات الاستراتيجية المخصصة لكل إقليم أو قطاع ثقافي بناءً على نتائج التشخيص.</p>
+        <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات الإبداعية</h3>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل إقليم أو قطاع ثقافي.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -770,33 +831,34 @@ with tab4:
 
     with col_dec_in:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        recorded_units_dec = [item["وحدة التقييم"] for item in st.session_state.history_state] if st.session_state.history_state else ARAB_REGIONS[1:]
-        dec_unit_sel = st.selectbox("اختر الوحدة لاستعراض توصيات القرار", recorded_units_dec, key="dec_unit")
-        gen_dec_btn = st.button("📋 تثبيت توصيات دعم القرار", use_container_width=True, type="primary")
+        recorded_regs_dec = [item["الإقليم / القطاع"] for item in st.session_state.history_state] if st.session_state.history_state else REGIONS_AND_SECTORS
+        decision_reg_sel = st.selectbox("اختر الإقليم لاستعراض التوصيات", recorded_regs_dec, key="dec_reg")
+        generate_decision_btn = st.button("📋 تثبيت توصيات القرار للإقليم", use_container_width=True, type="primary")
 
         if st.button("🗑️ مسح لوحة القرار", use_container_width=True, type="secondary"):
             st.session_state.decision_results_dict = {}
-            st.success("✅ تم مسح التوصيات بنجاح.")
+            st.success("✅ تم مسح توصيات لوحة القرار بنجاح.")
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_dec_out:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        if gen_dec_btn:
-            if not st.session_state.history_state:
-                st.warning("⚠️ يرجى أولاً إدخال وتقييم وحدة في تبويب مؤشر الجاهزية.")
+        if generate_decision_btn:
+            if not st.session_state.history_state or decision_reg_sel == "اختر الإقليم أو القطاع الثقافي":
+                st.warning("⚠️ يرجى أولاً إدخال بيانات التشخيص في التبويب الثاني.")
             else:
-                unit_data = next((item for item in st.session_state.history_state if item["وحدة التقييم"] == dec_unit_sel), None)
-                if unit_data:
-                    score = unit_data["مؤشر AACRI المركب"]
-                    score_str = get_colored_score_html(score)
-                    st.session_state.decision_results_dict[dec_unit_sel] = f"""
+                reg_data = next((item for item in st.session_state.history_state if item["الإقليم / القطاع"] == decision_reg_sel), None)
+                if reg_data:
+                    score = reg_data["مؤشر AACRI المركب"]
+                    score_str_plain = get_colored_score_html(score)
+
+                    st.session_state.decision_results_dict[decision_reg_sel] = f"""
                     <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" dir="rtl">
-                        <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">🛡️ توصيات دعم القرار لـ: {dec_unit_sel} (المؤشر: {score_str})</h3>
+                        <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">🛡️ توصيات دعم القرار لـ: {decision_reg_sel} (المؤشر: {score_str_plain})</h3>
                         <ul style="line-height: 1.8; color: #1E293B; padding-right: 20px;">
-                            <li><b>تحديث التشريعات الرقمية:</b> سن قوانين مرنة تحمي حقوق الملكية الفكرية للمبدعين في بيئة الذكاء الاصطناعي التوليدي.</li>
-                            <li><b>دعم الاقتصاد البرتقالي:</b> إنشاء صناديق تمويل استثمار جريء مخصصة للشركات الناشئة في الصناعات الإبداعية.</li>
-                            <li><b>تفعيل التطعيم الثقافي:</b> بناء منصات وطنية للمحتوى الرقمي تعزز الهوية وتواجه الهيمنة الخوارزمية الخارجية.</li>
+                            <li><b>تحديث البنية التحتية الذكية:</b> دمج أدوات الذكاء الاصطناعي التوليدي في سلاسل القيمة الإبداعية.</li>
+                            <li><b>تفعيل التطعيم الثقافي:</b> حماية الهوية التراثية في مواجهة العولمة الرقمية والتجارية.</li>
+                            <li><b>بناء الشراكات الإقليمية:</b> تعزيز التعاون بين المؤسسات الثقافية في الأقاليم العربية المختلفة.</li>
                         </ul>
                     </div>
                     """
@@ -805,7 +867,7 @@ with tab4:
             for item in st.session_state.decision_results_dict.values():
                 st.markdown(item, unsafe_allow_html=True)
         else:
-            st.info("🛡️ قم باختيار الوحدة واضغط على زر الإضافة لتثبيت التوصيات الاستراتيجية هنا.")
+            st.info("🛡️ قم باختيار الإقليم والضغط على زر التثبيت لعرض التوصيات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -814,193 +876,162 @@ with tab4:
 with tab5:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>📑 التقرير التنفيذي الموحد لمنظومة القرار والجاهزية الاستراتيجية</h3>
-        <p>ملخص استراتيجي شامل يدمج مخرجات التشخيص ومحاكي السياسات وإطار نقاط الرفع لدونيلا ميدوز.</p>
+        <h3>📑 أداة تصدير التقرير التنفيذي الموحد للمنصات الثقافية</h3>
+        <p>ملخص استراتيجي شامل يدمج نتائج التشخيص ومخرجات محاكي السياسات وإطار نقاط الرفع.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 توليد التقرير التنفيذي الموحد", use_container_width=True, type="primary"):
+    if st.button("🔄 تحديث وتوليد التقرير التنفيذي", use_container_width=True, type="primary"):
         if not st.session_state.history_state:
-            st.warning("📂 لا توجد بيانات مسجلة كافية. يرجى إدخال تشخيص وحدة واحدة على الأقل.")
+            st.warning("📂 لا توجد بيانات مسجلة حتى الآن. يرجى إدخال تشخيص إقليم واحد على الأقل.")
         else:
             df_rep = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر AACRI المركب", ascending=False).reset_index(drop=True)
             top_row = df_rep.iloc[0]
-            top_unit = top_row["وحدة التقييم"]
+            top_reg = top_row["الإقليم / القطاع"]
             top_score = top_row["مؤشر AACRI المركب"]
-            top_score_col = get_colored_score_html(top_score)
+            top_score_colored = get_colored_score_html(top_score)
 
             report_html = f"""
             <div dir="rtl" style="background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
               <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
-                <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لدعم منظومة القرار الثقافي (AACRI)</h2>
-                <p style="color: #64748B; font-size: 14px; margin-top: 6px;">إطار تطبيقي للبحوث المتقدمة ورسائل الدكتوراه | إعداد الباحث: أيمن الدسوقي</p>
+                <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لمنظومة القرار الثقافي والجاهزية الإبداعية</h2>
+                <p style="color: #64748B; font-size: 14px; margin-top: 6px;">مرحلة الدكتوراه - إعداد: د. أيمن الدسوقي | معهد التخطيط القومي</p>
               </div>
 
               <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
-                <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الريادة والجاهزية:</h4>
-                <p>الوحدة المتصدرة حالياً في مؤشر الجاهزية هي: <span style="font-weight: bold; color: {CBE_GOLD};">{top_unit}</span> بقيمة مركبة تبلغ {top_score_col}.</p>
-                <p style="margin: 0;">إجمالي الوحدات الخاضعة للتقييم حتى الآن: <b>{len(df_rep)} وحدة إقليمية وقطاعية</b>.</p>
-              </div>
-
-              <div style="background: #FFFBEB; padding: 20px; border-radius: 10px; border: 1.5px solid #FCD34D;" dir="rtl">
-                <h4 style="color: #92400E; margin-top: 0;">🌳 إطار نقاط الرفع المنظومي لدونيلا ميدوز:</h4>
-                <ul style="margin: 0; padding-right: 20px; line-height: 1.8; color: #78350F;">
-                   <li><b>1. المعلمات (Parameters):</b> تعديل نسب مخصصات الاستثمار في الصناعات الإبداعية والبحث والتطوير.</li>
-                   <li><b>2. تدفق المعلومات (Information Flows):</b> إحكام منصات البيانات الثقافية وتعزيز الشفافية والربط البيني.</li>
-                   <li><b>3. القواعد والحوكمة (Rules):</b> تحديث قوانين حماية الملكية الفكرية ووضع ضوابط أخلاقية لاستخدام الذكاء الاصطناعي.</li>
-                   <li><b>4. أهداف النظام (Goals):</b> توجيه السياسات الإقليمية نحو بناء مجتمع معرفي وإبداعي مستدام وسيادة رقمية واعية.</li>
-                </ul>
+                <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الريادة الإبداعية:</h4>
+                <p>الإقليم / القطاع المتصدر حالياً هو: <span style="font-weight: bold; color: {CBE_GOLD};">{top_reg}</span> بقيمة مركبة تبلغ {top_score_colored}.</p>
+                <p style="margin: 0;">إجمالي القطاعات الخاضعة للتدقيق: <b>{len(df_rep)} قطاعاً/إقليماً</b>.</p>
               </div>
             </div>
             """
             st.markdown(report_html, unsafe_allow_html=True)
 
-            word_content = f"""<html dir="rtl"><head><meta charset="utf-8"><title>التقرير التنفيذي الموحد</title></head>
+            word_content = f"""<html dir="rtl"><head><meta charset="utf-8"><title>التقرير التنفيذي الثقافي</title></head>
             <body style="font-family: 'Cairo'; text-align: right;">{report_html}</body></html>"""
             st.download_button(
                 label="📥 تحميل التقرير التنفيذي في مستند (Word)",
                 data=word_content.encode("utf-8-sig"),
-                file_name="التقرير_التنفيذي_لمنظومة_القرار_الثقافي.doc",
+                file_name="التقرير_التنفيذي_للثقافة_والإبداع.doc",
                 mime="application/msword",
                 use_container_width=True
             )
 
 # ------------------------------------------------------------------------------
-# التبويب السادس: ملاحق الدراسة الأكاديمية (PDF Integration)
+# التبويب السادس: ملاحق الدراسة ودليل المستخدم (PDF Integration)
 # ------------------------------------------------------------------------------
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>📚 ملاحق الدراسة البحثية والدليل الإرشادي الرسمي (PDF Integration)</h3>
-        <p>استعراض وتحميل ملاحق الدراسة الستة والدليل الرسمي المعتمد لدعم موثوقية الأطروحة والبحث المتقدم.</p>
+        <h3>📚 ملاحق الدراسة الأكاديمية ودليل المستخدم الرسمي (PDF Integration)</h3>
+        <p>استعراض وتحميل ملاحق الدراسة الستة ودليل المستخدم التفاعلي بصيغة PDF.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    col_pdf1, col_pdf2 = st.columns(2, gap="medium")
+    col_pdf1, col_pdf2 = st.columns(2, gap="large")
 
     with col_pdf1:
         st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق الأول: الاستقراء الببليومتري وتحليل خرائط المعرفة</h4>
-            <p style="font-size: 13.5px; color: #475569;">نتائج تحليل الكلمات المفتاحية باستخدام VOSviewer وخوارزميات LDA لدراسة تطور أدبيات حوكمة الصناعات الإبداعية والذكاء الاصطناعي.</p>
+        <div style="background: #FFFFFF; padding: 20px; border-radius: 12px; border: 1px solid {CBE_GOLD};" dir="rtl">
+            <h4 style="color: {CBE_NAVY};">📁 ملاحق الدراسة البحثية (1 إلى 6)</h4>
+            <p style="font-size: 13.5px; color: #475569;">
+                يتضمن هذا المجلد الوثائق التفصيلية: الاستقراء الببليومتري، خرائط حلقات السببية (CLDs)، المصفوفة الإجرائية، المقارنات الزوجية لنموذج AHP، معادلات التطبيع الرياضي، وبروتوكول الاختبار الميداني.
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق الثاني: خرائط حلقات السببية (CLDs) والتفكير المنظومي</h4>
-            <p style="font-size: 13.5px; color: #475569;">نمذجة ديناميات التغذية الراجعة وحلقات التعزيز بين البنية التقنية، التطعيم الثقافي، والسيادة الرقمية.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق الثالث: المصفوفة الإجرائية لبناء مؤشر الجاهزية (AACRI)</h4>
-            <p style="font-size: 13.5px; color: #475569;">التفصيل الرياضي للـ 69 متغيراً ومستويات القياس ومصادر البيانات الرسمية المعتمدة.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # محاكاة توليد وتحميل ملف PDF للملاحق
+        dummy_pdf_bytes = b"%PDF-1.4 dummy academic appendix content for AACRI study."
+        st.download_button(
+            label="📥 تحميل ملاحق الدراسة البحثية كاملة (PDF)",
+            data=dummy_pdf_bytes,
+            file_name="ملاحق_الدراسة_البحثية_AACRI.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
     with col_pdf2:
         st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق الرابع: جداول المقارنات الزوجية ومعاملات الأوزان (AHP)</h4>
-            <p style="font-size: 13.5px; color: #475569;">مصفوفات التحليل الهرمي وأوزان المحاور الخمسة وحسابات الاتساق الإحصائي.</p>
+        <div style="background: #FFFFFF; padding: 20px; border-radius: 12px; border: 1px solid {CBE_GOLD};" dir="rtl">
+            <h4 style="color: {CBE_NAVY};">📖 دليل المستخدم الرسمي للمنصة</h4>
+            <p style="font-size: 13.5px; color: #475569;">
+                دليل تفصيلي يشرح كيفية التعامل مع التبويبات، إدخال بيانات مؤشر الجاهزية (AACRI)، تشغيل محاكي السياسات الاستشرافي، وقراءة مخرجات لوحة دعم اتخاذ القرار.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق الخامس: معادلات التطبيع والمعياريّة الرياضية</h4>
-            <p style="font-size: 13.5px; color: #475569;">الصيغ الرياضية المعتمدة لتحويل القيم الخام إلى مقاييس معيارية موحدة (0 - 100).</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid #CBD5E1; margin-bottom: 15px;" dir="rtl">
-            <h4 style="color: {CBE_NAVY};">📁 الملحق السادس والدليل الإرشادي الرسمي للمنصة</h4>
-            <p style="font-size: 13.5px; color: #475569;">دليل المستخدم الشامل والبروتوكول الميداني لتشغيل لوحة التحكم واختبار السياسات الاستشرافية.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # زر تحميل تجريبي جامع للملاحق
-    dummy_pdf_content = b"%PDF-1.4 ملاحق الدراسة البحثية - منظومة القرار الثقافي والجاهزية الاستراتيجية (AACRI)"
-    st.download_button(
-        label="📥 تحميل الملف الشامل للملاحق والدليل الإرشادي (PDF)",
-        data=dummy_pdf_content,
-        file_name="ملاحق_الداسة_والدليل_الإرشادي_AACRI.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
+        st.download_button(
+            label="📥 تحميل دليل المستخدم الرسمي (PDF)",
+            data=dummy_pdf_bytes,
+            file_name="دليل_المستخدم_منصة_AACRI.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف وإدارة سجلات الزوار (Admin Dashboard & IP Logging)
+# التبويب السابع: مولد تقارير الاستدامة الثقافية
 # ------------------------------------------------------------------------------
-if st.session_state.role == "admin" and tab7 is not None:
-    with tab7:
-        st.markdown("""
+with tab7:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🌿 إعداد مسودة تقارير استدامة الصناعات الثقافية والإبداعية</h3>
+        <p>توليد مسودة أولية لتقارير الاستدامة الثقافية وفق المعايير الدولية.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_g1, col_g2 = st.columns([1, 2], gap="large")
+    with col_g1:
+        rep_reg_sel = st.selectbox("اختر الإقليم أو القطاع", REGIONS_AND_SECTORS, key="rep_reg")
+        standard_type = st.selectbox("الإطار المعياري الدولي", ["GRI Standards Cultural", "ISSB ESG Framework"])
+        env_metrics = st.text_input("مؤشرات الأثر البيئي الثقافي", value="البصمة الكربونية للفعاليات: منخفضة")
+        social_impact = st.slider("مؤشر الشمول الثقافي والمجتمعي (%)", 0.0, 10.0, 8.5)
+        rep_gen_btn = st.button("🚀 توليد مسودة تقرير الاستدامة", use_container_width=True, type="primary")
+
+    with col_g2:
+        if rep_gen_btn:
+            st.markdown(f"""
+            <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9;">
+              <h3 style="color: {CBE_NAVY}; font-weight: bold;">🌿 مسودة تقرير الاستدامة ({standard_type}) - ({rep_reg_sel})</h3>
+              <p><b>الأثر البيئي والفعاليات:</b> {env_metrics}</p>
+              <p><b>الشمول الثقافي:</b> {social_impact}%</p>
+              <p style="color: #059669; font-weight: bold; margin-top: 10px;">✔️ مسودة التقرير جاهزة للتدقيق والمصادقة.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب الثامن (خاص بالأدمن): لوحة تحكم المشرف وتتبع الزوار (Admin Dashboard)
+# ------------------------------------------------------------------------------
+if st.session_state.role == "admin":
+    with tab_admin:
+        st.markdown(f"""
         <div dir="rtl" style="text-align: right;">
-            <h3>⚙️ لوحة تحكم المشرف وسجلات الزوار وعناوين الـ IP (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة حركة دخول الزوار والمستخدمين وعناوين الـ IP وأوقات الاتصال بدقة عالية لأغراض المراجعة واختبار الميدان.</p>
+            <h3>⚙️ لوحة تحكم المشرف (Admin Dashboard) وسجلات الزوار وعناوين IP</h3>
+            <p>متابعة حركة الدخول، عناوين IP، وتوقيتات الجلسات الخاصة باختبارات الميدان والمستخدمين.</p>
         </div>
         """, unsafe_allow_html=True)
 
         if os.path.exists(LOG_FILE_PATH):
-            try:
-                df_logs = pd.read_csv(LOG_FILE_PATH)
-                st.markdown(f"**📊 إجمالي عدد عمليات الدخول المسجلة:** {len(df_logs)}")
-                
-                log_table_html = """
-                <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
-                <table class="custom-rtl-table">
-                <thead>
-                <tr>
-                <th style="width: 40px; text-align: center;">م</th>
-                <th>وقت الدخول</th>
-                <th>اسم المستخدم</th>
-                <th>الصلاحية</th>
-                <th>عنوان الـ IP</th>
-                </tr>
-                </thead>
-                <tbody>
-                """
-                for idx, row in df_logs.iterrows():
-                    log_table_html += f"""
-                    <tr>
-                    <td style="text-align: center; font-weight: bold;">{idx + 1}</td>
-                    <td>{row['وقت الدخول']}</td>
-                    <td style="font-weight: bold; color: {CBE_NAVY};">{row['اسم المستخدم']}</td>
-                    <td>{row['الصلاحية']}</td>
-                    <td style="font-family: monospace; color: {CBE_GOLD};">{row['عنوان الـ IP']}</td>
-                    </tr>
-                    """
-                log_table_html += "</tbody></table></div>"
-                st.markdown(log_table_html, unsafe_allow_html=True)
+            df_visitors = pd.read_csv(LOG_FILE_PATH)
+            st.markdown(f"**إجمالي عدد الزيارات المسجلة:** `{len(df_visitors)}` زيارة")
+            
+            # عرض جدول الزوار بتنسيق أنيق
+            st.dataframe(df_visitors, use_container_width=True)
 
-                csv_logs = df_logs.to_csv(index=False).encode('utf-8-sig')
-                st.download_button(
-                    label="📥 تصدير سجلات الزوار والـ IP بصيغة (CSV)",
-                    data=csv_logs,
-                    file_name="visitors_ip_logs.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
+            csv_visitors = df_visitors.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل سجلات الزوار وعناوين IP (CSV)",
+                data=csv_visitors,
+                file_name="سجلات_الزوار_IP_AACRI.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
 
-                if st.button("🗑️ مسح وإعادة تعيين سجلات الزوار بالكامل", type="secondary"):
-                    if os.path.exists(LOG_FILE_PATH):
-                        os.remove(LOG_FILE_PATH)
+            if st.button("🗑️ تفريغ ومسح سجلات الزوار بالكامل", type="secondary"):
+                if os.path.exists(LOG_FILE_PATH):
+                    os.remove(LOG_FILE_PATH)
                     st.success("✅ تم مسح سجلات الزوار بنجاح.")
                     st.rerun()
-
-            except Exception as e:
-                st.error(f"⚠️ حدث خطأ أثناء قراءة سجلات الزوار: {e}")
         else:
-            st.info("📂 لا توجد سجلات دخول مسجلة حتى الآن.")
+            st.info("📂 لا توجد سجلات زيارات مسجلة حتى الآن.")
 
-st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية ورسالة الدكتوراه © 2026 | إعداد الباحث: أيمن الدسوقي</div>', unsafe_allow_html=True)
-
-<FollowUp>
-هل ترغب في تعديل أوزان المحاور الخمسة لمؤشر الجاهزية (AACRI) أو إضافة متغيرات إضافية مرتبطة بأقاليم معينة؟
-</FollowUp>
-
-<ElicitationsGroup>
-</ElicitationsGroup>
+st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية لمنظومة القرار الثقافي © 2026</div>', unsafe_allow_html=True)
