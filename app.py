@@ -65,6 +65,50 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
+/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً */
+.custom-rtl-table {{
+    width: 100% !important;
+    border-collapse: collapse !important;
+    direction: rtl !important;
+    text-align: right !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+    font-family: 'Cairo', sans-serif !important;
+    background-color: #FFFFFF !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    border: 1px solid #CBD5E1 !important;
+}}
+
+.custom-rtl-table th {{
+    background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
+    color: #F8FAFC !important;
+    padding: 8px 6px !important;
+    font-weight: 700 !important;
+    border: 1px solid #002B49 !important;
+    text-align: right !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+}}
+
+.custom-rtl-table td {{
+    padding: 6px 6px !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    font-size: 11.5px !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+}}
+
+.custom-rtl-table tr:nth-child(even) {{
+    background-color: #F8FAFC !important;
+}}
+
+.custom-rtl-table tr:hover {{
+    background-color: #FEF3C7 !important;
+}}
+
 div.stButton > button {{
     width: 100% !important;
     border-radius: 8px !important;
@@ -297,7 +341,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية الشاملة
+# قائمة البنوك المصرية الشاملة (بدون البورصة المصرية)
 # ==============================================================================
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -316,7 +360,6 @@ BANKS_LIST_AR = [
     "مصرف أبو ظبي الإسلامي ADIB",
     "بنك NEXT",
     "بنك الإمارات دبي الوطني NDB",
-    "البورصة المصرية EGX",
     "بنك HSBC",
     "التجاري وفا بنك",
     "بنك المؤسسة العربية المصرفية ABC",
@@ -352,6 +395,30 @@ def get_colored_score_html(score):
         return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
     else:
         return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
+
+def describe_sip(val):
+    if val >= 80:
+        return f"منصات المعلومات الذكية والبنية التقنية متقدمة للغاية ({val}%)، مما تتيح بيئة رقمية آمنة ومستقرة لتشغيل ونقل البيانات اللحظية والتقارير الرقابية بكفاءة."
+    elif val >= 50:
+        return f"منصات المعلومات الذكية والترابط التقني في مستوى متوسط ({val}%)، وتتطلب ترقية سعات تدفق البيانات والربط البيني (APIs) لضمان سرعة تدفق المعطيات."
+    else:
+        return f"البنية التقنية ومنصات المعلومات تعاني من فجوة هيكلية حرجة ({val}%) تعيق أتمتة البيانات وتكامل العمليات التشخيصية."
+
+def describe_ig(val):
+    if val >= 80:
+        return f"الحوكمة المؤسسية راسخة ورصينة ({val}%)، تتميز باستقلالية تامة لمجلس الإدارة، لجان تدقيق فاعلة، والتزام صارم بضوابط البنك المركزي."
+    elif val >= 50:
+        return f"الحوكمة المؤسسية في نطاق متوازن ({val}%)، وتتطلب تعزيز استقلالية الأعضاء المستقلين وتفعيل أطر الرقابة الاستباقية للحد من المخاطر."
+    else:
+        return f"قصور حاد في آليات الحوكمة المؤسسية ({val}%) وضعف في الضوابط الرقابية الداخلية يستوجب حزم طوارئ وإصلاح هيكلي."
+
+def describe_sr(val):
+    if val >= 80:
+        return f"تقارير الاستدامة والتمويل الأخضر متقدمة للغاية ({val}%)، مع دمج فعال لمعايير ESG ومخاطر المناخ وأطر الإفصاح الدولي (GRI/ISSB)."
+    elif val >= 50:
+        return f"تقارير الاستدامة متوسطة الجاهزية ({val}%)، وتتطلب توسيع محفظة التمويل الأخضر وربط مؤشرات الأداء البيئي بالسياسات الائتمانية."
+    else:
+        return f"فجوة حرجة في تقارير الاستدامة ومحفظة التمويل الأخضر ({val}%) تستوجب إدراج المعايير البيئية والمناخية بجدول أعمال مجلس الإدارة."
 
 if "history_state" not in st.session_state:
     st.session_state.history_state = []
@@ -423,7 +490,6 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
-    # 1. محاولة الاستعلام من ملف JSON الخارجي أولاً
     kb_data = load_json_knowledge()
     if kb_data and bank_name in kb_data:
         bank_dict = kb_data[bank_name]
@@ -442,7 +508,6 @@ def process_rag_gemini_query(bank_name, question):
                 """
                 return formatted_output
 
-    # 2. النظام الاحتياطي الذكي المدمج في حال عدم توفر تطابق في ملف JSON
     q_lower = question.lower()
     if any(k in q_lower for k in ["تاريخ", "نشأة", "تأسيس", "متى", "مؤسس", "ملكية", "أول بنك"]):
         if "بنك مصر" in bank_name:
@@ -467,61 +532,7 @@ def process_rag_gemini_query(bank_name, question):
             <ul>
                 <li><b>سنة التأسيس / الانطلاق:</b> بدأ العمل بالاسم الحالي في أواخر الثمانينيات (1987) بعد انسحاب الشريك الأجنبي وتحول الأسهم للمساهمة المصرية والعالمية.</li>
                 <li><b>المؤسس والنشأة:</b> تأسس بشراكة بين البنك الأهلي المصري وبنوك عالمية قبل أن يتطور ليصبح كياناً مستقلاً.</li>
-                <li><b>هيكل الملكية:</b> شركة مساهمة مصرية مدرجة بالبورصة المصرية (EGX)، تتوزع ملكيتها بين مؤسسات مالية عالمية، صناديق استثمار كبرى، ومستثمرين أفراد ومؤسسات بدون سيطرة حكومية مباشرة.</li>
-            </ul>"""
-        elif "قطر الوطني" in bank_name or "qnb" in bank_name:
-            resp = f"""تأسس <b>{bank_name} QNB</b> في عام 1964 كأول بنك تجاري قطري، ليمتد نشاطه المتميز ويصبح ذراعاً مصرفياً إقليمياً قوياً في جمهورية مصر العربية والمنطقة.
-            <br><br><b>البصمة التاريخية وهيكل الملكية والانتشار:</b>
-            <ul>
-                <li><b>سنة التأسيس (المجموعة الأم):</b> 1964م (كأول بنك تجاري قطري)، ويعتبر اليوم واحداً من أكبر البنوك في منطقة الشرق الأوسط وشمال أفريقيا.</li>
-                <li><b>هيكل الملكية:</b> يتقاسم ملكية البنك جهاز قطر للاستثمار بنسبة 50% والقطاع الخاص بنسبة 50% الأخرى.</li>
-                <li><b>التوسع والانتشار في مصر:</b> يقدم خدماته المصرفية من خلال شبكة واسعة من الفروع تغطي مختلف أنحاء مصر (أكثر من 234 فرعاً موزعة على كافة المحافظات والمدن الرئيسية مثل القاهرة والإسكندرية)، مع شبكة متطورة من أجهزة الصراف الآلي (ATM).</li>
-            </ul>"""
-        elif "بنك التعمير والإسكان" in bank_name or "hdb" in bank_name:
-            resp = f"""تأسس <b>{bank_name}</b> بموجب قرارات استراتيجية حكومية لدعم قطاع التنمية العمرانية والإسكان في جمهورية مصر العربية.
-            <br><br><b>البصمة التاريخية وهيكل الملكية والتوسع:</b>
-            <ul>
-                <li><b>سنة التأسيس:</b> تأسس عام 1979 ليكون رائداً في تمويل مشروعات الإسكان الاجتماعي والمتوسط والتنمية العمرانية الجديدة.</li>
-                <li><b>هيكل الملكية:</b> شركة مساهمة مصرية تخضع لقوانين الاستثمار، وتساهم فيها هيئة المجتمعات العمرانية الجديدة وكيانات حكومية واستثمارية كبرى.</li>
-                <li><b>الانتشار:</b> يمتلك شبكة فروع واسعة تغطي كافة محافظات الجمهورية ويقدم خدمات مصرفية شاملة للأفراد والشركات.</li>
-            </ul>"""
-        elif "كريدي أجريكول" in bank_name:
-            resp = f"""يُعد <b>{bank_name} - مصر</b> امتداداً عريقاً لمؤسسة كريدي أجريكول العالمية العريقة، حيث يقدم أحدث الحلول المصرفية الرقمية والمستدامة.
-            <br><br><b>البصمة التاريخية وهيكل الملكية والانتشار:</b>
-            <ul>
-                <li><b>النشأة والتأسيس:</b> اندماج وتطوير لكيانات مصرفية سابقة (مثل بنك توماس كوك وبنك المصري الأمريكي سابقاً) تحت مظلة المجموعة الفرنسية العالمية.</li>
-                <li><b>هيكل الملكية:</b> تابع لمجموعة كريدي أجريكول الفرنسية العالمية (Credit Agricole S.A)، مع مساهمات مصرية ومؤسسية مدرجة بالبورصة المصرية.</li>
-                <li><b>الانتشار والخدمات:</b> شبكة فروع متطورة ومنصات رقمية ذكية تخدم قطاعات التجزئة والشركات الكبرى والمتوسطة.</li>
-            </ul>"""
-        elif "الإسكندرية" in bank_name:
-            resp = f"""تأسس <b>{bank_name}</b> في عام 1957 كواحد من عيون المصرفية المصرية، وتحول لاحقاً ليشكل قصة نجاح كبرى ضمن مجموعة إنتيزا سان باولو العالمية.
-            <br><br><b>البصمة التاريخية وهيكل الملكية والانتشار:</b>
-            <ul>
-                <li><b>سنة التأسيس:</b> 1957م.</li>
-                <li><b>هيكل الملكية:</b> مملوك أغلبياً لمجموعة "إنتيزا سان باولو" (Intesa Sanpaolo) الإيطالية العالمية المصرفية الكبرى، إلى جانب حصص مصرية مؤسسية.</li>
-                <li><b>الانتشار والخدمات:</b> يمتلك شبكة واسعة من الفروع تفوق 170 فرعاً تغطي كافة المحافظات الحيوية في مصر.</li>
-            </ul>"""
-        elif "بنك فيصل الإسلامي" in bank_name:
-            resp = f"""تأسس <b>{bank_name}</b> كأول بنك إسلامي في مصر بموجب القانون رقم 48 لسنة 1977، وبدأ نشاطه الفعلي عام 1979 بجهود مؤسسية رائدة.
-            <br><br><b>البصمة التاريخية وهيكل الملكية:</b>
-            <ul>
-                <li><b>سنة التأسيس:</b> 1977 (وبدأ التشغيل 1979).</li>
-                <li><b>المؤسسون:</b> بمبادرة من الأمير محمد الفيصل آل سعود ومجموعة من الشخصيات المصرية والسعودية الإسلامية البارزة.</li>
-                <li><b>هيكل الملكية:</b> شركة مساهمة مصرية مدرجة، تساهم فيها كيانات سعودية ومصرية وأفراد ومؤسسات مالية إسلامية.</li>
-            </ul>"""
-        elif "بنك البركة الإسلامي" in bank_name:
-            resp = f"""تأسس <b>{bank_name}</b> ضمن شبكة مجموعة البركة المصرفية العالمية لتقديم خدمات الصيرفة الإسلامية المتكاملة في مصر.
-            <br><br><b>البصمة التاريخية وهيكل الملكية:</b>
-            <ul>
-                <li><b>سنة التأسيس والنشأة:</b> امتداد لتاريخ طويل من المعاملات المصرفية الإسلامية (مجموعة البركة المصرفية).</li>
-                <li><b>هيكل الملكية:</b> يتبع مجموعة البركة المصرفية (مملوك لمجموعات استثمارية خليجية وعالمية كبرى).</li>
-            </ul>"""
-        elif "بنك القاهرة Banque du Caire" in bank_name:
-            resp = f"""تأسس <b>{bank_name}</b> عام 1952 كبنك وطني مصري يهدف إلى دعم التجارة والصناعة والاقتصاد الوطني.
-            <br><br><b>البصمة التاريخية وهيكل الملكية:</b>
-            <ul>
-                <li><b>سنة التأسيس:</b> 1952م.</li>
-                <li><b>هيكل الملكية:</b> مملوك بالكامل لبنك مصر (الذراع الاستثماري الحكومي)، ويعتبر أحد الأعمدة الرئيسية للقطاع المصرفي العام في مصر.</li>
+                <li><b>هيكل الملكية:</b> شركة مساهمة مصرية، تتوزع ملكيتها بين مؤسسات مالية عالمية، صناديق استثمار كبرى، ومستثمرين أفراد ومؤسسات بدون سيطرة حكومية مباشرة.</li>
             </ul>"""
         else:
             resp = f"""يُعد <b>{bank_name}</b> أحد الصروح المصرفية الفاعلة والمتميزة ضمن المنظومة المصرفية المصرية، حيث يخضع لإشراف البنك المركزي المصري ويسهم بفاعلية في تمويل الأنشطة الاقتصادية ودعم خطط التنمية المستدامة ورؤية مصر 2030.
@@ -708,7 +719,7 @@ with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك المصرفية المختارة مع تسجيل وثبات النتائج في الجدول التراكمي وإدارة السجلات الموضح أدناه.</p>
+        <p>إمكانية تشخيص البنوك المصرفية المختارة عبر الثلاث محاور الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -718,20 +729,9 @@ with tab2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي المراد قياسه", BANKS_LIST_AR, key="t1_bank")
         
-        sip_1 = st.slider("1. جاهزية البنية التحتية الرقمية (%)", 0, 100, 85, key="t1_sip1")
-        sip_2 = st.slider("2. توافر البيانات والمعالجة الآلية (%)", 0, 100, 88, key="t1_sip2")
-        sip_3 = st.slider("3. الترابط البيني التقني (APIs) (%)", 0, 100, 90, key="t1_sip3")
-        sip_4 = st.slider("4. السيادة الرقمية وأمن المعلومات (%)", 0, 100, 92, key="t1_sip4")
-
-        ig_1 = st.slider("1. التوافق التشريعي والتنظيمي (%)", 0, 100, 86, key="t1_ig1")
-        ig_2 = st.slider("2. الأخلاقيات والسلوك المؤسسي (%)", 0, 100, 88, key="t1_ig2")
-        ig_3 = st.slider("3. فاعلية الرقابة والتدقيق الداخلي (%)", 0, 100, 91, key="t1_ig3")
-        ig_4 = st.slider("4. كفاءة واستقلالية مجلس الإدارة (%)", 0, 100, 92, key="t1_ig4")
-
-        sr_1 = st.slider("1. الدمج الاستراتيجي لأهداف التنمية (%)", 0, 100, 85, key="t1_sr1")
-        sr_2 = st.slider("2. دمج مخاطر المناخ والتمويل الأخضر (%)", 0, 100, 81, key="t1_sr2")
-        sr_3 = st.slider("3. نسبة الأصول الخضراء (GAR) (%)", 0, 100, 78, key="t1_sr3")
-        sr_4 = st.slider("4. المواءمة مع معايير GRI و ISSB (%)", 0, 100, 89, key="t1_sr4")
+        sip_val = st.slider("محور منصات المعلومات الذكية (SIP) (40%)", 0, 100, 88, key="t1_sip_slider")
+        ig_val = st.slider("محور الحوكمة المؤسسية (IG) (30%)", 0, 100, 90, key="t1_ig_slider")
+        sr_val = st.slider("محور تقارير الاستدامة (SR) (30%)", 0, 100, 85, key="t1_sr_slider")
 
         calc_ssgi_btn = st.button("🚀 احسب وسجل مؤشر البنك", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -742,10 +742,6 @@ with tab2:
             if bank_ssgi_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
-                sip_val = (sip_1 + sip_2 + sip_3 + sip_4) / 4.0
-                ig_val = (ig_1 + ig_2 + ig_3 + ig_4) / 4.0
-                sr_val = (sr_1 + sr_2 + sr_3 + sr_4) / 4.0
-
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
@@ -762,9 +758,9 @@ with tab2:
                 entry = {
                     "البنك": bank_ssgi_sel,
                     "مؤشر SSGI المركب": final_score,
-                    "منصات المعلومات (40%)": round(sip_val, 2),
-                    "الحوكمة المؤسسية (30%)": round(ig_val, 2),
-                    "تقارير الاستدامة (30%)": round(sr_val, 2),
+                    "منصات المعلومات (40%)": sip_val,
+                    "الحوكمة المؤسسية (30%)": ig_val,
+                    "تقارير الاستدامة (30%)": sr_val,
                     "التقييم التشخيصي": diagnosis
                 }
 
@@ -784,21 +780,88 @@ with tab2:
                   <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة النهائية للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي والتفصيل المنظومي:</p>
-                    <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{detailed_diag}</p>
+                    <p style="margin: 0 0 10px 0; color: #1E293B; font-size: 14.5px;">{detailed_diag}</p>
+                    <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 10px 0;">
+                    <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
+                        <li><b>1. منصات المعلومات الذكية (SIP):</b> {describe_sip(sip_val)}</li>
+                        <li><b>2. الحوكمة المؤسسية (IG):</b> {describe_ig(ig_val)}</li>
+                        <li><b>3. تقارير الاستدامة (SR):</b> {describe_sr(sr_val)}</li>
+                    </ul>
                   </div>
                 </div>
                 """, unsafe_allow_html=True)
+
+                categories = ['منصات المعلومات الذكية (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
+                scores_list = [sip_val, ig_val, sr_val]
+                fig = go.Figure()
+                fig.add_trace(go.Scatterpolar(r=scores_list, theta=categories, fill='toself', name=bank_ssgi_sel, line_color=CBE_GOLD))
+                fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor="#FFFFFF", font=dict(family="Cairo", size=13))
+                st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور ثم الضغط على زر الحساب لعرض النتائج.")
+            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض النتائج والتمثيل الراداري.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 📋 قائمة ترتيب البنوك المسجلة")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
-        st.dataframe(df_history, use_container_width=True)
+        
+        table_html = """
+<div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
+<table class="custom-rtl-table">
+<thead>
+<tr>
+<th style="width: 30px; text-align: center;">م</th>
+<th>البنك</th>
+<th>مؤشر SSGI المركب</th>
+<th>منصات المعلومات (40%)</th>
+<th>الحوكمة المؤسسية (30%)</th>
+<th>تقارير الاستدامة (30%)</th>
+<th>التقييم التشخيصي</th>
+</tr>
+</thead>
+<tbody>
+"""
+        for idx, row in df_history.iterrows():
+            table_html += f"""
+<tr>
+<td style="text-align: center; font-weight: bold;">{idx + 1}</td>
+<td style="font-weight: bold; color: {CBE_NAVY};">{row['البنك']}</td>
+<td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
+<td>{row['منصات المعلومات (40%)']}%</td>
+<td>{row['الحوكمة المؤسسية (30%)']}%</td>
+<td>{row['تقارير الاستدامة (30%)']}%</td>
+<td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
+</tr>
+"""
+        table_html += """
+</tbody>
+</table>
+</div>
+"""
+        st.markdown(table_html, unsafe_allow_html=True)
+
+        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 تحميل جدول ترتيب البنوك المسجلة (Excel/CSV)",
+            data=csv_data,
+            file_name="ترتيب_البنوك_المسجلة_SSGI.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+        col_del1, col_del2 = st.columns([2, 1])
+        with col_del1:
+            recorded_banks = [item["البنك"] for item in st.session_state.history_state]
+            bank_to_delete = st.selectbox("اختر بنكاً من السجل لحذفه", recorded_banks, key="del_bank_box")
+        with col_del2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ حذف البنك المحددة", use_container_width=True, type="secondary"):
+                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != bank_to_delete]
+                st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
+                st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
