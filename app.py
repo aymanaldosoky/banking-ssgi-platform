@@ -65,6 +65,50 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
+/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً */
+.custom-rtl-table {{
+    width: 100% !important;
+    border-collapse: collapse !important;
+    direction: rtl !important;
+    text-align: right !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+    font-family: 'Cairo', sans-serif !important;
+    background-color: #FFFFFF !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    border: 1px solid #CBD5E1 !important;
+}}
+
+.custom-rtl-table th {{
+    background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
+    color: #F8FAFC !important;
+    padding: 8px 6px !important;
+    font-weight: 700 !important;
+    border: 1px solid #475569 !important;
+    text-align: right !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+}}
+
+.custom-rtl-table td {{
+    padding: 6px 6px !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    font-size: 11.5px !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+}}
+
+.custom-rtl-table tr:nth-child(even) {{
+    background-color: #F8FAFC !important;
+}}
+
+.custom-rtl-table tr:hover {{
+    background-color: #FEF3C7 !important;
+}}
+
 div.stButton > button {{
     width: 100% !important;
     border-radius: 8px !important;
@@ -140,50 +184,6 @@ div.stTabs {{
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4) !important;
-}}
-
-/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً (مطابق لكود الصناعات) */
-.custom-rtl-table {{
-    width: 100% !important;
-    border-collapse: collapse !important;
-    direction: rtl !important;
-    text-align: right !important;
-    margin-top: 8px !important;
-    margin-bottom: 12px !important;
-    font-family: 'Cairo', sans-serif !important;
-    background-color: #FFFFFF !important;
-    border-radius: 6px !important;
-    overflow: hidden !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-    border: 1px solid #CBD5E1 !important;
-}}
-
-.custom-rtl-table th {{
-    background: linear-gradient(135deg, #334155 100%, #1E293B 100%) !important;
-    color: #F8FAFC !important;
-    padding: 8px 6px !important;
-    font-weight: 700 !important;
-    border: 1px solid #475569 !important;
-    text-align: right !important;
-    font-size: 12px !important;
-    white-space: nowrap !important;
-}}
-
-.custom-rtl-table td {{
-    padding: 6px 6px !important;
-    border: 1px solid #E2E8F0 !important;
-    color: #1E293B !important;
-    font-size: 11.5px !important;
-    text-align: right !important;
-    line-height: 1.3 !important;
-}}
-
-.custom-rtl-table tr:nth-child(even) {{
-    background-color: #F8FAFC !important;
-}}
-
-.custom-rtl-table tr:hover {{
-    background-color: #FEF3C7 !important;
 }}
 
 .header-center {{
@@ -265,7 +265,7 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# نظام تتبع الزوار (IP Logging) مع الملف الخارجي
+# نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر)
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
 
@@ -350,7 +350,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية الشاملة (بدون البورصة المصرية EGX تماماً)
+# قائمة البنوك المصرية الشاملة (مع الحفاظ على استبعاد البورصة المصرية EGX تماماً)
 # ==============================================================================
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -455,7 +455,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# محرك "اسأل المنصة" (RAG مع حراسة صارمة Bank-Specific Guardrails وتكامل JSON)
+# محرك "اسأل المنصة" (RAG متقدم مع Bank-Specific Guardrails وتكامل JSON)
 # ==============================================================================
 JSON_KNOWLEDGE_FILE = "national_banking_governance_archive.json"
 
@@ -475,7 +475,7 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
-    # 1. التحقق والبحث أولاً في ملف المعرفة الخارجي national_banking_governance_archive.json لكل بنك حصرياً
+    # حراس البنوك المخصصين (Bank-Specific Guardrails) لضمان تفرد الإجابات وعدم التطابق الخاطئ
     kb_data = load_json_knowledge()
     if kb_data and bank_name in kb_data:
         bank_dict = kb_data[bank_name]
@@ -484,18 +484,18 @@ def process_rag_gemini_query(bank_name, question):
             if key_phrase in q_lower or any(w in q_lower for w in key_phrase.split()):
                 return f"""
                 <div dir="rtl" style="text-align: right; line-height: 1.9; color: {CBE_NAVY}; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
-                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف الأرشيف الخارجي ({bank_name})</h3>
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف المعرفة ({bank_name})</h3>
                   <p style="font-size: 14.5px; margin-bottom: 12px;"><b>السؤال / الاستفسار المطروح:</b> "{question}"</p>
                   <div style="background: {CBE_BG}; padding: 18px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 12px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من الأرشيف الخارجي):</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من أرشيف المعرفة الخارجي):</p>
                     <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{answer_text}</div>
                   </div>
                 </div>
                 """
 
-    # 2. النظام الاحتياطي الديناميكي الفريد لكل بنك (مع الحراسة الصارمة لضمان ارتباط الرد حصرياً باسم البنك المختار)
     q_lower = question.lower()
     
+    # محرك توليد الديناميكيات المخصص بدقة لكل بنك على حدة لمنع أي تكرار
     if any(k in q_lower for k in ["تاريخ", "نشأة", "تأسيس", "متى", "مؤسس", "ملكية", "أول بنك"]):
         if "بنك مصر" in bank_name:
             resp = f"""تأسس <b>{bank_name}</b> في 8 مايو 1920م بريادة المفكر الاقتصادي الراحل محمد طلعت حرب باشا.
@@ -563,9 +563,9 @@ def process_rag_gemini_query(bank_name, question):
             </ul>"""
     elif any(k in q_lower for k in ["الحوكمة", "مجلس", "الضبط", "مستقلين", "تعارض", "الشفافية", "المساءلة", "مكافحة الفساد"]):
         resp = f"""يعتمد <b>{bank_name}</b> هيكل حوكمة مؤسسياً متقدماً يتوافق تماماً مع تعليمات البنك المركزي المصري ومعايير الاستدامة الدولية.
-        <br><br><b>الأعمدة الرقابية والحوكمية الخاصة بـ {bank_name}:</b>
+        <br><br><b>الأعمدة الرقابية والحوكمية:</b>
         <ul>
-            <li><b>مجلس الإدارة:</b> يضم خبرات مستقلة وغير تنفيذية لضمان موضوعية اتخاذ القرار.</li>
+            <li><b>مجلس الإدارة:</b> يضم خبرات مستقلة وغير تنفيذية لضمان موضوعية اتخاذ القرار وتجنب تعارض المصالح.</li>
             <li><b>اللجان المنبثقة:</b> لجان التدقيق، المخاطر، الالتزام، والترشيحات والمكافآت التي ترفع تقاريرها الدورية مباشرة للمجلس.</li>
             <li><b>الشفافية والالتزام:</b> سياسات صارمة لمكافحة غسل الأموال، الإفصاح المالي الدقيق، وإدارة تعارض المصالح.</li>
         </ul>"""
@@ -579,7 +579,7 @@ def process_rag_gemini_query(bank_name, question):
         </ul>"""
     elif any(k in q_lower for k in ["المسؤولية المجتمعية", "التنموي", "الشمول المالي", "المرأة", "تمكين", "المناخ", "أخضر", "استدامة", "gar"]):
         resp = f"""يولي <b>{bank_name}</b> اهتماماً استراتيجياً ببرامج الاستدامة، التمويل الأخضر، والمسؤولية المجتمعية.
-        <br><br><b>المحاور التنفيذية والتنموية الخاصة بـ {bank_name}:</b>
+        <br><br><b>المحاور التنفيذية والتنموية:</b>
         <ul>
             <li><b>التمويل المستدام:</b> دمج المخاطر البيئية والمناخية (ESG) ضمن السياسات الائتمانية وتوجيه التمويلات للطاقة المتجددة.</li>
             <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق محافظ ومبادرات رقمية ميسرة لدعم رائدات الأعمال والشباب والمشروعات الصغيرة ومتناهية الصغر.</li>
@@ -702,7 +702,7 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع المستندات من ملف المعرفة وتحليل الإجابة..."):
+                with st.spinner("⏳ جاري استرجاع المستندات من أرشيف المعرفة وتحليل الإجابة..."):
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
@@ -710,13 +710,13 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - جدول تراكمي مصمم تماماً ككود الصناعات
+# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - 3 محاور رئيسية + رداري + جدول بتنسيق كود الصناعات
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown(f"""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة مع تسجيل وثبات النتائج في الجدول التراكمي.</p>
+        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي وتعديل الاتجاهات والترتيب.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -726,6 +726,7 @@ with tab2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي المراد قياسه", BANKS_LIST_AR, key="t1_bank")
         
+        # 3 محاور رئيسية فقط كما طلبتم
         sip_val = st.slider("1. محور منصات المعلومات والبنية الرقمية (SIP - 40%)", 0, 100, 88, key="t1_sip")
         ig_val = st.slider("2. محور الحوكمة المؤسسية والامتثال (IG - 30%)", 0, 100, 90, key="t1_ig")
         sr_val = st.slider("3. محور تقارير الاستدامة ومخاطر المناخ (SR - 30%)", 0, 100, 82, key="t1_sr")
@@ -782,6 +783,7 @@ with tab2:
                 </div>
                 """, unsafe_allow_html=True)
 
+                # رسم الردار (Radar Chart) للمحاور الثلاثة
                 categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
                 fig_radar = go.Figure()
                 fig_radar.add_trace(go.Scatterpolar(
@@ -804,19 +806,19 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة ترتيب وبنوك القطاع المسجلة")
+    st.markdown("### 📋 قائمة ترتيب البنوك المسجلة (الجدول التراكمي المطور)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # استعراض الجدول التراكمي المخصص (بأناقة كود الصناعات تماماً)
+        # الجدول التراكمي المطور ليبدأ من اليمين بـ (المسلسل، ثم اسم البنك، ثم المؤشر المركب، ثم باقي الأعمدة) تماماً مثل كود الصناعات
         table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
         <table class="custom-rtl-table">
         <thead>
         <tr>
-        <th style="width: 30px; text-align: center;">م</th>
-        <th>البنك المصرفي</th>
-        <th>مؤشر SSGI المركب</th>
+        <th style="width: 35px; text-align: center;">م</th>
+        <th>اسم البنك</th>
+        <th>المؤشر المركب (SSGI)</th>
         <th>منصات المعلومات (40%)</th>
         <th>الحوكمة المؤسسية (30%)</th>
         <th>تقارير الاستدامة (30%)</th>
@@ -825,6 +827,7 @@ with tab2:
         </thead>
         <tbody>
         """
+        
         for idx, row in df_history.iterrows():
             table_html += f"""
             <tr>
@@ -834,25 +837,38 @@ with tab2:
             <td>{row['منصات المعلومات (40%)']}%</td>
             <td>{row['الحوكمة المؤسسية (30%)']}%</td>
             <td>{row['تقارير الاستدامة (30%)']}%</td>
-            <td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
+            <td style="font-size: 11.5px;">{row['التقييم التشخيصي']}</td>
             </tr>
             """
-        table_html += "</tbody></table></div>"
+        table_html += """
+        </tbody>
+        </table>
+        </div>
+        """
         st.markdown(table_html, unsafe_allow_html=True)
-        
-        # خيار حذف البنك المحدد مفعل وسلس تماماً
+
+        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 تحميل جدول ترتيب البنوك المسجلة (Excel/CSV)",
+            data=csv_data,
+            file_name="ترتيب_البنوك_المصرية_SSGI.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+        # خيار حذف البنك المحدد بناءً على طلبك وبشكل سلس تماماً
         col_del1, col_del2 = st.columns([2, 1])
         with col_del1:
             recorded_banks = [item["البنك"] for item in st.session_state.history_state]
             bank_to_delete = st.selectbox("اختر بنكاً من السجل لحذفه", recorded_banks, key="del_bank_box")
         with col_del2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️ حذف البنك المحدّد", use_container_width=True, type="secondary"):
+            if st.button("🗑️ حذف البنك المحدد", use_container_width=True, type="secondary"):
                 st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != bank_to_delete]
                 st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
                 st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن في الجدول التراكمي.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -864,7 +880,7 @@ with tab3:
         <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار السيناريوهات الاستراتيجية بدقة عالية.</p>
     </div>
     """, unsafe_allow_html=True)
-    st.info("محاكي السياسات ومتابعة الانحدار جاهز للعمل عند إدخال البيانات في التبويب السابق.")
+    st.info("محاكي السياسات ومتابعة الانحدار جاهز للعمل عند إدخال بيانات البنوك في التبويب السابق.")
 
 # ------------------------------------------------------------------------------
 # التبويب الرابع: لوحة دعم اتخاذ القرار
