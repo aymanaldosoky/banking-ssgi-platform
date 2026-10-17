@@ -1,6 +1,7 @@
 import random
 import io
 import os
+import json
 import re
 from datetime import datetime
 import pandas as pd
@@ -402,8 +403,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# محرك "اسأل المنصة" (RAG مطور ذكي وديناميكي يغطي كافة البنوك والمحاور بعمق دقيق)
+# محرك "اسأل المنصة" (RAG مطور يقرأ من ملف JSON خارجي مع دعم احتياطي)
 # ==============================================================================
+JSON_KNOWLEDGE_FILE = "bank_knowledge_base.json"
+
+def load_json_knowledge():
+    if os.path.exists(JSON_KNOWLEDGE_FILE):
+        try:
+            with open(JSON_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
 def process_rag_gemini_query(bank_name, question):
     if bank_name == "اختر البنك المصرفي" or not question.strip():
         return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل المستند لتقارير الاستدامة والحوكمة."
@@ -411,9 +423,27 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
+    # 1. محاولة الاستعلام من ملف JSON الخارجي أولاً
+    kb_data = load_json_knowledge()
+    if kb_data and bank_name in kb_data:
+        bank_dict = kb_data[bank_name]
+        q_lower = question.lower()
+        for key_phrase, answer_text in bank_dict.items():
+            if key_phrase in q_lower or any(w in q_lower for w in key_phrase.split()):
+                formatted_output = f"""
+                <div dir="rtl" style="text-align: right; line-height: 1.9; color: {CBE_NAVY}; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف JSON ({bank_name})</h3>
+                  <p style="font-size: 14.5px; margin-bottom: 12px;"><b>السؤال / الاستفسار المطروح:</b> "{question}"</p>
+                  <div style="background: {CBE_BG}; padding: 18px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 12px;">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من قاعدة المعرفة الخارجية):</p>
+                    <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{answer_text}</div>
+                  </div>
+                </div>
+                """
+                return formatted_output
+
+    # 2. النظام الاحتياطي الذكي المدمج في حال عدم توفر تطابق في ملف JSON
     q_lower = question.lower()
-    
-    # 1. معالجة سؤال التأسيس والنشأة والملكية
     if any(k in q_lower for k in ["تاريخ", "نشأة", "تأسيس", "متى", "مؤسس", "ملكية", "أول بنك"]):
         if "بنك مصر" in bank_name:
             resp = f"""تأسس <b>{bank_name}</b> في 8 مايو 1920 بريادة الفكر الوطني للرائد الاقتصادي محمد طلعت حرب باشا، ليكون أول بنك مصري بالكامل برأس المال والكوادر الوطنية.
@@ -501,7 +531,6 @@ def process_rag_gemini_query(bank_name, question):
                 <li><b>هيكل الملكية والتبعية المؤسسية:</b> تتوزع ملكية البنك بين مساهمين محليين و/أو مؤسسات مالية إقليمية ودولية.</li>
             </ul>"""
 
-    # 2. معالجة محاور الحوكمة وتكوين مجالس الإدارة والشفافية
     elif any(k in q_lower for k in ["الحوكمة", "مجلس", "الضبط", "مستقلين", "تعارض", "الشفافية", "المساءلة", "مكافحة الفساد"]):
         resp = f"""يعتمد <b>{bank_name}</b> إطار حوكمة مؤسسياً متكاملاً يتوافق مع التعليمات الرقابية التنظيمية الصادرة عن البنك المركزي المصري ومعايير الاستدامة العالمية.
         <br><br><b>الركائز الحوكمية الأساسية:</b>
@@ -511,7 +540,6 @@ def process_rag_gemini_query(bank_name, question):
             <li><b>الشفافية والامتثال:</b> سياسات صارمة لمنع تعارض المصالح ومكافحة غسل الأموال وتأمين الإفصاح المالي.</li>
         </ul>"""
 
-    # 3. معالجة محاور الحصانة السيبرانية وحوكمة البيانات والامتثال الرقمي (SIP / RegTech)
     elif any(k in q_lower for k in ["السيبرانية", "البيانات", "السيادة الرقمية", "البنية التحتية", "sip", "regtech", "تسريب", "الحصانة"]):
         resp = f"""يُطبق <b>{bank_name}</b> منظومة متقدمة لحوكمة البيانات وأمن المعلومات والحصانة السيبرانية متوافقة مع معايير البنك المركزي المصري وقانون حماية البيانات الشخصية.
         <br><br><b>آليات الحصانة السيبرانية وحوكمة البيانات:</b>
@@ -521,13 +549,12 @@ def process_rag_gemini_query(bank_name, question):
             <li><b>الامتثال الرقابي (RegTech):</b> توظيف حلول التكنولوجيا الرقابية لضمان التدقيق الآلي ورصد العمليات المشبوهة واسترجاع المعطيات بكفاءة عالية.</li>
         </ul>"""
 
-    # 4. معالجة محاور المسؤولية المجتمعية والتمويل المستدام والشمول المالي
     elif any(k in q_lower for k in ["المسؤولية المجتمعية", "التنموي", "الشمول المالي", "المرأة", "تمكين", "المناخ", "أخضر", "استدامة", "gar"]):
         resp = f"""يولي <b>{bank_name}</b> اهتماماً بالغاً ببرامج المسؤولية المجتمعية والإنفاق التنموي المستدام ودعم مبادرات الشمول المالي والتحول الأخضر.
         <br><br><b>المحاور التنفيذية والتنموية:</b>
         <ul>
             <li><b>المسؤولية المجتمعية والإنفاق المستدام:</b> ضخ استثمارات وتبرعات موجهة لدعم قطاعات الصحة، التعليم، تطوير العشوائيات، ودعم الأسر الأولى بالرعاية وفق أهداف التنمية المستدامة.</li>
-            <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق مح محافظ وخدمات مصرفية رقمية ميسرة لدعم رائدات الأعمال والشباب والمشروعات الصغيرة ومتناهية الصغر.</li>
+            <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق محافظ وخدمات مصرفية رقمية ميسرة لدعم رائدات الأعمال والشباب والمشروعات الصغيرة ومتناهية الصغر.</li>
             <li><b>التمويل الأخضر ومخاطر المناخ:</b> دمج المعايير البيئية والمناخية (ESG) ضمن السياسات الائتمانية وتوجيه التمويلات للمشروعات الصديقة للبيئة.</li>
         </ul>"""
 
@@ -667,11 +694,11 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع المستندات وتحليل الإجابة المطولة والمفصلة للبنك..."):
+                with st.spinner("⏳ جاري استرجاع المستندات من ملف المعرفة وتحليل الإجابة..."):
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد المستمد من مستودعات التقارير.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
