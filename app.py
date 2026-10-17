@@ -65,6 +65,50 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
+/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً (مطابق لكود الصناعات) */
+.custom-rtl-table {{
+    width: 100% !important;
+    border-collapse: collapse !important;
+    direction: rtl !important;
+    text-align: right !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+    font-family: 'Cairo', sans-serif !important;
+    background-color: #FFFFFF !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    border: 1px solid #CBD5E1 !important;
+}}
+
+.custom-rtl-table th {{
+    background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
+    color: #FFFFFF !important;
+    padding: 8px 6px !important;
+    font-weight: 700 !important;
+    border: 1px solid #475569 !important;
+    text-align: right !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+}}
+
+.custom-rtl-table td {{
+    padding: 6px 6px !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    font-size: 11.5px !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+}}
+
+.custom-rtl-table tr:nth-child(even) {{
+    background-color: #F8FAFC !important;
+}}
+
+.custom-rtl-table tr:hover {{
+    background-color: #FEF3C7 !important;
+}}
+
 div.stButton > button {{
     width: 100% !important;
     border-radius: 8px !important;
@@ -221,18 +265,37 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# نظام تتبع الزوار (IP Logging)
+# نظام تتبع الزوار (IP Logging) الدائم
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
 
+def get_visitor_ip():
+    try:
+        ctx = st.runtime.scriptrunner.get_script_run_ctx()
+        if ctx and hasattr(ctx, "session_id"):
+            from streamlit.web.server.websocket_headers import _get_websocket_headers
+            headers = _get_websocket_headers()
+            if headers:
+                ip = headers.get("X-Forwarded-For") or headers.get("X-Real-Ip") or headers.get("Remote-Addr")
+                if ip:
+                    return ip.split(",")[0].strip()
+    except Exception:
+        pass
+    return "127.0.0.1 (محلي)"
+
+def init_visitor_log_file():
+    if not os.path.exists(LOG):
+        try:
+            df_init = pd.DataFrame(columns=["التاريخ والوقت", "اسم المستخدم", "الصلاحية", "عنوان IP"])
+            df_init.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
+        except Exception:
+            pass
+
+init_visitor_log_file()
+
 def log_visitor_action(username, role):
     try:
-        ctx = st.context
-        headers = getattr(ctx, "headers", {})
-        client_ip = headers.get("X-Forwarded-For", headers.get("X-Real-Ip", "127.0.0.1"))
-        if "," in client_ip:
-            client_ip = client_ip.split(",")[0].strip()
-        
+        client_ip = get_visitor_ip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_row = pd.DataFrame([{
             "التاريخ والوقت": timestamp,
@@ -242,7 +305,7 @@ def log_visitor_action(username, role):
         }])
         
         if os.path.exists(LOG_FILE):
-            df_log = pd.read_csv(LOG_FILE)
+            df_log = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
             if not ((df_log["اسم المستخدم"] == username) & (df_log["عنوان IP"] == client_ip) & (df_log["التاريخ والوقت"].str.startswith(timestamp[:16]))).any():
                 df_log = pd.concat([df_log, new_row], ignore_index=True)
                 df_log.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
@@ -297,7 +360,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية الشاملة (بدون البورصة المصرية EGX)
+# قائمة البنوك المصرية الشاملة (مع استبعاد البورصة المصرية EGX تماماً)
 # ==============================================================================
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -340,7 +403,7 @@ BANKS_LIST_AR = [
     "بنك الاستثمار القومي",
     "بنك الأهلي المتحد KFH",
     "بنوك بلوم BLOM",
-    "البنك الأهلي اليوناني أو البنك الوطني اليوناني",
+    "البنك الأهلي اليوناني",
     "بنك سيتي بنك CITIBANK"
 ]
 
@@ -358,15 +421,14 @@ if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
-
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
 
 def is_valid_arabic_question(text):
-    if not text or len(text.strip()) < 5:
+    if not text or len(text.strip()) < 3:
         return False
     arabic_chars = re.findall(r'[\u0600-\u06FF]', text)
-    if len(arabic_chars) < 4:
+    if len(arabic_chars) < 2:
         return False
     return True
 
@@ -402,9 +464,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# محرك "اسأل المنصة" (محصّن ومخصص لكل بنك على حدة لمنع أي تكرار وتغطية شاملة لكل بنك)
+# محرك "اسأل المنصة" (RAG مع ربط صارم وحصري باسم البنك وملف المعرفة الخارجي)
 # ==============================================================================
-JSON_KNOWLEDGE_FILE = "bank_knowledge_base.json"
+JSON_KNOWLEDGE_FILE = "national_banking_governance_archive.json"
 
 def load_json_knowledge():
     if os.path.exists(JSON_KNOWLEDGE_FILE):
@@ -422,7 +484,7 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
-    # 1. الاستعلام من ملف JSON الخارجي أولاً إذا وجد
+    # 1. التحقق أولاً من ملف المعرفة الخارجي national_banking_governance_archive.json لكل بنك حصرياً
     kb_data = load_json_knowledge()
     if kb_data and bank_name in kb_data:
         bank_dict = kb_data[bank_name]
@@ -431,101 +493,113 @@ def process_rag_gemini_query(bank_name, question):
             if key_phrase in q_lower or any(w in q_lower for w in key_phrase.split()):
                 return f"""
                 <div dir="rtl" style="text-align: right; line-height: 1.9; color: {CBE_NAVY}; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
-                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف JSON ({bank_name})</h3>
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف المعرفة ({bank_name})</h3>
                   <p style="font-size: 14.5px; margin-bottom: 12px;"><b>السؤال / الاستفسار المطروح:</b> "{question}"</p>
                   <div style="background: {CBE_BG}; padding: 18px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 12px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من قاعدة المعرفة الخارجية):</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من أرشيف الحوكمة الوطني):</p>
                     <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{answer_text}</div>
                   </div>
                 </div>
                 """
 
-    # 2. النظام الديناميكي المخصص حصرياً للبنك المُختار (يمنع التكرار ويعطي تفاصيل دقيقة حسب البنك والسؤال)
+    # 2. النظام الاحتياطي الديناميكي المتخصص والمفصل حصرياً لكل بنك (Bank-Specific Guardrails)
     q_lower = question.lower()
     
-    # تحديد محتوى الرد بناءً على نوع السؤال المُختار
     if any(k in q_lower for k in ["تاريخ", "نشأة", "تأسيس", "متى", "مؤسس", "ملكية", "أول بنك"]):
         if "بنك مصر" in bank_name:
-            sub_content = f"""تأسس <b>{bank_name}</b> في 8 مايو 1920م بريادة المفكر الاقتصادي الراحل محمد طلعت حرب باشا.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""تأسس <b>{bank_name}</b> في 8 مايو 1920م بريادة المفكر الاقتصادي الراحل محمد طلعت حرب باشا.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> أول بنك مصري بالكامل برأس المال والكوادر الوطنية لتحرير الاقتصاد.</li>
-                <li><b>هيكل الملكية:</b> مملوك بالكامل للدولة المصرية (ممثلة في بنك الاستثمار القومي).</li>
-                <li><b>البصمة التنموية:</b> رائد تأسيس الشركات الوطنية الكبرى في مجالات الصناعة والسياحة والنقل.</li>
+                <li><b>طبيعة التأسيس:</b> أول بنك مصري بالكامل برأس المال والكوادر الوطنية بهدف تحرير الاقتصاد القومي من السيطرة الأجنبية وقتئذ.</li>
+                <li><b>هيكل الملكية الحالي:</b> مملوك بالكامل للدولة المصرية (ممثلة في بنك الاستثمار القومي)، ويعتبر الذراع الاستثماري التنموي الأبرز للدولة.</li>
+                <li><b>البصمة الاستراتيجية:</b> يمتلك شبكة واسعة من الشركات التابعة في قطاعات السياحة، الطيران، والصناعة.</li>
             </ul>"""
         elif "الأهلي المصري" in bank_name:
-            sub_content = f"""تأسس <b>{bank_name} NBE</b> في 25 يونيو 1898م بموجب أمر عالي في عهد الخديوي عباس حلمي الثاني.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""تأسس <b>{bank_name} NBE</b> في 25 يونيو 1898 بموجب أمر عالي في عهد الخديوي عباس حلمي الثاني.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> تأسس بمبادرة من الممول البريطاني سر إرنست كاسل كبنك إصدار واكتتاب.</li>
-                <li><b>هيكل الملكية:</b> مملوك بالكامل للحكومة المصرية (وزارة المالية)، وهو الصرح المصرفي السيادي الأكبر.</li>
-                <li><b>البصمة التنموية:</b> صانع السوق الرئيسي في أدوات الدين وحيازة الحصة الأكبر من الودائع المصرفية.</li>
+                <li><b>طبيعة التأسيس:</b> تأسس بمبادرة من الممول البريطاني سر إرنست كاسل ليعمل كبنك إصدار واكتتاب تاريخي.</li>
+                <li><b>هيكل الملكية الحالي:</b> مملوك بالكامل للحكومة المصرية (ممثلة في وزارة المالية)، ويمثل أكبر صرح مصرفي حكومي سيادي في الدولة.</li>
+                <li><b>البصمة الاستراتيجية:</b> يستحوذ على الحصة الأكبر من ودائع القطاع المصرفي ويلعب دور صانع السوق الرئيسي في أدوات الدين الحكومي.</li>
             </ul>"""
         elif "التجاري الدولي" in bank_name or "cib" in bank_name:
-            sub_content = f"""تأسس <b>{bank_name} CIB</b> عام 1975م في الأصل، وانطلق بالاسم الحالي في أواخر الثمانينيات.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""تأسس <b>{bank_name} CIB</b> في الأصل عام 1975 باسم "بنك تشيس ناشيونال" ثم تحول بالكامل للكيان الحالي.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> أبرز نموذج ناجح ومؤسسي للقطاع الخاص المصرفي في مصر.</li>
-                <li><b>هيكل الملكية:</b> شركة مساهمة مصرية مدرجة بالبورصة وبورصة لندن، تتوزع أسهمها بين مؤسسات دولية وصناديق كبرى.</li>
-                <li><b>البصمة التنموية:</b> المعيار الذهبي لحوكمة الشركات والإفصاح البيئي والمجتمعي.</li>
+                <li><b>طبيعة التأسيس:</b> تحول في أواخر الثمانينيات إلى شركة مساهمة مصرية رائدة للقطاع الخاص المصرفي.</li>
+                <li><b>هيكل الملكية الحالي:</b> مدرج في البورصة المصرية وبورصة لندن، وتتوزع ملكيته بين مؤسسات مالية عالمية وصناديق استثمار كبرى بدون سيطرة حكومية.</li>
+                <li><b>البصمة الاستراتيجية:</b> يعتبر المعيار الذهبي في حوكمة الشركات ومعايير الإفصاح المالي والمصرفي في مصر.</li>
             </ul>"""
         elif "قطر الوطني" in bank_name or "qnb" in bank_name:
-            sub_content = f"""يُعد <b>{bank_name} QNB</b> امتداداً عريقاً لمجموعة QNB العالمية التي تأسست عام 1964م.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""تأسس <b>{bank_name} QNB</b> ضمن مجموعة QNB العالمية التي انطلقت عام 1964 كأول بنك تجاري قطري.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> ذراع مصرفي إقليمي قوي وسريع النمو في السوق المصرفي المصري.</li>
-                <li><b>هيكل الملكية:</b> يتبع مجموعة QNB الدولية (بمساهمة رئيسية لجهاز قطر للاستثمار) ومساهمات حرة.</li>
-                <li><b>البصمة التنموية:</b> تمويل المشروعات القومية والشركات الكبرى والمتوسطة بشبكة فروع متطورة.</li>
+                <li><b>طبيعة التأسيس والنشاط:</b> توسع إقليمياً ليصبح أحد أكبر البنوك العاملة في مصر والشرق الأوسط وشمال أفريقيا.</li>
+                <li><b>هيكل الملكية الحالي:</b> يتبع مجموعة QNB الدولية (بمساهمة رئيسية لجهاز قطر للاستثمار) إلى جانب الأسهم المتداولة.</li>
+                <li><b>البصمة الاستراتيجية:</b> تركيز قوي على تمويل الشركات الكبرى، المشروعات التنموية الكبرى، وشبكة فروع فائقة التطور.</li>
             </ul>"""
         elif "الإسكندرية" in bank_name:
-            sub_content = f"""تأسس <b>{bank_name}</b> عام 1957م ليشكل علامة فارقة في المصرفية المصرية.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""تأسس <b>{bank_name}</b> في عام 1957م ليشكل ركيزة أساسية في المصرفية الوطنية قبل أن يتحول لشراكة عالمية كبرى.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> تطور ليصبح جزءاً من المنظومة المصرفية الأوروبية الدولية الحديثة.</li>
-                <li><b>هيكل الملكية:</b> مملوك أغلبياً لمجموعة إنتيزا سان باولو (Intesa Sanpaolo) الإيطالية العالمية الكبرى.</li>
-                <li><b>البصمة التنموية:</b> دمج الخبرة المحلية العريقة مع المعايير المصرفية والبيئية الأوروبية الصارمة.</li>
+                <li><b>طبيعة التأسيس:</b> تم دمج وتطوير أنشطته ليتكامل مع المعايير المصرفية الأوروبية الحديثة.</li>
+                <li><b>هيكل الملكية الحالي:</b> مملوك أغلبياً لمجموعة "إنتيزا سان باولو" (Intesa Sanpaolo) الإيطالية العالمية العملاقة.</li>
+                <li><b>البصمة الاستراتيجية:</b> يجمع بين الخبرة العريقة في السوق المصري وشبكة علاقات ومعايير المجموعة الأوروبية الأم.</li>
+            </ul>"""
+        elif "كريدي أجريكول" in bank_name:
+            resp = f"""تأسس <b>{bank_name} - مصر</b> امتداداً لكيانات سابقة عريقة تحت مظلة المجموعة الفرنسية العالمية.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
+            <ul>
+                <li><b>طبيعة التأسيس:</b> اندماج مؤسسي متطور (مثل بنك المصري الأمريكي) لتقديم حلول مصرفية رقمية متكاملة.</li>
+                <li><b>هيكل الملكية الحالي:</b> يتبع مجموعة كريدي أجريكول الفرنسية العالمية مع أسهم مدرجة ومؤسسية بالسوق المصري.</li>
+                <li><b>البصمة الاستراتيجية:</b> الريادة في الابتكار التكنولوجي المصرفي وتطبيقات البنوك الرقمية الذكية (Banki).</li>
+            </ul>"""
+        elif "فيصل الإسلامي" in bank_name:
+            resp = f"""تأسس <b>{bank_name}</b> بموجب القانون رقم 48 لسنة 1977 وبدأ نشاطه عام 1979م.
+            <br><br><b>الفروق الجوهرية والهيكل التاريخي والمؤسسي:</b>
+            <ul>
+                <li><b>طبيعة التأسيس:</b> أول مصرف إسلامي في مصر بمبادرة تاريخية من الأمير محمد الفيصل آل سعود ونخبة من الشخصيات المصرية.</li>
+                <li><b>هيكل الملكية الحالي:</b> شركة مساهمة مصرية إسلامية تساهم فيها كيانات سعودية ومصرية وأفراد ومؤسسات.</li>
+                <li><b>البصمة الاستراتيجية:</b> الالتزام التام بأحكام الشريعة الإسلامية في كافة المعاملات والتمويلات التنموية.</li>
             </ul>"""
         else:
-            sub_content = f"""يُعد <b>{bank_name}</b> صرحاً مصرفياً متميزاً يعمل وفق أطر تنظيمية وترخيصية معتمدة من البنك المركزي المصري.
-            <br><br><b>الركائز التاريخية وهيكل الملكية:</b>
+            resp = f"""يُعد <b>{bank_name}</b> صرحاً مصرفياً استراتيجياً يعمل وفق تراخيص معتمدة من البنك المركزي المصري.
+            <br><br><b>الفروق الجوهرية والهيكل المؤسسي:</b>
             <ul>
-                <li><b>طبيعة التأسيس:</b> إطار تشعيري واستثماري متطور يدعم التنافسية وخدمة الاقتصاد الوطني.</li>
-                <li><b>هيكل الملكية:</b> مساهمات مشتركة بين كيانات محلية، إقليمية، أو مؤسسات عالمية متخصصة.</li>
+                <li><b>طبيعة التأسيس:</b> إطار تشريعي وتنظيمي متطور يدعم التنافسية المصرفية في السوق المصري.</li>
+                <li><b>هيكل الملكية:</b> شراكة بين مساهمين محليين و/أو مؤسسات مالية إقليمية ودولية كبرى.</li>
+                <li><b>البصمة الاستراتيجية:</b> المساهمة الفعالة في الشمول المالي، دعم قطاع الشركات، وتطبيق أطر الحوكمة الحديثة.</li>
             </ul>"""
-
     elif any(k in q_lower for k in ["الحوكمة", "مجلس", "الضبط", "مستقلين", "تعارض", "الشفافية", "المساءلة", "مكافحة الفساد"]):
-        sub_content = f"""يتبنى <b>{bank_name}</b> نظام حوكمة مؤسسياً فريداً ومستقلاً يتماشى مع إرشادات البنك المركزي المصري ومعايير حوكمة الشركات الدولية.
-        <br><br><b>التفاصيل الهوكمية للبنك:</b>
+        resp = f"""يعتمد <b>{bank_name}</b> هيكل حوكمة مؤسسياً متقدماً يتوافق تماماً مع تعليمات البنك المركزي المصري ومعايير الاستدامة الدولية.
+        <br><br><b>الأعمدة الرقابية والحوكمية:</b>
         <ul>
-            <li><b>هيكل مجلس الإدارة:</b> يتضمن أعضاء مستقلين وغير تنفيذيين لتعزيز النزاهة والموضوعية في اتخاذ القرار المصرفي.</li>
-            <li><b>اللجان المتخصصة:</b> تففعيل لجان التدقيق، إدارة المخاطر، الالتزام، والترشيحات والمكافآت لرفع تقارير مباشرة لمجلس الإدارة.</li>
-            <li><b>مكافحة الفساد وتعارض المصالح:</b> تطبيق سياسات صارمة للامتثال، الإفصاح المالي الشفاف، والتدقيق المستمر.</li>
+            <li><b>مجلس الإدارة:</b> يضم خبرات مستقلة وغير تنفيذية لضمان موضوعية اتخاذ القرار.</li>
+            <li><b>اللجان المنبثقة:</b> لجان التدقيق، المخاطر، الالتزام، والترشيحات والمكافآت التي ترفع تقاريرها الدورية مباشرة للمجلس.</li>
+            <li><b>الشفافية والالتزام:</b> سياسات صارمة لمكافحة غسل الأموال، الإفصاح المالي الدقيق، وإدارة تعارض المصالح.</li>
         </ul>"""
-
     elif any(k in q_lower for k in ["السيبرانية", "البيانات", "السيادة الرقمية", "البنية التحتية", "sip", "regtech", "تسريب", "الحصانة"]):
-        sub_content = f"""يطبق <b>{bank_name}</b> بنية تحتية رقمية ذكية ومنصات معلومات متطورة (SIP) تضمن أعلى مستويات الحصانة السيبرانية وحوكمة البيانات.
-        <br><br><b>الآليات التقنية والأمنية للبنك:</b>
+        resp = f"""يطبق <b>{bank_name}</b> منظومة متكاملة للحصانة السيبرانية وحوكمة البيانات أمن المعلومات متوافقة مع معايير البنك المركزي المصري وقانون حماية البيانات الشخصية.
+        <br><br><b>الركائز التقنية والأمنية:</b>
         <ul>
-            <li><b>الأمن السيبراني:</b> غرف عمليات أمنية لمراقبة البشكات على مدار الساعة وتشفير البيانات المالية (ISO 27001).</li>
-            <li><b>السيادة الرقمية:</b> الالتزام التام بقوانين حماية البيانات وتخزين المعطيات داخل مراكز مؤمنة بجمهورية مصر العربية.</li>
-            <li><b>التقنيات الرقابية (RegTech):</b> استخدام أدوات ذكية لرصد العمليات المشبوهة والتدقيق الآلي الفوري.</li>
+            <li><b>البنية التحتية ومنصات المعلومات (SIP):</b> تشغيل غرف عمليات أمنية لصد الهجمات وتشفير البيانات الحساسة طبقاً لمعايير (ISO 27001).</li>
+            <li><b>السيادة الرقمية:</b> الالتزام بتخزين ومعالجة البيانات المصرفية داخل مراكز بيانات وطنية مؤمنة بالكامل داخل جمهورية مصر العربية.</li>
+            <li><b>التكنولوجيا الرقابية (RegTech):</b> استخدام أدوات ذكية للتدقيق الآلي ورصد العمليات المشبوهة واسترجاع المعطيات الفورية.</li>
         </ul>"""
-
     elif any(k in q_lower for k in ["المسؤولية المجتمعية", "التنموي", "الشمول المالي", "المرأة", "تمكين", "المناخ", "أخضر", "استدامة", "gar"]):
-        sub_content = f"""يُنفذ <b>{bank_name}</b> استراتيجية متكاملة للتمويل المستدام، تقارير الاستدامة (GRI / ISSB)، والمسؤولية المجتمعية.
-        <br><br><b>المحاور التنفيذية والتنموية للبنك:</b>
+        resp = f"""يولي <b>{bank_name}</b> اهتماماً استراتيجياً ببرامج الاستدامة، التمويل الأخضر، والمسؤولية المجتمعية.
+        <br><br><b>المحاور التنفيذية والتنموية:</b>
         <ul>
-            <li><b>التمويل الأخضر ومخاطر المناخ:</b> دمج معايير (ESG) في السياسات الائتمانية وتمويل مشروعات الطاقة النظيفة.</li>
-            <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق مبادرات ومحافظ رقمية لدعم رائدات الأعمال والشركات الصغيرة والمتوسطة.</li>
-            <li><b>التنمية المجتمعية:</b> توجيه استثمارات لخدمة قطاعات الصحة، التعليم، وتطوير المناطق الأولى بالرعاية ضمن رؤية مصر 2030.</li>
+            <li><b>التمويل المستدام:</b> دمج المخاطر البيئية والمناخية (ESG) ضمن السياسات الائتمانية وتوجيه التمويلات للطاقة المتجددة.</li>
+            <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق محافظ ومبادرات رقمية ميسرة لدعم رائدات الأعمال والشباب والمشروعات الصغيرة ومتناهية الصغر.</li>
+            <li><b>الإنفاق المجتمعي:</b> توجيه استثمارات لدعم قطاعات الصحة، التعليم، وتطوير المجتمعات الأكثر احتياجاً وفق رؤية مصر 2030.</li>
         </ul>"""
-
     else:
-        sub_content = f"""يُجري <b>{bank_name}</b> عمليات تشغيلية ومؤسسية دقيقة تتوافق تماماً مع التعليمات الرقابية للبنك المركزي المصري ومبادئ التنمية المستدامة.
-        <br><br><b>الملامح التنظيمية للبنك:</b>
+        resp = f"""يتبنى <b>{bank_name}</b> استراتيجيات تشغيلية ومؤسسية متكاملة توازن بين الكفاءة المالية، متطلبات الحوكمة، ومبادرات التنمية المستدامة.
+        <br><br><b>الملامح الرئيسية للنشاط:</b>
         <ul>
-            <li>التزام تام بالشفافية الإفصاح المالي والتشغيلي.</li>
-            <li>التحديث المستمر للخدمات الرقمية ومنصات دعم القرار المؤسسي.</li>
+            <li>الالتزام التام بالتعليمات الرقابية والتنظيمية الصادرة عن البنك المركزي المصري.</li>
+            <li>تطوير دائم للبنية التحتية الرقمية والخدمات المصرفية الموجهة للأفراد والشركات.</li>
         </ul>"""
 
     return f"""
@@ -534,13 +608,13 @@ def process_rag_gemini_query(bank_name, question):
       <p style="font-size: 14.5px; margin-bottom: 12px;"><b>السؤال / الاستفسار المطروح:</b> "{question}"</p>
       <div style="background: {CBE_BG}; padding: 18px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 12px;">
         <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق:</p>
-        <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{sub_content}</div>
+        <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{resp}</div>
       </div>
     </div>
     """
 
 # ==============================================================================
-# التبويبات الرئيسية
+# التبويبات الرئيسية للمنصة
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -645,13 +719,13 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - 3 محاور رئيسية + رسم رداري
+# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - 3 محاور رئيسية + جدول تراكمي مطابق لكود الصناعات
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown(f"""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة مع تسجيل وثبات النتائج في الجدول التراكمي.</p>
+        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي المخصص.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -661,7 +735,6 @@ with tab2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي المراد قياسه", BANKS_LIST_AR, key="t1_bank")
         
-        # 3 محاور رئيسية كما طلبت
         sip_val = st.slider("1. محور منصات المعلومات والبنية الرقمية (SIP - 40%)", 0, 100, 88, key="t1_sip")
         ig_val = st.slider("2. محور الحوكمة المؤسسية والامتثال (IG - 30%)", 0, 100, 90, key="t1_ig")
         sr_val = st.slider("3. محور تقارير الاستدامة ومخاطر المناخ (SR - 30%)", 0, 100, 82, key="t1_sr")
@@ -718,7 +791,6 @@ with tab2:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # رسم الردار (Radar Chart) للمحاور الثلاثة
                 categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
                 fig_radar = go.Figure()
                 fig_radar.add_trace(go.Scatterpolar(
@@ -744,17 +816,60 @@ with tab2:
     st.markdown("### 📋 قائمة ترتيب البنوك المسجلة")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
-        st.dataframe(df_history, use_container_width=True)
         
-        # خيار حذف البنك المحدد بناءً على طلبك
-        selected_bank_to_delete = st.selectbox("اختر بنكا للحذف من السجلات المسجلة", ["اختر البنك للحذف"] + list(df_history["البنك"].unique()))
-        if st.button("🗑️ حذف البنك المحدد"):
-            if selected_bank_to_delete != "اختر البنك للحذف":
-                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != selected_bank_to_delete]
-                st.success(f"تم حذف بنك {selected_bank_to_delete} بنجاح.")
-                st.rerun()
+        table_html = """
+<div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
+<table class="custom-rtl-table">
+<thead>
+<tr>
+<th style="width: 30px; text-align: center;">م</th>
+<th>البنك المصرفي</th>
+<th>مؤشر SSGI المركب</th>
+<th>منصات المعلومات (40%)</th>
+<th>الحوكمة المؤسسية (30%)</th>
+<th>تقارير الاستدامة (30%)</th>
+<th>التقييم التشخيصي</th>
+</tr>
+</thead>
+<tbody>
+"""
+        for idx, row in df_history.iterrows():
+            table_html += f"""
+<tr>
+<td style="text-align: center; font-weight: bold;">{idx + 1}</td>
+<td style="font-weight: bold; color: {CBE_NAVY};">{row['البنك']}</td>
+<td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
+<td>{row['منصات المعلومات (40%)']}%</td>
+<td>{row['الحوكمة المؤسسية (30%)']}%</td>
+<td>{row['تقارير الاستدامة (30%)']}%</td>
+<td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
+</tr>
+"""
+        table_html += "</tbody></table></div>"
+        st.markdown(table_html, unsafe_allow_html=True)
+
+        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 تحميل جدول ترتيب البنوك المسجلة (Excel/CSV)",
+            data=csv_data,
+            file_name="ترتيب_البنوك_المصرفية_SSGI.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+        col_del1, col_del2 = st.columns([2, 1])
+        with col_del1:
+            recorded_banks = [item["البنك"] for item in st.session_state.history_state]
+            selected_bank_to_delete = st.selectbox("اختر بنكا للحذف من السجلات المسجلة", ["اختر البنك للحذف"] + recorded_banks, key="del_bank_box")
+        with col_del2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ حذف البنك المحدد", use_container_width=True, type="secondary"):
+                if selected_bank_to_delete != "اختر البنك للحذف":
+                    st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != selected_bank_to_delete]
+                    st.success(f"✅ تم حذف بنك ({selected_bank_to_delete}) بنجاح.")
+                    st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -813,8 +928,17 @@ if tab7 is not None:
         </div>
         """, unsafe_allow_html=True)
         if os.path.exists(LOG_FILE):
-            df_v = pd.read_csv(LOG_FILE)
+            df_v = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
             st.dataframe(df_v, use_container_width=True)
+            
+            csv_v = df_v.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل سجل الزوار وعناوين IP (CSV)",
+                data=csv_v,
+                file_name="visitors_log.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
         else:
             st.info("📂 لا توجد سجلات زيارات حتى الآن.")
 
