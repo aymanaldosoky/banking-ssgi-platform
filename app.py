@@ -65,50 +65,6 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
-/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً (مطابق لكود الصناعات) */
-.custom-rtl-table {{
-    width: 100% !important;
-    border-collapse: collapse !important;
-    direction: rtl !important;
-    text-align: right !important;
-    margin-top: 8px !important;
-    margin-bottom: 12px !important;
-    font-family: 'Cairo', sans-serif !important;
-    background-color: #FFFFFF !important;
-    border-radius: 6px !important;
-    overflow: hidden !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-    border: 1px solid #CBD5E1 !important;
-}}
-
-.custom-rtl-table th {{
-    background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
-    color: #FFFFFF !important;
-    padding: 8px 6px !important;
-    font-weight: 700 !important;
-    border: 1px solid #475569 !important;
-    text-align: right !important;
-    font-size: 12px !important;
-    white-space: nowrap !important;
-}}
-
-.custom-rtl-table td {{
-    padding: 6px 6px !important;
-    border: 1px solid #E2E8F0 !important;
-    color: #1E293B !important;
-    font-size: 11.5px !important;
-    text-align: right !important;
-    line-height: 1.3 !important;
-}}
-
-.custom-rtl-table tr:nth-child(even) {{
-    background-color: #F8FAFC !important;
-}}
-
-.custom-rtl-table tr:hover {{
-    background-color: #FEF3C7 !important;
-}}
-
 div.stButton > button {{
     width: 100% !important;
     border-radius: 8px !important;
@@ -184,6 +140,50 @@ div.stTabs {{
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4) !important;
+}}
+
+/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً (مطابق لكود الصناعات) */
+.custom-rtl-table {{
+    width: 100% !important;
+    border-collapse: collapse !important;
+    direction: rtl !important;
+    text-align: right !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+    font-family: 'Cairo', sans-serif !important;
+    background-color: #FFFFFF !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    border: 1px solid #CBD5E1 !important;
+}}
+
+.custom-rtl-table th {{
+    background: linear-gradient(135deg, #334155 100%, #1E293B 100%) !important;
+    color: #F8FAFC !important;
+    padding: 8px 6px !important;
+    font-weight: 700 !important;
+    border: 1px solid #475569 !important;
+    text-align: right !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+}}
+
+.custom-rtl-table td {{
+    padding: 6px 6px !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    font-size: 11.5px !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+}}
+
+.custom-rtl-table tr:nth-child(even) {{
+    background-color: #F8FAFC !important;
+}}
+
+.custom-rtl-table tr:hover {{
+    background-color: #FEF3C7 !important;
 }}
 
 .header-center {{
@@ -265,7 +265,7 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# نظام تتبع الزوار (IP Logging) الدائم
+# نظام تتبع الزوار (IP Logging) مع الملف الخارجي
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
 
@@ -281,17 +281,7 @@ def get_visitor_ip():
                     return ip.split(",")[0].strip()
     except Exception:
         pass
-    return "127.0.0.1 (محلي)"
-
-def init_visitor_log_file():
-    if not os.path.exists(LOG):
-        try:
-            df_init = pd.DataFrame(columns=["التاريخ والوقت", "اسم المستخدم", "الصلاحية", "عنوان IP"])
-            df_init.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
-        except Exception:
-            pass
-
-init_visitor_log_file()
+    return "127.0.0.1 (محلي / Local)"
 
 def log_visitor_action(username, role):
     try:
@@ -305,7 +295,7 @@ def log_visitor_action(username, role):
         }])
         
         if os.path.exists(LOG_FILE):
-            df_log = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
+            df_log = pd.read_csv(LOG_FILE)
             if not ((df_log["اسم المستخدم"] == username) & (df_log["عنوان IP"] == client_ip) & (df_log["التاريخ والوقت"].str.startswith(timestamp[:16]))).any():
                 df_log = pd.concat([df_log, new_row], ignore_index=True)
                 df_log.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
@@ -360,7 +350,7 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية الشاملة (مع استبعاد البورصة المصرية EGX تماماً)
+# قائمة البنوك المصرية الشاملة (بدون البورصة المصرية EGX تماماً)
 # ==============================================================================
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -403,7 +393,7 @@ BANKS_LIST_AR = [
     "بنك الاستثمار القومي",
     "بنك الأهلي المتحد KFH",
     "بنوك بلوم BLOM",
-    "البنك الأهلي اليوناني",
+    "البنك الأهلي اليوناني أو البنك الوطني اليوناني",
     "بنك سيتي بنك CITIBANK"
 ]
 
@@ -421,14 +411,15 @@ if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
+
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
 
 def is_valid_arabic_question(text):
-    if not text or len(text.strip()) < 3:
+    if not text or len(text.strip()) < 5:
         return False
     arabic_chars = re.findall(r'[\u0600-\u06FF]', text)
-    if len(arabic_chars) < 2:
+    if len(arabic_chars) < 4:
         return False
     return True
 
@@ -464,7 +455,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# محرك "اسأل المنصة" (RAG مع ربط صارم وحصري باسم البنك وملف المعرفة الخارجي)
+# محرك "اسأل المنصة" (RAG مع حراسة صارمة Bank-Specific Guardrails وتكامل JSON)
 # ==============================================================================
 JSON_KNOWLEDGE_FILE = "national_banking_governance_archive.json"
 
@@ -484,7 +475,7 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤالا منطقيا وبحثيا واضحا باللغة العربية لكي تتمكن المنصة من تحليله والرد عليه بدقة."
 
-    # 1. التحقق أولاً من ملف المعرفة الخارجي national_banking_governance_archive.json لكل بنك حصرياً
+    # 1. التحقق والبحث أولاً في ملف المعرفة الخارجي national_banking_governance_archive.json لكل بنك حصرياً
     kb_data = load_json_knowledge()
     if kb_data and bank_name in kb_data:
         bank_dict = kb_data[bank_name]
@@ -493,16 +484,16 @@ def process_rag_gemini_query(bank_name, question):
             if key_phrase in q_lower or any(w in q_lower for w in key_phrase.split()):
                 return f"""
                 <div dir="rtl" style="text-align: right; line-height: 1.9; color: {CBE_NAVY}; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
-                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف المعرفة ({bank_name})</h3>
+                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">🎯 التقرير التحليلي المفصل والمستند لملف الأرشيف الخارجي ({bank_name})</h3>
                   <p style="font-size: 14.5px; margin-bottom: 12px;"><b>السؤال / الاستفسار المطروح:</b> "{question}"</p>
                   <div style="background: {CBE_BG}; padding: 18px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 12px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من أرشيف الحوكمة الوطني):</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">💡 التحليل التفصيلي والعميق (من الأرشيف الخارجي):</p>
                     <div style="margin: 0; color: #1E293B; font-size: 14.5px;">{answer_text}</div>
                   </div>
                 </div>
                 """
 
-    # 2. النظام الاحتياطي الديناميكي المتخصص والمفصل حصرياً لكل بنك (Bank-Specific Guardrails)
+    # 2. النظام الاحتياطي الديناميكي الفريد لكل بنك (مع الحراسة الصارمة لضمان ارتباط الرد حصرياً باسم البنك المختار)
     q_lower = question.lower()
     
     if any(k in q_lower for k in ["تاريخ", "نشأة", "تأسيس", "متى", "مؤسس", "ملكية", "أول بنك"]):
@@ -572,14 +563,14 @@ def process_rag_gemini_query(bank_name, question):
             </ul>"""
     elif any(k in q_lower for k in ["الحوكمة", "مجلس", "الضبط", "مستقلين", "تعارض", "الشفافية", "المساءلة", "مكافحة الفساد"]):
         resp = f"""يعتمد <b>{bank_name}</b> هيكل حوكمة مؤسسياً متقدماً يتوافق تماماً مع تعليمات البنك المركزي المصري ومعايير الاستدامة الدولية.
-        <br><br><b>الأعمدة الرقابية والحوكمية:</b>
+        <br><br><b>الأعمدة الرقابية والحوكمية الخاصة بـ {bank_name}:</b>
         <ul>
             <li><b>مجلس الإدارة:</b> يضم خبرات مستقلة وغير تنفيذية لضمان موضوعية اتخاذ القرار.</li>
             <li><b>اللجان المنبثقة:</b> لجان التدقيق، المخاطر، الالتزام، والترشيحات والمكافآت التي ترفع تقاريرها الدورية مباشرة للمجلس.</li>
             <li><b>الشفافية والالتزام:</b> سياسات صارمة لمكافحة غسل الأموال، الإفصاح المالي الدقيق، وإدارة تعارض المصالح.</li>
         </ul>"""
     elif any(k in q_lower for k in ["السيبرانية", "البيانات", "السيادة الرقمية", "البنية التحتية", "sip", "regtech", "تسريب", "الحصانة"]):
-        resp = f"""يطبق <b>{bank_name}</b> منظومة متكاملة للحصانة السيبرانية وحوكمة البيانات أمن المعلومات متوافقة مع معايير البنك المركزي المصري وقانون حماية البيانات الشخصية.
+        resp = f"""يطبق <b>{bank_name}</b> منظومة متكاملة للحصانة السيبرانية وحوكمة البيانات وأمن المعلومات متوافقة مع معايير البنك المركزي المصري وقانون حماية البيانات الشخصية.
         <br><br><b>الركائز التقنية والأمنية:</b>
         <ul>
             <li><b>البنية التحتية ومنصات المعلومات (SIP):</b> تشغيل غرف عمليات أمنية لصد الهجمات وتشفير البيانات الحساسة طبقاً لمعايير (ISO 27001).</li>
@@ -588,7 +579,7 @@ def process_rag_gemini_query(bank_name, question):
         </ul>"""
     elif any(k in q_lower for k in ["المسؤولية المجتمعية", "التنموي", "الشمول المالي", "المرأة", "تمكين", "المناخ", "أخضر", "استدامة", "gar"]):
         resp = f"""يولي <b>{bank_name}</b> اهتماماً استراتيجياً ببرامج الاستدامة، التمويل الأخضر، والمسؤولية المجتمعية.
-        <br><br><b>المحاور التنفيذية والتنموية:</b>
+        <br><br><b>المحاور التنفيذية والتنموية الخاصة بـ {bank_name}:</b>
         <ul>
             <li><b>التمويل المستدام:</b> دمج المخاطر البيئية والمناخية (ESG) ضمن السياسات الائتمانية وتوجيه التمويلات للطاقة المتجددة.</li>
             <li><b>الشمول المالي وتمكين المرأة:</b> إطلاق محافظ ومبادرات رقمية ميسرة لدعم رائدات الأعمال والشباب والمشروعات الصغيرة ومتناهية الصغر.</li>
@@ -614,7 +605,7 @@ def process_rag_gemini_query(bank_name, question):
     """
 
 # ==============================================================================
-# التبويبات الرئيسية للمنصة
+# التبويبات الرئيسية
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -719,13 +710,13 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - 3 محاور رئيسية + جدول تراكمي مطابق لكود الصناعات
+# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - جدول تراكمي مصمم تماماً ككود الصناعات
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown(f"""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي المخصص.</p>
+        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة مع تسجيل وثبات النتائج في الجدول التراكمي.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -813,63 +804,55 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة ترتيب البنوك المسجلة")
+    st.markdown("### 📋 قائمة ترتيب وبنوك القطاع المسجلة")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
+        # استعراض الجدول التراكمي المخصص (بأناقة كود الصناعات تماماً)
         table_html = """
-<div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
-<table class="custom-rtl-table">
-<thead>
-<tr>
-<th style="width: 30px; text-align: center;">م</th>
-<th>البنك المصرفي</th>
-<th>مؤشر SSGI المركب</th>
-<th>منصات المعلومات (40%)</th>
-<th>الحوكمة المؤسسية (30%)</th>
-<th>تقارير الاستدامة (30%)</th>
-<th>التقييم التشخيصي</th>
-</tr>
-</thead>
-<tbody>
-"""
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 280px;">
+        <table class="custom-rtl-table">
+        <thead>
+        <tr>
+        <th style="width: 30px; text-align: center;">م</th>
+        <th>البنك المصرفي</th>
+        <th>مؤشر SSGI المركب</th>
+        <th>منصات المعلومات (40%)</th>
+        <th>الحوكمة المؤسسية (30%)</th>
+        <th>تقارير الاستدامة (30%)</th>
+        <th>التقييم التشخيصي</th>
+        </tr>
+        </thead>
+        <tbody>
+        """
         for idx, row in df_history.iterrows():
             table_html += f"""
-<tr>
-<td style="text-align: center; font-weight: bold;">{idx + 1}</td>
-<td style="font-weight: bold; color: {CBE_NAVY};">{row['البنك']}</td>
-<td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
-<td>{row['منصات المعلومات (40%)']}%</td>
-<td>{row['الحوكمة المؤسسية (30%)']}%</td>
-<td>{row['تقارير الاستدامة (30%)']}%</td>
-<td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
-</tr>
-"""
+            <tr>
+            <td style="text-align: center; font-weight: bold;">{idx + 1}</td>
+            <td style="font-weight: bold; color: {CBE_NAVY};">{row['البنك']}</td>
+            <td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
+            <td>{row['منصات المعلومات (40%)']}%</td>
+            <td>{row['الحوكمة المؤسسية (30%)']}%</td>
+            <td>{row['تقارير الاستدامة (30%)']}%</td>
+            <td style="font-size: 11px;">{row['التقييم التشخيصي']}</td>
+            </tr>
+            """
         table_html += "</tbody></table></div>"
         st.markdown(table_html, unsafe_allow_html=True)
-
-        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            label="📥 تحميل جدول ترتيب البنوك المسجلة (Excel/CSV)",
-            data=csv_data,
-            file_name="ترتيب_البنوك_المصرفية_SSGI.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-
+        
+        # خيار حذف البنك المحدد مفعل وسلس تماماً
         col_del1, col_del2 = st.columns([2, 1])
         with col_del1:
             recorded_banks = [item["البنك"] for item in st.session_state.history_state]
-            selected_bank_to_delete = st.selectbox("اختر بنكا للحذف من السجلات المسجلة", ["اختر البنك للحذف"] + recorded_banks, key="del_bank_box")
+            bank_to_delete = st.selectbox("اختر بنكاً من السجل لحذفه", recorded_banks, key="del_bank_box")
         with col_del2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️ حذف البنك المحدد", use_container_width=True, type="secondary"):
-                if selected_bank_to_delete != "اختر البنك للحذف":
-                    st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != selected_bank_to_delete]
-                    st.success(f"✅ تم حذف بنك ({selected_bank_to_delete}) بنجاح.")
-                    st.rerun()
+            if st.button("🗑️ حذف البنك المحدّد", use_container_width=True, type="secondary"):
+                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != bank_to_delete]
+                st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
+                st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن في الجدول التراكمي.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -928,17 +911,8 @@ if tab7 is not None:
         </div>
         """, unsafe_allow_html=True)
         if os.path.exists(LOG_FILE):
-            df_v = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
+            df_v = pd.read_csv(LOG_FILE)
             st.dataframe(df_v, use_container_width=True)
-            
-            csv_v = df_v.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل سجل الزوار وعناوين IP (CSV)",
-                data=csv_v,
-                file_name="visitors_log.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
         else:
             st.info("📂 لا توجد سجلات زيارات حتى الآن.")
 
