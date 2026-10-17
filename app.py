@@ -358,8 +358,10 @@ if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
-if "user_query_text" not in st.session_state:
-    st.session_state.user_query_text = ""
+
+# تهيئة حالة مربع السؤال الموحد مرة واحدة
+if "query_text_box" not in st.session_state:
+    st.session_state.query_text_box = ""
 
 def is_valid_arabic_question(text):
     if not text or len(text.strip()) < 5:
@@ -412,7 +414,6 @@ def process_rag_gemini_query(bank_name, question):
 
     q_lower = question.lower()
     
-    # محرك التخصيص الفريد والموسع كلياً لكل بنك حسب الموضوع
     if any(k in q_lower for k in ["الحوكمة", "مجلس", "الضبط", "مستقلين", "تعريف"]):
         if "الأهلي المصري" in bank_name:
             resp = f"""يعتمد <b>{bank_name} NBE</b> كأكبر صرح مصرفي حكومي استراتيجي على إطار حوكمة سيادي متكامل يوازن بدقة بين الأبعاد التنموية القومية ومعايير الانضباط المؤسسي العالمي.
@@ -469,7 +470,7 @@ def process_rag_gemini_query(bank_name, question):
             <br><br><b>الهيكل والتفاصيل الحوكمية الفريدة لبنك فيصل الإسلامي:</b>
             <ul>
                 <li><b>الرقابة الشرعية والتدقيق المؤسسي:</b> إشراف دقيق من هيئة الرقابة الشرعية على كافة الصيغ الاستثمارية (المضاربة، المرابحة، المشاركة).</li>
-                <li><b>لجان الاستثمار والتمويل:</b> تقييم دقيق للمشروعات التنموية وفق دراسات جدوى تراعى الب ابع الاجتماعية والاقتصادية والبيئية.</li>
+                <li><b>لجان الاستثمار والتمويل:</b> تقييم دقيق للمشروعات التنموية وفق دراسات جدوى تراعى الأبعاد الاجتماعية والاقتصادية والبيئية.</li>
                 <li><b>الالتزام والإفصاح المستدام:</b> سياسات وقائية صارمة تمنع تركز التمويلات وتدعم الاستقرار المالي والمصرفي.</li>
             </ul>"""
         elif "بنك القاهرة Banque du Caire" in bank_name:
@@ -662,16 +663,19 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
         
+        # مربع النص الموحد المرتبط بحالة session_state
         user_question = st.text_area(
             "❓ اكتب سؤالك/ استفسارك:",
-            value=st.session_state.user_query_text,
             placeholder="مثال: متى تأسس بنك مصر ومن هو مؤسسه؟ أو ما هي جهود الاستدامة؟",
             height=120,
             key="query_text_box"
         )
-        st.session_state.user_query_text = user_question
 
         st.markdown("<b>📌 أسئلة/ استفسارات مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
+
+        # دالة لتحديث قيمة مربع النص مباشرة قبل إعادة تشغيل التطبيق عبر on_click
+        def set_suggested_question(question):
+            st.session_state.query_text_box = question
 
         with st.expander("🏛️ محور الحوكمة والتأسيس والتاريخ (IG & History)"):
             ig_questions = [
@@ -681,10 +685,14 @@ with tab1:
                 "كيف يفصح البنك عن سياسات الشفافية والمساءلة ومكافحة الفساد؟",
                 "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"
             ]
-            for q in ig_questions:
-                if st.button(q, key=f"btn_ig_{hash(q)}"):
-                    st.session_state.user_query_text = q
-                    st.rerun()
+            for i, q in enumerate(ig_questions):
+                st.button(
+                    q,
+                    key=f"btn_ig_{i}",
+                    on_click=set_suggested_question,
+                    args=(q,),
+                    use_container_width=True
+                )
 
         with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
             sr_questions = [
@@ -694,10 +702,14 @@ with tab1:
                 "كيف يمتثل البنك للمعايير الدولية للإفصاح المالي (GRI و ISSB)؟",
                 "ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟"
             ]
-            for q in sr_questions:
-                if st.button(q, key=f"btn_sr_{hash(q)}"):
-                    st.session_state.user_query_text = q
-                    st.rerun()
+            for i, q in enumerate(sr_questions):
+                st.button(
+                    q,
+                    key=f"btn_sr_{i}",
+                    on_click=set_suggested_question,
+                    args=(q,),
+                    use_container_width=True
+                )
 
         with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
             sip_questions = [
@@ -707,10 +719,14 @@ with tab1:
                 "كيف يوظف البنك تقنيات الرقابة التنظيمية (RegTech) واسترجاع المعطيات؟",
                 "ما مدى التوافق مع قانون حماية البيانات الشخصية والسيادة الرقمية؟"
             ]
-            for q in sip_questions:
-                if st.button(q, key=f"btn_sip_{hash(q)}"):
-                    st.session_state.user_query_text = q
-                    st.rerun()
+            for i, q in enumerate(sip_questions):
+                st.button(
+                    q,
+                    key=f"btn_sip_{i}",
+                    on_click=set_suggested_question,
+                    args=(q,),
+                    use_container_width=True
+                )
 
         ask_submit_btn = st.button("تقديم السؤال/ الاستفسار", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -718,7 +734,7 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if ask_submit_btn:
-            active_q = st.session_state.user_query_text
+            active_q = st.session_state.query_text_box
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
             elif not active_q.strip():
@@ -728,7 +744,7 @@ with tab1:
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح (ليتم نسخه في خانة السؤال تلقائياً) أو اكتب استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد المستمد من مستودعات التقارير.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح (ليتم نسخه في مربع الكتابة تلقائياً) أو اكتب استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد المستمد من مستودعات التقارير.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
