@@ -1,4 +1,3 @@
-import random
 import io
 import os
 import json
@@ -9,8 +8,8 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
-# استيراد محرك RAG المطور ووحدة التدقيق
-from bank_rag_engine import process_rag_gemini_query, audit_differentiation, JSON_KNOWLEDGE_FILE
+# استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
+from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
 # ==============================================================================
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL)
@@ -414,7 +413,6 @@ if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
-
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
 
@@ -474,13 +472,13 @@ else:
     tab7 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (يستدعي المحرك المستقل bank_rag_engine.py)
+# التبويب الأول: اسأل المنصة (يستدعي المحرك المستقل bank_rag_engine مباشرة)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية</h3>
-        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة عبر محرك RAG المطور.</p>
+        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -547,11 +545,12 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع المستندات عبر محرك RAG المستقل وتحليل الإجابة..."):
+                with st.spinner("⏳ جاري استرجاع المستندات عبر المحرك المستقل وتحليل الإجابة المخصصة للبنك..."):
+                    # استدعاء الدالة القادمة من bank_rag_engine.py
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد عبر المحرك المستقل.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -561,7 +560,7 @@ with tab2:
     st.markdown(f"""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي.</p>
+        <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي وتعديل الاتجاهات والترتيب.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -589,12 +588,12 @@ with tab2:
 
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
-                    detailed_diag = f"🟢 **جاهزية متقدمة ومستدامة:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}."
+                    detailed_diag = f"🟢 **جاهزية متقدمة ومستدامة:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}. تعكس هذه النتيجة تفوقاً هيكلياً في حوكمة البنك وبنيته التقنية واستدامته."
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
-                    detailed_diag = f"🟡 **جاهزية متوسطة:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}."
+                    detailed_diag = f"🟡 **جاهزية متوسطة تتطلب تدخلاً استباقياً:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}."
                 else:
-                    diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري."
+                    diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     detailed_diag = f"🔴 **فجوة هيكلية حرجة:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}."
 
                 entry = {
@@ -621,7 +620,7 @@ with tab2:
                   <p style="font-size: 15px; margin-bottom: 8px;"><b>البنك الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{bank_ssgi_sel}</span></p>
                   <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي:</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي والتفصيل المنظومي:</p>
                     <p style="margin: 0; color: #1E293B; font-size: 14.5px;">{detailed_diag}</p>
                   </div>
                 </div>
@@ -643,12 +642,13 @@ with tab2:
                     font=dict(family="Cairo", size=12)
                 )
                 st.plotly_chart(fig_radar, use_container_width=True)
+
         else:
-            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور ثم الضغط على زر الحساب لعرض النتائج.")
+            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض النتائج والتحليل الرداري.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة ترتيب البنوك المسجلة")
+    st.markdown("### 📋 قائمة ترتيب البنوك المسجلة (الجدول التراكمي المطور)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
@@ -668,6 +668,7 @@ with tab2:
         </thead>
         <tbody>
         """
+        
         for idx, row in df_history.iterrows():
             table_html += f"""
             <tr>
@@ -680,7 +681,11 @@ with tab2:
             <td style="font-size: 11.5px;">{row['التقييم التشخيصي']}</td>
             </tr>
             """
-        table_html += "</tbody></table></div>"
+        table_html += """
+        </tbody>
+        </table>
+        </div>
+        """
         st.markdown(table_html, unsafe_allow_html=True)
 
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
@@ -703,7 +708,7 @@ with tab2:
                 st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
                 st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -712,10 +717,10 @@ with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار السيناريوهات الاستراتيجية.</p>
+        <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار السيناريوهات الاستراتيجية بدقة عالية.</p>
     </div>
     """, unsafe_allow_html=True)
-    st.info("محاكي السياسات جاهز للعمل عند إدخال بيانات البنوك في التبويب السابق.")
+    st.info("محاكي السياسات ومتابعة الانحدار جاهز للعمل عند إدخال بيانات البنوك في التبويب السابق.")
 
 # ------------------------------------------------------------------------------
 # التبويب الرابع: لوحة دعم اتخاذ القرار
@@ -735,7 +740,7 @@ with tab5:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📑 أداة تصدير التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>
-        <p>ملخص استراتيجي شامل يدمج نتائج التدقيق ونتائج محاكي السياسات وإطار دونيلا ميدوز.</p>
+        <p>ملخص استراتيجي شامل يدمج نتائج التدقيق ونتائج محاكي السياسات وإطار دونيلا ميدوز لنقاط الرفع.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -751,42 +756,43 @@ with tab6:
     """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف والزوار (Admin) مع دمج أداة audit_differentiation
+# التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard + أداة audit_differentiation)
 # ------------------------------------------------------------------------------
 if tab7 is not None:
     with tab7:
         st.markdown("""
         <div dir="rtl" style="text-align: right;">
             <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP وأوقات الدخول بدقة.</p>
+            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP، بالإضافة إلى اختبار أداة تمايز الإجابات للمحرك.</p>
         </div>
         """, unsafe_allow_html=True)
         
+        # قسم فحص تدقيق التمايز (audit_differentiation) الموصى به
+        st.markdown("---")
+        st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
+        threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
+        
+        if st.button("🚀 تشغيل فحص تمايز الإجابات", type="primary"):
+            sample_questions = [
+                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
+                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
+                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
+            ]
+            with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
+                flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
+                if flagged_pairs:
+                    st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
+                    for q_item, b1, b2, ratio_val in flagged_pairs:
+                        st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
+                else:
+                    st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
+
+        st.markdown("---")
+        st.markdown("#### 📋 سجلات الزوار وعناوين IP")
         if os.path.exists(LOG_FILE):
             df_v = pd.read_csv(LOG_FILE)
             st.dataframe(df_v, use_container_width=True)
         else:
             st.info("📂 لا توجد سجلات زيارات حتى الآن.")
-
-        st.markdown("---")
-        st.markdown("### 🔍 أداة تدقيق تمايز الإجابات (Audit Differentiation)")
-        st.markdown("يتيح هذا الزر فحص مدى تشابه الإجابات بين البنوك للأسئلة البحثية المقترحة لضمان تمايز المحتوى وعدم تكراره:")
-        
-        threshold_slider = st.slider("عتبة التشابه المسموح بها (Threshold)", 0.5, 0.99, 0.90, 0.05)
-        
-        if st.button("🚀 تشغيل تدقيق تمايز الإجابات", type="primary"):
-            sample_questions = [
-                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-                "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
-                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟"
-            ]
-            with st.spinner("⏳ جاري تحليل نسبة التشابه بين البنوك عبر المحرك..."):
-                flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
-                if flagged_pairs:
-                    st.warning(f"⚠️ تنبيه: تم رصد ({len(flagged_pairs)}) حالة تجاوزت عتبة التشابه ({threshold_slider}):")
-                    for q_item, b1, b2, ratio_val in flagged_pairs:
-                        st.markdown(f"- السؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
-                else:
-                    st.success("✅ ممتاز! كافة الإجابات المختبرة متميزة ولا توجد حالات تتجاوز عتبة التشابه المحددة.")
 
 st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
