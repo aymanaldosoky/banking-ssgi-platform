@@ -604,7 +604,6 @@ with tab2:
                     "التقييم التشخيصي": diagnosis
                 }
 
-                # تحديث أو إضافة البنك المسجل في الجلسة مباشرة
                 updated = False
                 for idx, item in enumerate(st.session_state.history_state):
                     if item["البنك"] == bank_ssgi_sel:
@@ -649,11 +648,10 @@ with tab2:
 
     st.markdown("---")
     st.markdown("### 📋 قائمة ترتيب البنوك المسجلة (الجدول التراكمي المطور)")
-    
-    # التأكد من عرض الجدول التراكمي مباشرة متى توفرت بيانات مسجلة في الجلسة
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
+        # بناء جدول HTML المحسّن الذي يعرض بشكل سليم وثابت دون إظهار الكود الخام
         table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
         <table class="custom-rtl-table">
@@ -710,7 +708,7 @@ with tab2:
                 st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
                 st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم باختيار بنك وإجراء التشخيص في الأعلى ثم اضغط زر (احسب وسجل مؤشر البنك) لإضافته وعرضه في الجدول التراكمي.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
