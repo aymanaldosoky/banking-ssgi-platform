@@ -1,5 +1,3 @@
-import random
-import io
 import os
 import json
 import re
@@ -9,8 +7,8 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
-# استيراد محرك الإجابات المستقل وأداة التدقيق
-from bank_rag_engine import process_rag_gemini_query, audit_differentiation, JSON_KNOWLEDGE_FILE
+# استدعاء محرك الإجابات المستقل وأداة التدقيق
+from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
 # ==============================================================================
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL)
@@ -474,13 +472,13 @@ else:
     tab7 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (يستدعي المحرك المستقل bank_rag_engine)
+# التبويب الأول: اسأل المنصة (يستدعي المحرك الجديد مباشرة)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية</h3>
-        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة عبر محرك الإجابات المستقل.</p>
+        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -547,12 +545,11 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع المستندات عبر المحرك المستقل وتحليل الإجابة المخصصة للبنك..."):
-                    # استدعاء المحرك المستقل الجديد
+                with st.spinner("⏳ جاري استرجاع المستندات وتحليل الإجابة المخصصة للبنك عبر المحرك المطور..."):
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد عبر المحرك.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -758,50 +755,43 @@ with tab6:
     """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف والزوار (Admin) وتدقيق التمايز
+# التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard + أداة audit_differentiation)
 # ------------------------------------------------------------------------------
 if tab7 is not None:
     with tab7:
         st.markdown("""
         <div dir="rtl" style="text-align: right;">
-            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP وتشخيص تمايز الإجابات للمحرك.</p>
+            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار وأداة التدقيق البحثي (Admin Dashboard)</h3>
+            <p>متابعة وتصدير سجلات دخول الزوار، وعناوين الـ IP، وتقييم مؤشر تمايز الإجابات بين البنوك.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # قسم أداة تدقيق التمايز (Audit Differentiation)
         st.markdown("---")
-        st.markdown("#### 🔍 أداة تدقيق تمايز الإجابات البحثية (`audit_differentiation`)")
-        st.markdown("تقيس هذه الأداة نسبة التشابه بين إجابات البنوك المختلفة للأسئلة الرئيسية للكشف عن أي تكرار أو تشابه زائد.")
+        st.markdown("#### 🔍 تدقيق تمايز الإجابات بين البنوك (`audit_differentiation`)")
+        st.markdown("اضغط على الزر أدناه لفحص مدى تطابق الإجابات بين البنوك عبر عينة الأسئلة لضمان استيفاء المعايير البحثية:")
         
-        sample_questions_for_audit = [
-            "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-            "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
-            "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟"
-        ]
+        threshold_slider = st.slider("عتبة التشابه المسموح بها (Threshold)", 0.50, 0.99, 0.90, 0.05)
         
-        col_aud1, col_aud2 = st.columns([1, 2])
-        with col_aud1:
-            threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.05)
-            run_audit_btn = st.button("🚀 تشغيل فحص التمايز", use_container_width=True, type="primary")
-            
-        with col_aud2:
-            if run_audit_btn:
-                with st.spinner("⏳ جاري فحص ومقارنة إجابات البنوك..."):
-                    # أخذ عينة مصغرة من البنوك لتسريع الفحص
-                    test_banks_subset = BANKS_LIST_AR[1:10]
-                    flagged_pairs = audit_differentiation(test_banks_subset, sample_questions_for_audit, threshold=threshold_slider)
-                    if flagged_pairs:
-                        st.warning(لتنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:)
-                        for q_item, b1, b2, score in flagged_pairs:
-                            st.markdown(f"- السؤال: *{q_item}* | البنك الأول: **{b1}** | البنك الثاني: **{b2}** | نسبة التشابه: **{score}**")
-                    else:
-                        st.success("✅ ممتاز! لا توجد أزواج تتجاوز عتبة التشابه المحددة بين البنوك المختارة.")
-            else:
-                st.info("اضغط على زر التشغيل لبدء فحص تمايز الإجابات.")
+        if st.button("🧪 تشغيل أداة تدقيق التمايز", type="primary"):
+            sample_banks = ["بنك مصر BM", "البنك الأهلي المصري NBE", "البنك التجاري الدولي CIB", "بنك فيصل الإسلامي", "بنك القاهرة Banque du Caire"]
+            sample_questions = [
+                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
+                "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
+                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟"
+            ]
+            with st.spinner("⏳ جاري تحليل ومقارنة النصوص..."):
+                flagged_pairs = audit_differentiation(sample_banks, sample_questions, threshold=threshold_slider)
+                
+                # تم حل مشكلة خطأ بناء الجملة (SyntaxError) بالتنظيم السليم للطباعة
+                if flagged_pairs:
+                    st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
+                    for q_item, b1, b2, score_val in flagged_pairs:
+                        st.markdown(f"- السؤال: **{q_item}** بين **{b1}** و **{b2}** بنسبة تشابه **{score_val}**")
+                else:
+                    st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه المحددة بين البنوك المختارة.")
 
         st.markdown("---")
-        st.markdown("#### 📂 سجلات الزوار وعناوين الـ IP")
+        st.markdown("#### 📂 سجلات زيارات المنصة (Visitors Log)")
         if os.path.exists(LOG_FILE):
             df_v = pd.read_csv(LOG_FILE)
             st.dataframe(df_v, use_container_width=True)
