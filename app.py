@@ -546,7 +546,6 @@ with tab1:
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
                 with st.spinner("⏳ جاري استرجاع المستندات عبر المحرك المستقل وتحليل الإجابة المخصصة للبنك..."):
-                    # استدعاء الدالة القادمة من bank_rag_engine.py
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
@@ -605,6 +604,7 @@ with tab2:
                     "التقييم التشخيصي": diagnosis
                 }
 
+                # تحديث أو إضافة البنك المسجل في الجلسة مباشرة
                 updated = False
                 for idx, item in enumerate(st.session_state.history_state):
                     if item["البنك"] == bank_ssgi_sel:
@@ -649,6 +649,8 @@ with tab2:
 
     st.markdown("---")
     st.markdown("### 📋 قائمة ترتيب البنوك المسجلة (الجدول التراكمي المطور)")
+    
+    # التأكد من عرض الجدول التراكمي مباشرة متى توفرت بيانات مسجلة في الجلسة
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
@@ -708,7 +710,7 @@ with tab2:
                 st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
                 st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم باختيار بنك وإجراء التشخيص في الأعلى ثم اضغط زر (احسب وسجل مؤشر البنك) لإضافته وعرضه في الجدول التراكمي.")
 
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
@@ -767,7 +769,6 @@ if tab7 is not None:
         </div>
         """, unsafe_allow_html=True)
         
-        # قسم فحص تدقيق التمايز (audit_differentiation) الموصى به
         st.markdown("---")
         st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
         threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
