@@ -651,7 +651,6 @@ with tab2:
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # بناء جدول HTML المحسّن الذي يعرض بشكل سليم وثابت دون إظهار الكود الخام
         table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
         <table class="custom-rtl-table">
