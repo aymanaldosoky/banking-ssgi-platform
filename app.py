@@ -9,7 +9,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
-# استيراد محرك الإجابات المستقل المطور وتوابع التدقيق الأكاديمي
+# استيراد محرك الإجابات المستقل وأداة التدقيق
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation, JSON_KNOWLEDGE_FILE
 
 # ==============================================================================
@@ -474,13 +474,13 @@ else:
     tab7 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (يستدعي الوحدة المستقلة مباشرة)
+# التبويب الأول: اسأل المنصة (يستدعي المحرك المستقل bank_rag_engine)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🎯 استخلاص وتحليل البيانات الذكي ومعالجة الأسئلة التنظيمية</h3>
-        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة.</p>
+        <p>استعراض الإجابات الفريدة المفصلة والمستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة عبر محرك الإجابات المستقل.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -547,11 +547,12 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال بحثي للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع المستندات وتحليل الإجابة المخصصة للبنك عبر المحرك المطور..."):
+                with st.spinner("⏳ جاري استرجاع المستندات عبر المحرك المستقل وتحليل الإجابة المخصصة للبنك..."):
+                    # استدعاء المحرك المستقل الجديد
                     response_html = process_rag_gemini_query(ask_bank_sel, active_q)
                     st.markdown(response_html, unsafe_allow_html=True)
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة استفسارك التنظيمي لاستعراض التحليل التفصيلي الفريد عبر المحرك.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
@@ -697,43 +698,110 @@ with tab2:
             mime="text/csv",
             use_container_width=True
         )
+
+        col_del1, col_del2 = st.columns([2, 1])
+        with col_del1:
+            recorded_banks = [item["البنك"] for item in st.session_state.history_state]
+            bank_to_delete = st.selectbox("اختر بنكاً من السجل لحذفه", recorded_banks, key="del_bank_box")
+        with col_del2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ حذف البنك المحدد", use_container_width=True, type="secondary"):
+                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != bank_to_delete]
+                st.success(f"✅ تم حذف سجل بنك ({bank_to_delete}) بنجاح.")
+                st.rerun()
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
-# باقي التبويبات (محاكي السياسات، دعم القرار، تقارير الاستدامة)
+# التبويب الثالث: محاكي السياسات (Policy Simulator)
 # ------------------------------------------------------------------------------
 with tab3:
-    st.markdown("<h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>", unsafe_allow_html=True)
-with tab4:
-    st.markdown("<h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات المصرفية</h3>", unsafe_allow_html=True)
-with tab5:
-    st.markdown("<h3>📑 أداة تصدير التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>", unsafe_allow_html=True)
-with tab6:
-    st.markdown("<h3>🌿 إعداد مسودة تقارير الاستدامة (GRI / ISSB)</h3>", unsafe_allow_html=True)
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>
+        <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار السيناريوهات الاستراتيجية بدقة عالية.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.info("محاكي السياسات ومتابعة الانحدار جاهز للعمل عند إدخال بيانات البنوك في التبويب السابق.")
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف (مع إضافة أداة تدقيق التمايز audit_differentiation)
+# التبويب الرابع: لوحة دعم اتخاذ القرار
+# ------------------------------------------------------------------------------
+with tab4:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات المصرفية</h3>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب الخامس: التقرير التنفيذي الموحد
+# ------------------------------------------------------------------------------
+with tab5:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>📑 أداة تصدير التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>
+        <p>ملخص استراتيجي شامل يدمج نتائج التدقيق ونتائج محاكي السياسات وإطار دونيلا ميدوز لنقاط الرفع.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB)
+# ------------------------------------------------------------------------------
+with tab6:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🌿 إعداد مسودة تقارير الاستدامة (GRI / ISSB)</h3>
+        <p>توليد مسودة أولية لتقارير الاستدامة للبنوك المصرية وفق الأطر الدولية.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب السابع: لوحة تحكم المشرف والزوار (Admin) وتدقيق التمايز
 # ------------------------------------------------------------------------------
 if tab7 is not None:
     with tab7:
         st.markdown("""
         <div dir="rtl" style="text-align: right;">
-            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & Differentiation Audit)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار، مع إمكانية تشغيل أداة تدقيق تمايز الإجابات بين البنوك.</p>
+            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
+            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP وتشخيص تمايز الإجابات للمحرك.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🔍 تشغيل تدقيق التمايز (Audit Differentiation)", use_container_width=True):
-            sample_questions = ["متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟", "عرف الحوكمة وتكوين مجلس الإدارة بالبنك"]
-            flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=0.90)
-            if flagged_pairs:
-                st.warning(f"⚠️ وُجدت {lenق:=len(flagged_pairs)} حالة تشابه تتجاوز النسبة المقبولة (90%):")
-                for q, b1, b2, score in flagged_pairs:
-                    st.write(- السؤال: `{q}` بين **{b1}** و **{b2}** بنسبة تشابه {score})
+        # قسم أداة تدقيق التمايز (Audit Differentiation)
+        st.markdown("---")
+        st.markdown("#### 🔍 أداة تدقيق تمايز الإجابات البحثية (`audit_differentiation`)")
+        st.markdown("تقيس هذه الأداة نسبة التشابه بين إجابات البنوك المختلفة للأسئلة الرئيسية للكشف عن أي تكرار أو تشابه زائد.")
+        
+        sample_questions_for_audit = [
+            "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
+            "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
+            "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟"
+        ]
+        
+        col_aud1, col_aud2 = st.columns([1, 2])
+        with col_aud1:
+            threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.05)
+            run_audit_btn = st.button("🚀 تشغيل فحص التمايز", use_container_width=True, type="primary")
+            
+        with col_aud2:
+            if run_audit_btn:
+                with st.spinner("⏳ جاري فحص ومقارنة إجابات البنوك..."):
+                    # أخذ عينة مصغرة من البنوك لتسريع الفحص
+                    test_banks_subset = BANKS_LIST_AR[1:10]
+                    flagged_pairs = audit_differentiation(test_banks_subset, sample_questions_for_audit, threshold=threshold_slider)
+                    if flagged_pairs:
+                        st.warning(لتنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:)
+                        for q_item, b1, b2, score in flagged_pairs:
+                            st.markdown(f"- السؤال: *{q_item}* | البنك الأول: **{b1}** | البنك الثاني: **{b2}** | نسبة التشابه: **{score}**")
+                    else:
+                        st.success("✅ ممتاز! لا توجد أزواج تتجاوز عتبة التشابه المحددة بين البنوك المختارة.")
             else:
-                st.success("✅ مميز جداً! جميع الإجابات متميزة ولا توجد حالات تطابق عمياء تتجاوز العتبة المحددة.")
+                st.info("اضغط على زر التشغيل لبدء فحص تمايز الإجابات.")
 
+        st.markdown("---")
+        st.markdown("#### 📂 سجلات الزوار وعناوين الـ IP")
         if os.path.exists(LOG_FILE):
             df_v = pd.read_csv(LOG_FILE)
             st.dataframe(df_v, use_container_width=True)
