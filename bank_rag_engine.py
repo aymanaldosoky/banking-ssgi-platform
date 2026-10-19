@@ -7,14 +7,14 @@ bank_rag_engine.py
     from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
 طبقات الإجابة (بالترتيب):
-  1) أرشيف المعرفة JSON  (national_banking_governance_archive.json)  ← الأعلى موثوقية
+  1) أرشيف المعرفة JSON (الأجزاء المقسمة archive_part_1.json إلى 6)  ← الأعلى موثوقية
   2) ملف تعريف البنك + نوعه (حكومي/إسلامي/أجنبي/خاص) + الإطار التنظيمي المصري
   3) نموذج لغة (Claude أو Gemini) مُقيَّد بالسياق، لأي سؤال لا تغطيه الطبقتان
   4) إن تعذّر كل ما سبق: رسالة صريحة بالفجوة بدل اختلاق إجابة
 
 متغيرات البيئة:
-  ANTHROPIC_API_KEY  أو  GEMINI_API_KEY      (اختياري — لتفعيل الطبقة 3)
-  BANK_RAG_ENRICH=1                          (اختياري — إثراء إجابات الطبقة 2 بنموذج اللغة)
+  ANTHROPIC_API_KEY   أو  GEMINI_API_KEY      (اختياري — لتفعيل الطبقة 3)
+  BANK_RAG_ENRICH=1                           (اختياري — إثراء إجابات الطبقة 2 بنموذج اللغة)
 """
 import os
 import re
@@ -176,7 +176,7 @@ PROFILES = {
     "البنك العربي الأفريقي": dict(
         founded="1964", origin="أُسس كبنك مشترك مصري–كويتي",
         ownership="يساهم فيه البنك المركزي المصري وجهاز الكويت للاستثمار", group="AAIB"),
-    "البنك العقاري المصري العربي EALB": dict(
+    "بنك العقاري المصري العربي EALB": dict(
         founded="1880", origin="يعود إلى «الكريدي فونسييه المصري» (1880) أحد أقدم مؤسسات التمويل العقاري في مصر",
         ownership="ملكية حكومية", mandate="التمويل العقاري والإسكان"),
     "بنك ناصر الاجتماعي": dict(
@@ -395,18 +395,31 @@ COMPOSERS = {
 }
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON  (يدعم صيغتين)
-#    أ) {"البنك": {"intent_id": "نص"}}          ← مفضلة
-#    ب) {"البنك": {"عبارة مفتاحية": "نص"}}      ← الصيغة القديمة
+# 5) أرشيف المعرفة JSON — محدث لدعم الأجزاء الستة ودمجها تلقائياً
 # ==============================================================================
 def load_json_knowledge():
-    if os.path.exists(JSON_KNOWLEDGE_FILE):
+    combined_data = {}
+    # حلقة تكرارية لقراءة الأجزاء الستة المتقسمة ودمجها تلقائياً
+    for i in range(1, 7):
+        part_filename = f"archive_part_{i}.json"
+        if os.path.exists(part_filename):
+            try:
+                with open(part_filename, "r", encoding="utf-8") as f:
+                    part_data = json.load(f)
+                    if isinstance(part_data, dict):
+                        combined_data.update(part_data)
+            except Exception:
+                pass
+                
+    # كاحتياط إضافي: إذا لم تتوفر الأجزاء، يبحث عن الملف الأصلي المفرد إن وجد
+    if not combined_data and os.path.exists(JSON_KNOWLEDGE_FILE):
         try:
             with open(JSON_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                combined_data = json.load(f)
         except Exception:
-            return {}
-    return {}
+            pass
+            
+    return combined_data
 
 
 def archive_lookup(bank, question, intent, kb=None):
@@ -581,7 +594,7 @@ def process_rag_gemini_query(bank_name, question):
     # --- الطبقة 4: فجوة صريحة
     gap = (f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
            f"ولن تُقدَّم إجابة مبنية على التخمين.</p>"
-           f"<ul><li><b>لإضافة الإجابة:</b> أضف نصاً للبنك في ملف <code>{JSON_KNOWLEDGE_FILE}</code> تحت المفتاح المناسب.</li>"
+           f"<ul><li><b>لإضافة الإجابة:</b> أضف نصاً للبنك في ملف الأرشيف تحت المفتاح المناسب.</li>"
            f"<li><b>لتفعيل الإجابة الآلية:</b> عيّن متغير البيئة ANTHROPIC_API_KEY أو GEMINI_API_KEY.</li>"
            f"<li><b>مصدر مقترح:</b> تقرير الاستدامة والتقرير السنوي المنشوران للبنك.</li></ul>")
     return render_card(bank_name, question, gap, "gap")
