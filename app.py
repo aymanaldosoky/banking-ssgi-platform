@@ -646,7 +646,7 @@ with tab2:
             st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض النتائج والتحليل الرداري.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+   st.markdown("---")
     st.markdown("### 📋 قائمة ترتيب البنوك المسجلة (الجدول التراكمي المطور)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
@@ -686,6 +686,8 @@ with tab2:
         </table>
         </div>
         """
+        
+        # التأكد من تمرير الوسيط unsafe_allow_html=True لمنع ظهور الوسوم كرموز نصية
         st.markdown(table_html, unsafe_allow_html=True)
 
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
