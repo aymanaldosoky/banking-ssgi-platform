@@ -472,7 +472,7 @@ else:
     tab7 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (يستدعي المحرك المستقل bank_rag_engine مباشرة)
+# التبويب الأول: اسأل المنصة
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
@@ -651,7 +651,7 @@ with tab2:
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # هندسة جدول نظيفة متوافقة مع كود الصناعات ومحمية من ظهور الرموز الخام
+        # هندسة الجدول وتجميع الـ HTML في نص واحد تماماً مثل كود الصناعات
         table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
         <table class="custom-rtl-table">
@@ -686,7 +686,7 @@ with tab2:
         </table>
         </div>
         """
-        # التعديل الهام هنا لتفعيل قراءة HTML عبر Streamlit بشكل سليم تماماً
+        # عرض الجدول دفعة واحدة باستخدام st.markdown مع تفعيل unsafe_allow_html=True
         st.markdown(table_html, unsafe_allow_html=True)
 
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
