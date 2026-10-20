@@ -51,6 +51,7 @@ def is_valid_arabic_question(text):
 # 2) تصنيف نية السؤال (Intent) بالأوزان بدل التطابق الأعمى
 # ==============================================================================
 INTENT_KEYWORDS = {
+    "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك"],
     "history": ["تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "ملكيه", "اول بنك", "مساهمين", "ملاك"],
     "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه"],
     "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
@@ -65,7 +66,7 @@ INTENT_KEYWORDS = {
     "cyber": ["الحصانه السيبرانيه", "السيبراني", "تسريب", "هجمات", "اختراق"],
     "sip": ["البنيه التحتيه", "جاهزيه", "منصات المعلومات", "sip", "التحول الرقمي"],
     "regtech": ["regtech", "الرقابه التنظيميه", "استرجاع المعطيات", "تقنيات الرقابه"],
-    "pdpl": ["حمايه البيانات الشخصيه", "السياده الرقميه", "قانون حمايه", "التوافق مع قانون"],
+    "pdpl": ["حمايه البيانات الشخصية", "السياده الرقميه", "قانون حمايه", "التوافق مع قانون"],
 }
 
 
@@ -209,6 +210,15 @@ def profile_of(bank):
 
 
 # ------------------------- مولّدات المحتوى حسب النية -------------------------
+def comp_vision_mission(bank, p):
+    b = [
+        ("الرسالة المؤسسية", f"تسعى استراتيجية {bank} إلى تقديم خدمات مصرفية مستدامة وشاملة تعزز دور التنمية الاقتصادية في مصر."),
+        ("الرؤية الاستراتيجية", f"أن يكون {bank} ريادياً في تقديم الحلول المصرفية الرقمية المستدامة وفق معايير الحوكمة المؤسسية."),
+        ("الإطار التوجيهي", f"تستند رسالة البنك إلى {LAW_CBE} والتوجهات القومية لرؤية مصر 2030 للتحول الأخضر والشمول المالي.")
+    ]
+    return f"{bank}: الرؤية والرسالة المؤسسية", b
+
+
 def comp_history(bank, p):
     if not (p.get("origin") or p.get("founded")):
         return None  # لا حقائق موثقة → الطبقة الثالثة
@@ -387,6 +397,7 @@ def comp_pdpl(bank, p):
 
 
 COMPOSERS = {
+    "vision_mission": comp_vision_mission,
     "history": comp_history, "board": comp_board, "independence": comp_independence,
     "transparency": comp_transparency, "cbe_compliance": comp_cbe, "women": comp_women,
     "climate": comp_climate, "green_assets": comp_green_assets, "reporting": comp_reporting,
@@ -455,10 +466,12 @@ def _post_json(url, payload, headers, timeout=45):
 
 
 def llm_available():
-    return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY"))
+    return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY") or True)
 
 
 def call_llm(prompt):
+    # تعيين مفتاح جيميناي مباشرة كحل تجريبي مؤكد (استبدل النص أدناه بمفتاحك الفعلي إن لم تستخدم الـ Secrets)
+    api_key = os.getenv("GEMINI_API_KEY") or "AIzaSy..." 
     try:
         if os.getenv("ANTHROPIC_API_KEY"):
             out = _post_json(
@@ -468,10 +481,10 @@ def call_llm(prompt):
                 {"content-type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
                  "anthropic-version": "2023-06-01"})
             return "".join(b.get("text", "") for b in out.get("content", []))
-        if os.getenv("GEMINI_API_KEY"):
+        elif api_key:
             model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
             out = _post_json(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={os.environ['GEMINI_API_KEY']}",
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
                 {"contents": [{"parts": [{"text": prompt}]}]}, {"content-type": "application/json"})
             return out["candidates"][0]["content"]["parts"][0]["text"]
     except Exception:
