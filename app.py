@@ -267,6 +267,13 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
+# دالة معالجة النصوص وحذف المسافات البادئة (Flat HTML Helper)
+# ==============================================================================
+def flat_html(s: str) -> str:
+    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود."""
+    return "".join(line.strip() for line in s.splitlines())
+
+# ==============================================================================
 # نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر)
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
@@ -553,7 +560,7 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI) - مُحدّث بالكامل بهندسة جداول الصناعات
+# التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI)
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown(f"""
@@ -651,7 +658,6 @@ with tab2:
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # هندسة الجدول وتجميع الـ HTML في نص واحد تماماً مثل كود الصناعات
         table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
         <table class="custom-rtl-table">
@@ -686,8 +692,8 @@ with tab2:
         </table>
         </div>
         """
-        # عرض الجدول دفعة واحدة باستخدام st.markdown مع تفعيل unsafe_allow_html=True
-        st.markdown(table_html, unsafe_allow_html=True)
+        # تمرير الجدول عبر دالة flat_html لمنع تفسير المسافات ككود في Markdown
+        st.markdown(flat_html(table_html), unsafe_allow_html=True)
 
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
