@@ -600,7 +600,7 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - [تم تحديثه لزيادة العمق والشمولية]
+# التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown("""
@@ -632,7 +632,6 @@ with tab2:
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
-                # صياغة مفصلة وغنية للتقييم التشخيصي والتفصيل المنظومي
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     detailed_diag = f"""
@@ -700,10 +699,10 @@ with tab2:
                 st.markdown(f"""
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                   <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-                  <p style="font-size: 15px; margin-bottom: 8px;"><b>اسم البنك :</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
+                  <p style="font-size: 15px; margin-bottom: 8px;"><b>اسم البنك:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
                   <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};"> التشخيصي القياسي :</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التشخيص القياسي:</p>
                     <div style="color: #1E293B;">{detailed_diag}</div>
                   </div>
                 </div>
@@ -1023,7 +1022,7 @@ with tab3:
 
                     deep_analysis = f"""
                     <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 10px;" dir="rtl">
-                        <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; text-align: right;">📊 التشخيص القياسي المخصص لدولة/بنك ({sim_bank_sel}):</p>
+                        <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; text-align: right;">📊 التشخيص القياسي المخصص لبنك ({sim_bank_sel}):</p>
                         <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.8; text-align: right;">
                             <li><b>1. منصات المعلومات (SIP):</b> {describe_sip(s_val)}</li>
                             <li><b>2. الحوكمة المؤسسية (IG):</b> {describe_ig(i_val)}</li>
@@ -1068,13 +1067,13 @@ with tab3:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار
+# التبويب الرابع: لوحة دعم اتخاذ القرار (مع التصحيح الذكي والمخصص حسب القيم)
 # ------------------------------------------------------------------------------
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات المصرفية</h3>
-        <p>استعراض التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي.</p>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي بديناميكية تمنع التعارض أو النقد غير المبرر.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1153,36 +1152,36 @@ with tab4:
                         r_val = bank_data["تقارير الاستدامة (30%)"]
                         score_str_plain = get_colored_score_html(score)
 
+                        # صياغة توصيات ذكية تتأكد من تقييم الأداء المرتفع بشكل إيجابي وعدم السخرية من القيمة 100%
                         if score >= 80:
                             recs_list = [
                                 f"<b>تعزيز ريادة الابتكار المصرفي لـ ({decision_bank_sel}):</b> توظيف منصات المعلومات المتقدمة ({s_val}%) لتصدير الخدمات المالية الرقمية وقيادة التحول نحو المعايير المستدامة.",
                                 f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة والالتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
                             ]
-                            deep_analysis_text = f"""
-- توصي المنصة بتأسيس <b>'لجنة عليا للسيادة الرقمية والاستدامة'</b> مستفيدين من كفاءة الحوكمة المؤسسية ({i_val}%).
-- تعزيز مساهمة البنك في التمويل الأخضر استناداً إلى الأداء المرتفع في تقارير الاستدامة ({r_val}%).
-- قيادة الشراكات المصرفية الاستراتيجية لتعظيم العوائد وتحقيق أهداف التنمية المستدامة.
-                            """
                         elif score >= 51:
                             recs_list = [
-                                f"<b>ردم الفجوة التقنية والمؤسسية لـ ({decision_bank_sel}):</b> إطلاق حزم برامج تطوير منصات المعلومات بناءً على قراءة ({s_val}%).",
-                                f"<b>سد الاختناقات الهيكلية:</b> تعزيز استقلالية لجان المراجعة وإدارة المخاطر لتحسين مؤشر الحوكمة المسجل عند ({i_val}%)."
+                                f"<b>تطوير البنية والمؤسسية لـ ({decision_bank_sel}):</b> تحسين كفاءة منصات المعلومات بناءً على قراءة ({s_val}%).",
+                                f"<b>دعم منظومة الالتزام:</b> تعزيز دور لجان المراجعة وإدارة المخاطر لتحسين مؤشر الحوكمة المسجل عند ({i_val}%)."
                             ]
-                            deep_analysis_text = f"""
-- تتطلب صانعة القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية.
-- توجيه الائتمان المصرفي نحو المشروعات الخضراء لتعويض الضعف النسبي في الاستدامة ({r_val}%).
-- تحديث أطر إدارة المخاطر الكلية والتحوط المرن.
-                            """
                         else:
                             recs_list = [
                                 f"<b>التدخل الاستباقي العاجل لـ ({decision_bank_sel}):</b> معالجة الاختناقات الهيكلية الحرجة في البنية التقنية ومنصات المعلومات ({s_val}%).",
                                 f"<b>إعادة هيكلة أطر الحوكمة:</b> تفعيل التزام تام بتعليمات البنك المركزي ورفع كفاءة التدقيق الداخلي ({i_val}%)."
                             ]
-                            deep_analysis_text = f"""
-- تفرض الضرورة القصوى تنفيذ خطط طوارئ استثمارية لترميم البنية التحتية الرقمية ({s_val}%).
-- مراجعة سياسات تعارض المصالح وهيكل مجالس الإدارة لردم الفجوات الرقابية.
-- إطلاق برامج عاجلة للإفصاح المالي وغير المالي وفق معايير الاستدامة ({r_val}%).
-                            """
+
+                        # صياغة الإضافات التحليلية مع شرط خاص لملف الاستدامة إذا كان مرتفعاً (مثل 100%)
+                        if r_val >= 90:
+                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للجاهزية المرتفعة في الاستدامة ({r_val}%)."
+                        elif r_val >= 50:
+                            sustainability_comment = f"الاستمرار في توجيه الائتمان المصرفي نحو المشروعات الخضراء لتعزيز الأداء في الاستدامة ({r_val}%)."
+                        else:
+                            sustainability_comment = f"إطلاق برامج عاجلة لتطوير الإفصاح المالي وغير المالي وفق معايير الاستدامة لتعويض الضعف في ({r_val}%)."
+
+                        deep_analysis_text = f"""
+- يتطلب متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).
+- {sustainability_comment}
+- تحديث أطر إدارة المخاطر الكلية والتحوط المرن بالتوازي مع متطلبات الحوكمة ({i_val}%).
+                        """
 
                         st.session_state.decision_results_dict[decision_bank_sel] = {
                             "bank": decision_bank_sel,
@@ -1206,7 +1205,9 @@ with tab4:
                             <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
                             <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 20px;">
                                 {item['deep']}
-
+                            </div>
+                        </div>
+                    </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
             else:
