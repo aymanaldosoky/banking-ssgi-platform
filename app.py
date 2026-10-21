@@ -1380,7 +1380,7 @@ with tab6:
         """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("#### ⚙️ توليد مسودة تقارير الاستدامة التوجيهية المخصصة للبنك استناداً للمحاور المسجلة")
+    st.markdown("#### توليد مسودة تقارير الاستدامة التوجيهية المخصصة للبنك استناداً للمحاور المسجلة")
 
     all_registered_banks = list(set([item["البنك"] for item in st.session_state.history_state])) if st.session_state.history_state else []
     
