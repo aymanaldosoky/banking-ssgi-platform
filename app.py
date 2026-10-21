@@ -627,7 +627,6 @@ with tab1:
                 with st.spinner("⏳ جاري استرجاع وتحليل الإجابة المخصصة للبنك..."):
                     # فحص خاص في حال كان البنك هو البنك الأهلي اليوناني أو أي بنك تتطلب بياناته معالجة دقيقة
                     if ask_bank_sel == "البنك الأهلي اليوناني":
-                        # فحص ما إذا كان استعلاماً عن التأسيس ولم تُضبط له مستندات كافية بعد
                         if "تأسس" in active_q or "مؤسسه" in active_q:
                             st.markdown(f"""
                             <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8;" dir="rtl">
@@ -757,7 +756,7 @@ with tab2:
                     </div>
                     """
 
-                # شرط عدم التكرار للبنك الواحد: الاكتفاء بذكر البنك مرة واحدة بناءً على آخر تعديل مختارة للمؤشر والمحاور
+                # شرط عدم التكرار للبنك الواحد: الاكتفاء بذكر البنك مرة واحدة بناءً على آخر تعديل ومؤشر
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -981,7 +980,7 @@ with tab3:
                     else:
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
                         analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
-                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech), وتصدر التصنيفات الإقليمية في التمويل الأخضر."
+                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
 
                     simulated_val = round(simulated_val, 2)
                     delta = round(simulated_val - base_val, 2)
