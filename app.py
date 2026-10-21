@@ -519,7 +519,7 @@ st.markdown("""
 <div class="ticker-wrap">
   <div class="ticker">
     <span class="ticker-item">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة وتقارير الاستدامة بالقطاع المصرفي المصري</span>
-    <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسية</span>
+    <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسة</span>
     <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي لاختبار السيناريوهات الاستراتيجية (Multiple Regression)</span>
     <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار وتوطين المعايير الرقابية وإطار دونيلا ميدوز لنقاط الرفع</span>
   </div>
@@ -527,7 +527,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسية
+# التبويبات الرئيسة
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -638,7 +638,7 @@ with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج المتعددة في قائمة البنوك المختارة دون قيود أو استبدال.</p>
+        <p>إمكانية تشخيص البنوك عبر المحاور الثلاثة الرئيسة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -854,8 +854,8 @@ with tab2:
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات الاستثمارية وتثبيت أكثر من سيناريو استراتيجي لنفس البنك في نفس الوقت دون مسح السيناريوهات السابقة.</p>
+        <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
+        <p>استشراف أثر التدخلات.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -894,7 +894,7 @@ with tab3:
                 <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
                 <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
                 <hr>
-                <h3>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h3>
+                <h3>📋 عرض السيناريوهات للبنوك:</h3>
             """
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
@@ -1017,8 +1017,8 @@ with tab3:
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات المصرفية</h3>
-        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي بديناميكية تمنع التعارض أو النقد غير المبرر.</p>
+        <h3>🛡️ لوحة دعم اتخاذ القرار المصرفي</h3>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1148,9 +1148,7 @@ with tab4:
                             <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
                             <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 20px;">
                                 {item['deep']}
-                            </div>
-                        </div>
-                    </div>
+
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
             else:
