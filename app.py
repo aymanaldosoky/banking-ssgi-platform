@@ -253,6 +253,17 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
+# دالة تنظيف النصوص وإزالة الرموز والأكواد المشوهة
+# ==============================================================================
+def clean_text(text: str) -> str:
+    if not isinstance(text, str):
+        return str(text)
+    # إزالة المسافات غير المرئية والرموز الخفية وضبط الاتجاهات
+    cleaned = text.replace('\xa0', ' ').replace('\u200b', '')
+    cleaned = re.sub(r'[^\w\s\-\.\%\(\)\:\,\/\ء-ي]', ' ', cleaned)
+    return re.sub(r'\s+', ' ', cleaned).strip()
+
+# ==============================================================================
 # نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر)
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
@@ -330,7 +341,7 @@ if not st.session_state.authenticated:
         with login_container:
             st.markdown(f"""
             <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: right;" dir="rtl">
-                <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي </h2>
+                <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
                 <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
                     إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
                 </p>
@@ -478,7 +489,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسية (متوافقة تماماً مع هيكل كود الصناعات)
+# التبويبات الرئيسية
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -586,7 +597,7 @@ with tab1:
 # التبويب الثاني: مؤشر الحوكمة الذكية المستدامة (SSGI)
 # ------------------------------------------------------------------------------
 with tab2:
-    st.markdown(f"""
+    st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
         <p>إمكانية تشخيص البنوك المختارة عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج في الجدول التراكمي وتعديل الاتجاهات والترتيب.</p>
@@ -626,12 +637,12 @@ with tab2:
                     detailed_diag = f"🔴 **فجوة هيكلية حرجة:** القيمة المركبة للمؤشر (SSGI): {score_str_plain}."
 
                 entry = {
-                    "البنك": bank_ssgi_sel,
+                    "البنك": clean_text(bank_ssgi_sel),
                     "مؤشر SSGI المركب": final_score,
                     "منصات المعلومات (40%)": round(sip_val, 2),
                     "الحوكمة المؤسسية (30%)": round(ig_val, 2),
                     "تقارير الاستدامة (30%)": round(sr_val, 2),
-                    "التقييم التشخيصي": diagnosis
+                    "التقييم التشخيصي": clean_text(diagnosis)
                 }
 
                 updated = False
@@ -646,7 +657,7 @@ with tab2:
                 st.markdown(f"""
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                   <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-                  <p style="font-size: 15px; margin-bottom: 8px;"><b>البنك الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{bank_ssgi_sel}</span></p>
+                  <p style="font-size: 15px; margin-bottom: 8px;"><b>البنك الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
                   <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي والتفصيل المنظومي:</p>
@@ -699,15 +710,17 @@ with tab2:
         """
         
         for idx, row in df_history.iterrows():
+            clean_bank_name = clean_text(str(row['البنك']))
+            clean_diag = clean_text(str(row['التقييم التشخيصي']))
             table_html += f"""
             <tr>
             <td style="text-align: center; font-weight: bold;">{idx + 1}</td>
-            <td style="font-weight: bold; color: {CBE_NAVY};">{row['البنك']}</td>
+            <td style="font-weight: bold; color: {CBE_NAVY};">{clean_bank_name}</td>
             <td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
             <td>{row['منصات المعلومات (40%)']}%</td>
             <td>{row['الحوكمة المؤسسية (30%)']}%</td>
             <td>{row['تقارير الاستدامة (30%)']}%</td>
-            <td style="font-size: 11.5px;">{row['التقييم التشخيصي']}</td>
+            <td style="font-size: 11.5px;">{clean_diag}</td>
             </tr>
             """
         table_html += """
@@ -852,7 +865,7 @@ with tab2:
         st.plotly_chart(fig_pie_bank, use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator) - مطابق تماماً لكود الصناعات
+# التبويب الثالث: محاكي السياسات (Policy Simulator)
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
@@ -1013,7 +1026,7 @@ with tab3:
     st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار - مطابق تماماً لكود الصناعات
+# التبويب الرابع: لوحة دعم اتخاذ القرار
 # ------------------------------------------------------------------------------
 with tab4:
     st.markdown("""
@@ -1164,7 +1177,7 @@ with tab4:
     st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد - مطابق تماماً لكود الصناعات
+# التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -1286,7 +1299,7 @@ with tab5:
             <html dir="rtl">
             <head><meta charset="utf-8"><title>التقرير التنفيذي الموحد للقطاع المصرفي</title></head>
             <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-                <h1 style="color: {CBE_NAVY}; text-align: center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
+                <h1 style="color: {CBE_NAVY}; center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
                 <p style="text-align: center; color: #64748B;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار (SSGI)</p>
                 <hr>
                 <h3>🏆 مؤشرات الأداء العام والريادة المصرفية:</h3>
