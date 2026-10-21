@@ -614,7 +614,7 @@ with tab2:
 
     with col_input:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        bank_ssgi_sel = st.selectbox("اختر البنك المصرفي المراد قياسه", BANKS_LIST_AR, key="t1_bank")
+        bank_ssgi_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="t1_bank")
         
         sip_val = st.slider("1. محور منصات المعلومات والبنية الرقمية (SIP - 40%)", 0, 100, 88, key="t1_sip")
         ig_val = st.slider("2. محور الحوكمة المؤسسية والامتثال (IG - 30%)", 0, 100, 90, key="t1_ig")
@@ -639,7 +639,7 @@ with tab2:
                     <div style="line-height: 1.8; font-size: 14.5px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                        <p><b>🔍 التفصيل المنظومي والتشخيص المعمق للمحاور:</b></p>
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، وهو ما يعكس بنية تحتية رقمية متقدمة، تكاملاً تاماً مع الأنظمة الرقابية الآلية للبنك المركزي، وحوكمة فائقة للخوارزميات والبيانات.</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، مما يعبر عن استقلالية تامة لمجلس الإدارة ولجان المراجعة وإدارة المخاطر، والالتزام الصارم بسياسات الإفصاح والشفافية وتجنب تعارض المصالح.</li>
@@ -654,7 +654,7 @@ with tab2:
                     <div style="line-height: 1.8; font-size: 14.5px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                        <p><b>🔍 التفصيل المنظومي والتشخيص المعمق للمحاور:</b></p>
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، مما يشير إلى بنية رقمية تقليدية أو متوسطة الكفاءة تحتاج إلى تحديث سعات تدفق البيانات وتوطين تقارير (RegTech).</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، وهو ما يتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين في هيكل اللجان.</li>
@@ -669,7 +669,7 @@ with tab2:
                     <div style="line-height: 1.8; font-size: 14.5px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                        <p><b>🔍 التفصيل المنظومي والتشخيص المعمق للمحاور:</b></p>
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، وهو مستوى يعيق أتمتة الالتزام والرقابة التنظيمية ويشكل خطراً على السيادة الرقمية وأمن البيانات.</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، مما يعكس قصوراً حاداً في هيكل الصلاحيات والتدقيق الداخلي يتطلب إعادة هندسة شاملة.</li>
@@ -700,10 +700,10 @@ with tab2:
                 st.markdown(f"""
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                   <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-                  <p style="font-size: 15px; margin-bottom: 8px;"><b>البنك الخاضع للتقييم:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
+                  <p style="font-size: 15px; margin-bottom: 8px;"><b>اسم البنك :</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
                   <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
                   <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التقييم التشخيصي والتفصيل المنظومي المعمق:</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};"> التشخيصي القياسي :</p>
                     <div style="color: #1E293B;">{detailed_diag}</div>
                   </div>
                 </div>
@@ -731,7 +731,7 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة ترتيب البنوك المختارة ")
+    st.markdown("### 📋 قائمة البنوك المختارة ")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
