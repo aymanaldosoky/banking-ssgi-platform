@@ -625,8 +625,31 @@ with tab1:
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال للإجابة عليه.")
             else:
                 with st.spinner("⏳ جاري استرجاع وتحليل الإجابة المخصصة للبنك..."):
-                    response_html = process_rag_gemini_query(ask_bank_sel, active_q)
-                    st.markdown(response_html, unsafe_allow_html=True)
+                    # فحص خاص في حال كان البنك هو البنك الأهلي اليوناني أو أي بنك تتطلب بياناته معالجة دقيقة
+                    if ask_bank_sel == "البنك الأهلي اليوناني":
+                        # فحص ما إذا كان استعلاماً عن التأسيس ولم تُضبط له مستندات كافية بعد
+                        if "تأسس" in active_q or "مؤسسه" in active_q:
+                            st.markdown(f"""
+                            <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8;" dir="rtl">
+                                <h4 style="color: {CBE_NAVY}; margin-top: 0;">🎯 التقرير التحليلي المفصل ({ask_bank_sel})</h4>
+                                <p><b>السؤال / الاستفسار المطروح:</b> "{active_q}"</p>
+                                <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 4px solid #D97706; margin-top: 10px;">
+                                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #92400E;">⚪ لا توجد بيانات كافية</p>
+                                    <p style="margin: 0; color: #1E293B; font-size: 13.5px;">
+                                    لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص البنك الأهلي اليوناني، ولن تُقدَّم إجابة مبنية على التخمين.<br>
+                                    - <b>لإضافة الإجابة:</b> أضف نصاً للبنك في ملف الأرشيف تحت المفتاح المناسب.<br>
+                                    - <b>لتفعيل الإجابة الآلية:</b> عيّن متغير البيئة ANTHROPIC_API_KEY أو GEMINI_API_KEY.<br>
+                                    - <b>مصدر مقترح:</b> تقرير الاستدامة والتقرير السنوي المنشوران للبنك.
+                                    </p>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            response_html = process_rag_gemini_query(ask_bank_sel, active_q)
+                            st.markdown(response_html, unsafe_allow_html=True)
+                    else:
+                        response_html = process_rag_gemini_query(ask_bank_sel, active_q)
+                        st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/ الاستفسار.")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -734,7 +757,7 @@ with tab2:
                     </div>
                     """
 
-                # السماح بتعدد السجلات والإدخالات لنفس البنك بدلاً من استبدالها عبر إضافة طابع زمني أو معرّف فريد
+                # شرط عدم التكرار للبنك الواحد: الاكتفاء بذكر البنك مرة واحدة بناءً على آخر تعديل مختارة للمؤشر والمحاور
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -745,6 +768,8 @@ with tab2:
                     "التقييم التشخيصي": clean_text(diagnosis)
                 }
 
+                # إزالة أي سجل سابق لنفس البنك وتحديثه بالقيمة الجديدة لضمان ظهور البنك مرة واحدة فقط في الجدول
+                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != clean_text(bank_ssgi_sel)]
                 st.session_state.history_state.append(entry)
 
                 st.markdown(f"""
@@ -781,7 +806,7 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة البنوك والسجلات المختارة (تسمح بتكرار البنك الواحد لعدة إدخالات)")
+    st.markdown("### 📋 قائمة البنوك والسجلات المختارة (تقتصر على ذكر البنك مرة واحدة حسب آخر تعديل)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
@@ -849,7 +874,7 @@ with tab2:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator) - يسمح بأكثر من سيناريو لنفس البنك
+# التبويب الثالث: محاكي السياسات (Policy Simulator)
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
@@ -956,7 +981,7 @@ with tab3:
                     else:
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
                         analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
-                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
+                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech), وتصدر التصنيفات الإقليمية في التمويل الأخضر."
 
                     simulated_val = round(simulated_val, 2)
                     delta = round(simulated_val - base_val, 2)
@@ -984,7 +1009,6 @@ with tab3:
                     </div>
                     """
                     
-                    # استخدام معرف فريد يعتمد على التوقيت والبنك والسيناريو للسماح بتسجيل عدة سيناريوهات لنفس البنك
                     sim_key = f"{sim_bank_sel} - {scenario_dropdown} [{datetime.now().strftime('%H:%M:%S')}]"
                     st.session_state.simulated_results_dict[sim_key] = {
                         "html": box_html, 
@@ -1148,7 +1172,9 @@ with tab4:
                             <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
                             <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 20px;">
                                 {item['deep']}
-
+                            </div>
+                        </div>
+                    </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
             else:
@@ -1158,7 +1184,7 @@ with tab4:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد (مع زر التوليد المؤقت/الفوري وتحديث مستقر)
+# التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -1171,10 +1197,8 @@ with tab5:
     if not st.session_state.history_state:
         st.warning("📂 لا توجد بيانات مسجلة كافية حتى الآن. يرجى إدخال تشخيص بنك واحد على الأقل في القسم الثاني لتفعيل التقرير التنفيذي.")
     else:
-        # إضافة زر توليد فوري مؤقت لضمان التحكم في العرض ومنع الاختفاء أو إعادة التعيين
         generate_exec_report = st.button("🚀 توليد وتحديث التقرير التنفيذي الموحد فورياً", use_container_width=True, type="primary")
 
-        # استخدام مفتاح حالة لضمان استقرار العرض وعدم اختفائه عند النقر أو إعادة التحميل
         if "show_exec_report" not in st.session_state:
             st.session_state.show_exec_report = False
 
@@ -1214,7 +1238,6 @@ with tab5:
                     specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
                     specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
 
-                # دمج كافة السيناريوهات المرتبطة بهذا البنك
                 matched_sims = {s_key: s_val_obj for s_key, s_val_obj in st.session_state.simulated_results_dict.items() if s_val_obj['bank'] == b_name}
                 if matched_sims:
                     sim_details_list = []
