@@ -253,12 +253,18 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
+# دالة معالجة النصوص وحذف المسافات البادئة (Flat HTML Helper) لمدخلات Markdown
+# ==============================================================================
+def flat_html(s: str) -> str:
+    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود."""
+    return "".join(line.strip() for line in s.splitlines())
+
+# ==============================================================================
 # دالة تنظيف النصوص وإزالة الرموز والأكواد المشوهة
 # ==============================================================================
 def clean_text(text: str) -> str:
     if not isinstance(text, str):
         return str(text)
-    # إزالة المسافات غير المرئية والرموز الخفية وضبط الاتجاهات
     cleaned = text.replace('\xa0', ' ').replace('\u200b', '')
     cleaned = re.sub(r'[^\w\s\-\.\%\(\)\:\,\/\ء-ي]', ' ', cleaned)
     return re.sub(r'\s+', ' ', cleaned).strip()
@@ -728,7 +734,8 @@ with tab2:
         </table>
         </div>
         """
-        st.markdown(table_html, unsafe_allow_html=True)
+        # استخدام flat_html لمنع تفسير المسافات ككتلة كود Markdown
+        st.markdown(flat_html(table_html), unsafe_allow_html=True)
 
         csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
@@ -843,7 +850,7 @@ with tab2:
         </table>
         </div>
         """
-        st.markdown(hierarchy_table_html, unsafe_allow_html=True)
+        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
 
         axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
         weights_vals_bank = [40, 30, 30]
