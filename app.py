@@ -489,7 +489,7 @@ def describe_sr(val):
 if "history_state" not in st.session_state:
     st.session_state.history_state = []
 if "simulated_results_dict" not in st.session_state:
-    st.session_state.simulated_results_dict = {}
+    st.session_state.simulated_results_dict = {} # ستحتوي على قوائم بالسيناريوهات لكل بنك
 if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 if "query_text_box" not in st.session_state:
@@ -664,7 +664,6 @@ with tab2:
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
-                # صياغة تعليقات ذكية تفصل بدقة بين القيم المرتفعة والمتوسطة والمنخفضة لكل محور دون تعميم سلبي
                 def get_sr_comment(val):
                     if val >= 80:
                         return f"سجل البنك ({val}%)، مما يعكس أداءً متميزاً والتزاماً ريادياً في دمج معايير (GRI و ISSB)، والتوسع الفعال في محفظة التمويل المستدام والأصول الخضراء ومخاطر المناخ."
@@ -851,126 +850,14 @@ with tab2:
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)"):
-        st.markdown("""
-        <div dir="rtl" style="text-align: right;">
-        <ul>
-            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة بعد النشر.</li>
-            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم سيادة القانون، العدالة والمساواة، المتابعة والمساءلة، المشاركة، الشفافية والإفصاح، ومجلس الإدارة.</li>
-            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف.</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
-        hierarchy_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 400px;">
-        <table class="custom-rtl-table">
-        <thead>
-        <tr>
-        <th>المحور الرئيسي</th>
-        <th>البعد الأساسي</th>
-        <th>العناصر الفرعية</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-        <td rowspan="4" style="font-weight: bold; color: #002B49; vertical-align: top;">أولاً: منصات المعلومات الذكية (SIP)</td>
-        <td>1. جودة المعلومات</td>
-        <td>1/1 جاهزية البنية التحتية الرقمية.<br>1/2 توافر البيانات وقابليتها للمعالجة الآلية.</td>
-        </tr>
-        <tr>
-        <td>2. التكامل والخصوصية</td>
-        <td>2/1 الترابط البيني التقني.<br>2/2 السيادة الرقمية وأمن المعلومات.</td>
-        </tr>
-        <tr>
-        <td>3. الامتثال التقني</td>
-        <td>3/1 الامتثال للمعايير القياسية.<br>3/2 حوكمة الخوارزميات والذكاء الاصطناعي.</td>
-        </tr>
-        <tr>
-        <td>4. التخطيط والمراقبة بعد النشر</td>
-        <td>4/1 الرصد والتحليل الآني.<br>4/2 دقة وموثوقية المخرجات الرقابية.</td>
-        </tr>
-        <tr>
-        <td rowspan="6" style="font-weight: bold; color: #002B49; vertical-align: top;">ثانياً: الحوكمة المؤسسية (IG)</td>
-        <td>1. سيادة القانون</td>
-        <td>1/1 التوافق التشريعي والتنظيمي مع البنك المركزي.<br>1/2 الأخلاقيات والسلوك المصرفي.</td>
-        </tr>
-        <tr>
-        <td>2. العدالة والمساواة</td>
-        <td>2/1 العدالة التنظيمية والوظيفية.<br>2/2 عدالة حقوق أصحاب المصلحة والمودعين.</td>
-        </tr>
-        <tr>
-        <td>3. المتابعة والمساءلة</td>
-        <td>3/1 وضوح هيكل المسؤوليات والصلاحيات.<br>3/2 فاعلية آليات الرقابة والتدقيق الداخلي.</td>
-        </tr>
-        <tr>
-        <td>4. المشاركة</td>
-        <td>4/1 تفاعل وانخراط أصحاب المصلحة.<br>4/2 المشاركة الفعالة في صنع القرار الاستراتيجي.</td>
-        </tr>
-        <tr>
-        <td>5. الشفافية والإفصاح</td>
-        <td>5/1 جودة ووضوح الإفصاح المالي وغير المالي.<br>5/2 توقيت ودورية الإفصاح.</td>
-        </tr>
-        <tr>
-        <td>6. مجلس الإدارة</td>
-        <td>6/1 كفاءة وفاعلية تشكيل المجلس والأعضاء المستقلين.<br>6/2 نشاط اللجان المنبثقة (المراجعة، المخاطر).<br>6/3 سياسات تجنب تعارض المصالح.</td>
-        </tr>
-        <tr>
-        <td rowspan="5" style="font-weight: bold; color: #002B49; vertical-align: top;">ثالثاً: تقارير الاستدامة (SR)</td>
-        <td>1. الاستراتيجية</td>
-        <td>1/1 الدمج الاستراتيجي لأهداف التنمية المستدامة.<br>1/2 التخصيص المالي والائتماني المستدام.</td>
-        </tr>
-        <tr>
-        <td>2. التنوع والشمول</td>
-        <td>2/1 تنوع الهيكل القيادي وتمكين المرأة.<br>2/2 شمول الخدمات المالية المصرفية.</td>
-        </tr>
-        <tr>
-        <td>3. إدارة المخاطر</td>
-        <td>3/1 دمج مخاطر المناخ ضمن إدارة المخاطر الكلية.<br>3/2 اختبارات الضغط والتحوط المرن.</td>
-        </tr>
-        <tr>
-        <td>4. الأبعاد التشغيلية</td>
-        <td>4/1 التمويل والاستثمار الأخضر والاقتصادي.<br>4/2 الكفاءة التشغيلية للموارد والبيئة.<br>4/3 أثر المسؤولية المجتمعية والإنفاق التنموي.</td>
-        </tr>
-        <tr>
-        <td>5. المقاييس والأهداف</td>
-        <td>5/1 أداء تحقيق المستهدفات البيئية والمجتمعية.<br>5/2 المواءمة المعيارية مع (GRI و ISSB) والتوكيد.</td>
-        </tr>
-        </tbody>
-        </table>
-        </div>
-        """
-        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
-
-        axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
-        weights_vals_bank = [40, 30, 30]
-        custom_pie_colors_bank = [CBE_NAVY, CBE_GOLD, "#475569"]
-
-        fig_pie_bank = px.pie(
-            names=axes_names_bank,
-            values=weights_vals_bank,
-            hole=0.4,
-            title="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)",
-            color=axes_names_bank,
-            color_discrete_map=dict(zip(axes_names_bank, custom_pie_colors_bank))
-        )
-        fig_pie_bank.update_layout(
-            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.99, xanchor='right'),
-            paper_bgcolor="#FFFFFF",
-            font=dict(family="Cairo", size=13)
-        )
-        st.plotly_chart(fig_pie_bank, use_container_width=True)
-
 # ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
+# التبويب الثالث: محاكي السياسات (Policy Simulator) - يدعم أكثر من سيناريو للبنك الواحد
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار السيناريوهات الاستراتيجية بدقة عالية.</p>
+        <p>استشراف أثر التدخلات الاستثمارية والتكنولوجية واختبار أكثر من سيناريو استراتيجي لنفس البنك بدقة عالية وتراكمية.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -995,9 +882,9 @@ with tab3:
             var2_ig = st.slider("2️⃣ نسبة الزيادة في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2")
             var3_sr = st.slider("3️⃣ نسبة الزيادة في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3")
 
-            run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو البنك", use_container_width=True, type="primary")
+            run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو إضافي للبنك", use_container_width=True, type="primary")
             
-            if st.button("🗑️ مسح وإعادة تعيين استجابات المحاكي", use_container_width=True, type="secondary"):
+            if st.button("🗑️ مسح وإعادة تعيين كافة سيناريوهات المحاكي", use_container_width=True, type="secondary"):
                 st.session_state.simulated_results_dict = {}
                 st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                 st.rerun()
@@ -1009,13 +896,13 @@ with tab3:
                 <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
                 <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
                 <hr>
-                <h3>📋 مقارنة السيناريوهات المثبتة للبنوك (المختارة):</h3>
+                <h3>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h3>
             """
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
                     sim_word_html += f"""
                     <div style="border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
-                        <h4>السيناريو: {k}</h4>
+                        <h4>معرف السيناريو: {k}</h4>
                         <div>{v['html']}</div>
                         <div style="margin-top: 10px;">{v['deep']}</div>
                     </div>
@@ -1098,7 +985,9 @@ with tab3:
                       </div>
                     </div>
                     """
-                    sim_key = f"{sim_bank_sel} - {scenario_dropdown}"
+                    
+                    # استخدام معرف فريد يعتمد على البنك واسم السيناريو والطابع الزمني للسماح بتسجيل أكثر من سيناريو لنفس البنك دون مسح القديم
+                    sim_key = f"{sim_bank_sel} - {scenario_dropdown} [{datetime.now().strftime('%H:%M:%S')}]"
                     st.session_state.simulated_results_dict[sim_key] = {
                         "html": box_html, 
                         "deep": deep_analysis, 
@@ -1112,19 +1001,20 @@ with tab3:
 
             if st.session_state.simulated_results_dict:
                 st.markdown("---")
-                st.markdown("<h4>📋 مقارنة السيناريوهات المثبتة للبنوك:</h4>", unsafe_allow_html=True)
-                for item in st.session_state.simulated_results_dict.values():
+                st.markdown("<h4>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h4>", unsafe_allow_html=True)
+                for s_key, item in st.session_state.simulated_results_dict.items():
+                    st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
                     st.markdown(item["html"], unsafe_allow_html=True)
                     st.markdown(item["deep"], unsafe_allow_html=True)
                     st.markdown("---")
             else:
-                st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة السيناريوهات هنا بغرض المقارنة.")
+                st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار (مع التصحيح الذكي والمخصص حسب القيم)
+# التبويب الرابع: لوحة دعم اتخاذ القرار
 # ------------------------------------------------------------------------------
 with tab4:
     st.markdown("""
@@ -1272,7 +1162,7 @@ with tab4:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد (مع الثبات التلقائي وعرض تفاصيل التأسيس)
+# التبويب الخامس: التقرير التنفيذي الموحد (يعرض كافة السيناريوهات المسجلة للبنك)
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -1317,18 +1207,19 @@ with tab5:
                 specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
                 specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
 
-            matched_sims = [s_key for s_key in st.session_state.simulated_results_dict.keys() if s_key.startswith(b_name)]
+            # استعراض كافة السيناريوهات المرتبطة بهذا البنك
+            matched_sims = {s_key: s_val_obj for s_key, s_val_obj in st.session_state.simulated_results_dict.items() if s_val_obj['bank'] == b_name}
             if matched_sims:
-                latest_sim_key = matched_sims[-1]
-                sim_data_obj = st.session_state.simulated_results_dict[latest_sim_key]
-                sim_detail = (
-                    f"تم تطبيق سيناريو ({sim_data_obj['scenario']})؛ "
-                    f"حيث بلغت القيمة المتوقعة للمؤشر ({sim_data_obj['simulated_val']}%) بصافي تغير قدره ({sim_data_obj['delta']:+.2f}). "
-                    f"<b>التحليل:</b> {sim_data_obj['analysis_text']} "
-                    f"<b>خطة التحرك:</b> {sim_data_obj['action_plan']}"
-                )
+                sim_details_list = []
+                for s_key, sim_data_obj in matched_sims.items():
+                    sim_details_list.append(
+                        f"• <b>السيناريو ({sim_data_obj['scenario']}):</b> القيمة المتوقعة ({sim_data_obj['simulated_val']}%) بصافي تغير ({sim_data_obj['delta']:+.2f}). "
+                        f"<i>التحليل:</i> {sim_data_obj['analysis_text']} "
+                        f"<i>خطة التحرك:</i> {sim_data_obj['action_plan']}"
+                    )
+                sim_detail = "<br>".join(sim_details_list)
             else:
-                sim_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم تسجيل سيناريو استشرافي لهذا البنك.</span>"
+                sim_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم تسجيل سيناريوهات استشرافية لهذا البنك.</span>"
             
             if b_name in st.session_state.decision_results_dict:
                 dec_item = st.session_state.decision_results_dict[b_name]
@@ -1349,7 +1240,7 @@ with tab5:
                 <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
                     <li><b>محاور الجاهزية الذكية المرصودة:</b> منصات المعلومات ({s_val}%) | الحوكمة المؤسسية ({i_val}%) | تقارير الاستدامة ({r_val}%)</li>
                     <li><b>المسار التنفيذي الموصى به:</b> {specific_policy_action}</li>
-                    <li style="margin-top: 8px;"><b>🔬 مخرجات محاكي السياسات الاستشرافي:</b><br>{sim_detail}</li>
+                    <li style="margin-top: 8px;"><b>🔬 مخرجات محاكي السياسات الاستشرافي (السيناريوهات المسجلة):</b><br>{sim_detail}</li>
                     <li style="margin-top: 8px;"><b>🛡️ مخرجات لوحة دعم القرار والسياسات:</b><br>{dec_detail}</li>
                 </ul>
             </div>
@@ -1437,7 +1328,7 @@ with tab6:
     st.info("مولد تقارير الاستدامة جاهز لتوليد مسودة الإفصاحات البيئية والمجتمعية والحوكمة (ESG) للبنوك المسجلة.")
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard + أداة audit_differentiation)
+# التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard)
 # ------------------------------------------------------------------------------
 if tab7 is not None:
     with tab7:
