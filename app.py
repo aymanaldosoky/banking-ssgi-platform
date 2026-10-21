@@ -1216,7 +1216,6 @@ with tab4:
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
@@ -1365,7 +1364,6 @@ with tab5:
             )
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب السادس: مولد تقارير الاستدامة (GRI/ISSB)
