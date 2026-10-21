@@ -483,7 +483,7 @@ st.markdown("""
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "🎯 اسأل المنصة",
-        "📊 مؤشر الحوكمة (SSGI)", 
+        "📊 مؤشر الحوكمة المركب (SSGI)", 
         "📈 محاكي السياسات (Policy Simulator)", 
         "🛡️ لوحة دعم اتخاذ القرار", 
         "📑 التقرير التنفيذي الموحد",
