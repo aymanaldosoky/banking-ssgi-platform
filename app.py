@@ -519,15 +519,15 @@ st.markdown("""
 <div class="ticker-wrap">
   <div class="ticker">
     <span class="ticker-item">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة وتقارير الاستدامة بالقطاع المصرفي المصري</span>
-    <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسة</span>
+    <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسية</span>
     <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي لاختبار السيناريوهات الاستراتيجية (Multiple Regression)</span>
-    <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار </span>
+    <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار وتوطين المعايير الرقابية وإطار دونيلا ميدوز لنقاط الرفع</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسة
+# التبويبات الرئيسية
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -624,31 +624,9 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال للإجابة عليه.")
             else:
-                with st.spinner("⏳ جاري استرجاع وتحليل الإجابة المخصصة للبنك..."):
-                    # فحص خاص في حال كان البنك هو البنك الأهلي اليوناني أو أي بنك تتطلب بياناته معالجة دقيقة
-                    if ask_bank_sel == "البنك الأهلي اليوناني":
-                        if "تأسس" in active_q or "مؤسسه" in active_q:
-                            st.markdown(f"""
-                            <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8;" dir="rtl">
-                                <h4 style="color: {CBE_NAVY}; margin-top: 0;">🎯 التقرير التحليلي المفصل ({ask_bank_sel})</h4>
-                                <p><b>السؤال / الاستفسار المطروح:</b> "{active_q}"</p>
-                                <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 4px solid #D97706; margin-top: 10px;">
-                                    <p style="margin: 0 0 8px 0; font-weight: bold; color: #92400E;">⚪ لا توجد بيانات كافية</p>
-                                    <p style="margin: 0; color: #1E293B; font-size: 13.5px;">
-                                    لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص البنك الأهلي اليوناني، ولن تُقدَّم إجابة مبنية على التخمين.<br>
-                                    - <b>لإضافة الإجابة:</b> أضف نصاً للبنك في ملف الأرشيف تحت المفتاح المناسب.<br>
-                                    - <b>لتفعيل الإجابة الآلية:</b> عيّن متغير البيئة ANTHROPIC_API_KEY أو GEMINI_API_KEY.<br>
-                                    - <b>مصدر مقترح:</b> تقرير الاستدامة والتقرير السنوي المنشوران للبنك.
-                                    </p>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            response_html = process_rag_gemini_query(ask_bank_sel, active_q)
-                            st.markdown(response_html, unsafe_allow_html=True)
-                    else:
-                        response_html = process_rag_gemini_query(ask_bank_sel, active_q)
-                        st.markdown(response_html, unsafe_allow_html=True)
+                with st.spinner("⏳ جاري استرجاع المستندات عبر المحرك المستقل وتحليل الإجابة المخصصة للبنك..."):
+                    response_html = process_rag_gemini_query(ask_bank_sel, active_q)
+                    st.markdown(response_html, unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/ الاستفسار.")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -660,7 +638,7 @@ with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك عبر المحاور الثلاثة الرئيسة.</p>
+        <p>إمكانية تشخيص البنوك عبر المحاور الثلاثة الرئيسية مع تسجيل وثبات النتائج المتعددة في قائمة البنوك المختارة دون قيود أو استبدال.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -756,7 +734,7 @@ with tab2:
                     </div>
                     """
 
-                # شرط عدم التكرار للبنك الواحد: الاكتفاء بذكر البنك مرة واحدة بناءً على آخر تعديل ومؤشر
+                # السماح بتعدد السجلات والإدخالات لنفس البنك بدلاً من استبدالها عبر إضافة طابع زمني أو معرّف فريد
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -767,8 +745,6 @@ with tab2:
                     "التقييم التشخيصي": clean_text(diagnosis)
                 }
 
-                # إزالة أي سجل سابق لنفس البنك وتحديثه بالقيمة الجديدة لضمان ظهور البنك مرة واحدة فقط في الجدول
-                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != clean_text(bank_ssgi_sel)]
                 st.session_state.history_state.append(entry)
 
                 st.markdown(f"""
@@ -805,7 +781,7 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📋 قائمة البنوك والسجلات المختارة (تقتصر على ذكر البنك مرة واحدة حسب آخر تعديل)")
+    st.markdown("### 📋 قائمة البنوك والسجلات المختارة (تسمح بتكرار البنك الواحد لعدة إدخالات)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
@@ -873,13 +849,13 @@ with tab2:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
 # ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
+# التبويب الثالث: محاكي السياسات (Policy Simulator) - يسمح بأكثر من سيناريو لنفس البنك
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات.</p>
+        <h3>🔬 محاكي السياسات الاستشرافي والمتابعة التراكمية للسيناريوهات المصرفية</h3>
+        <p>استشراف أثر التدخلات الاستثمارية وتثبيت أكثر من سيناريو استراتيجي لنفس البنك في نفس الوقت دون مسح السيناريوهات السابقة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -918,7 +894,7 @@ with tab3:
                 <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
                 <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
                 <hr>
-                <h3>📋 عرض السيناريوهات للبنوك:</h3>
+                <h3>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h3>
             """
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
@@ -1008,6 +984,7 @@ with tab3:
                     </div>
                     """
                     
+                    # استخدام معرف فريد يعتمد على التوقيت والبنك والسيناريو للسماح بتسجيل عدة سيناريوهات لنفس البنك
                     sim_key = f"{sim_bank_sel} - {scenario_dropdown} [{datetime.now().strftime('%H:%M:%S')}]"
                     st.session_state.simulated_results_dict[sim_key] = {
                         "html": box_html, 
@@ -1040,8 +1017,8 @@ with tab3:
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🛡️ لوحة دعم اتخاذ القرار المصرفي</h3>
-        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي.</p>
+        <h3>🛡️ لوحة دعم اتخاذ القرار وتوطين السياسات المصرفية</h3>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي بديناميكية تمنع التعارض أو النقد غير المبرر.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1183,7 +1160,7 @@ with tab4:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد
+# التبويب الخامس: التقرير التنفيذي الموحد (مع زر التوليد المؤقت/الفوري وتحديث مستقر)
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -1196,8 +1173,10 @@ with tab5:
     if not st.session_state.history_state:
         st.warning("📂 لا توجد بيانات مسجلة كافية حتى الآن. يرجى إدخال تشخيص بنك واحد على الأقل في القسم الثاني لتفعيل التقرير التنفيذي.")
     else:
+        # إضافة زر توليد فوري مؤقت لضمان التحكم في العرض ومنع الاختفاء أو إعادة التعيين
         generate_exec_report = st.button("🚀 توليد وتحديث التقرير التنفيذي الموحد فورياً", use_container_width=True, type="primary")
 
+        # استخدام مفتاح حالة لضمان استقرار العرض وعدم اختفائه عند النقر أو إعادة التحميل
         if "show_exec_report" not in st.session_state:
             st.session_state.show_exec_report = False
 
@@ -1237,6 +1216,7 @@ with tab5:
                     specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
                     specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
 
+                # دمج كافة السيناريوهات المرتبطة بهذا البنك
                 matched_sims = {s_key: s_val_obj for s_key, s_val_obj in st.session_state.simulated_results_dict.items() if s_val_obj['bank'] == b_name}
                 if matched_sims:
                     sim_details_list = []
@@ -1281,7 +1261,7 @@ with tab5:
             <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
               <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
                 <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h2>
-                <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على معطيات ومخرجات (SSGI)</p>
+                <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على مخرجات الدراسة المنهجية (SSGI)</p>
               </div>
             """, unsafe_allow_html=True)
 
