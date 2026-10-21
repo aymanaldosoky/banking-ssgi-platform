@@ -270,6 +270,38 @@ def clean_text(text: str) -> str:
     return re.sub(r'\s+', ' ', cleaned).strip()
 
 # ==============================================================================
+# قاعدة معطيات ومعلومات التأسيس والنشأة للبنوك المصرية
+# ==============================================================================
+BANK_PROFILE_DATA = {
+    "بنك مصر BM": {
+        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصاددي الوطني محمد طلعت حرب باشا.",
+        "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية (مؤسسة مالية حكومية كبرى).",
+        "profile": "أول بنك مصري بالكامل يهدف إلى استثمار المدخرات الوطنية وتوجيهها لخدمة الاقتصاد القومي والتنمية المستدامة."
+    },
+    "البنك الأهلي المصري NBE": {
+        "founded": "تأسس في 25 يونيو 1898 بموجب أمر عالي.",
+        "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية.",
+        "profile": "يُعد أقدم وأكبر البنوك التجارية في مصر، ولعب تاريخياً دور البنك المركزي في إصدار النقد وتمويل التجارة."
+    },
+    "البنك التجاري الدولي CIB": {
+        "founded": "تأسس عام 1975 تحت اسم (بنك تشيس مانهاتن التجاري الدولي) ثم تحول إلى اسمه الحالي.",
+        "ownership": "شركة مساهمة مصرية مدرجة في البورصة المصرية (مملوك لمؤسسات ومستثمرين محليين وعالميين).",
+        "profile": "يُعد أكبر البنوك التجارية الخاصة في مصر وسبّاقاً في تطبيق معايير الحوكمة والتحول الرقمي والاستدامة."
+    },
+    "بنك قطر الوطني الأهلي QNB": {
+        "founded": "تأسس عام 1978 كشركة مساهمة مصرية.",
+        "ownership": "تابع لمجموعة QNB العالمية (قطر الوطني) بنسبة سيطرة أغلبية.",
+        "profile": "يُعد أحد أكبر البنوك الخاصة العاملة في السوق المصرفي المصري مع شبكة فروع واسعة وتمويلات مؤسسية ضخمة."
+    }
+}
+
+def get_bank_founding_profile(bank_name):
+    for key, data in BANK_PROFILE_DATA.items():
+        if key in bank_name:
+            return f"<b>تاريخ النشأة:</b> {data['founded']} | <b>هيكل الملكية:</b> {data['ownership']} | <b>نبذة تأسيسية:</b> {data['profile']}"
+    return f"<b>بيانات تنظيمية:</b> بنك مصرفي مسجل وخاضع لإشراف البنك المركزي المصري ويعمل وفق المعايير المصرفية والرقابية المعتمدة."
+
+# ==============================================================================
 # نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر)
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
@@ -448,7 +480,7 @@ def describe_ig(val):
 
 def describe_sr(val):
     if val >= 80:
-        return f"التزام متميز بتقارير الاستدامة والتمويل الأخضر ({val}%) مع حصة معتبرة للأصول الخضراء ومواءمة معايير (GRI/ISSB)."
+        return f"أداء متميز والتزام ريادي في تقارير الاستدامة والتمويل الأخضر ({val}%) مع دمج فعال لمخاطر المناخ وتوسيع الأصول الخضراء وفق معايير (GRI/ISSB)."
     elif val >= 50:
         return f"أداء متوسط في تقارير الاستدامة ({val}%) يستوجب التوسع في محفظة التمويل المستدام ومخاطر المناخ."
     else:
@@ -632,6 +664,31 @@ with tab2:
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
+                # صياغة تعليقات ذكية تفصل بدقة بين القيم المرتفعة والمتوسطة والمنخفضة لكل محور دون تعميم سلبي
+                def get_sr_comment(val):
+                    if val >= 80:
+                        return f"سجل البنك ({val}%)، مما يعكس أداءً متميزاً والتزاماً ريادياً في دمج معايير (GRI و ISSB)، والتوسع الفعال في محفظة التمويل المستدام والأصول الخضراء ومخاطر المناخ."
+                    elif val >= 50:
+                        return f"سجل البنك ({val}%)، مما يعكس أداءً متوسطاً يتطلب التوسع في محفظة التمويل المستدام ومخاطر المناخ."
+                    else:
+                        return f"سجل البنك ({val}%)، مما يعكس ضعفاً هيكلياً في ملف الاستدامة والتمويل الأخضر يعيق امتثال البنك للمعايير الدولية."
+
+                def get_sip_comment(val):
+                    if val >= 80:
+                        return f"سجل البنك ({val}%)، وهو ما يعكس بنية تحتية رقمية متقدمة، تكاملاً تاماً مع الأنظمة الرقابية الآلية للبنك المركزي، وحوكمة فائقة للخوارزميات والبيانات."
+                    elif val >= 50:
+                        return f"سجل البنك ({val}%)، مما يشير إلى بنية رقمية متوسطة الكفاءة تحتاج إلى تحديث سعات تدفق البيانات وتوطين تقارير (RegTech)."
+                    else:
+                        return f"سجل البنك ({val}%)، وهو مستوى يعيق أتمتة الالتزام والرقابة التنظيمية ويشكل خطراً على السيادة الرقمية وأمن البيانات."
+
+                def get_ig_comment(val):
+                    if val >= 80:
+                        return f"سجل البنك ({val}%)، مما يعبر عن استقلالية تامة لمجلس الإدارة ولجان المراجعة وإدارة المخاطر، والالتزام الصارم بسياسات الإفصاح والشفافية وتجنب تعارض المصالح."
+                    elif val >= 50:
+                        return f"سجل البنك ({val}%)، وهو ما يتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين في هيكل اللجان."
+                    else:
+                        return f"سجل البنك ({val}%)، مما يعكس قصوراً حاداً في هيكل الصلاحيات والتدقيق الداخلي يتطلب إعادة هندسة شاملة."
+
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     detailed_diag = f"""
@@ -640,9 +697,9 @@ with tab2:
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
-                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، وهو ما يعكس بنية تحتية رقمية متقدمة، تكاملاً تاماً مع الأنظمة الرقابية الآلية للبنك المركزي، وحوكمة فائقة للخوارزميات والبيانات.</li>
-                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، مما يعبر عن استقلالية تامة لمجلس الإدارة ولجان المراجعة وإدارة المخاطر، والالتزام الصارم بسياسات الإفصاح والشفافية وتجنب تعارض المصالح.</li>
-                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> سجل البنك ({sr_val}%)، وهو ما يوضح ريادة واضحة في دمج معايير (GRI و ISSB)، وتوسيع محفظة التمويل المستدام والأصول الخضراء ومخاطر المناخ.</li>
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
                         </ul>
                         <p style="margin-top: 8px; color: {CBE_NAVY}; font-weight: bold;">💡 التوصية الاستراتيجية المباشرة: الحفاظ على موقع الريادة، تصدير النماذج التكنولوجية الناجحة، وتوسيع الشراكات الدولية في تمويل المناخ.</p>
                     </div>
@@ -655,9 +712,9 @@ with tab2:
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
-                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، مما يشير إلى بنية رقمية تقليدية أو متوسطة الكفاءة تحتاج إلى تحديث سعات تدفق البيانات وتوطين تقارير (RegTech).</li>
-                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، وهو ما يتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين في هيكل اللجان.</li>
-                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> سجل البنك ({sr_val}%)، مما يعكس قصوراً نسبياً في إدراج أبعاد مخاطر المناخ ضمن محفظة الائتمان الكلي.</li>
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
                         </ul>
                         <p style="margin-top: 8px; color: {CBE_NAVY}; font-weight: bold;">💡 التوصية الاستراتيجية المباشرة: تنفيذ برامج تدريجية لتطوير منصات البيانات، وسد الاختناقات الهيكلية في لجان الالتزام.</p>
                     </div>
@@ -670,9 +727,9 @@ with tab2:
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
                         <ul style="margin: 0; padding-right: 20px;">
-                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> سجل البنك ({sip_val}%)، وهو مستوى يعيق أتمتة الالتزام والرقابة التنظيمية ويشكل خطراً على السيادة الرقمية وأمن البيانات.</li>
-                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> سجل البنك ({ig_val}%)، مما يعكس قصوراً حاداً في هيكل الصلاحيات والتدقيق الداخلي يتطلب إعادة هندسة شاملة.</li>
-                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> سجل البنك ({sr_val}%)، وهو ضعف يعيق امتثال البنك للمعايير الدولية للإفصاح المالي (GRI/ISSB).</li>
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
                         </ul>
                         <p style="margin-top: 8px; color: {CBE_NAVY}; font-weight: bold;">💡 التوصية الاستراتيجية المباشرة: إعلان حالة طوارئ استثمارية، ترميم البنية التحتية الرقمية، ومراجعة فورية لهيكل لجان المراجعة والمخاطر.</p>
                     </div>
@@ -1152,7 +1209,6 @@ with tab4:
                         r_val = bank_data["تقارير الاستدامة (30%)"]
                         score_str_plain = get_colored_score_html(score)
 
-                        # صياغة توصيات ذكية تتأكد من تقييم الأداء المرتفع بشكل إيجابي وعدم السخرية من القيمة 100%
                         if score >= 80:
                             recs_list = [
                                 f"<b>تعزيز ريادة الابتكار المصرفي لـ ({decision_bank_sel}):</b> توظيف منصات المعلومات المتقدمة ({s_val}%) لتصدير الخدمات المالية الرقمية وقيادة التحول نحو المعايير المستدامة.",
@@ -1169,9 +1225,8 @@ with tab4:
                                 f"<b>إعادة هيكلة أطر الحوكمة:</b> تفعيل التزام تام بتعليمات البنك المركزي ورفع كفاءة التدقيق الداخلي ({i_val}%)."
                             ]
 
-                        # صياغة الإضافات التحليلية مع شرط خاص لملف الاستدامة إذا كان مرتفعاً (مثل 100%)
-                        if r_val >= 90:
-                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للجاهزية المرتفعة في الاستدامة ({r_val}%)."
+                        if r_val >= 80:
+                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للججاهزية المرتفعة في الاستدامة ({r_val}%)."
                         elif r_val >= 50:
                             sustainability_comment = f"الاستمرار في توجيه الائتمان المصرفي نحو المشروعات الخضراء لتعزيز الأداء في الاستدامة ({r_val}%)."
                         else:
@@ -1217,7 +1272,7 @@ with tab4:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد
+# التبويب الخامس: التقرير التنفيذي الموحد (مع الثبات التلقائي وعرض تفاصيل التأسيس)
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("""
@@ -1227,140 +1282,145 @@ with tab5:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🔄 تحديث وتوليد التقرير التنفيذي الموحد", use_container_width=True, type="primary"):
-        if not st.session_state.history_state:
-            st.warning("📂 لا توجد بيانات مسجلة كافية حتى الآن. يرجى إدخال تشخيص بنك واحد على الأقل في القسم الثاني.")
-        else:
-            df_rep = pd.DataFrame(st.session_state.history_state).sort_values(
-                by="مؤشر SSGI المركب", ascending=False
-            ).reset_index(drop=True)
+    if not st.session_state.history_state:
+        st.warning("📂 لا توجد بيانات مسجلة كافية حتى الآن. يرجى إدخال تشخيص بنك واحد على الأقل في القسم الثاني (مؤشر الحوكمة المركب SSGI) لتفعيل التقرير التنفيذي الموحد تلقائياً.")
+    else:
+        df_rep = pd.DataFrame(st.session_state.history_state).sort_values(
+            by="مؤشر SSGI المركب", ascending=False
+        ).reset_index(drop=True)
+        
+        top_row = df_rep.iloc[0]
+        top_bank = top_row["البنك"]
+        top_score = top_row["مؤشر SSGI المركب"]
+        top_score_str = get_colored_score_html(top_score)
+        top_bank_profile_info = get_bank_founding_profile(top_bank)
+
+        cards_html_list = []
+        word_blocks_html = ""
+
+        for idx, row in df_rep.iterrows():
+            b_name = row['البنك']
+            b_score = row['مؤشر SSGI المركب']
+            b_diag = row['التقييم التشخيصي']
             
-            top_row = df_rep.iloc[0]
-            top_bank = top_row["البنك"]
-            top_score = top_row["مؤشر SSGI المركب"]
-            top_score_str = get_colored_score_html(top_score)
+            s_val = row['منصات المعلومات (40%)']
+            i_val = row['الحوكمة المؤسسية (30%)']
+            r_val = row['تقارير الاستدامة (30%)']
+            
+            if b_score >= 80:
+                specific_strategic_angle = f"يتمتع بنك ({b_name}) بأداء متقدم ومستدام ({b_score}%), مما يمنحه ميزة تنافسية عالية في قيادة التحول الرقمي المصرفي، التمويل الأخضر، والامتثال الرقابي المتقدم."
+                specific_policy_action = f"تأسيس 'لجنة استراتيجية للسيادة الرقمية'، تعظيم محفظة الأصول الخضراء، وتوظيف الأنظمة الرقابية المتقدمة (RegTech)."
+            elif b_score >= 51:
+                specific_strategic_angle = f"يسجل بنك ({b_name}) جاهزية متوسطة ({b_score}%) تواجه بعض الاختناقات الهيكلية في البنية التقنية أو لجان الالتزام؛ وهو ما يتطلب تدخلاً استباقياً لردم الفجوات."
+                specific_policy_action = f"تنفيذ برامج تطوير منصات المعلومات (SIP)، تعزيز استقلالية لجان المراجعة، والتوسع في تدريب الكوادر."
+            else:
+                specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
+                specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
 
-            cards_html_list = []
-            word_blocks_html = ""
+            matched_sims = [s_key for s_key in st.session_state.simulated_results_dict.keys() if s_key.startswith(b_name)]
+            if matched_sims:
+                latest_sim_key = matched_sims[-1]
+                sim_data_obj = st.session_state.simulated_results_dict[latest_sim_key]
+                sim_detail = (
+                    f"تم تطبيق سيناريو ({sim_data_obj['scenario']})؛ "
+                    f"حيث بلغت القيمة المتوقعة للمؤشر ({sim_data_obj['simulated_val']}%) بصافي تغير قدره ({sim_data_obj['delta']:+.2f}). "
+                    f"<b>التحليل:</b> {sim_data_obj['analysis_text']} "
+                    f"<b>خطة التحرك:</b> {sim_data_obj['action_plan']}"
+                )
+            else:
+                sim_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم تسجيل سيناريو استشرافي لهذا البنك.</span>"
+            
+            if b_name in st.session_state.decision_results_dict:
+                dec_item = st.session_state.decision_results_dict[b_name]
+                dec_detail = f"{dec_item['recs'][0]} — وكذلك: {dec_item['recs'][1]}"
+            else:
+                dec_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم اعتماد توصيات لوحة القرار لهذا البنك.</span>"
 
-            for idx, row in df_rep.iterrows():
-                b_name = row['البنك']
-                b_score = row['مؤشر SSGI المركب']
-                b_diag = row['التقييم التشخيصي']
-                
-                s_val = row['منصات المعلومات (40%)']
-                i_val = row['الحوكمة المؤسسية (30%)']
-                r_val = row['تقارير الاستدامة (30%)']
-                
-                if b_score >= 80:
-                    specific_strategic_angle = f"يتمتع بنك ({b_name}) بأداء متقدم ومستدام ({b_score}%), مما يمنحه ميزة تنافسية عالية في قيادة التحول الرقمي المصرفي، التمويل الأخضر، والامتثال الرقابي المتقدم."
-                    specific_policy_action = f"تأسيس 'لجنة استراتيجية للسيادة الرقمية'، تعظيم محفظة الأصول الخضراء، وتوظيف الأنظمة الرقابية المتقدمة (RegTech)."
-                elif b_score >= 51:
-                    specific_strategic_angle = f"يسجل بنك ({b_name}) جاهزية متوسطة ({b_score}%) تواجه بعض الاختناقات الهيكلية في البنية التقنية أو لجان الالتزام؛ وهو ما يتطلب تدخلاً استباقياً لردم الفجوات."
-                    specific_policy_action = f"تنفيذ برامج تطوير منصات المعلومات (SIP)، تعزيز استقلالية لجان المراجعة، والتوسع في تدريب الكوادر."
-                else:
-                    specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
-                    specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
-
-                matched_sims = [s_key for s_key in st.session_state.simulated_results_dict.keys() if s_key.startswith(b_name)]
-                if matched_sims:
-                    latest_sim_key = matched_sims[-1]
-                    sim_data_obj = st.session_state.simulated_results_dict[latest_sim_key]
-                    sim_detail = (
-                        f"تم تطبيق سيناريو ({sim_data_obj['scenario']})؛ "
-                        f"حيث بلغت القيمة المتوقعة للمؤشر ({sim_data_obj['simulated_val']}%) بصافي تغير قدره ({sim_data_obj['delta']:+.2f}). "
-                        f"<b>التحليل:</b> {sim_data_obj['analysis_text']} "
-                        f"<b>خطة التحرك:</b> {sim_data_obj['action_plan']}"
-                    )
-                else:
-                    sim_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم تسجيل سيناريو استشرافي لهذا البنك.</span>"
-                
-                if b_name in st.session_state.decision_results_dict:
-                    dec_item = st.session_state.decision_results_dict[b_name]
-                    dec_detail = f"{dec_item['recs'][0]} — وكذلك: {dec_item['recs'][1]}"
-                else:
-                    dec_detail = "<span style='background-color: #FEF3C7; color: #92400E; padding: 3px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #FCD34D;'>⚠️ لم يتم اعتماد توصيات لوحة القرار لهذا البنك.</span>"
-
-                single_card_html = f"""
-                <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);" dir="rtl">
-                    <h4 style="color: {CBE_NAVY}; font-weight: bold; margin-top: 0; margin-bottom: 10px; font-size: 16.5px;">
-                        📌 التشخيص المنظومي والنتائج الاستراتيجية المستقلة لبنك: <span style="color: {CBE_GOLD};">{b_name}</span> (المؤشر المركب: {b_score}%)
-                    </h4>
-                    <p style="margin-bottom: 8px; color: #334155; font-size: 14px;"><b>التقييم التشخيصي الشامل:</b> {b_diag}</p>
-                    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-right: 4px solid {CBE_GOLD};">
-                        <p style="margin: 0 0 6px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 13.5px;">• زاوية التحليل الاستراتيجي المتميزة:</p>
-                        <p style="margin: 0; color: #1E293B; font-size: 13.5px; line-height: 1.7;">{specific_strategic_angle}</p>
-                    </div>
-                    <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
-                        <li><b>محاور الجاهزية الذكية المرصودة:</b> منصات المعلومات ({s_val}%) | الحوكمة المؤسسية ({i_val}%) | تقارير الاستدامة ({r_val}%)</li>
-                        <li><b>المسار التنفيذي الموصى به:</b> {specific_policy_action}</li>
-                        <li style="margin-top: 8px;"><b>🔬 مخرجات محاكي السياسات الاستشرافي:</b><br>{sim_detail}</li>
-                        <li style="margin-top: 8px;"><b>🛡️ مخرجات لوحة دعم القرار والسياسات:</b><br>{dec_detail}</li>
-                    </ul>
+            single_card_html = f"""
+            <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);" dir="rtl">
+                <h4 style="color: {CBE_NAVY}; font-weight: bold; margin-top: 0; margin-bottom: 10px; font-size: 16.5px;">
+                    📌 التشخيص المنظومي والنتائج الاستراتيجية المستقلة لبنك: <span style="color: {CBE_GOLD};">{b_name}</span> (المؤشر المركب: {b_score}%)
+                </h4>
+                <p style="margin-bottom: 8px; color: #334155; font-size: 14px;"><b>التقييم التشخيصي الشامل:</b> {b_diag}</p>
+                <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-right: 4px solid {CBE_GOLD};">
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 13.5px;">• زاوية التحليل الاستراتيجي المتميزة:</p>
+                    <p style="margin: 0; color: #1E293B; font-size: 13.5px; line-height: 1.7;">{specific_strategic_angle}</p>
                 </div>
-                """
-                cards_html_list.append(single_card_html)
-                word_blocks_html += single_card_html
-
-            st.markdown(f"""
-            <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
-              <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
-                <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h2>
-                <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على مخرجات الدراسة المنهجية (SSGI)</p>
-              </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown(f"""
-            <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
-                <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الأداء العام والريادة المصرفية:</h4>
-                <p style="margin-bottom: 8px;">يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب: <span style="font-weight: bold; color: {CBE_GOLD};">{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
-                <p style="margin: 0;">إجمالي البنوك الخاضعة للتشخيص والتحليل المنظومي حتى الآن: <b>{len(df_rep)} بنك مصرفي</b>.</p>
+                <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
+                    <li><b>محاور الجاهزية الذكية المرصودة:</b> منصات المعلومات ({s_val}%) | الحوكمة المؤسسية ({i_val}%) | تقارير الاستدامة ({r_val}%)</li>
+                    <li><b>المسار التنفيذي الموصى به:</b> {specific_policy_action}</li>
+                    <li style="margin-top: 8px;"><b>🔬 مخرجات محاكي السياسات الاستشرافي:</b><br>{sim_detail}</li>
+                    <li style="margin-top: 8px;"><b>🛡️ مخرجات لوحة دعم القرار والسياسات:</b><br>{dec_detail}</li>
+                </ul>
             </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown("<h4 style='color: #002B49; margin-bottom: 12px;'>📋 ترتيب الملخص التراكمي للبنوك:</h4>", unsafe_allow_html=True)
-            for idx, row in df_rep.iterrows():
-                s = row['مؤشر SSGI المركب']
-                s_str = get_colored_score_html(s)
-                summary_card = f"""
-                <div style="margin-bottom: 12px; line-height: 1.8; background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;" dir="rtl">
-                    <b>المركز ({idx + 1}): {row['البنك']}</b> — المؤشر المركب: {s_str} | منصات المعلومات: {row['منصات المعلومات (40%)']}% | الحوكمة: {row['الحوكمة المؤسسية (30%)']}% <br>
-                    <span style="color: #475569; font-size: 13.5px;"><b>التقييم التشخيصي:</b> {row['التقييم التشخيصي']}</span>
-                </div>
-                """
-                st.markdown(summary_card, unsafe_allow_html=True)
-
-            for card_code in cards_html_list:
-                st.markdown(card_code, unsafe_allow_html=True)
-
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            word_content = f"""
-            <html dir="rtl">
-            <head><meta charset="utf-8"><title>التقرير التنفيذي الموحد للقطاع المصرفي</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-                <h1 style="color: {CBE_NAVY}; center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
-                <p style="text-align: center; color: #64748B;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار (SSGI)</p>
-                <hr>
-                <h3>🏆 مؤشرات الأداء العام والريادة المصرفية:</h3>
-                <p>يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة: <b>{top_bank}</b> بقيمة مركبة تبلغ {top_score_str}.</p>
-                <p>إجمالي البنوك الخاضعة للتشخيص والتحليل المنظومي: <b>{len(df_rep)} بنك مصرفي</b>.</p>
-                <hr>
-                <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                {word_blocks_html}
-                <hr>
-                <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
-                <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
-            </body>
-            </html>
             """
-            st.download_button(
-                label="📥 تحميل التقرير التنفيذي في ملف مستند (Word)",
-                data=word_content.encode("utf-8-sig"),
-                file_name="التقرير_التنفيذي_للقطاع_المصرفي.doc",
-                mime="application/msword",
-                use_container_width=True
-            )
+            cards_html_list.append(single_card_html)
+            word_blocks_html += single_card_html
+
+        st.markdown(f"""
+        <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
+          <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
+            <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h2>
+            <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على مخرجات الدراسة المنهجية (SSGI)</p>
+          </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
+            <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الأداء العام والريادة المصرفية:</h4>
+            <p style="margin-bottom: 8px;">يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب: <span style="font-weight: bold; color: {CBE_GOLD};">{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
+            <div style="background: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #CBD5E1; margin-top: 10px; margin-bottom: 10px;">
+                <p style="margin: 0 0 6px 0; color: {CBE_NAVY}; font-weight: bold;">🏛️ الملامح التأسيسية والمعطيات التاريخية للبنك المتصدر ({top_bank}):</p>
+                <p style="margin: 0; color: #334155; font-size: 13.5px; line-height: 1.7;">{top_bank_profile_info}</p>
+            </div>
+            <p style="margin: 0;">إجمالي البنوك الخاضعة للتشخيص والتحليل المنظومي حتى الآن: <b>{len(df_rep)} بنك مصرفي</b>.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<h4 style='color: #002B49; margin-bottom: 12px;'>📋 ترتيب الملخص التراكمي للبنوك:</h4>", unsafe_allow_html=True)
+        for idx, row in df_rep.iterrows():
+            s = row['مؤشر SSGI المركب']
+            s_str = get_colored_score_html(s)
+            summary_card = f"""
+            <div style="margin-bottom: 12px; line-height: 1.8; background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0;" dir="rtl">
+                <b>المركز ({idx + 1}): {row['البنك']}</b> — المؤشر المركب: {s_str} | منصات المعلومات: {row['منصات المعلومات (40%)']}% | الحوكمة: {row['الحوكمة المؤسسية (30%)']}% <br>
+                <span style="color: #475569; font-size: 13.5px;"><b>التقييم التشخيصي:</b> {row['التقييم التشخيصي']}</span>
+            </div>
+            """
+            st.markdown(summary_card, unsafe_allow_html=True)
+
+        for card_code in cards_html_list:
+            st.markdown(card_code, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        word_content = f"""
+        <html dir="rtl">
+        <head><meta charset="utf-8"><title>التقرير التنفيذي الموحد للقطاع المصرفي</title></head>
+        <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
+            <h1 style="color: {CBE_NAVY}; center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
+            <p style="text-align: center; color: #64748B;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار (SSGI)</p>
+            <hr>
+            <h3>🏆 مؤشرات الأداء العام والريادة المصرفية:</h3>
+            <p>يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة: <b>{top_bank}</b> بقيمة مركبة تبلغ {top_score_str}.</p>
+            <p><b>معطيات وتاريخ التأسيس:</b> {top_bank_profile_info}</p>
+            <p>إجمالي البنوك الخاضعة للتشخيص والتحليل المنظومي: <b>{len(df_rep)} بنك مصرفي</b>.</p>
+            <hr>
+            <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
+            {word_blocks_html}
+            <hr>
+            <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
+            <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
+        </body>
+        </html>
+        """
+        st.download_button(
+            label="📥 تحميل التقرير التنفيذي في ملف مستند (Word)",
+            data=word_content.encode("utf-8-sig"),
+            file_name="التقرير_التنفيذي_للقطاع_المصرفي.doc",
+            mime="application/msword",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
