@@ -256,6 +256,7 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 # دالة معالجة النصوص وحذف المسافات البادئة (Flat HTML Helper) لمدخلات Markdown
 # ==============================================================================
 def flat_html(s: str) -> str:
+    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود."""
     return "".join(line.strip() for line in s.splitlines())
 
 # ==============================================================================
@@ -1341,109 +1342,139 @@ with tab5:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب السادس: مولد تقارير الاستدامة (GRI/ISSB) - [مطور ومحدّث]
+# التبويب السادس: مولد تقارير الاستدامة (GRI/ISSB) المطور والدليل العملي
 # ------------------------------------------------------------------------------
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🌿 الدليل العملي ومولد مسودات تقارير الاستدامة المصرفية (GRI / ISSB)</h3>
-        <p>إطار توجيهي متكامل كدليل عملي لإعداد تقارير الاستدامة للقطاع المصرفي، مع إمكانية توليد مسودة أولية مخصصة لأي بنك بناءً على معطياته ومخرجات الأقسام السابقة.</p>
+        <h3>🌿 دليل إعداد تقارير الاستدامة المصرفية (GRI / ISSB) ومولد المسودات المخصصة</h3>
+        <p>إطار عمل تطبيقي ودليل عملي تفصيلي موجه للقطاع المصرفي ككل، مع إمكانية توليد مسودة إفصاح مخصصة ومستقلة لأي بنك بناءً على المعطيات والمؤشرات المسجلة.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # عرض البنود الثابتة والدليل العملي للقطاع المصرفي
-    with st.expander("📖 اضغط لاستعراض الدليل العملي والبنوذ الثابتة لإعداد تقارير الاستدامة (GRI / ISSB) للقطاع المصرفي", expanded=False):
+    with st.expander("📖 اضغط لاستعراض (الدليل العملي الشامل لإعداد تقارير الاستدامة للبنوك في ضوء GRI / ISSB)", expanded=False):
         st.markdown(f"""
-        <div style="background: #FFFFFF; padding: 20px; border-radius: 10px; border: 1px solid {CBE_GOLD}; line-height: 1.8; color: #1E293B;" dir="rtl">
-            <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏛️ البنود الثابتة والمحددة لإعداد تقارير الاستدامة المصرفية (وفق معايير GRI و ISSB):</h4>
-            <ol>
-                <li><b>البند الأول: الحوكمة المؤسسية والشفافية (GRI 2 / ISSB S1):</b> الإفصاح عن هيكل مجلس الإدارة، نسبة الأعضاء المستقلين، سياسات مكافحة الفساد ورشوة الشركات، وآليات إدارة المخاطر وتجنب تعارض المصالح.</li>
-                <li><b>البند الثاني: الإفصاح المالي المرتبط بالمناخ (ISSB S2 / TCFD):</b> تقييم ومؤشرات مخاطر الانتقال ومخاطر الكوارث الفيزيائية، وإدارة الأصول الخضراء ومحافظ التمويل المستدام.</li>
-                <li><b>البند الثالث: الأداء البيئي والتشغيلي المباشر (GRI 302 & GRI 305):</b> بصمة الكربون للبنك، استهلاك الطاقة والكهرباء بالمقر الرئيسي والفروع، وإدارة النفايات والتحول نحو المباني الخضراء.</li>
-                <li><b>البند الرابع: التمويل المسؤول والشمول المالي (GRI 203 / المبادىء المصرفية المسؤولة PRB):</b> توجيه الائتمان للمشروعات الصغيرة والمتوسطة، التمويل متناهي الصغر، وتمكين المرأة والشباب ودمج فئات المجتمع غير المشمولة مصرفياً.</li>
-                <li><b>البند الخامس: رأس المال بشري والمجتمعي (GRI 401 & GRI 413):</b> تكافؤ الفرص، برامج التدريب والتطوير المهني، معدلات دوران العمل، واستثمارات المسؤولية المجتمعية والتنموية في القطاعات الأكثر احتياجاً.</li>
-            </ol>
+        <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9;" dir="rtl">
+            <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏛️ الدليل العملي الاسترشادي لإعداد تقارير الاستدامة المصرفية</h4>
+            <p>يستند هذا الدليل إلى المعايير الدولية المحدثة الصادرة عن المبادرة العالمية لإعداد التقارير (GRI) ومجلس معايير الاستدامة الدولية (ISSB - S1/S2)، ليعمل كمرجع مؤسسي للقطاع المصرفي:</p>
+            
+            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 12px 0;">
+            
+            <p><b>1. البند المؤسسي الأول: الحوكمة المؤسسية والإفصاح عن الاستراتيجية (ISSB S1 / GRI 2)</b></p>
+            <ul style="margin: 0 0 15px 0; padding-right: 20px; color: #334155;">
+                <li><b>نطاق الإفصاح:</b> دور مجلس الإدارة واللجان المنبثقة (المراجعة، المخاطر، الاستدامة) في الإشراف على المخاطر والفرص المرتبطة بالاستدامة والمناخ.</li>
+                <li><b>آلية العمل والأرقام:</b> الإفصاح عن نسبة الأعضاء المستقلين في مجلس الإدارة، عدد اجتماعات لجنة الاستدامة سنوياً، وسياسات ربط الحوافز التنفيذية بتحقيق مستهدفات ESG.</li>
+            </ul>
+
+            <p><b>2. البند البيئي الثاني: التمويل الأخضر ومخاطر التغير المناخي (GRI 201-2 / ISSB S2)</b></p>
+            <ul style="margin: 0 0 15px 0; padding-right: 20px; color: #334155;">
+                <li><b>نطاق الإفصاح:</b> قياس وإدارة المخاطر المرتبطة بالمناخ (المادية والانتقالية) ومحفظة التمويل المستدام.</li>
+                <li><b>آلية العمل والأرقام:</b> حساب نسبة الأصول الخضراء وقروض المشروعات المستدامة إلى إجمالي محفظة الائتمان، وقياس الانبعاثات المرتبطة بمحافظ التمويل (Scope 3 - Financed Emissions).</li>
+            </ul>
+
+            <p><b>3. البند الاجتماعي الثالث: الشمول المالي، رأس المال البشرى، والمسؤولية المجتمعية (GRI 401, 403, 203)</b></p>
+            <ul style="margin: 0 0 15px 0; padding-right: 20px; color: #334155;">
+                <li><b>نطاق الإفصاح:</b> دور البنك في تمكين المرأة، دعم الشركات الصغيرة والمتوسطة (SMEs)، والشمول المالي الرقمي.</li>
+                <li><b>آلية العمل والأرقام:</b> عدد الحسابات المصرفية المفتوحة للWomens والشباب، نسبة تمكين المرأة في المناصب القيادية، وساعات التدريب السنوية للعاملين.</li>
+            </ul>
+
+            <p><b>4. البند الرابع: حوكمة البيانات، الحصانة السيبرانية، والامتثال (GRI 418 / RegTech)</b></p>
+            <ul style="margin: 0; padding-right: 20px; color: #334155;">
+                <li><b>نطاق الإفصاح:</b> أمن المعلومات، حماية خصوصية العملاء، وتكامل منصات البيانات (SIP).</li>
+                <li><b>آلية العمل والأرقام:</b> عدد الحوادث السيبرانية المرصودة (صفر المستهدف)، معدل تشفير البيانات الحساسة، والامتثال لمعايير البنك المركزي وقوانين حماية البيانات.</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### 🎯 توليد المسودة الأولية لتقرير الاستدامة لبنك مختار:", unsafe_allow_html=True)
+    st.markdown("#### 🎯 مولد المسودات التوجيهية لتقارير الاستدامة للبنوك المسجلة")
 
-    col_esg_1, col_esg_2 = st.columns([1, 2], gap="large")
+    col_esg_in, col_esg_out = st.columns([1, 2], gap="large")
 
-    with col_esg_1:
+    with col_esg_in:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        # القائمة المنسدلة للبنوك (تدمج البنوك المسجلة في الـ history state مع القائمة العامة إن لزم)
-        available_banks_for_esg = list(set([item["البنك"] for item in st.session_state.history_state])) if st.session_state.history_state else []
-        all_options_esg = ["اختر البنك المصرفي"] + available_banks_for_esg if available_banks_for_esg else BANKS_LIST_AR
+        # دمج البنوك من القائمة العامة والبنوك التي تم تشخيصها في النظام
+        all_available_banks_for_esg = list(set(BANKS_LIST_AR[1:] + [item["البنك"] for item in st.session_state.history_state]))
+        esg_bank_sel = st.selectbox("اختر البنك المصرفي لإعداد المسودة", all_available_banks_for_esg, key="esg_bank_sel")
         
-        esg_bank_sel = st.selectbox("اختر البنك لإعداد المسودة", all_options_esg, key="esg_bank_dropdown")
-        
-        report_year = st.selectbox("سنة الإفصاح والتقرير", ["2026", "2025", "2024"], key="esg_year")
-        
-        generate_esg_btn = st.button("🌿 توليد مسودة تقرير الاستدامة (GRI/ISSB)", use_container_width=True, type="primary")
+        generate_esg_draft_btn = st.button("🌿 توليد مسودة تقرير الاستدامة المفصلة", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_esg_2:
+    with col_esg_out:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        if generate_esg_btn:
+        if generate_esg_draft_btn:
             if esg_bank_sel == "اختر البنك المصرفي":
-                st.warning("⚠️ يرجى اختيار بنك مصرفي صالح لتوليد مسودة تقرير الاستدامة.")
+                st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتوليد مسودة تقرير الاستدامة.")
             else:
-                # محاولة جلب بيانات البنك المسجلة إذا وجدت
-                bank_record = next((item for item in st.session_state.history_state if item["البنك"] == esg_bank_sel), None)
-                
-                if bank_record:
-                    s_score = bank_record["منصات المعلومات (40%)"]
-                    i_score = bank_record["الحوكمة المؤسسية (30%)"]
-                    r_score = bank_record["تقارير الاستدامة (30%)"]
-                    composite = bank_record["مؤشر SSGI المركب"]
-                    diag_text = bank_record["التقييم التشخيصي"]
+                # البحث عما إذا كان البنك قد تم تشخيصه مسبقاً للحصول على أرقامه الحقيقية، وإلا استخدام قيم افتراضية استرشادية
+                matched_history = next((item for item in st.session_state.history_state if item["البنك"] == esg_bank_sel), None)
+                if matched_history:
+                    score = matched_history["مؤشر SSGI المركب"]
+                    s_val = matched_history["منصات المعلومات (40%)"]
+                    i_val = matched_history["الحوكمة المؤسسية (30%)"]
+                    r_val = matched_history["تقارير الاستدامة (30%)"]
                 else:
-                    s_score, i_score, r_score, composite = 85.0, 88.0, 80.0, 84.5
-                    diag_text = "أداء قياسي تقديري بناءً على المعطيات العامة في القطاع المصرفي."
+                    score, s_val, i_val, r_val = 82.5, 85.0, 88.0, 78.0
 
                 bank_profile_text = get_bank_founding_profile(esg_bank_sel)
 
-                esg_draft_html = f"""
-                <div style="background: #FFFFFF; padding: 25px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.06);" dir="rtl">
-                    <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 20px;">
-                        <h3 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">🌿 مسودة تقرير الاستدامة والإفصاح المالي (GRI / ISSB)</h3>
-                        <p style="color: {CBE_GOLD}; font-weight: bold; margin-top: 5px;">البنك المصرفي: {esg_bank_sel} | سنة التقرير: {report_year}</p>
+                esg_report_html = f"""
+                <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9;" dir="rtl">
+                    <h3 style="color: {CBE_NAVY}; margin-top: 0; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 10px;">
+                        🌿 مسودة تقرير الاستدامة الموجهة (GRI / ISSB) — بنك: <span style="color: {CBE_GOLD};">{esg_bank_sel}</span>
+                    </h3>
+                    <p style="font-size: 13.5px; color: #64748B;"><b>تاريخ الإصدار:</b> {datetime.now().strftime('%Y-%m-%d')} | <b>المنصة الوطنية الذكية لحوكمة القطاع المصرفي</b></p>
+                    
+                    <div style="background: {CBE_BG}; padding: 14px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin: 15px 0;">
+                        <p style="margin: 0 0 6px 0; font-weight: bold; color: {CBE_NAVY};">🏛️ نبذة تعريفية وهيكل الملكية:</p>
+                        <p style="margin: 0; color: #334155; font-size: 13.5px;">{bank_profile_text}</p>
                     </div>
+
+                    <p><b>1. إفصاح الحوكمة والاستراتيجية المؤسسية (ISSB S1 / GRI 2):</b></p>
+                    <ul style="margin: 0 0 12px 0; padding-right: 20px; color: #1E293B;">
+                        <li><b>مؤشر الحوكمة المرصود بالمنصة:</b> {i_val}% (يعكس استقلالية لجان المراجعة والالتزام).</li>
+                        <li><b>مثال صياغي توجيهي:</b> "يتبنى مجلس إدارة بنك {esg_bank_sel} إشرافاً مباشراً على استراتيجية الاستدامة، مع التزام تام بسياسات تجنب تعارض المصالح والإفصاح الشفاف وفق المعايير الرقابية للبنك المركزي."</li>
+                    </ul>
+
+                    <p><b>2. إفصاح البعد البيئي والتمويل الأخضر ومخاطر المناخ (ISSB S2 / GRI 201-2):</b></p>
+                    <ul style="margin: 0 0 12px 0; padding-right: 20px; color: #1E293B;">
+                        <li><b>مؤشر الاستدامة المرصود بالمنصة:</b> {r_val}% (يعكس كفاءة دمج مخاطر المناخ وتوسيع الأصول الخضراء).</li>
+                        <li><b>مثال صياغي توجيهي:</b> "قام بنك {esg_bank_sel} بتوجيه نسبة بلغت استرشادياً <b>18.5%</b> من إجمالي محفظة الائتمان الجديدة نحو المشروعات الخضراء وتمويل كفاءة الطاقة، مع بدء قياس الانبعاثات المرتبطة بمحافظ التمويل."</li>
+                    </ul>
+
+                    <p><b>3. إفصاح البعد الاجتماعي والشمول المالي (GRI 203 / GRI 401):</b></p>
+                    <ul style="margin: 0 0 12px 0; padding-right: 20px; color: #1E293B;">
+                        <li><b>مثال صياغي توجيهي:</b> "أطلق البنك مبادرات واسعة لدعم الشمول المالي وتمكين المرأة، حيث بلغت نسبة السيدات المستفيدات من الخدمات المصرفية الرقمية <b>38%</b> من إجمالي القاعدة العمومية للبنك."</li>
+                    </ul>
+
+                    <p><b>4. إفصاح البنية الرقمية وحوكمة البيانات والامتثال (GRI 418 / RegTech):</b></p>
+                    <ul style="margin: 0; padding-right: 20px; color: #1E293B;">
+                        <li><b>مؤشر منصات المعلومات المرصود:</b> {s_val}% (يعكس جاهزية البنية الرقمية وتكامل التقارير الرقابية).</li>
+                        <li><b>مثال صياغي توجيهي:</b> "يعتمد البنك على بنية رقمية متقدمة ومنصات معلومات (SIP) تضمن حماية فائقة لبيانات العملاء وتحقيق التوافق التام مع متطلبات الحصانة السيبرانية."</li>
+                    </ul>
                     
-                    <p><b>1. مقدمة ونبذة مؤسسية:</b><br>{bank_profile_text}</p>
-                    
-                    <p><b>2. مؤشرات الجاهزية والحوكمة المؤسسية المرصودة بالمنصة:</b></br>
-                    - المؤشر المركب للحوكمة الذكية المستدامة (SSGI): <b>{composite}%</b><br>
-                    - تقييم محور تقارير الاستدامة (SR): <b>{r_score}%</b><br>
-                    - تقييم محور الحوكمة المؤسسية (IG): <b>{i_score}%</b><br>
-                    - تقييم محور منصات المعلومات (SIP): <b>{s_score}%</b><br>
-                    - التشخيص العام: <i>{diag_text}</i></p>
-
-                    <p><b>3. الإفصاحات البيئية والمناخية (ISSB S2 / TCFD):</b><br>
-                    - التزام البنك بإدارة مخاطر المناخ وتوفير تمويلات للمشروعات الخضراء والطاقة المتجددة.<br>
-                    - قياس البصمة الكربونية للعمليات التشغيلية وتوسيع محفظة الأصول المستدامة.</p>
-
-                    <p><b>4. الإفصاحات المجتمعية والشمول المالي (GRI 203 / GRI 413):</b><br>
-                    - تعزيز الشمول المالي وتمكين المرأة ودعم رواد الأعمال والمشروعات الصغيرة والمتوسطة (SMEs).<br>
-                    - برامج المسؤولية المجتمعية والإنفاق التنموي المستدام في المحافظات الأكثر احتياجاً.</p>
-
-                    <p><b>5. حوكمة البيانات وأمن المعلومات (RegTech & SIP):</b><br>
-                    - تطبيق أعلى معايير الحصانة السيبرانية وحوكمة البيانات لضمان السرية والامتثال لتعليمات البنك المركزي المصري.</p>
+                    <p style="margin-top: 15px; font-size: 12px; color: #64748B; text-align: center;"><i>ملاحظة: هذه المسودة ذات طبيعة توجيهية استرشادية للباحث وصناع القرار ويمكن تعديلها واعتمادها في التقارير النهائية.</i></p>
                 </div>
                 """
-                st.markdown(esg_draft_html, unsafe_allow_html=True)
+                st.markdown(esg_report_html, unsafe_allow_html=True)
 
+                esg_word_download = f"""
+                <html dir="rtl">
+                <head><meta charset="utf-8"><title>مسودة تقرير الاستدامة - {esg_bank_sel}</title></head>
+                <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
+                    {esg_report_html}
+                </body>
+                </html>
+                """
                 st.download_button(
-                    label="📥 تحميل مسودة تقرير الاستدامة (Word)",
-                    data=esg_draft_html.encode("utf-8-sig"),
+                    label=f"📥 تحميل مسودة تقرير الاستدامة لـ ({esg_bank_sel}) في ملف مستند (Word)",
+                    data=esg_word_download.encode("utf-8-sig"),
                     file_name=f"مسودة_تقرير_الاستدامة_{clean_text(esg_bank_sel)}.doc",
                     mime="application/msword",
                     use_container_width=True
                 )
         else:
-            st.info("🌿 قم باختيار البنك وسنة التقرير، ثم اضغط على زر التوليد لعرض المسودة الأولية لتقرير الاستدامة مخصصة للبنك.")
+            st.info("🌿 يرجى اختيار البنك المصرفي المطلوب من القائمة والضغط على زر التوليد لعرض المسودة التوجيهية المفصلة.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
