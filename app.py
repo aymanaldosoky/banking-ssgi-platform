@@ -1148,7 +1148,7 @@ with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🛡️ لوحة دعم اتخاذ القرار المصرفي</h3>
-        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي.</p>
+        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي المصري.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1389,7 +1389,7 @@ with tab5:
             <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
               <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
                 <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h2>
-                <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على معطيات ومخرجات (SSGI)</p>
+                <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على المعطيات والمخرجات المطلوبة </p>
               </div>
             """
 
@@ -1457,8 +1457,8 @@ with tab5:
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>🌿 القسم السادس الموسع: نظام توليد تقارير الاستدامة المتقدم والدليل العملي الشامل (GRI / ISSB / SDG Impact)</h3>
-        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2), معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
+        <h3>🌿نظام توليد تقارير الاستدامة المتقدم والدليل العملي الشامل (GRI / ISSB / SDG Impact)</h3>
+        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2)، معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1519,13 +1519,13 @@ with tab6:
 
                 st.markdown(flat_html(f"""
                 <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px;" dir="rtl">
-                    <h3 style="color: {CBE_NAVY}; margin-top: 0;">🌿 مسودة تقرير الاستدامة المخصصة للبنك: {b_name}</h3>
+                    <h3 style="color: {CBE_NAVY}; margin-top: 0;">🌿 مسودة تقرير الاستدامة المخصصة لبنك: {b_name}</h3>
                     <p style="color: #64748B;">تتيح لك الأقسام أدناه التحكم الكامل في توسيع أو تقليص بنود مسودة تقرير الاستدامة التوجيهية المفصلة بالكامل للبنك، بالإضافة إلى إمكانية تحميل الملف بكافة تفاصيله دون اختصار.</p>
                 </div>
                 """), unsafe_allow_html=True)
 
                 # استخدام عناصر التوسيع والتقليص (Expanders) التفاعلية لكل بند رئيسي في مسودة تقرير الاستدامة للبنك المختار
-                with st.expander("📌 البند التمهيدي: الملخص التنفيذي ومؤشرات التشخيص المعتمدة بالمنصة (اضغط للتقليص / التوسيع)", expanded=True):
+                with st.expander("📌 البند التمهيدي: الملخص التنفيذي ومؤشرات التشخيص المعتمدة بالمنصة", expanded=True):
                     st.markdown(flat_html(f"""
                     <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD};" dir="rtl">
                         <p style="margin: 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">📌 ملخص مؤشرات التشخيص المعتمدة في المنصة لبنك ({b_name}):</p>
@@ -1538,7 +1538,7 @@ with tab6:
                     </div>
                     """), unsafe_allow_html=True)
 
-                with st.expander("1️⃣ البند الأول: الإفصاح عن الحوكمة المؤسسية وهيكل اتخاذ القرار واستراتيجية الاستدامة (GRI 2 & ISSB S1)", expanded=False):
+                with st.expander("البند الأول: الإفصاح عن الحوكمة المؤسسية وهيكل اتخاذ القرار واستراتيجية الاستدامة (GRI 2 & ISSB S1)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
                         <p><b>الملامح التأسيسية وهيكل الملكية:</b> {profile_info}</p>
@@ -1546,21 +1546,21 @@ with tab6:
                     </div>
                     """), unsafe_allow_html=True)
 
-                with st.expander("2️⃣ البند الثاني: الإفصاحات البيئية وتمويل المناخ وإدارة البصمة الكربونية (GRI 302/305 & ISSB S2)", expanded=False):
+                with st.expander("البند الثاني: الإفصاحات البيئية وتمويل المناخ وإدارة البصمة الكربونية (GRI 302/305 & ISSB S2)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
                         <p><b>الأداء البيئي والتمويل المستدام:</b> استناداً إلى مستوى أداء الاستدامة ومخاطر المناخ المسجل بواقع ({r_val}%), يعمل بنك ({b_name}) على التوسع المدروس في محفظة الأصول الخضراء، تمويل مشروعات الطاقة المتجددة، وكفاءة استخدام الموارد. كما يلتزم البنك بقياس البصمة الكربونية التشغيلية (Scopes 1, 2, 3) لفروع البنك ومراكز البيانات، وإدماج اختبارات التحمل المناخي (Climate Stress Testing) ضمن تقييم الجدارة الائتمانية للمحفظة المؤسسية للعملاء الكبار.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
-                with st.expander("3️⃣ البند الثالث: الإفصاحات المجتمعية والشمول المالي وتطوير رأس المال البشري (GRI 401/405/413)", expanded=False):
+                with st.expander("البند الثالث: الإفصاحات المجتمعية والشمول المالي وتطوير رأس المال البشري (GRI 401/405/413)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
                         <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
-                with st.expander("4️⃣ البند الرابع: خطة التحرك الاستراتيجي والتوصيات التنفيذية المقترحة للبنك", expanded=False):
+                with st.expander("البند الرابع: خطة التحرك الاستراتيجي والتوصيات التنفيذية المقترحة للبنك", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
                         <ul>
