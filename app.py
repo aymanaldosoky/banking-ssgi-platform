@@ -253,21 +253,20 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# دالة معالجة النصوص وحذف المسافات البادئة (Flat HTML Helper) لمدخلات Markdown
+# الدوال المساعدة المحدثة (Flat HTML & Clean Text) لمنع تحول النصوص لكود
 # ==============================================================================
 def flat_html(s: str) -> str:
-    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود."""
-    return "".join(line.strip() for line in s.splitlines())
+    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود، واضعاً مسافة للفصل الآمن."""
+    return " ".join(l.strip() for l in s.splitlines() if l.strip())
 
-# ==============================================================================
-# دالة تنظيف النصوص وإزالة الرموز والأكواد المشوهة
-# ==============================================================================
-def clean_text(text: str) -> str:
+def clean_text(text) -> str:
+    """ينزع الوسوم الدخيلة وعلامات [cite] ويحافظ على الإيموجي والرموز."""
     if not isinstance(text, str):
         return str(text)
-    cleaned = text.replace('\xa0', ' ').replace('\u200b', '')
-    cleaned = re.sub(r'[^\w\s\-\.\%\(\)\:\,\/\ء-ي]', ' ', cleaned)
-    return re.sub(r'\s+', ' ', cleaned).strip()
+    t = re.sub(r"\[cite[^\]]*\]", "", text)
+    t = re.sub(r"<[^>]+>", "", t)
+    t = t.replace("\xa0", " ").replace("\u200b", "")
+    return re.sub(r"\s+", " ", t).strip()
 
 # ==============================================================================
 # قاعدة معطيات ومعلومات التأسيس والنشأة للبنوك المصرية
@@ -472,7 +471,7 @@ def describe_sip(val):
 
 def describe_ig(val):
     if val >= 80:
-        return f"حوكمة مؤسسية راسخة ({val}%) مع استقلالية تامة لمجلس الإدارة ولجان المراجعة والالتزام بأعلى معايير الشفافية."
+        return f"حوكمة مؤسسية راسخة ({val}%) مع استقلالية تامة لمجلس الإدارة ولجان المراجعة والامتثال بأعلى معايير الشفافية."
     elif val >= 50:
         return f"الحوكمة المؤسسية في نطاق متوازن ({val}%) وتتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين."
     else:
@@ -627,7 +626,7 @@ with tab1:
                 with st.spinner("⏳ جاري استرجاع وتحليل الإجابة المخصصة للبنك..."):
                     if ask_bank_sel == "البنك الأهلي اليوناني":
                         if "تأسس" in active_q or "مؤسسه" in active_q:
-                            st.markdown(f"""
+                            st.markdown(flat_html(f"""
                             <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8;" dir="rtl">
                                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">🎯 التقرير التحليلي المفصل ({ask_bank_sel})</h4>
                                 <p><b>السؤال / الاستفسار المطروح:</b> "{active_q}"</p>
@@ -638,13 +637,13 @@ with tab1:
                                     </p>
                                 </div>
                             </div>
-                            """, unsafe_allow_html=True)
+                            """), unsafe_allow_html=True)
                         else:
                             response_html = process_rag_gemini_query(ask_bank_sel, active_q)
-                            st.markdown(response_html, unsafe_allow_html=True)
+                            st.markdown(flat_html(response_html), unsafe_allow_html=True)
                     else:
                         response_html = process_rag_gemini_query(ask_bank_sel, active_q)
-                        st.markdown(response_html, unsafe_allow_html=True)
+                        st.markdown(flat_html(response_html), unsafe_allow_html=True)
         else:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/ الاستفسار.")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -762,7 +761,7 @@ with tab2:
                 st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != clean_text(bank_ssgi_sel)]
                 st.session_state.history_state.append(entry)
 
-                st.markdown(f"""
+                st.markdown(flat_html(f"""
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                   <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
                   <p style="font-size: 15px; margin-bottom: 8px;"><b>اسم البنك:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
@@ -772,7 +771,7 @@ with tab2:
                     <div style="color: #1E293B;">{detailed_diag}</div>
                   </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """), unsafe_allow_html=True)
 
                 categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
                 fig_radar = go.Figure()
@@ -796,6 +795,7 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
+    
     st.markdown("### 📋 قائمة البنوك والسجلات المختارة (تقتصر على ذكر البنك مرة واحدة حسب آخر تعديل)")
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
@@ -1128,8 +1128,8 @@ with tab3:
                 st.markdown("<h4>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h4>", unsafe_allow_html=True)
                 for s_key, item in st.session_state.simulated_results_dict.items():
                     st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
-                    st.markdown(item["html"], unsafe_allow_html=True)
-                    st.markdown(item["deep"], unsafe_allow_html=True)
+                    st.markdown(flat_html(item["html"]), unsafe_allow_html=True)
+                    st.markdown(flat_html(item["deep"]), unsafe_allow_html=True)
                     st.markdown("---")
             else:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
@@ -1246,11 +1246,12 @@ with tab4:
                         else:
                             sustainability_comment = f"إطلاق برامج عاجلة لتطوير الإفصاح المالي وغير المالي وفق معايير الاستدامة لتعويض الضعف في ({r_val}%)."
 
-                        deep_analysis_text = f"""
-- يتطلب متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).
-- {sustainability_comment}
-- تحديث أطر إدارة المخاطر الكلية والتحوط المرن بالتوازي مع متطلبات الحوكمة ({i_val}%).
-                        """
+                        deep_items = [
+                            f"يتطلب متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).",
+                            sustainability_comment,
+                            f"تحديث أطر إدارة المخاطر الكلية والتحوط المرن بالتوازي مع متطلبات الحوكمة ({i_val}%)."
+                        ]
+                        deep_analysis_text = "<ul style='margin:0;padding-right:20px;'>" + "".join(f"<li>{x}</li>" for x in deep_items) + "</ul>"
 
                         st.session_state.decision_results_dict[decision_bank_sel] = {
                             "bank": decision_bank_sel,
@@ -1272,13 +1273,13 @@ with tab4:
                             </ul>
                             <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 10px 0;">
                             <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
-                            <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 20px;">
+                            <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 0;">
                                 {item['deep']}
                             </div>
                         </div>
                     </div>
                     """
-                    st.markdown(card_html, unsafe_allow_html=True)
+                    st.markdown(flat_html(card_html), unsafe_allow_html=True)
             else:
                 st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1380,15 +1381,15 @@ with tab5:
                 cards_html_list.append(single_card_html)
                 word_blocks_html += single_card_html
 
-            st.markdown(f"""
+            header_html = f"""
             <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 30px; border-radius: 14px; border: 2px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 6px 20px rgba(0,0,0,0.08);">
               <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 15px; margin-bottom: 25px;">
                 <h2 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h2>
                 <p style="color: #64748B; font-size: 14.5px; margin-top: 6px;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار - بناءً على معطيات ومخرجات (SSGI)</p>
               </div>
-            """, unsafe_allow_html=True)
+            """
 
-            st.markdown(f"""
+            top_block_html = f"""
             <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الأداء العام والريادة المصرفية:</h4>
                 <p style="margin-bottom: 8px;">يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب: <span style="font-weight: bold; color: {CBE_GOLD};">{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
@@ -1398,9 +1399,10 @@ with tab5:
                 </div>
                 <p style="margin: 0;">إجمالي البنوك والسجلات الخاضعة للتشخيص والتحليل المنظومي حتى الآن: <b>{len(df_rep)} سجل مصرفي</b>.</p>
             </div>
-            """, unsafe_allow_html=True)
+            <h4 style='color: #002B49; margin-bottom: 12px;'>📋 ترتيب الملخص التراكمي للبنوك:</h4>
+            """
 
-            st.markdown("<h4 style='color: #002B49; margin-bottom: 12px;'>📋 ترتيب الملخص التراكمي للبنوك:</h4>", unsafe_allow_html=True)
+            summary_cards = []
             for idx, row in df_rep.iterrows():
                 s = row['مؤشر SSGI المركب']
                 s_str = get_colored_score_html(s)
@@ -1410,18 +1412,16 @@ with tab5:
                     <span style="color: #475569; font-size: 13.5px;"><b>التقييم التشخيصي:</b> {row['التقييم التشخيصي']}</span>
                 </div>
                 """
-                st.markdown(summary_card, unsafe_allow_html=True)
+                summary_cards.append(summary_card)
 
-            for card_code in cards_html_list:
-                st.markdown(card_code, unsafe_allow_html=True)
-
-            st.markdown("</div>", unsafe_allow_html=True)
+            report_html = header_html + top_block_html + "".join(summary_cards) + "".join(cards_html_list) + "</div>"
+            st.markdown(flat_html(report_html), unsafe_allow_html=True)
 
             word_content = f"""
             <html dir="rtl">
             <head><meta charset="utf-8"><title>التقرير التنفيذي الموحد للقطاع المصرفي</title></head>
             <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-                <h1 style="color: {CBE_NAVY}; center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
+                <h1 style="color: {CBE_NAVY}; text-align: center;">📑 التقرير التنفيذي الموحد لحوكمة القطاع المصرفي وتقارير الاستدامة</h1>
                 <p style="text-align: center; color: #64748B;">ملخص استراتيجي موجه للقيادات العليا وصناع القرار (SSGI)</p>
                 <hr>
                 <h3>🏆 مؤشرات الأداء العام والريادة المصرفية:</h3>
@@ -1448,24 +1448,17 @@ with tab5:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# # ------------------------------------------------------------------------------
 # التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB) والدليل العملي الموسع
 # ------------------------------------------------------------------------------
 with tab6:
-    st.markdown(
-        """
+    st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🌿 توليد مسودة تقارير الاستدامة التوجيهية والدليل العملي الشامل (GRI / ISSB)</h3>
         <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري وفق أحدث المعايير الدولية المعاصرة ومبادئ تأثير أهداف التنمية المستدامة (SDG Impact Standards).</p>
     </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
 
-    # 1. أولاً: توليد مسودة تقارير الاستدامة التوجيهية المخصصة للبنك
-    st.markdown(
-        "#### 📋 توليد مسودة تقارير الاستدامة التوجيهية المخصصة للبنك استناداً للمحاور المسجلة"
-    )
+    st.markdown("#### 📋 توليد مسودة تقارير الاستدامة التوجيهية المخصصة للبنك استناداً للمحاور المسجلة")
 
     all_registered_banks = (
         list(set([item["البنك"] for item in st.session_state.history_state]))
@@ -1474,9 +1467,7 @@ with tab6:
     )
 
     if not all_registered_banks:
-        st.warning(
-            "⚠️ يرجى أولاً إدخال وتسجيل بيانات بنك واحد على الأقل في (قسم مؤشر الحوكمة SSGI) لتفعيل مولد المسودة المخصصة."
-        )
+        st.warning("⚠️ يرجى أولاً إدخال وتسجيل بيانات بنك واحد على الأقل في (قسم مؤشر الحوكمة SSGI) لتفعيل مولد المسودة المخصصة.")
     else:
         col_gen1, col_gen2 = st.columns([2, 1])
         with col_gen1:
@@ -1539,9 +1530,7 @@ with tab6:
                     <p><b>مثال توجيهي للصياغة العملية للقطاع المصرفي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة في المناصب القيادية، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة مع الالتزام التام بمعايير حماية سرية بيانات العملاء والسيادة الرقمية.</p>
                 </div>
                 """
-                st.markdown(
-                    flat_html(draft_html_content), unsafe_allow_html=True
-                )
+                st.markdown(flat_html(draft_html_content), unsafe_allow_html=True)
 
                 docx_download_data = f"""
                 <html dir="rtl">
@@ -1576,13 +1565,11 @@ with tab6:
 
     st.markdown("---")
 
-    # 2. ثانياً: الدليل العملي الشامل والموسع والمفصل لإعداد تقارير الاستدامة (GRI / ISSB / SDG Impact)
     with st.expander(
         "📖 استعراض الدليل العملي الشامل والموسع والمفصل لجميع بنود وأقسام الاستدامة (GRI / ISSB / SDG Impact) للقطاع المصرفي",
         expanded=True,
     ):
-        st.markdown(
-            f"""
+        guide_html_content = f"""
         <div style="background: #FFFFFF; padding: 30px; border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 2.0;" dir="rtl">
             <h2 style="color: {CBE_NAVY}; margin-top: 0; text-align: center;">📚 الدليل العملي الشامل لإعداد تقارير الاستدامة في القطاع المصرفي (GRI / ISSB / SDG Impact)</h2>
             <p style="text-align: center; color: #475569;">مرجع منهجي متكامل لإعداد التقارير المالية وغير المالية المتعلقة بالاستدامة وفق معايير الإفصاح المالي الدولي (ISSB S1 / S2)، معايير المبادرة العالمية (GRI Standards)، ومعايير تأثير أهداف التنمية المستدامة (UNDP SDG Impact Standards)</p>
@@ -1590,23 +1577,23 @@ with tab6:
 
             <h3 style="color: {CBE_NAVY};">1️⃣ المحور الأول: المعايير العالمية والإفصاحات العامة (GRI Universal Standards: GRI 1, GRI 2, GRI 3)</h3>
             <ul>
-                <li><b>GRI 1 (الأساسيات):</b> يحدد مبادئ إعداد التقارير (الدقة، القابلية للمقارنة، الوضوح، الموثوقية، والتوقيت المناسب) التي يجب على البنوك الالتزام بها لضمان جودة الإفصاحات غير المالية[cite: 40].</li>
-                <li><b>GRI 2 (الإفصاحات العامة والتفاصيل التنظيمية):</b> يتضمن تفاصيل أنشطة البنك المصرفي، هيكل الحوكمة وتكوين مجلس الإدارة، سياسات الإفصاح، استراتيجية الاستدامة، وطرق إشراك أصحاب المصلحة (Stakeholder Engagement)[cite: 41].</li>
-                <li><b>GRI 3 (الموضوعات الجوهرية - Material Topics):</b> إرشادات تحديد الموضوعات ذات الأولوية القصوى بناءً على تقييم التأثيرات الاقتصادية والبيئية والاجتماعية الفعلية والمحتملة لأنشطة البنوك[cite: 41, 46].</li>
+                <li><b>GRI 1 (الأساسيات):</b> يحدد مبادئ إعداد التقارير (الدقة، القابلية للمقارنة، الوضوح، الموثوقية، والتوقيت المناسب) التي يجب على البنوك الالتزام بها لضمان جودة الإفصاحات غير المالية.</li>
+                <li><b>GRI 2 (الإفصاحات العامة والتفاصيل التنظيمية):</b> يتضمن تفاصيل أنشطة البنك المصرفي، هيكل الحوكمة وتكوين مجلس الإدارة، سياسات الإفصاح، استراتيجية الاستدامة، وطرق إشراك أصحاب المصلحة (Stakeholder Engagement).</li>
+                <li><b>GRI 3 (الموضوعات الجوهرية - Material Topics):</b> إرشادات تحديد الموضوعات ذات الأولوية القصوى بناءً على تقييم التأثيرات الاقتصادية والبيئية والاجتماعية الفعلية والمحتملة لأنشطة البنوك.</li>
             </ul>
 
             <h3 style="color: {CBE_NAVY};">2️⃣ المحور الثاني: الحوكمة المؤسسية وإدارة المخاطر الاستراتيجية (ISSB S1 & GRI 2)</h3>
             <ul>
-                <li><b>هيكل الإشراف والمساءلة الحوكمية:</b> إفصاح البنك عن دور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه ومراقبة المخاطر والفرص المتعلقة بالاستدامة والتمويل المستدام[cite: 47].</li>
+                <li><b>هيكل الإشراف والمساءلة الحوكمية:</b> إفصاح البنك عن دور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه ومراقبة المخاطر والفرص المتعلقة بالاستدامة والتمويل المستدام.</li>
                 <li><b>تكامل الاستراتيجية ونماذج أعمال البنك:</b> توضيح كيفية تأثير المخاطر والفرص البيئية والاجتماعية على استراتيجية البنك بعيدة المدى، خطط أعماله الائتمانية، وقرارات تخصيص رأس المال.</li>
-                <li><b>أطر إدارة المخاطر الكلية:</b> سياسات دمج المخاطر البيئية والاجتماعية ومخاطر الحوكمة (ESG) ضمن السياسات الائتمانية وإدارة المخاطر المؤسسية للبنك[cite: 43].</li>
-                <li><b>سياسات النزاهة ومكافحة الفساد:</b> الإفصاح عن مدونة السلوك الأخلاقي المصرفي، آليات الإبلاغ عن المخالفات، سياسات منع تضارب المصالح، ومكافحة غسل الأموال[cite: 53].</li>
+                <li><b>أطر إدارة المخاطر الكلية:</b> سياسات دمج المخاطر البيئية والاجتماعية ومخاطر الحوكمة (ESG) ضمن السياسات الائتمانية وإدارة المخاطر المؤسسية للبنك.</li>
+                <li><b>سياسات النزاهة ومكافحة الفساد:</b> الإفصاح عن مدونة السلوك الأخلاقي المصرفي، آليات الإبلاغ عن المخالفات، سياسات منع تضارب المصالح، ومكافحة غسل الأموال.</li>
             </ul>
 
             <h3 style="color: {CBE_NAVY};">3️⃣ المحور الثالث: الإفصاحات البيئية وتمويل المناخ والطاقة (GRI 302/303/305 & ISSB S2)</h3>
             <ul>
-                <li><b>إدارة البصمة الكربونية التشغيلية (Scopes 1, 2, 3):</b> قياس والإفصاح الشفاف عن الانبعاثات المباشرة وغير المباشرة الناتجة عن عمليات فروع البنك ومراكز البيانات وسلسلة التوريد[cite: 49].</li>
-                <li><b>محفظة التمويل الأخضر والأصول المستدامة:</b> قياس نسبة وحجم المحفظة الائتمانية الموجهة لمشروعات الطاقة المتجددة، كفاءة الطاقة، والنقل المستدام، بالإضافة إلى إصدار السندات الخضراء (Green Bonds)[cite: 41].</li>
+                <li><b>إدارة البصمة الكربونية التشغيلية (Scopes 1, 2, 3):</b> قياس والإفصاح الشفاف عن الانبعاثات المباشرة وغير المباشرة الناتجة عن عمليات فروع البنك ومراكز البيانات وسلسلة التوريد.</li>
+                <li><b>محفظة التمويل الأخضر والأصول المستدامة:</b> قياس نسبة وحجم المحفظة الائتمانية الموجهة لمشروعات الطاقة المتجددة، كفاءة الطاقة، والنقل المستدام، بالإضافة إلى إصدار السندات الخضراء (Green Bonds).</li>
                 <li><b>اختبارات التحمل المناخي (Climate Stress Testing):</b> مدى جاهزية البنك لتقييم واختبار تأثير المخاطر المناخية الطبيعية والانتقالية على جودة أصوله ومحفظة عملائه الكبار.</li>
                 <li><b>إفصاحات التمويل المرتبط بالمناخ (Financed Emissions):</b> تقييم الانبعاثات المُموّلة عبر القطاعات عالية الانبعاثات ووضع خطط انتقالية واضحة لإزالة الكربون (Net-Zero Transition Plans).</li>
             </ul>
@@ -1614,20 +1601,19 @@ with tab6:
             <h3 style="color: {CBE_NAVY};">4️⃣ المحور الرابع: الإفصاحات المجتمعية والشمول المالي ورأس المال البشري (GRI 401/403/405/413)</h3>
             <ul>
                 <li><b>الشمول المالي والتحول الرقمي المستدام:</b> حجم ونطاق التمويلات الموجهة للمشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة والشباب، وتوسيع نطاق الخدمات المصرفية الرقمية في كافة المحافظات.</li>
-                <li><b>رأس المال البشري وتكافؤ الفرص:</b> سياسات التوظيف العادل، برامج التدريب والتطوير المستمر للعاملين بالقطاع المصرفي، نسب تمثيل المرأة في الإدارة العليا، ومؤشرات الصحة والسلامة المهنية[cite: 51].</li>
+                <li><b>رأس المال البشري وتكافؤ الفرص:</b> سياسات التوظيف العادل، برامج التدريب والتطوير المستمر للعاملين بالقطاع المصرفي، نسب تمثيل المرأة في الإدارة العليا، ومؤشرات الصحة والسلامة المهنية.</li>
                 <li><b>المسؤولية المجتمعية والاستثمار التنموي:</b> حجم الإنفاق المجتمعي الموجه لدعم المبادرات القومية (مثل قطاعات الصحة، التعليم، ودعم الأسر الأولى بالرعاية).</li>
-                <li><b>حماية حقوق العملاء وأمن البيانات:</b> معايير حماية سرية بيانات العملاء، سياسات الشفافية في تسعير الخدمات المصرفية، والامتثال لقواعد اللائحة العامة لحماية البيانات (GDPR) وقوانين حماية البيانات الشخصية[cite: 54].</li>
+                <li><b>حماية حقوق العملاء وأمن البيانات:</b> معايير حماية سرية بيانات العملاء، سياسات الشفافية في تسعير الخدمات المصرفية، والامتثال لقواعد حماية البيانات الشخصية والسيادة الرقمية.</li>
             </ul>
 
             <h3 style="color: {CBE_NAVY};">5️⃣ المحور الخامس: معايير تأثير أهداف التنمية المستدامة (UNDP SDG Impact Standards for Enterprises)</h3>
             <ul>
-                <li><b>التركيز على اتخاذ القرار الداخلي:</b> دمج إدارة التأثير والمساهمة الإيجابية في أهداف التنمية المستدامة (SDGs) ضمن صلب استراتيجية البنك وعملية صنع القرار القيادي[cite: 57].</li>
-                <li><b>الشفافية والتوكيد الخارجي (External Assurance):</b> ضمان قيام طرف ثالث مستقل بالتدقيق والتحقق من صحة الإفصاحات الخاصة بالاستدامة لتعزيز موثوقية التقرير أمام المستثمرين والبنك المركزي[cite: 51].</li>
+                <li><b>التركيز على اتخاذ القرار الداخلي:</b> دمج إدارة التأثير والمساهمة الإيجابية في أهداف التنمية المستدامة (SDGs) ضمن صلب استراتيجية البنك وعملية صنع القرار القيادي.</li>
+                <li><b>الشفافية والتوكيد الخارجي (External Assurance):</b> ضمان قيام طرف ثالث مستقل بالتدقيق والتحقق من صحة الإفصاحات الخاصة بالاستدامة لتعزيز موثوقية التقرير أمام المستثمرين والبنك المركزي.</li>
             </ul>
         </div>
-        """,
-            unsafe_allow_html=True,
-        )
+        """
+        st.markdown(flat_html(guide_html_content), unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard)
