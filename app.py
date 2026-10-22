@@ -1230,7 +1230,7 @@ with tab4:
                         if score >= 80:
                             recs_list = [
                                 f"<b>تعزيز ريادة الابتكار المصرفي لـ ({decision_bank_sel}):</b> توظيف منصات المعلومات المتقدمة ({s_val}%) لتصدير الخدمات المالية الرقمية وقيادة التحول نحو المعايير المستدامة.",
-                                f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة والالتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
+                                f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة واللتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
                             ]
                         elif score >= 51:
                             recs_list = [
@@ -1633,6 +1633,28 @@ with tab6:
         </div>
         """
         st.markdown(flat_html(comprehensive_guide_html), unsafe_allow_html=True)
+
+        # زر تحميل الدليل العملي الشامل بتنسيق مستند Word
+        guide_docx_content = f"""
+        <html dir="rtl">
+        <head><meta charset="utf-8"><title>الدليل العملي الشامل لإعداد تقارير الاستدامة</title></head>
+        <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
+            <h1 style="color: {CBE_NAVY}; text-align: center;">الدليل العملي الشامل والموسع لإعداد تقارير الاستدامة في القطاع المصرفي المصري</h1>
+            <p style="text-align: center; color: #64748B;">مرجع منهجي وتطبيقي متكامل (GRI Standards / ISSB S1 & S2 / SDG Impact Standards)</p>
+            <hr>
+            {comprehensive_guide_html}
+            <hr>
+            <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
+        </body>
+        </html>
+        """
+        st.download_button(
+            label="📥 تحميل الدليل العملي الشامل والموسع في ملف مستند (Word)",
+            data=guide_docx_content.encode("utf-8-sig"),
+            file_name="الدليل_العملي_الشامل_لتقارير_الاستدامة_المصرفية.doc",
+            mime="application/msword",
+            use_container_width=True
+        )
 
 # ------------------------------------------------------------------------------
 # التبويب السابع: لوحة تحكم المشرف والزوار (Admin Dashboard)
