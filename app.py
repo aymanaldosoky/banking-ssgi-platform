@@ -1474,7 +1474,7 @@ with tab6:
     if not all_registered_banks:
         st.warning("⚠️ يرجى أولاً إدخال وتسجيل بيانات بنك واحد على الأقل في (قسم مؤشر الحوكمة SSGI) لتفعيل مولد المسودة المخصصة.")
     else:
-        col_gen1, col_gen2 = st.columns([2, 1])
+        col_gen1, col_gen2, col_gen3 = st.columns([2, 1, 1])
         with col_gen1:
             selected_bank_for_report = st.selectbox(
                 "اختر البنك لتوليد مسودة تقرير الاستدامة المخصصة والتفصيلية",
@@ -1484,10 +1484,17 @@ with tab6:
         with col_gen2:
             st.markdown("<br>", unsafe_allow_html=True)
             generate_draft_btn = st.button(
-                "🌿 توليد المسودة التوجيهية الشاملة والمفصلة",
+                "🌿 توليد المسودة",
                 use_container_width=True,
                 type="primary",
             )
+        with col_gen3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ مسح وإعادة تعيين", use_container_width=True, type="secondary"):
+                st.session_state.draft_generated_state = False
+                st.session_state.draft_bank_name = ""
+                st.success("✅ تم مسح وإعادة تعيين مسودة التقرير بنجاح.")
+                st.rerun()
 
         if generate_draft_btn:
             st.session_state.draft_generated_state = True
@@ -1513,7 +1520,7 @@ with tab6:
                 st.markdown(flat_html(f"""
                 <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px;" dir="rtl">
                     <h3 style="color: {CBE_NAVY}; margin-top: 0;">🌿 مسودة تقرير الاستدامة المخصصة للبنك: {b_name}</h3>
-                    <p style="color: #64748B;">تتيح لك الأقسام الت أدناه التحكم الكامل في توسيع أو تقليص بنود مسودة تقرير الاستدامة التوجيهية المفصلة بالكامل للبنك، بالإضافة إلى إمكانية تحميل الملف بكافة تفاصيله دون اختصار.</p>
+                    <p style="color: #64748B;">تتيح لك الأقسام أدناه التحكم الكامل في توسيع أو تقليص بنود مسودة تقرير الاستدامة التوجيهية المفصلة بالكامل للبنك، بالإضافة إلى إمكانية تحميل الملف بكافة تفاصيله دون اختصار.</p>
                 </div>
                 """), unsafe_allow_html=True)
 
@@ -1651,7 +1658,7 @@ with tab6:
             </ul>
 
             <h3 style="color: {CBE_NAVY}; margin-top: 25px;">5️⃣ المحور الخامس: معايير تأثير أهداف التنمية المستدامة (UNDP SDG Impact Standards for Enterprises) ومقاييس الأداء الثلاثين (ESG)</h3>
-            <p>يستند هذا الدليل إلى <b>30 مؤشراً مقترحاً للاستدامة</b> مقتبسة من الوثيقة التوجيهية للاتحاد الدولي للبورصات (WFE) والمبادرة العالمية (GRI) لتشمل الجوانب البيئية والمجتمعية والحوكمة:</p>
+            <p>يستند هذا الدليل إلى <b>30 مؤشراً مقترحاً للاستدامة</b> مقتبسة من الوثيقة التوجيهية للاتحاد الدولي للبورصات (WFE) والمبادرة العالمية (GRI) تشمل الجوانب البيئية والمجتمعية والحوكمة:</p>
             <ul>
                 <li><b>مؤشرات الأداء البيئي (1 إلى 9):</b> انبعاثات الغازات الدفيئة (النطاق 1، 2، 3)، كثافة الانبعاثات، استهلاك وزدواجية الطاقة، إدارة الموارد المائية والنفايات السائلة، السياسات البيئية المعتمدة، وإدارة مخاطر المناخ.</li>
                 <li><b>مؤشرات الأداء المجتمعي (10 إلى 20):</b> نسبة أجور المديرين التنفيذيين، نسبة الأجور بين الجنسين، معدل دوران الموظفين، التنوع بين الجنسين في المستويات القيادية، الصحة والسلامة المهنية، مناهضة التحرش وعمل الأطفال، وحقوق الإنسان.</li>
