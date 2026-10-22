@@ -1617,9 +1617,9 @@ with tab6:
                 )
 
     st.markdown("---")
-    st.markdown("#### 📖 2. الدليل العملي الشامل والموسع والمفصل لجميع بنود وأقسام الاستدامة للقطاع المصرفي")
+    st.markdown("#### 📖 2. الدليل العملي الشامل لإعداد تقارير الاستدامة للقطاع المصرفي")
 
-    with st.expander("📚 اضغط هنا لاستعراض الدليل العملي الشامل والموسع (GRI Standards / ISSB S1 & S2 / SDG Impact Standards / المؤشرات الثلاثين)", expanded=True):
+    with st.expander("📚 اضغط هنا لاستعراض الدليل العملي الشامل  (GRI Standards / ISSB S1 & S2 / SDG Impact Standards)", expanded=True):
         comprehensive_guide_html = f"""
         <div style="background: #FFFFFF; padding: 35px; border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 2.1;" dir="rtl">
             <h2 style="color: {CBE_NAVY}; margin-top: 0; text-align: center;">📚 الدليل العملي الشامل والموسع لإعداد تقارير الاستدامة في القطاع المصرفي المصري</h2>
