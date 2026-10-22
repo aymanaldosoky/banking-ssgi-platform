@@ -493,6 +493,10 @@ if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
+if "draft_generated_state" not in st.session_state:
+    st.session_state.draft_generated_state = False
+if "draft_bank_name" not in st.session_state:
+    st.session_state.draft_bank_name = ""
 
 # ==============================================================================
 # الهيدر والشريط الإخباري
@@ -1454,7 +1458,7 @@ with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🌿 القسم السادس الموسع: نظام توليد تقارير الاستدامة المتقدم والدليل العملي الشامل (GRI / ISSB / SDG Impact)</h3>
-        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2)، معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
+        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2), معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1486,11 +1490,15 @@ with tab6:
             )
 
         if generate_draft_btn:
+            st.session_state.draft_generated_state = True
+            st.session_state.draft_bank_name = selected_bank_for_report
+
+        if st.session_state.draft_generated_state and st.session_state.draft_bank_name in all_registered_banks:
             bank_record = next(
                 (
                     item
                     for item in st.session_state.history_state
-                    if item["البنك"] == selected_bank_for_report
+                    if item["البنك"] == st.session_state.draft_bank_name
                 ),
                 None,
             )
