@@ -1766,7 +1766,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث بالكامل حسب الطلب)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث لتفعيل إجابة الـ 31 عبارة تفاعلياً)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1819,477 +1819,216 @@ with tab7:
         """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("#### ثانياً: عبارات الاستقصاء بالكامل")
+    st.markdown("#### ثانياً: بيانات المشارك ومعلومات أولية ومهنية")
     
-    # النص المطلوب كاملاً بدون نقصان أو زيادة
-    survey_full_text_html = """
-    <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid #CBD5E1; line-height: 1.8;">
-        <p><b>مقياس التقييم:</b> (1) غير موافق تماما، (2) غير موافق، (3) محايد، (4) موافق، (5) موافق تماما.</p>
-        <br>
-        <h4 style="color: #002B49;">1- متغير منصة المعلومات الذكية</h4>
-        <div style="overflow-x: auto;">
-        <table class="custom-rtl-table">
-            <thead>
-                <tr>
-                    <th style="text-align: center; width: 40px;">م</th>
-                    <th>العبــــــــارة</th>
-                    <th style="text-align: center;">غير موافق تماماً</th>
-                    <th style="text-align: center;">غير موافق</th>
-                    <th style="text-align: center;">محايد</th>
-                    <th style="text-align: center;">موافق</th>
-                    <th style="text-align: center;">موافق تماما</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">1</td>
-                    <td>يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">2</td>
-                    <td>تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">3</td>
-                    <td>يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">4</td>
-                    <td>يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الامتثال التقني</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">5</td>
-                    <td>يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">6</td>
-                    <td>تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">7</td>
-                    <td>تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التخطيط والمراقبة بعد النشر</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">8</td>
-                    <td>يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">9</td>
-                    <td>تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التكامل والخصوصية</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">10</td>
-                    <td>يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">11</td>
-                    <td>يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
+    # نموذج إدخال بيانات المشارك
+    col_inf1, col_inf2 = st.columns(2, gap="medium")
+    with col_inf1:
+        survey_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user_main")
+        org_nature_u = st.selectbox("طبيعة المؤسسة", [
+            "بنك قطاع عام/ حكومي", "بنك قطاع خاص مشترك", "بنك إسلامي", "بنك عربي/ أجنبي",
+            "جهة رقابية ك(البنك المركزي / الرقابة المالية)", "مؤسسة أكاديمية أو شركة تكنولوجيا مالية", "أخرى"
+        ], key="org_nat_u_dyn")
+        sci_degree_u = st.selectbox("المؤهل العلمي", ["دكتوراه", "ماجستير", "شهادة مهنية متخصصة مثل: CISA, GRCP", "ليسانس/ بكالوريوس"], key="sci_deg_u_dyn")
+    with col_inf2:
+        spec_field_u = st.selectbox("مجال التخصص الوظيفي", [
+            "مجلس الإدارة/ الإدارة العليا العامة", "الحوكمة/ الالتزام/ المراجعة الداخلية",
+            "الاستدامة/ المسؤولية المجتمعية", "تكنولوجيا المعلومات/ التحول الرقمي", "إدارة المخاطر/ الائتمان", "البحث/ التطوير أو أخرى"
+        ], key="spec_field_u_dyn")
+        job_level_u = st.selectbox("المستوى الوظيفي", ["رئيس/ عضو مجلس إدارة", "رئيس قطاع/ مساعد مدير عام", "مدير إدارة/ مدير عام", "خبير/ مستشار/ كبير أخصائيين", "مستوى إشرافي", "أخرى"], key="job_level_u_dyn")
+        exp_years_u = st.selectbox("سنـوات الخبرة في القطاع المصرفي", ["أقل من 10 سنوات", "من 10 سنوات إلى أقل من 15 سنة", "من 15 سنة إلى أقل من 20 سنة", "20 سنة فأكثر"], key="exp_yrs_u_dyn")
 
-        <br>
-        <h4 style="color: #002B49;">2- متغير الحوكمة المؤسسية</h4>
-        <div style="overflow-x: auto;">
-        <table class="custom-rtl-table">
-            <thead>
-                <tr>
-                    <th style="text-align: center; width: 40px;">م</th>
-                    <th>العبــــــــارة</th>
-                    <th style="text-align: center;">غير موافق تماماً</th>
-                    <th style="text-align: center;">غير موافق</th>
-                    <th style="text-align: center;">محايد</th>
-                    <th style="text-align: center;">موافق</th>
-                    <th style="text-align: center;">موافق تماما</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الشفافية والإفصاح</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">12</td>
-                    <td>تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">13</td>
-                    <td>يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المتابعة والمساءلة</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">14</td>
-                    <td>يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">15</td>
-                    <td>يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">العدالة والمساواة</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">16</td>
-                    <td>تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المشاركة</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">17</td>
-                    <td>يسهم النموذج في تعزيز التواصل الفعال وإشراك الأطراف المعنية في تحديد الموضوعات الجوهرية (Materiality).</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">سيادة القانون</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">18</td>
-                    <td>يعزز النموذج من قدرة البنك على الاستجابة الفورية للتعديلات التشريعية والمصرفية ورصد حالات عدم الامتثال القانوني بدقة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">مجلس الإدارة</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">19</td>
-                    <td>تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
+    is_listed_u = st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟", ["نعم", "لا"], horizontal=True, key="is_listed_u_dyn")
 
-        <br>
-        <h4 style="color: #002B49;">3- متغير تقارير الاستدامة</h4>
-        <div style="overflow-x: auto;">
-        <table class="custom-rtl-table">
-            <thead>
-                <tr>
-                    <th style="text-align: center; width: 40px;">م</th>
-                    <th>العبــــــــارة</th>
-                    <th style="text-align: center;">غير موافق تماماً</th>
-                    <th style="text-align: center;">غير موافق</th>
-                    <th style="text-align: center;">محايد</th>
-                    <th style="text-align: center;">موافق</th>
-                    <th style="text-align: center;">موافق تماما</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الاستراتيجية</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">20</td>
-                    <td>تعكس التقارير الصادرة عن النموذج دمجاً حقيقياً لأهداف التنمية المستدامة (SDGs) ورؤية مصر 2030 في استراتيجية البنك طويلة الأجل.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد البيئي</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">21</td>
-                    <td>يتيح النموذج قياس والإفصاح بدقة عن البصمة الكربونية للبنك (النطاقات 1، 2، 3) وتوضيح حجم التمويل الأخضر والطاقة المتجددة (Green Finance).</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">22</td>
-                    <td>يوفر النموذج مؤشرات كمية دقيقة لقياس كفاءة رصد معدلات خفض استهلاك الموارد الداخلية (الطاقة، المياه، الورق).</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد الاجتماعي</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">23</td>
-                    <td>تفصح التقارير بالأرقام عن جهود البنك في تعزيز الشمول المالي ووصول الخدمات للفئات المهمشة والمناطق النائية.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">24</td>
-                    <td>يتم قياس أثر مبادرات المسؤولية المجتمعية (CSR) وتوضيح العائد الاجتماعي منها (SROI) بشكل كمي.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد الاقتصادي</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">25</td>
-                    <td>توضح التقارير العوائد الاقتصادية المباشرة وغير المباشرة لتبني ممارسات الاستدامة ودعم التوجه نحو المشتريات المستدامة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">إدارة المخاطر</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">26</td>
-                    <td>يتم دمج مخاطر المناخ والاستدامة (ESG Risks) ضمن إطار إدارة المخاطر الكلي للبنك بشكل منهجي.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">27</td>
-                    <td>توجد خطط طوارئ واستمرارية أعمال محدثة لمواجهة الأزمات المحتملة المرتبطة بالاستدامة أو التقنية.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المقاييس والأهداف</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">28</td>
-                    <td>يتم وضع أهداف مستقبلية (Targets) ذكية ومحددة زمنياً لكل محور من محاور الاستدامة.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">29</td>
-                    <td>يضمن النموذج دقة احتساب المؤشرات المركبة، ويسهل عملية المقارنة المعيارية (Benchmarking) مع المنافسين.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التنوع والشمول</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">30</td>
-                    <td>يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-                <tr>
-                    <td style="text-align: center; font-weight: bold;">31</td>
-                    <td>تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.</td>
-                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
-                </tr>
-            </tbody>
-        </table>
+    st.markdown("---")
+    st.markdown("#### ثالثاً: عبارات الاستقصاء (يرجى تقييم العبارات الـ 31 التالية بناءً على مقياس ليكارت الخماسي)")
+    st.markdown("<p style='color: #64748B;'>مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>", unsafe_allow_html=True)
+
+    # قاموس لخرائط الخيارات الرقمية
+    likert_mapping = {
+        "غير موافق تماماً": 1,
+        "غير موافق": 2,
+        "محايد": 3,
+        "موافق": 4,
+        "موافق تماماً": 5
+    }
+    likert_options = ["غير موافق تماماً", "غير موافق", "محايد", "موافق", "موافق تماماً"]
+
+    # قوائم لتخزين إجابات المحاور الثلاثة لحساب المتوسطات لاحقاً
+    sip_scores = []
+    ig_scores = []
+    sr_scores = []
+
+    # دالة مساعدة لعرض العبارة مع خيارات الراديو الأفقية
+    def render_statement(num, text, category_list):
+        st.markdown(f"""
+        <div style="background: #F8FAFC; padding: 12px 15px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 8px;" dir="rtl">
+            <span style="font-weight: bold; color: {CBE_NAVY};">({num}) {text}</span>
         </div>
-    </div>
-    """
-    st.markdown(flat_html(survey_full_text_html), unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        ans = st.radio(
+            f"تقييم العبارة {num}",
+            likert_options,
+            index=3,  # الافتراضي "موافق" (4)
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"stmt_{num}"
+        )
+        category_list.append(likert_mapping[ans])
+        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
+    # -----------------------------------------------------------------
+    # 1- متغير منصة المعلومات الذكية (العبارات من 1 إلى 11)
+    # -----------------------------------------------------------------
+    st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 20px;'>1- متغير منصة المعلومات الذكية</h4>", unsafe_allow_html=True)
+    
+    render_statement(1, "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.", sip_scores)
+    render_statement(2, "تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.", sip_scores)
+    render_statement(3, "يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.", sip_scores)
+    render_statement(4, "يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.", sip_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الامتثال التقني</div>", unsafe_allow_html=True)
+    render_statement(5, "يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.", sip_scores)
+    render_statement(6, "تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.", sip_scores)
+    render_statement(7, "تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).", sip_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>التخطيط والمراقبة بعد النشر</div>", unsafe_allow_html=True)
+    render_statement(8, "يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.", sip_scores)
+    render_statement(9, "تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.", sip_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>التكامل والخصوصية</div>", unsafe_allow_html=True)
+    render_statement(10, "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.", sip_scores)
+    render_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.", sip_scores)
+
+
+    # -----------------------------------------------------------------
+    # 2- متغير الحوكمة المؤسسية (العبارات من 12 إلى 19)
+    # -----------------------------------------------------------------
+    st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 30px;'>2- متغير الحوكمة المؤسسية</h4>", unsafe_allow_html=True)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الشفافية والإفصاح</div>", unsafe_allow_html=True)
+    render_statement(12, "تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.", ig_scores)
+    render_statement(13, "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.", ig_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>المتابعة والمساءلة</div>", unsafe_allow_html=True)
+    render_statement(14, "يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.", ig_scores)
+    render_statement(15, "يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.", ig_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>العدالة والمساواة</div>", unsafe_allow_html=True)
+    render_statement(16, "تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.", ig_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>المشاركة</div>", unsafe_allow_html=True)
+    render_statement(17, "يسهم النموذج في تعزيز التواصل الفعال وإشراك الأطراف المعنية في تحديد الموضوعات الجوهرية (Materiality).", ig_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>سيادة القانون</div>", unsafe_allow_html=True)
+    render_statement(18, "يعزز النموذج من قدرة البنك على الاستجابة الفورية للتعديلات التشريعية والمصرفية ورصد حالات عدم الامتثال القانوني بدقة.", ig_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>مجلس الإدارة</div>", unsafe_allow_html=True)
+    render_statement(19, "تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.", ig_scores)
+
+
+    # -----------------------------------------------------------------
+    # 3- متغير تقارير الاستدامة (العبارات من 20 إلى 31)
+    # -----------------------------------------------------------------
+    st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 30px;'>3- متغير تقارير الاستدامة</h4>", unsafe_allow_html=True)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الاستراتيجية</div>", unsafe_allow_html=True)
+    render_statement(20, "تعكس التقارير الصادرة عن النموذج دمجاً حقيقياً لأهداف التنمية المستدامة (SDGs) ورؤية مصر 2030 في استراتيجية البنك طويلة الأجل.", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>البعد البيئي</div>", unsafe_allow_html=True)
+    render_statement(21, "يتيح النموذج قياس والإفصاح بدقة عن البصمة الكربونية للبنك (النطاقات 1، 2، 3) وتوضيح حجم التمويل الأخضر والطاقة المتجددة (Green Finance).", sr_scores)
+    render_statement(22, "يوفر النموذج مؤشرات كمية دقيقة لقياس كفاءة رصد معدلات خفض استهلاك الموارد الداخلية (الطاقة، المياه، الورق).", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>البعد الاجتماعي</div>", unsafe_allow_html=True)
+    render_statement(23, "تفصح التقارير بالأرقام عن جهود البنك في تعزيز الشمول المالي ووصول الخدمات للفئات المهمشة والمناطق النائية.", sr_scores)
+    render_statement(24, "يتم قياس أثر مبادرات المسؤولية المجتمعية (CSR) وتوضيح العائد الاجتماعي منها (SROI) بشكل كمي.", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>البعد الاقتصادي</div>", unsafe_allow_html=True)
+    render_statement(25, "توضح التقارير العوائد الاقتصادية المباشرة وغير المباشرة لتبني ممارسات الاستدامة ودعم التوجه نحو المشتريات المستدامة.", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>إدارة المخاطر</div>", unsafe_allow_html=True)
+    render_statement(26, "يتم دمج مخاطر المناخ والاستدامة (ESG Risks) ضمن إطار إدارة المخاطر الكلي للبنك بشكل منهجي.", sr_scores)
+    render_statement(27, "توجد خطط طوارئ واستمرارية أعمال محدثة لمواجهة الأزمات المحتملة المرتبطة بالاستدامة أو التقنية.", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>المقاييس والأهداف</div>", unsafe_allow_html=True)
+    render_statement(28, "يتم وضع أهداف مستقبلية (Targets) ذكية ومحددة زمنياً لكل محور من محاور الاستدامة.", sr_scores)
+    render_statement(29, "يضمن النموذج دقة احتساب المؤشرات المركبة، ويسهل عملية المقارنة المعيارية (Benchmarking) مع المنافسين.", sr_scores)
+    
+    st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>التنوع والشمول</div>", unsafe_allow_html=True)
+    render_statement(30, "يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.", sr_scores)
+    render_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.", sr_scores)
+
     st.markdown("<br>", unsafe_allow_html=True)
+    
+    # حساب المتوسطات الآلية للمحاور الثلاثة بناءً على الإجابات الفعلية للعبارات
+    avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2)
+    avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2)
+    avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2)
+
+    st.markdown(f"""
+    <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 20px;" dir="rtl">
+        <h5 style="color: {CBE_NAVY}; margin-top: 0;">📊 ملخص متوسطات التقييم المحسوبة آلياً:</h5>
+        <ul>
+            <li><b>محور منصات المعلومات الذكية (SIP):</b> {avg_sip_val} من 5</li>
+            <li><b>محور الحوكمة المؤسسية (IG):</b> {avg_ig_val} من 5</li>
+            <li><b>محور تقارير الاستدامة (SR):</b> {avg_sr_val} من 5</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+    survey_comments = st.text_area("💬 مقترحات أخرى أو معوقات أو ملاحظات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:", placeholder="اكتب ملاحظاتك ومقترحاتك هنا...", key="user_survey_comments")
 
     all_surveys_data = load_survey_log_from_file()
     total_responses_count = len(all_surveys_data)
 
-    if st.session_state.role == "admin":
-        # ==========================================
-        # عرض صلاحيات الأدمن (Admin View)
-        # ==========================================
-        col_s1, col_s2 = st.columns([1, 1], gap="large")
+    submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="submit_survey_final_btn")
 
-        with col_s1:
-            st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-            st.markdown("##### 📝 بيانات المشارك والبنك التابع (لوحة الأدمن):", unsafe_allow_html=True)
-            survey_bank_sel = st.selectbox("اختر البنك المصرفي للمشاركين", BANKS_LIST_AR, key="survey_bank_admin")
-            survey_role_title = st.text_input("المسمى الوظيفي / الإدارة", placeholder="أدخل المسمى الوظيفي...", key="admin_role")
-            survey_experience = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 10 سنوات", "من 10 سنوات إلى أقل من 15 سنة", "من 15 سنة إلى أقل من 20 سنة", "20 سنة فأكثر"], key="admin_exp")
-
-            st.markdown("<br><b>📊 تقييم عبارات المحاور الثلاثة (مقياس 1 إلى 5):</b>", unsafe_allow_html=True)
-            q_sip_score = st.slider("1. متغير منصة المعلومات الذكية (متوسط تقدير العبارات 1-11)", 1, 5, 4, key="admin_q1")
-            q_ig_score = st.slider("2. متغير الحوكمة المؤسسية (متوسط تقدير العبارات 12-19)", 1, 5, 4, key="admin_q2")
-            q_sr_score = st.slider("3. متغير تقارير الاستدامة (متوسط تقدير العبارات 20-31)", 1, 5, 4, key="admin_q3")
-            
-            st.markdown("<br><b>- الأوزان النسبية المقترحة لكل محور (المجموع 100%):</b>", unsafe_allow_html=True)
-            w_sip = st.number_input("منصات المعلومات الذكية (%)", 0, 100, 40, key="w_sip_adm")
-            w_ig = st.number_input("الحوكمة المؤسسية (%)", 0, 100, 30, key="w_ig_adm")
-            w_sr = st.number_input("تقارير الاستدامة (%)", 0, 100, 30, key="w_sr_adm")
-
-            survey_comments = st.text_area("💬 مقترحات أخرى أو معوقات أو ملاحظات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:", placeholder="اكتب ملاحظاتك ومقترحاتك هنا...", key="admin_comm")
-
-            submit_survey_btn_admin = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="admin_sub_btn")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col_s2:
-            st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-            st.markdown("#### 📊 تحليل واستعراض شيت إكسيل استجابات فرق العمل (خاص بالأدمن):", unsafe_allow_html=True)
-            
-            if submit_survey_btn_admin:
-                if survey_bank_sel == "اختر البنك المصرفي":
-                    st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
-                elif not survey_role_title.strip():
-                    st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
-                else:
-                    new_survey_rec = {
-                        "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
-                        "اسم البنك": clean_text(survey_bank_sel),
-                        "المسمى الوظيفي / الإدارة": clean_text(survey_role_title),
-                        "سنوات الخبرة": survey_experience,
-                        "محور منصات المعلومات": q_sip_score,
-                        "محور الحوكمة المؤسسية": q_ig_score,
-                        "محور تقارير الاستدامة": q_sr_score,
-                        "ملاحظات وتوصيات إضافية": clean_text(survey_comments),
-                        "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }
-                    current_surveys = load_survey_log_from_file()
-                    current_surveys.append(new_survey_rec)
-                    try:
-                        pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                        st.success("✅ تم التسجيل بنجاح وتم حفظ الاستجابة في شيت الإكسيل بنجاح!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
-
-            updated_surveys_data = load_survey_log_from_file()
-            if updated_surveys_data:
-                df_surveys = pd.DataFrame(updated_surveys_data)
-                st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
-                
-                st.dataframe(df_surveys[["معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة", "وقت الإرسال"]], use_container_width=True)
-
-                avg_sip = df_surveys["محور منصات المعلومات"].mean()
-                avg_ig = df_surveys["محور الحوكمة المؤسسية"].mean()
-                avg_sr = df_surveys["محور تقارير الاستدامة"].mean()
-
-                fig_survey = px.bar(
-                    x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
-                    y=[avg_sip, avg_ig, avg_sr],
-                    range_y=[0, 5],
-                    title="متوسط تقييمات فرق العمل للمحاور الثلاثة (من 5)",
-                    color=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
-                    color_discrete_map={'منصات المعلومات (SIP)': CBE_NAVY, 'الحوكمة المؤسسية (IG)': CBE_GOLD, 'تقارير الاستدامة (SR)': '#475569'}
-                )
-                fig_survey.update_layout(font=dict(family="Cairo", size=12))
-                st.plotly_chart(fig_survey, use_container_width=True)
-
-                csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
-                st.download_button(
-                    label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني بالكامل (Excel/CSV)",
-                    data=csv_surveys_bytes,
-                    file_name="شيت_إكسيل_استجابات_استبيان_فرق_العمل_المصرفي.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-            else:
-                st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن.")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    else:
-        # ==========================================
-        # عرض صلاحيات اليوزر العادي (User View)
-        # ==========================================
-        if st.session_state.get("survey_submitted_by_user", False):
-            st.success("✅ تم التسجيل بنجاح في القسم السابع بعد اتمام تسجيل البيانات.")
-            st.markdown(f"""
-            <div style="background: {CBE_BG}; padding: 20px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-top: 20px;">
-                <h4 style="color: {CBE_NAVY}; margin: 0;">إجمالي الاستجابات المرصودة: {total_responses_count} استجابة</h4>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("📝 تسجيل استجابة جديدة أخرى", use_container_width=True):
-                st.session_state.survey_submitted_by_user = False
-                st.rerun()
+    if submit_survey_btn:
+        if survey_bank_sel == "اختر البنك المصرفي":
+            st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
         else:
-            st.markdown("##### 📝 تسجيل استجابة جديدة (معلومات أولية ومهنية):", unsafe_allow_html=True)
-            
-            survey_bank_sel_u = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user")
-            
-            st.markdown("<br><b>ثالثاً: معلومات أولية ومهنية (يرجى اختيار ما يناسب وضعك الوظيفي):</b>", unsafe_allow_html=True)
-            
-            org_nature_u = st.selectbox("1. طبيعة المؤسسة", [
-                "بنك قطاع عام/ حكومي",
-                "بنك قطاع خاص مشترك",
-                "بنك إسلامي",
-                "بنك عربي/ أجنبي",
-                "جهة رقابية ك(البنك المركزي / الرقابة المالية)",
-                "مؤسسة أكاديمية أو شركة تكنولوجيا مالية",
-                "أخرى"
-            ], key="org_nat_u")
+            new_survey_rec = {
+                "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
+                "اسم البنك": clean_text(survey_bank_sel),
+                "طبيعة المؤسسة": clean_text(org_nature_u),
+                "المسمى الوظيفي / الإدارة": f"{spec_field_u} - {job_level_u}",
+                "المستوى الوظيفي": clean_text(job_level_u),
+                "سنوات الخبرة": exp_years_u,
+                "محور منصات المعلومات": avg_sip_val,
+                "محور الحوكمة المؤسسية": avg_ig_val,
+                "محور تقارير الاستدامة": avg_sr_val,
+                "ملاحظات وتوصيات إضافية": clean_text(survey_comments),
+                "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            current_surveys = load_survey_log_from_file()
+            current_surveys.append(new_survey_rec)
+            try:
+                pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+                st.success("✅ تم حفظ استجابتك بنجاح في شيت الإكسيل الميداني!")
+                st.balloons()
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
-            is_listed_u = st.radio("2. هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟", ["نعم", "لا"], horizontal=True, key="is_listed_u")
+    # عرض لوحة الإحصائيات للأدمن أو ملخص الاستجابات
+    if st.session_state.get("role") == "admin":
+        st.markdown("---")
+        st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
+        updated_surveys_data = load_survey_log_from_file()
+        if updated_surveys_data:
+            df_surveys = pd.DataFrame(updated_surveys_data)
+            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
+            st.dataframe(df_surveys[["معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة", "وقت الإرسال"]], use_container_width=True)
 
-            sci_degree_u = st.selectbox("3. المؤهل العلمي", [
-                "دكتوراه",
-                "ماجستير",
-                "شهادة مهنية متخصصة مثل: CISA, GRCP",
-                "ليسانس/ بكالوريوس"
-            ], key="sci_deg_u")
-
-            spec_field_u = st.selectbox("4. مجال التخصص الوظيفي", [
-                "مجلس الإدارة/ الإدارة العليا العامة",
-                "الحوكمة/ الالتزام/ المراجعة الداخلية",
-                "الاستدامة/ المسؤولية المجتمعية",
-                "تكنولوجيا المعلومات/ التحول الرقمي",
-                "إدارة المخاطر/ الائتمان",
-                "البحث/ التطوير أو أخرى"
-            ], key="spec_field_u")
-
-            job_level_u = st.selectbox("5. المستوى الوظيفي", [
-                "رئيس/ عضو مجلس إدارة",
-                "رئيس قطاع/ مساعد مدير عام",
-                "مدير إدارة/ مدير عام",
-                "خبير/ مستشار/ كبير أخصائيين",
-                "مستوى إشرافي",
-                "أخرى"
-            ], key="job_level_u")
-
-            exp_years_u = st.selectbox("6. سنـوات الخبرة في القطاع المصرفي", [
-                "أقل من 10 سنوات",
-                "من 10 سنوات إلى أقل من 15 سنة",
-                "من 15 سنة إلى أقل من 20 سنة",
-                "20 سنة فأكثر"
-            ], key="exp_yrs_u")
-
-            st.markdown("<br><b>📊 التقييم على مقياس ليكارت (1 إلى 5):</b>", unsafe_allow_html=True)
-            q_sip_score_u = st.slider("1. تقييم كفاءة منصات المعلومات الذكية وبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="user_q1")
-            q_ig_score_u = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="user_q2")
-            q_sr_score_u = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="user_q3")
-            
-            st.markdown("<br><b>- الأوزان النسبية المقترحة لكل محور (المجموع 100%):</b>", unsafe_allow_html=True)
-            w_sip_u = st.number_input("منصات المعلومات الذكية (%)", 0, 100, 40, key="w_sip_usr")
-            w_ig_u = st.number_input("الحوكمة المؤسسية (%)", 0, 100, 30, key="w_ig_usr")
-            w_sr_u = st.number_input("تقارير الاستدامة (%)", 0, 100, 30, key="w_sr_usr")
-
-            survey_comments_u = st.text_area("💬 مقترحات أخرى أو معوقات أو ملاحظات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:", placeholder="اكتب ملاحظاتك ومقترحاتك هنا...", key="user_comm")
-
-            submit_survey_btn_user = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="user_sub_btn")
-
-            if submit_survey_btn_user:
-                if survey_bank_sel_u == "اختر البنك المصرفي":
-                    st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
-                else:
-                    new_survey_rec_u = {
-                        "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
-                        "اسم البنك": clean_text(survey_bank_sel_u),
-                        "المسمى الوظيفي / الإدارة": f"{spec_field_u} - {job_level_u}",
-                        "سنوات الخبرة": exp_years_u,
-                        "محور منصات المعلومات": q_sip_score_u,
-                        "محور الحوكمة المؤسسية": q_ig_score_u,
-                        "محور تقارير الاستدامة": q_sr_score_u,
-                        "ملاحظات وتوصيات إضافية": clean_text(survey_comments_u),
-                        "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }
-                    current_surveys = load_survey_log_from_file()
-                    current_surveys.append(new_survey_rec_u)
-                    try:
-                        pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                        st.session_state.survey_submitted_by_user = True
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
+            csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني بالكامل (Excel/CSV)",
+                data=csv_surveys_bytes,
+                file_name="شيت_إكسيل_استجابات_استبيان_فرق_العمل_المصرفي.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن.")
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
