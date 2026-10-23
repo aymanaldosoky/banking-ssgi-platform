@@ -301,9 +301,10 @@ def get_bank_founding_profile(bank_name):
     return f"<b>بيانات تنظيمية:</b> بنك مصرفي مسجل وخاضع لإشراف البنك المركزي المصري ويعمل وفق المعايير المصرفية والرقابية المعتمدة."
 
 # ==============================================================================
-# نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر)
+# نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر) الاستبيان الموجه
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
+SURVEY_LOG_FILE = "survey_responses_log.csv"
 
 def init_visitor_log_file():
     if not os.path.exists(LOG_FILE):
@@ -313,12 +314,34 @@ def init_visitor_log_file():
         except Exception:
             pass
 
+def init_survey_log_file():
+    if not os.path.exists(SURVEY_LOG_FILE):
+        try:
+            df_init = pd.DataFrame(columns=[
+                "معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة",
+                "محور منصات المعلومات", "محور الحوكمة المؤسسية", "محور تقارير الاستدامة",
+                "ملاحظات وتوصيات إضافية", "وقت الإرسال"
+            ])
+            df_init.to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+        except Exception:
+            pass
+
 init_visitor_log_file()
+init_survey_log_file()
 
 def load_visitors_log_from_file():
     if os.path.exists(LOG_FILE):
         try:
             df = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
+            return df.to_dict(orient="records")
+        except Exception:
+            return []
+    return []
+
+def load_survey_log_from_file():
+    if os.path.exists(SURVEY_LOG_FILE):
+        try:
+            df = pd.read_csv(SURVEY_LOG_FILE, encoding='utf-8-sig')
             return df.to_dict(orient="records")
         except Exception:
             return []
@@ -525,15 +548,28 @@ st.markdown("""
     <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسة</span>
     <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي لاختبار السيناريوهات الاستراتيجية (Multiple Regression)</span>
     <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار </span>
+    <span class="ticker-item">| 📋 الاستبيان الموجه لفرق العمل في البنوك وعينة الدراسة الميدانية </span>
     <span class="ticker-item">| 📖 دليل المستخدم الرسمي والتوثيق المنهجي PDF </span>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسة (مع إضافة تبويب دليل المستخدم الرسمي للمنصة PDF)
+# التبويبات الرئيسة (مع إضافة تبويب الاستبيان الموجه لفرق العمل)
 # ==============================================================================
 if st.session_state.role == "admin":
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+        "🎯 اسأل المنصة",
+        "📊 مؤشر الحوكمة المركب (SSGI)", 
+        "📈 محاكي السياسات (Policy Simulator)", 
+        "🛡️ لوحة دعم اتخاذ القرار", 
+        "📑 التقرير التنفيذي الموحد",
+        "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي PDF",
+        "🔒 لوحة تحكم المشرف والزوار (Admin)"
+    ])
+else:
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
         "🎯 اسأل المنصة",
         "📊 مؤشر الحوكمة المركب (SSGI)", 
@@ -541,20 +577,10 @@ if st.session_state.role == "admin":
         "🛡️ لوحة دعم اتخاذ القرار", 
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
-        "📖 دليل المستخدم الرسمي PDF",
-        "🔒 لوحة تحكم المشرف والزوار (Admin)"
-    ])
-else:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "🎯 اسأل المنصة",
-        "📊 مؤشر الحوكمة المركب (SSGI)", 
-        "📈 محاكي السياسات (Policy Simulator)", 
-        "🛡️ لوحة دعم اتخاذ القرار", 
-        "📑 التقرير التنفيذي الموحد",
-        "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
+        "📋 استبيان فرق العمل المصرفي",
         "📖 دليل المستخدم الرسمي PDF"
     ])
-    tab8 = None
+    tab9 = None
 
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة
@@ -1455,13 +1481,13 @@ with tab5:
     st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب السادس الموسع: مولد تقارير الاستدامة (GRI / ISSB) والدليل العملي الشامل
+# التبويب السادس الموسع: مولد تقارير الاستدامة (GRI / ISSB)
 # ------------------------------------------------------------------------------
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🌿 نظام توليد تقارير الاستدامة المتقدم والدليل العملي الشامل (GRI / ISSB / SDG Impact)</h3>
-        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2)، معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
+        <p>إطار توجيهي متكامل ومفصل للقطاع المصرفي المصري يربط بين معايير المبادرة العالمية (GRI Standards)، معايير الإفصاح المالي الدولي (ISSB S1/S2), معايير تأثير أهداف التنمية المستدامة (SDG Impact Standards)، و30 مؤشراً مقترحاً للأداء البيئي والمجتمعي والحوكمة (ESG).</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1558,7 +1584,7 @@ with tab6:
                 with st.expander("البند الثالث: الإفصاحات المجتمعية والشمول المالي وتطوير رأس المال البشري (GRI 401/405/413)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
-                        <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
+                        <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs), تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
@@ -1738,9 +1764,108 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع الجديد: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
+# التبويب السابع الجديد كلياً: الاستبيان الموجه إلى فرق العمل في البنوك للعينة المختارة
 # ------------------------------------------------------------------------------
 with tab7:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
+        <p>استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل والقيادات المصرفية حول محاور المنصة (منصات المعلومات، الحوكمة المؤسسية، وتقارير الاستدامة). يتم حفظ الاستجابات لحظياً وإتاحة تحليلها وتصديرها.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    col_s1, col_s2 = st.columns([1, 1], gap="large")
+
+    with col_s1:
+        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+        st.markdown("#### 📝 بيانات المشارك والبنك التابع:", unsafe_allow_html=True)
+        survey_bank_sel = st.selectbox("اختر البنك المصرفي للمشاركين", BANKS_LIST_AR, key="survey_bank")
+        survey_role_title = st.text_input("المسمى الوظيفي / الإدارة (مثال: إدارة المخاطر، الالتزام، الاستدامة)", placeholder="أدخل المسمى الوظيفي...")
+        survey_experience = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"])
+
+        st.markdown("<br><b>📊 أسئلة ومحاور استبيان التقييم (على مقياس ليكارت 1 - 5):</b>", unsafe_allow_html=True)
+        
+        q_sip_score = st.slider("1. تقييم كفاءة منصات المعلومات الذكية والبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="sur_q1")
+        q_ig_score = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="sur_q2")
+        q_sr_score = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="sur_q3")
+        
+        survey_comments = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...")
+
+        submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان الميداني", use_container_width=True, type="primary")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_s2:
+        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+        st.markdown("#### 📊 تحليل النتائج الفورية لاستبيانات فرق العمل:", unsafe_allow_html=True)
+        
+        if submit_survey_btn:
+            if survey_bank_sel == "اختر البنك المصرفي":
+                st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
+            elif not survey_role_title.strip():
+                st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
+            else:
+                new_survey_rec = {
+                    "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
+                    "اسم البنك": clean_text(survey_bank_sel),
+                    "المسمى الوظيفي / الإدارة": clean_text(survey_role_title),
+                    "سنوات الخبرة": survey_experience,
+                    "محور منصات المعلومات": q_sip_score,
+                    "محور الحوكمة المؤسسية": q_ig_score,
+                    "محور تقارير الاستدامة": q_sr_score,
+                    "ملاحظات وتوصيات إضافية": clean_text(survey_comments),
+                    "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                current_surveys = load_survey_log_from_file()
+                current_surveys.append(new_survey_rec)
+                try:
+                    pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+                    st.success("✅ تم حفظ استجابتك بنجاح في قاعدة بيانات الاستبيانات الميدانية!")
+                except Exception as e:
+                    st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
+
+        all_surveys_data = load_survey_log_from_file()
+        if all_surveys_data:
+            df_surveys = pd.DataFrame(all_surveys_data)
+            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة لفرق العمل:</b> {len(df_surveys)} مشارك</p>", unsafe_allow_html=True)
+            
+            # عرض جدول الاستجابات
+            st.dataframe(df_surveys[["معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة", "وقت الإرسال"]], use_container_width=True)
+
+            # رسم بياني توضيحي لمتوسط تقييمات المحاور
+            avg_sip = df_surveys["محور منصات المعلومات"].mean()
+            avg_ig = df_surveys["محور الحوكمة المؤسسية"].mean()
+            avg_sr = df_surveys["محور تقارير الاستدامة"].mean()
+
+            fig_survey = px.bar(
+                x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
+                y=[avg_sip, avg_ig, avg_sr],
+                range_y=[0, 5],
+                title="متوسط تقييمات فرق العمل للمحاور الثلاثة (من 5)",
+                color=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
+                color_discrete_map={'منصات المعلومات (SIP)': CBE_NAVY, 'الحوكمة المؤسسية (IG)': CBE_GOLD, 'تقارير الاستدامة (SR)': '#475569'}
+            )
+            fig_survey.update_layout(font=dict(family="Cairo", size=12))
+            st.plotly_chart(fig_survey, use_container_width=True)
+
+            # أزرار التصدير
+            csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل كافة استجابات الاستبيان الميداني (Excel/CSV)",
+                data=csv_surveys_bytes,
+                file_name="استجابات_استبيان_فرق_العمل_المصرفي.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.info("📋 لم يتم تسجيل أي استجابات ميدانية حتى الآن. قم بملء الاستمارة في القائمة الجانبية وإرسالها لتظهر التحليلات هنا.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
+# ------------------------------------------------------------------------------
+with tab8:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة الحوكمة المصرفية (PDF / Docs)</h3>
@@ -1750,7 +1875,6 @@ with tab7:
 
     st.markdown("---")
 
-    # محتوى دليل المستخدم الرسمي لعرضه وتصديره
     user_manual_html = f"""
     <div style="background: #FFFFFF; padding: 35px; border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 2.1;" dir="rtl">
         <h2 style="color: {CBE_NAVY}; margin-top: 0; text-align: center;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية</h2>
@@ -1758,7 +1882,7 @@ with tab7:
         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 25px 0;">
 
         <h3 style="color: {CBE_NAVY};">1️⃣ نظرة عامة ورؤية المنصة</h3>
-        <p>تمثل هذه المنصة الإطار التطبيقي الميداني والبرمجي لرسالة الدكتوراه في العلوم البيئية (معهد التخطيط القومي - جامعة عين شمس) للباحث/ <b>أيمن الدسوقي</b>. تهدف المنصة إلى توفير بيئة ذكية متكاملة ومستقلة لتقييم وحوكمة البنوك المصرية عبر مؤشر الحوكمة الذكية المستدامة (SSGI)، مع دعم اتخاذ القرار، محاكاة السيناريوهات الاستراتيجية، واستخلاص الإجابات والتقارير عبر محرك ذكاء اصطناعي مستقل (RAG).</p>
+        <p>تمثل هذه المنصة الإطار التطبيقي الميداني والبرمجي لرسالة الدكتوراه في العلوم البيئية (معهد التخطيط القومي - جامعة عين شمس) للباحث/ <b>أيمن الدسوقي</b>. تهدف المنصة إلى توفير بيئة ذكية متكاملة ومستقلة لتقييم وحوكمة البنوك المصرية عبر مؤشر الحوكمة الذكية المستدامة (SSGI)، مع دعم اتخاذ القرار، محاكاة السيناريوهات الاستراتيجية، جمع استبيانات فرق العمل، واستخلاص الإجابات والتقارير عبر محرك ذكاء اصطناعي مستقل (RAG).</p>
 
         <h3 style="color: {CBE_NAVY}; margin-top: 25px;">2️⃣ دليل الأقسام والأقسام التفاعلية في المنصة</h3>
         <ul>
@@ -1768,6 +1892,7 @@ with tab7:
             <li><b>🛡️ لوحة دعم اتخاذ القرار:</b> توفير توصيات استراتيجية وتوجيهية مخصصة لكل بنك حسب قراءته التشخيصية.</li>
             <li><b>📑 التقرير التنفيذي الموحد:</b> أداة لتوليد تقرير شامل ومحدث ديناميكياً لكافة البنوك المسجلة مع إمكانية التحميل بصيغة (Word).</li>
             <li><b>🌿 مولد تقارير الاستدامة والدليل العملي:</b> توليد مسودات تقارير الاستدامة (GRI/ISSB/SDG Impact) والاطلاع على 30 مؤشراً لـ (ESG).</li>
+            <li><b>📋 استبيان فرق العمل المصرفي:</b> استمارة ميدانية لجمع استجابات العاملين بالبنوك وتحليلها وتصديرها.</li>
             <li><b>📖 دليل المستخدم الرسمي (هذا القسم):</b> توثيق شامل لكل وظائف المنصة وإتاحة التصدير المباشر للملفات.</li>
         </ul>
 
@@ -1781,10 +1906,8 @@ with tab7:
     """
 
     st.markdown(flat_html(user_manual_html), unsafe_allow_html=True)
-
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # زر تحميل دليل المستخدم الرسمي بصيغة مستند وورد / PDF افتراضي
     manual_download_data = f"""
     <html dir="rtl">
     <head><meta charset="utf-8"><title>دليل المستخدم الرسمي للمنصة الوطنية الذكية</title></head>
@@ -1806,10 +1929,10 @@ with tab7:
     )
 
 # ------------------------------------------------------------------------------
-# التبويب الثامن: لوحة تحكم المشرف والزوار (Admin Dashboard)
+# التبويب التاسع: لوحة تحكم المشرف والزوار (Admin Dashboard)
 # ------------------------------------------------------------------------------
-if tab8 is not None:
-    with tab8:
+if tab9 is not None:
+    with tab9:
         st.markdown("""
         <div dir="rtl" style="text-align: right;">
             <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
