@@ -1766,7 +1766,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث بالكامل حسب الطلب)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث بالترتيب الجديد وعدد المستجيبين)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1778,7 +1778,7 @@ with tab7:
 
     st.markdown("---")
 
-    # 1. إمكانية تمديد وتصغير واجهة الرسالة الموجهة للبنك
+    # عرض ترويسة جهة الدراسة والبحث العلمي والخطاب الموجه (قابل للتمديد/التقليص)
     with st.expander("🏛️ عرض ترويسة جهة الدراسة والبحث العلمي والخطاب الموجه (اضغط للتمديد أو التقليص)", expanded=False):
         st.markdown(f"""
         <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 20px; line-height: 1.9;" dir="rtl">
@@ -1842,26 +1842,7 @@ with tab7:
         is_listed_u = st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟", ["نعم", "لا"], horizontal=True, key="is_listed_u_dyn")
 
     # -----------------------------------------------------------------
-    # القسم الثاني: الأوزان النسبية للمحاور (أصبحت ثالثاً) (قابل للتمديد/التقليص)
-    # -----------------------------------------------------------------
-    with st.expander("⚖️ ثالثاً: الأوزان النسبية المقترحة للمحاور (اضغط للتمديد أو التقليص)", expanded=True):
-        st.markdown("<p>بناءً على خبرة سيادتك، ما هو الوزن النسبي (الأهمية) الذي تقترحونه لكل محور عند تقييم نضج البنك؟ (يجب أن يكون المجموع 100%)</p>", unsafe_allow_html=True)
-        col_w1, col_w2, col_w3 = st.columns(3)
-        with col_w1:
-            w_sip = st.number_input("منصات المعلومات الذكية: (%)", min_value=0, max_value=100, value=40, key="weight_sip_input")
-        with col_w2:
-            w_ig = st.number_input("الحوكمة المؤسسية: (%)", min_value=0, max_value=100, value=30, key="weight_ig_input")
-        with col_w3:
-            w_sr = st.number_input("تقارير الاستدامة: (%)", min_value=0, max_value=100, value=30, key="weight_sr_input")
-        
-        total_weight = w_sip + w_ig + w_sr
-        if total_weight != 100:
-            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب أن يكون المجموع الكلي مساوياً لـ 100% تماماً.")
-        else:
-            st.success("✅ مجموع الأوزان متطابق وصحيح (100%).")
-
-    # -----------------------------------------------------------------
-    # القسم الثالث: عبارات الاستبيان الـ 31 (أصبحت رابعاً) (قابل للتمديد/التقليص)
+    # القسم الثاني: عبارات الاستبيان الـ 31 تفصيلياً (أصبحت ثالثاً) (قابل للتمديد/التقليص)
     # -----------------------------------------------------------------
     statement_answers_dict = {}
     sip_scores = []
@@ -1895,7 +1876,7 @@ with tab7:
         category_list.append(likert_mapping[ans])
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-    with st.expander("📝 رابعاً: عبارات الاستبيان الـ 31 تفصيلياً (اضغط للتمديد أو التقليص)", expanded=True):
+    with st.expander("📝 ثالثاً: عبارات الاستبيان الـ 31 تفصيلياً (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p style='color: #64748B;'>مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>", unsafe_allow_html=True)
 
         # 1- متغير منصة المعلومات الذكية (1-11)
@@ -1968,9 +1949,28 @@ with tab7:
         render_statement(30, "يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.", sr_scores)
         render_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.", sr_scores)
 
+    # -----------------------------------------------------------------
+    # القسم الرابع: الأوزان النسبية للمحاور (أصبحت رابعاً) (قابل للتمديد/التقليص)
+    # -----------------------------------------------------------------
+    with st.expander("⚖️ رابعاً: الأوزان النسبية المقترحة للمحاور (اضغط للتمديد أو التقليص)", expanded=True):
+        st.markdown("<p>بناءً على خبرة سيادتك، ما هو الوزن النسبي (الأهمية) الذي تقترحونه لكل محور عند تقييم نضج البنك؟ (يجب أن يكون المجموع 100%)</p>", unsafe_allow_html=True)
+        col_w1, col_w2, col_w3 = st.columns(3)
+        with col_w1:
+            w_sip = st.number_input("منصات المعلومات الذكية: (%)", min_value=0, max_value=100, value=40, key="weight_sip_input")
+        with col_w2:
+            w_ig = st.number_input("الحوكمة المؤسسية: (%)", min_value=0, max_value=100, value=30, key="weight_ig_input")
+        with col_w3:
+            w_sr = st.number_input("تقارير الاستدامة: (%)", min_value=0, max_value=100, value=30, key="weight_sr_input")
+        
+        total_weight = w_sip + w_ig + w_sr
+        if total_weight != 100:
+            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب أن يكون المجموع الكلي مساوياً لـ 100% تماماً.")
+        else:
+            st.success("✅ مجموع الأوزان متطابق وصحيح (100%).")
+
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # حساب المتوسطات آلياً لتخزينها في الملف (دون عرضها بالواجهة)
+    # حساب المتوسطات آلياً لتخزينها في الملف دون إظهارها كملخص بالواجهة
     avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2)
     avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2)
     avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2)
@@ -1979,6 +1979,13 @@ with tab7:
 
     all_surveys_data = load_survey_log_from_file()
     total_responses_count = len(all_surveys_data)
+
+    # عرض إجمالي عدد الاستجابات المستجيبة بشكل واضح وبارز
+    st.markdown(f"""
+    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
+        <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 16px;">📊 إجمالي عدد الاستجابات المسجلة حتى الآن: ({total_responses_count}) استجابة</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="submit_survey_final_btn")
 
@@ -2011,8 +2018,7 @@ with tab7:
             current_surveys.append(new_survey_rec)
             try:
                 pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                # رسالة واضحة وبارزة بنجاح التسجيل (بدون بلالين)
-                st.markdown(f"""
+                st.markdown("""
                 <div style="background: #D1FAE5; padding: 18px; border-radius: 10px; border: 1.5px solid #059669; text-align: center; margin-top: 15px;" dir="rtl">
                     <h4 style="color: #065F46; margin: 0;">✅ تم تسجيل وحفظ الاستجابة بنجاح بكافة تفاصيل العبارات والأوزان في شيت الإكسيل الميداني!</h4>
                 </div>
@@ -2040,6 +2046,13 @@ with tab7:
             )
         else:
             st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن.")
+
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #64748B; font-size: 13px; padding: 10px 0;" dir="rtl">
+        جميع الحقوق محفوظة للدراسة البحثية © 2026
+    </div>
+    """, unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
