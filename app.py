@@ -1792,7 +1792,7 @@ with tab7:
         </div>
         <p>ونظراً لما تتمتعون به من خبرة ودراية في هذا المجال الحيوي؛ نتشرف بدعوة سيادتكم للمشاركة في هذا البحث من خلال الإجابة على عبارات الاستقصاء المرفق، وتحديد مدى موافقتكم عليها بما ترونه مناسباً، علما بأن هذه الدراسة تهدف إلى تقديم حلول مبتكرة تعتمد على الذكاء الاصطناعي لتعزيز الحوكمة المؤسسية ودعم السيادة الرقمية في البنوك المصرية.</p>
         <p>كما نؤكد لسيادتكم أن كافة البيانات والآراء ستحاط بالسرية التامة، ولن تستخدم إلا لأغراض البحث العلمي فقط.</p>
-        <p><b>وتفضلوا بققبول فائق التقدير والاحترام،,,</b></p>
+        <p><b>وتفضلوا بقبول فائق التقدير والاحترام،,,</b></p>
         <p style="margin-bottom: 0;">
             <b>الباحث:</b> أيمن محمد إبراهيم الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)<br>
             <b>تحت إشراف:</b><br>
@@ -1819,8 +1819,278 @@ with tab7:
         """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("#### ثانياً: عبارات الاستقصاء (المتغيرات الثلاثة الرئيسية ومقياس ليكارت الخماسي)")
-    st.markdown("<p style='color: #64748B; font-size: 13.5px;'>مقياس التقييم: (1) غير موافق تماما، (2) غير موافق، (3) محايد، (4) موافق، (5) موافق تماما.</p>", unsafe_allow_html=True)
+    st.markdown("#### ثانياً: عبارات الاستقصاء بالكامل")
+    
+    # النص المطلوب كاملاً بدون نقصان أو زيادة
+    survey_full_text_html = """
+    <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid #CBD5E1; line-height: 1.8;">
+        <p><b>مقياس التقييم:</b> (1) غير موافق تماما، (2) غير موافق، (3) محايد، (4) موافق، (5) موافق تماما.</p>
+        <br>
+        <h4 style="color: #002B49;">1- متغير منصة المعلومات الذكية</h4>
+        <div style="overflow-x: auto;">
+        <table class="custom-rtl-table">
+            <thead>
+                <tr>
+                    <th style="text-align: center; width: 40px;">م</th>
+                    <th>العبــــــــارة</th>
+                    <th style="text-align: center;">غير موافق تماماً</th>
+                    <th style="text-align: center;">غير موافق</th>
+                    <th style="text-align: center;">محايد</th>
+                    <th style="text-align: center;">موافق</th>
+                    <th style="text-align: center;">موافق تماما</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">1</td>
+                    <td>يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">2</td>
+                    <td>تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">3</td>
+                    <td>يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">4</td>
+                    <td>يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الامتثال التقني</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">5</td>
+                    <td>يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">6</td>
+                    <td>تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">7</td>
+                    <td>تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التخطيط والمراقبة بعد النشر</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">8</td>
+                    <td>يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">9</td>
+                    <td>تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التكامل والخصوصية</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">10</td>
+                    <td>يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">11</td>
+                    <td>يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <br>
+        <h4 style="color: #002B49;">2- متغير الحوكمة المؤسسية</h4>
+        <div style="overflow-x: auto;">
+        <table class="custom-rtl-table">
+            <thead>
+                <tr>
+                    <th style="text-align: center; width: 40px;">م</th>
+                    <th>العبــــــــارة</th>
+                    <th style="text-align: center;">غير موافق تماماً</th>
+                    <th style="text-align: center;">غير موافق</th>
+                    <th style="text-align: center;">محايد</th>
+                    <th style="text-align: center;">موافق</th>
+                    <th style="text-align: center;">موافق تماما</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الشفافية والإفصاح</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">12</td>
+                    <td>تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">13</td>
+                    <td>يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المتابعة والمساءلة</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">14</td>
+                    <td>يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">15</td>
+                    <td>يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">العدالة والمساواة</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">16</td>
+                    <td>تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المشاركة</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">17</td>
+                    <td>يسهم النموذج في تعزيز التواصل الفعال وإشراك الأطراف المعنية في تحديد الموضوعات الجوهرية (Materiality).</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">سيادة القانون</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">18</td>
+                    <td>يعزز النموذج من قدرة البنك على الاستجابة الفورية للتعديلات التشريعية والمصرفية ورصد حالات عدم الامتثال القانوني بدقة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">مجلس الإدارة</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">19</td>
+                    <td>تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <br>
+        <h4 style="color: #002B49;">3- متغير تقارير الاستدامة</h4>
+        <div style="overflow-x: auto;">
+        <table class="custom-rtl-table">
+            <thead>
+                <tr>
+                    <th style="text-align: center; width: 40px;">م</th>
+                    <th>العبــــــــارة</th>
+                    <th style="text-align: center;">غير موافق تماماً</th>
+                    <th style="text-align: center;">غير موافق</th>
+                    <th style="text-align: center;">محايد</th>
+                    <th style="text-align: center;">موافق</th>
+                    <th style="text-align: center;">موافق تماما</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">الاستراتيجية</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">20</td>
+                    <td>تعكس التقارير الصادرة عن النموذج دمجاً حقيقياً لأهداف التنمية المستدامة (SDGs) ورؤية مصر 2030 في استراتيجية البنك طويلة الأجل.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد البيئي</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">21</td>
+                    <td>يتيح النموذج قياس والإفصاح بدقة عن البصمة الكربونية للبنك (النطاقات 1، 2، 3) وتوضيح حجم التمويل الأخضر والطاقة المتجددة (Green Finance).</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">22</td>
+                    <td>يوفر النموذج مؤشرات كمية دقيقة لقياس كفاءة رصد معدلات خفض استهلاك الموارد الداخلية (الطاقة، المياه، الورق).</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد الاجتماعي</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">23</td>
+                    <td>تفصح التقارير بالأرقام عن جهود البنك في تعزيز الشمول المالي ووصول الخدمات للفئات المهمشة والمناطق النائية.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">24</td>
+                    <td>يتم قياس أثر مبادرات المسؤولية المجتمعية (CSR) وتوضيح العائد الاجتماعي منها (SROI) بشكل كمي.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">البعد الاقتصادي</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">25</td>
+                    <td>توضح التقارير العوائد الاقتصادية المباشرة وغير المباشرة لتبني ممارسات الاستدامة ودعم التوجه نحو المشتريات المستدامة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">إدارة المخاطر</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">26</td>
+                    <td>يتم دمج مخاطر المناخ والاستدامة (ESG Risks) ضمن إطار إدارة المخاطر الكلي للبنك بشكل منهجي.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">27</td>
+                    <td>توجد خطط طوارئ واستمرارية أعمال محدثة لمواجهة الأزمات المحتملة المرتبطة بالاستدامة أو التقنية.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">المقاييس والأهداف</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">28</td>
+                    <td>يتم وضع أهداف مستقبلية (Targets) ذكية ومحددة زمنياً لكل محور من محاور الاستدامة.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">29</td>
+                    <td>يضمن النموذج دقة احتساب المؤشرات المركبة، ويسهل عملية المقارنة المعيارية (Benchmarking) مع المنافسين.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="background-color: #E2E8F0; font-weight: bold; color: #002B49;">التنوع والشمول</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">30</td>
+                    <td>يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; font-weight: bold;">31</td>
+                    <td>تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.</td>
+                    <td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td><td style="text-align: center;">q</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+    """
+    st.markdown(flat_html(survey_full_text_html), unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
     all_surveys_data = load_survey_log_from_file()
     total_responses_count = len(all_surveys_data)
@@ -2020,7 +2290,6 @@ with tab7:
                         st.rerun()
                     except Exception as e:
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
-
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
