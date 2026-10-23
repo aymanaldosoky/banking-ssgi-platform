@@ -21,10 +21,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-CBE_NAVY = "#002B49"         # أزرق مصرفي عميق
-CBE_GOLD = "#C5A059"         # ذهبي ملكي
-CBE_GOLD_LIGHT = "#E2C07D"   # ذهبي فاتح
-CBE_BG = "#F8F9FA"           # خلفية ناعمة
+CBE_NAVY = "#002B49"        # أزرق مصرفي عميق
+CBE_GOLD = "#C5A059"        # ذهبي ملكي
+CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
+CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
 CUSTOM_CSS = f"""
 <style>
@@ -1764,103 +1764,160 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع المحدث كلياً: الاستبيان الموجه إلى فرق العمل في البنوك وحفظ شيت الإكسيل
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك وحفظ وصلاحيات شيت الإكسيل (محدث طبقاً للطلب)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
-        <p>استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل والقيادات المصرفية حول محاور المنصة. يتم حفظ كافة الاستجابات لحظياً في شيت الإكسيل وإتاحة استعراضها وتحميلها بالكامل.</p>
+        <p>استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل والقيادات المصرفية حول محاور المنصة.</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    col_s1, col_s2 = st.columns([1, 1], gap="large")
+    # تحميل الاستجابات السابقة للتأكد من العد
+    all_surveys_data = load_survey_log_from_file()
+    total_responses_count = len(all_surveys_data)
 
-    with col_s1:
-        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        st.markdown("#### 📝 بيانات المشارك والبنك التابع:", unsafe_allow_html=True)
-        survey_bank_sel = st.selectbox("اختر البنك المصرفي للمشاركين", BANKS_LIST_AR, key="survey_bank")
-        survey_role_title = st.text_input("المسمى الوظيفي / الإدارة (مثال: إدارة المخاطر، الالتزام، الاستدامة)", placeholder="أدخل المسمى الوظيفي...")
-        survey_experience = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"])
+    if st.session_state.role == "admin":
+        # ==========================================
+        # عرض صلاحيات الأدمن (Admin View)
+        # ==========================================
+        col_s1, col_s2 = st.columns([1, 1], gap="large")
+
+        with col_s1:
+            st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+            st.markdown("#### 📝 بيانات المشارك والبنك التابع (لوحة الأدمن):", unsafe_allow_html=True)
+            survey_bank_sel = st.selectbox("اختر البنك المصرفي للمشاركين", BANKS_LIST_AR, key="survey_bank_admin")
+            survey_role_title = st.text_input("المسمى الوظيفي / الإدارة", placeholder="أدخل المسمى الوظيفي...", key="admin_role")
+            survey_experience = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"], key="admin_exp")
+
+            st.markdown("<br><b>📊 أسئلة ومحاور استبيان التقييم (على مقياس ليكارت 1 - 5):</b>", unsafe_allow_html=True)
+            q_sip_score = st.slider("1. تقييم كفاءة منصات المعلومات الذكية وبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="admin_q1")
+            q_ig_score = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="admin_q2")
+            q_sr_score = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="admin_q3")
+            survey_comments = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...", key="admin_comm")
+
+            submit_survey_btn_admin = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="admin_sub_btn")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with col_s2:
+            st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+            st.markdown("#### 📊 تحليل واستعراض شيت إكسيل استجابات فرق العمل (خاص بالأدمن):", unsafe_allow_html=True)
+            
+            if submit_survey_btn_admin:
+                if survey_bank_sel == "اختر البنك المصرفي":
+                    st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
+                elif not survey_role_title.strip():
+                    st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
+                else:
+                    new_survey_rec = {
+                        "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
+                        "اسم البنك": clean_text(survey_bank_sel),
+                        "المسمى الوظيفي / الإدارة": clean_text(survey_role_title),
+                        "سنوات الخبرة": survey_experience,
+                        "محور منصات المعلومات": q_sip_score,
+                        "محور الحوكمة المؤسسية": q_ig_score,
+                        "محور تقارير الاستدامة": q_sr_score,
+                        "ملاحظات وتوصيات إضافية": clean_text(survey_comments),
+                        "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    current_surveys = load_survey_log_from_file()
+                    current_surveys.append(new_survey_rec)
+                    try:
+                        pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+                        st.success("✅ تم حفظ الاستجابة بنجاح في شيت الإكسيل (Survey Excel Sheet) الخاص بالدراسة الميدانية!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
+
+            updated_surveys_data = load_survey_log_from_file()
+            if updated_surveys_data:
+                df_surveys = pd.DataFrame(updated_surveys_data)
+                st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
+                
+                # عرض جدول الاستجابات بتنسيق RTL مريح
+                st.dataframe(df_surveys[["معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة", "وقت الإرسال"]], use_container_width=True)
+
+                avg_sip = df_surveys["محور منصات المعلومات"].mean()
+                avg_ig = df_surveys["محور الحوكمة المؤسسية"].mean()
+                avg_sr = df_surveys["محور تقارير الاستدامة"].mean()
+
+                fig_survey = px.bar(
+                    x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
+                    y=[avg_sip, avg_ig, avg_sr],
+                    range_y=[0, 5],
+                    title="متوسط تقييمات فرق العمل للمحاور الثلاثة (من 5)",
+                    color=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
+                    color_discrete_map={'منصات المعلومات (SIP)': CBE_NAVY, 'الحوكمة المؤسسية (IG)': CBE_GOLD, 'تقارير الاستدامة (SR)': '#475569'}
+                )
+                fig_survey.update_layout(font=dict(family="Cairo", size=12))
+                st.plotly_chart(fig_survey, use_container_width=True)
+
+                csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(
+                    label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني بالكامل (Excel/CSV)",
+                    data=csv_surveys_bytes,
+                    file_name="شيت_إكسيل_استجابات_استبيان_فرق_العمل_المصرفي.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن.")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    else:
+        # ==========================================
+        # عرض صلاحيات اليوزر العادي (User View)
+        # ==========================================
+        st.markdown(f"""
+        <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-bottom: 20px;">
+            <p style="margin: 0; font-weight: bold; color: {CBE_NAVY};">
+                📊 إجمالي الاستجابات المرصودة في شيت الإكسيل: {total_responses_count} استجابة
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("#### 📝 تسجيل استجابة جديدة:", unsafe_allow_html=True)
+        
+        survey_bank_sel_u = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user")
+        survey_role_title_u = st.text_input("المسمى الوظيفي / الإدارة", placeholder="أدخل المسمى الوظيفي...", key="user_role")
+        survey_experience_u = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"], key="user_exp")
 
         st.markdown("<br><b>📊 أسئلة ومحاور استبيان التقييم (على مقياس ليكارت 1 - 5):</b>", unsafe_allow_html=True)
-        
-        q_sip_score = st.slider("1. تقييم كفاءة منصات المعلومات الذكية والبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="sur_q1")
-        q_ig_score = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="sur_q2")
-        q_sr_score = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="sur_q3")
-        
-        survey_comments = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...")
+        q_sip_score_u = st.slider("1. تقييم كفاءة منصات المعلومات الذكية وبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="user_q1")
+        q_ig_score_u = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="user_q2")
+        q_sr_score_u = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="user_q3")
+        survey_comments_u = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...", key="user_comm")
 
-        submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary")
-        st.markdown('</div>', unsafe_allow_html=True)
+        submit_survey_btn_user = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="user_sub_btn")
 
-    with col_s2:
-        st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        st.markdown("#### 📊 تحليل واستعراض شيت إكسيل استجابات فرق العمل:", unsafe_allow_html=True)
-        
-        if submit_survey_btn:
-            if survey_bank_sel == "اختر البنك المصرفي":
+        if submit_survey_btn_user:
+            if survey_bank_sel_u == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
-            elif not survey_role_title.strip():
+            elif not survey_role_title_u.strip():
                 st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
             else:
-                new_survey_rec = {
+                new_survey_rec_u = {
                     "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
-                    "اسم البنك": clean_text(survey_bank_sel),
-                    "المسمى الوظيفي / الإدارة": clean_text(survey_role_title),
-                    "سنوات الخبرة": survey_experience,
-                    "محور منصات المعلومات": q_sip_score,
-                    "محور الحوكمة المؤسسية": q_ig_score,
-                    "محور تقارير الاستدامة": q_sr_score,
-                    "ملاحظات وتوصيات إضافية": clean_text(survey_comments),
+                    "اسم البنك": clean_text(survey_bank_sel_u),
+                    "المسمى الوظيفي / الإدارة": clean_text(survey_role_title_u),
+                    "سنوات الخبرة": survey_experience_u,
+                    "محور منصات المعلومات": q_sip_score_u,
+                    "محور الحوكمة المؤسسية": q_ig_score_u,
+                    "محور تقارير الاستدامة": q_sr_score_u,
+                    "ملاحظات وتوصيات إضافية": clean_text(survey_comments_u),
                     "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 current_surveys = load_survey_log_from_file()
-                current_surveys.append(new_survey_rec)
+                current_surveys.append(new_survey_rec_u)
                 try:
                     pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                    st.success("✅ تم حفظ استجابتك بنجاح في شيت الإكسيل (Survey Excel Sheet) الخاص بالدراسة الميدانية!")
+                    st.success("✅ تم تسجيل وإرسال البيانات بنجاح! تم إخفاء التفاصيل السابقة وفقاً للصلاحيات ومتاحة الآن لإدخال بيانات جديدة.")
+                    st.rerun()
                 except Exception as e:
                     st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
-
-        all_surveys_data = load_survey_log_from_file()
-        if all_surveys_data:
-            df_surveys = pd.DataFrame(all_surveys_data)
-            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
-            
-            # عرض جدول الاستجابات بتنسيق RTL مريح
-            st.dataframe(df_surveys[["معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة", "وقت الإرسال"]], use_container_width=True)
-
-            # رسم بياني توضيحي لمتوسط تقييمات المحاور
-            avg_sip = df_surveys["محور منصات المعلومات"].mean()
-            avg_ig = df_surveys["محور الحوكمة المؤسسية"].mean()
-            avg_sr = df_surveys["محور تقارير الاستدامة"].mean()
-
-            fig_survey = px.bar(
-                x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
-                y=[avg_sip, avg_ig, avg_sr],
-                range_y=[0, 5],
-                title="متوسط تقييمات فرق العمل للمحاور الثلاثة (من 5)",
-                color=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)'],
-                color_discrete_map={'منصات المعلومات (SIP)': CBE_NAVY, 'الحوكمة المؤسسية (IG)': CBE_GOLD, 'تقارير الاستدامة (SR)': '#475569'}
-            )
-            fig_survey.update_layout(font=dict(family="Cairo", size=12))
-            st.plotly_chart(fig_survey, use_container_width=True)
-
-            # أزرار التصدير المباشر لشيت الإكسيل
-            csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني بالكامل (Excel/CSV)",
-                data=csv_surveys_bytes,
-                file_name="شيت_إكسيل_استجابات_استبيان_فرق_العمل_المصرفي.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن. قم بملء الاستمارة وإرسالها لتظهر التحليلات وشيت التحميل هنا.")
-        st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
