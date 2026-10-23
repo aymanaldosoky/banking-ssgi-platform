@@ -392,6 +392,8 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 if "role" not in st.session_state:
     st.session_state.role = ""
+if "survey_submitted_by_user" not in st.session_state:
+    st.session_state.survey_submitted_by_user = False
 
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -1673,7 +1675,7 @@ with tab6:
                 <li><b>إدارة البصمة الكربونية التشغيلية (Scopes 1, 2, 3):</b> قياس والإفصاح الشفاف عن الانبعاثات المباشرة وغير المباشرة الناشئة عن عمليات فروع البنك ومراكز البيانات وسلسلة التوريد.</li>
                 <li><b>محفظة التمويل الأخضر والأصول المستدامة:</b> قياس نسبة وحجم المحفظة الائتمانية الموجهة لمشروعات الطاقة المتجددة، كفاءة الطاقة، والنقل المستدام، بالإضافة إلى إصدار السندات الخضراء (Green Bonds).</li>
                 <li><b>اختبارات التحمل المناخي (Climate Stress Testing):</b> مدى جاهزية البنك لتقييم واختبار تأثير المخاطر المناخية الطبيعية والانتقالية على جودة أصوله ومحفظة عملائه الكبار.</li>
-                <li><b>إفصاحات التمويل المرتبط بالمناخ (Financed Emissions):</b> تقييم الانبعاثات المُموّلة عبر القطاعات عالية الانبعاثات ووضع خطط انتقالية واضحة لإزالة الكربون (Net-Zero Transition Plans).</li>
+                <li><b>إفصاحات التمويل المرتبط بالمناخ (Financed Emissions):</b> تقييم الانبعاثات Mُموّلة عبر القطاعات عالية الانبعاثات ووضع خطط انتقالية واضحة لإزالة الكربون (Net-Zero Transition Plans).</li>
             </ul>
 
             <h3 style="color: {CBE_NAVY}; margin-top: 25px;">4️⃣ المحور الرابع: الإفصاحات المجتمعية والشمول المالي ورأس المال البشري (GRI 401/403/405/413)</h3>
@@ -1764,7 +1766,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك وحفظ وصلاحيات شيت الإكسيل (محدث طبقاً للطلب)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث بالكامل حسب الطلب)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1776,13 +1778,13 @@ with tab7:
 
     st.markdown("---")
 
-    # تحميل الاستجابات السابقة للتأكد من العد
+    # تحميل الاستجابات الحالية
     all_surveys_data = load_survey_log_from_file()
     total_responses_count = len(all_surveys_data)
 
     if st.session_state.role == "admin":
         # ==========================================
-        # عرض صلاحيات الأدمن (Admin View)
+        # عرض صلاحيات الأدمن (Admin View): كافة التفاصيل، جداول، رسوم بيانية، زر التحميل
         # ==========================================
         col_s1, col_s2 = st.columns([1, 1], gap="large")
 
@@ -1827,7 +1829,7 @@ with tab7:
                     current_surveys.append(new_survey_rec)
                     try:
                         pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                        st.success("✅ تم حفظ الاستجابة بنجاح في شيت الإكسيل (Survey Excel Sheet) الخاص بالدراسة الميدانية!")
+                        st.success("✅ تم التسجيل بنجاح وتم حفظ الاستجابة في شيت الإكسيل بنجاح!")
                         st.rerun()
                     except Exception as e:
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
@@ -1869,55 +1871,63 @@ with tab7:
 
     else:
         # ==========================================
-        # عرض صلاحيات اليوزر العادي (User View)
+        # عرض صلاحيات اليوزر العادي (User View) طبقاً للطلب بدقة:
+        # بمجرد تسجيل البيانات وإرسال الاستمارة بنجاح، يتم إخفاء كافة البيانات المسجلة السابقة،
+        # والاكتفاء فقط بذكر إجمالي الاستجابات المرصودة بالصيغة المطلوبة: ..... استجابة.
         # ==========================================
-        st.markdown(f"""
-        <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-bottom: 20px;">
-            <p style="margin: 0; font-weight: bold; color: {CBE_NAVY};">
-                📊 إجمالي الاستجابات المرصودة في شيت الإكسيل: {total_responses_count} استجابة
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("#### 📝 تسجيل استجابة جديدة:", unsafe_allow_html=True)
         
-        survey_bank_sel_u = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user")
-        survey_role_title_u = st.text_input("المسمى الوظيفي / الإدارة", placeholder="أدخل المسمى الوظيفي...", key="user_role")
-        survey_experience_u = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"], key="user_exp")
+        if st.session_state.get("survey_submitted_by_user", False):
+            # إخفاء كافة البيانات المسجلة السابقة وإظهار رسالة النجاح وإجمالي الاستجابات فقط بالصيغة المطلوبة
+            st.success("✅ تم التسجيل بنجاح في القسم السابع بعد اتمام تسجيل البيانات.")
+            st.markdown(f"""
+            <div style="background: {CBE_BG}; padding: 20px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-top: 20px;">
+                <h4 style="color: {CBE_NAVY}; margin: 0;">إجمالي الاستجابات المرصودة: {total_responses_count} استجابة</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("📝 تسجيل استجابة جديدة أخرى", use_container_width=True):
+                st.session_state.survey_submitted_by_user = False
+                st.rerun()
+        else:
+            st.markdown("#### 📝 تسجيل استجابة جديدة:", unsafe_allow_html=True)
+            
+            survey_bank_sel_u = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user")
+            survey_role_title_u = st.text_input("المسمى الوظيفي / الإدارة", placeholder="أدخل المسمى الوظيفي...", key="user_role")
+            survey_experience_u = st.selectbox("سنوات الخبرة في القطاع المصرفي", ["أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 10 إلى 15 سنة", "أكثر من 15 سنة"], key="user_exp")
 
-        st.markdown("<br><b>📊 أسئلة ومحاور استبيان التقييم (على مقياس ليكارت 1 - 5):</b>", unsafe_allow_html=True)
-        q_sip_score_u = st.slider("1. تقييم كفاءة منصات المعلومات الذكية وبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="user_q1")
-        q_ig_score_u = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="user_q2")
-        q_sr_score_u = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="user_q3")
-        survey_comments_u = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...", key="user_comm")
+            st.markdown("<br><b>📊 أسئلة ومحاور استبيان التقييم (على مقياس ليكارت 1 - 5):</b>", unsafe_allow_html=True)
+            q_sip_score_u = st.slider("1. تقييم كفاءة منصات المعلومات الذكية وبنية التقنية وأتمتة الالتزام (SIP)", 1, 5, 4, key="user_q1")
+            q_ig_score_u = st.slider("2. تقييم جودة الحوكمة المؤسسية واستقلالية لجان المراجعة والشفافية (IG)", 1, 5, 4, key="user_q2")
+            q_sr_score_u = st.slider("3. تقييم أداء تقارير الاستدامة والتمويل الأخضر ومخاطر المناخ (SR)", 1, 5, 4, key="user_q3")
+            survey_comments_u = st.text_area("💬 مقترحات وتوصيات إضافية لتطوير المنصة وحوكمة القطاع المصرفي:", placeholder="اكتب ملاحظاتك هنا...", key="user_comm")
 
-        submit_survey_btn_user = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="user_sub_btn")
+            submit_survey_btn_user = st.button("📤 إرسال وحفظ الاستبيان الميداني في شيت الإكسيل", use_container_width=True, type="primary", key="user_sub_btn")
 
-        if submit_survey_btn_user:
-            if survey_bank_sel_u == "اختر البنك المصرفي":
-                st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
-            elif not survey_role_title_u.strip():
-                st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
-            else:
-                new_survey_rec_u = {
-                    "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
-                    "اسم البنك": clean_text(survey_bank_sel_u),
-                    "المسمى الوظيفي / الإدارة": clean_text(survey_role_title_u),
-                    "سنوات الخبرة": survey_experience_u,
-                    "محور منصات المعلومات": q_sip_score_u,
-                    "محور الحوكمة المؤسسية": q_ig_score_u,
-                    "محور تقارير الاستدامة": q_sr_score_u,
-                    "ملاحظات وتوصيات إضافية": clean_text(survey_comments_u),
-                    "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-                current_surveys = load_survey_log_from_file()
-                current_surveys.append(new_survey_rec_u)
-                try:
-                    pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
-                    st.success("✅ تم تسجيل وإرسال البيانات بنجاح! تم إخفاء التفاصيل السابقة وفقاً للصلاحيات ومتاحة الآن لإدخال بيانات جديدة.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
+            if submit_survey_btn_user:
+                if survey_bank_sel_u == "اختر البنك المصرفي":
+                    st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
+                elif not survey_role_title_u.strip():
+                    st.warning("⚠️ يرجى إدخال المسمى الوظيفي أو الإدارة.")
+                else:
+                    new_survey_rec_u = {
+                        "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
+                        "اسم البنك": clean_text(survey_bank_sel_u),
+                        "المسمى الوظيفي / الإدارة": clean_text(survey_role_title_u),
+                        "سنوات الخبرة": survey_experience_u,
+                        "محور منصات المعلومات": q_sip_score_u,
+                        "محور الحوكمة المؤسسية": q_ig_score_u,
+                        "محور تقارير الاستدامة": q_sr_score_u,
+                        "ملاحظات وتوصيات إضافية": clean_text(survey_comments_u),
+                        "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    current_surveys = load_survey_log_from_file()
+                    current_surveys.append(new_survey_rec_u)
+                    try:
+                        pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+                        st.session_state.survey_submitted_by_user = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
