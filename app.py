@@ -2,6 +2,7 @@ import io
 import os
 import json
 import re
+import hashlib
 from datetime import datetime
 import pandas as pd
 import streamlit as st
@@ -111,11 +112,24 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-div.stButton > button {{
+/* توحيد تصميم الأزرار ومفاتيح التحميل ليطابق الأزرق المصرفي القاتم */
+div.stButton > button, div.stDownloadButton > button {{
     width: 100% !important;
     border-radius: 50px !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: 700 !important;
+    background-color: {CBE_NAVY} !important;
+    color: #FFFFFF !important;
+    border: 1.5px solid {CBE_GOLD} !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.2) !important;
+}}
+
+div.stButton > button:hover, div.stDownloadButton > button:hover {{
+    background-color: #001A33 !important;
+    color: {CBE_GOLD_LIGHT} !important;
+    border-color: #FFFFFF !important;
+    box-shadow: 0 6px 16px rgba(0, 43, 73, 0.35) !important;
 }}
 
 div.stTabs {{
@@ -161,18 +175,22 @@ div.stTabs {{
 }}
 
 .stTabs [data-baseweb="tab"]:hover {{
-    background-color: {CBE_GOLD} !important;
-    color: {CBE_NAVY} !important;
+    background-color: #1D4ED8 !important;
+    color: #FFFFFF !important;
     border-color: #FFFFFF !important;
 }}
 
 .stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, {CBE_GOLD} 0%, #A38243 100%) !important;
-    color: {CBE_NAVY} !important;
+    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
+    color: #FFFFFF !important;
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.45) !important;
 }}
+
+.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
+.stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
+.stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
 
 .header-center {{
     text-align: center !important;
@@ -253,20 +271,21 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# الدوال المساعدة المحدثة (Flat HTML & Clean Text) لمنع تحول النصوص لكود
+# الدوال المساعدة (Flat HTML & Clean Text)
 # ==============================================================================
 def flat_html(s: str) -> str:
-    """يحذف المسافات البادئة والأسطر الفارغة حتى لا يفسّرها Markdown ككود، واضعاً مسافة للفصل الآمن."""
     return " ".join(l.strip() for l in s.splitlines() if l.strip())
 
 def clean_text(text) -> str:
-    """ينزع الوسوم الدخيلة وعلامات [cite] ويحافظ على الإيموجي والرموز."""
     if not isinstance(text, str):
         return str(text)
     t = re.sub(r"\[cite[^\]]*\]", "", text)
     t = re.sub(r"<[^>]+>", "", t)
     t = t.replace("\xa0", " ").replace("\u200b", "")
     return re.sub(r"\s+", " ", t).strip()
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # ==============================================================================
 # قاعدة معطيات ومعلومات التأسيس والنشأة للبنوك المصرية
@@ -301,7 +320,7 @@ def get_bank_founding_profile(bank_name):
     return f"<b>بيانات تنظيمية:</b> بنك مصرفي مسجل وخاضع لإشراف البنك المركزي المصري ويعمل وفق المعايير المصرفية والرقابية المعتمدة."
 
 # ==============================================================================
-# نظام تتبع الزوار (IP Logging ودعم ملفات السيرفر) الاستبيان الموجه
+# نظام تتبع الزوار والاستبيانات
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
@@ -384,7 +403,7 @@ def log_visitor_action(username, role):
         pass
 
 # ==============================================================================
-# إدارة جلسة الدخول والصلاحيات
+# إدارة جلسة الدخول والصلاحيات الآمنة
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -394,6 +413,9 @@ if "role" not in st.session_state:
     st.session_state.role = ""
 if "survey_submitted_by_user" not in st.session_state:
     st.session_state.survey_submitted_by_user = False
+
+ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
+ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -414,7 +436,7 @@ if not st.session_state.authenticated:
             password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
             
             if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
-                if username_input == "admin" and password_input == "admin123":
+                if username_input == ADMIN_USER and hash_password(password_input) == ADMIN_PASS_HASH:
                     st.session_state.authenticated = True
                     st.session_state.username = "مشرف النظام (Admin)"
                     st.session_state.role = "admin"
@@ -557,7 +579,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسة (مع إضافة تبويب الاستبيان الموجه لفرق العمل)
+# التبويبات الرئيسة
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
@@ -900,6 +922,9 @@ with tab2:
 
     st.markdown("---")
     
+    # --------------------------------------------------------------------------
+    # استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
+    # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
         st.markdown("""
         <div dir="rtl" style="text-align: right;">
@@ -1170,8 +1195,6 @@ with tab3:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الرابع: لوحة دعم اتخاذ القرار
 # ------------------------------------------------------------------------------
@@ -1318,8 +1341,6 @@ with tab4:
             else:
                 st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
@@ -1480,10 +1501,8 @@ with tab5:
                 use_container_width=True
             )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
-# التبويب السادس الموسع: مولد تقارير الاستدامة (GRI / ISSB)
+# التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB)
 # ------------------------------------------------------------------------------
 with tab6:
     st.markdown("""
@@ -1657,7 +1676,7 @@ with tab6:
 
             <h3 style="color: {CBE_NAVY};">1️⃣ المحور الأول: المعايير العالمية للإفصاح المؤسسي (GRI Universal Standards: GRI 1, GRI 2, GRI 3)</h3>
             <ul>
-                <li><b>GRI 1 (الأساسيات):</b> يحدد مبادئ إعداد التقارير المصرفية الأساسية (الدقة، القابلية للممقارنة، الوضوح، الموثوقية، والتوقيت المناسب) التي يجب الالتزام بها لضمان جودة الإفصاحات غير المالية.</li>
+                <li><b>GRI 1 (الأساسيات):</b> يحدد مبادئ إعداد التقارير المصرفية الأساسية (الدقة، القابلية للمقارنة، الوضوح، الموثوقية، والتوقيت المناسب) التي يجب الالتزام بها لضمان جودة الإفصاحات غير المالية.</li>
                 <li><b>GRI 2 (الإفصاحات العامة والتفاصيل التنظيمية):</b> يتضمن تفاصيل أنشطة البنك المصرفي، هيكل الحوكمة وتكوين مجلس الإدارة، سياسات الإفصاح، استراتيجية الاستدامة، وطرق إشراك أصحاب المصلحة (Stakeholder Engagement).</li>
                 <li><b>GRI 3 (الموضوعات الجوهرية - Material Topics):</b> إرشادات دقيقة لتحديد الموضوعات ذات الأولوية القصوى بناءً على تقييم التأثيرات الاقتصادية والبيئية والاجتماعية الفعلية والمحتملة لأنشطة البنوك.</li>
             </ul>
@@ -1675,7 +1694,7 @@ with tab6:
                 <li><b>إدارة البصمة الكربونية التشغيلية (Scopes 1, 2, 3):</b> قياس والإفصاح الشفاف عن الانبعاثات المباشرة وغير المباشرة الناشئة عن عمليات فروع البنك ومراكز البيانات وسلسلة التوريد.</li>
                 <li><b>محفظة التمويل الأخضر والأصول المستدامة:</b> قياس نسبة وحجم المحفظة الائتمانية الموجهة لمشروعات الطاقة المتجددة، كفاءة الطاقة، والنقل المستدام، بالإضافة إلى إصدار السندات الخضراء (Green Bonds).</li>
                 <li><b>اختبارات التحمل المناخي (Climate Stress Testing):</b> مدى جاهزية البنك لتقييم واختبار تأثير المخاطر المناخية الطبيعية والانتقالية على جودة أصوله ومحفظة عملائه الكبار.</li>
-                <li><b>إفصاحات التمويل المرتبط بالمناخ (Financed Emissions):</b> تقييم الانبعاثات Mُموّلة عبر القطاعات عالية الانبعاثات ووضع خطط انتقالية واضحة لإزالة الكربون (Net-Zero Transition Plans).</li>
+                <li><b>إفصاحات التمويل المرتبط بالمناخ (Financed Emissions):</b> تقييم الانبعاثات المُمولة عبر القطاعات عالية الانبعاثات ووضع خطط انتقالية واضحة لإزالة الكربون (Net-Zero Transition Plans).</li>
             </ul>
 
             <h3 style="color: {CBE_NAVY}; margin-top: 25px;">4️⃣ المحور الرابع: الإفصاحات المجتمعية والشمول المالي ورأس المال البشري (GRI 401/403/405/413)</h3>
@@ -1726,7 +1745,7 @@ with tab6:
                 <ul style="margin-bottom: 0;">
                     <li><b>المؤشر (21):</b> التنوع الهيكلي والمهني في تشكيل مجلس الإدارة (Board Diversity & Expertise).</li>
                     <li><b>المؤشر (22):</b> نسبة الأعضاء المستقلين غير التنفيذيين في مجلس الإدارة ولجان المراجعة والترشيحات (Independent Board Members Ratio).</li>
-                    <li><b>المؤشر (23):</b> وجود حوافز ومكافطات مرتبطة بتحقيق مستهدفات الاستدامة وخفض الانبعاثات للقيادات التنفيذية (Sustainability-linked Executive Compensation).</li>
+                    <li><b>المؤشر (23):</b> وجود حوافز ومكافطات مرتبطة تحقيق مستهدفات الاستدامة وخفض الانبعاثات للقيادات التنفيذية (Sustainability-linked Executive Compensation).</li>
                     <li><b>المؤشر (24):</b> مدونة قواعد سلوك الموردين والشركاء التجاريين ومعايير تقييمهم بيئياً ومجتمعياً (Supplier Code of Conduct).</li>
                     <li><b>المؤشر (25):</b> فاعلية سياسات وإجراءات مكافحة الفساد، الرشوة، وغسل الأموال (Anti-Corruption & Anti-Bribery Policies).</li>
                     <li><b>المؤشر (26):</b> سياسات حماية سرية البيانات الشخصية للعملاء والسيادة الرقمية (GDPR & Data Privacy Compliance).</li>
@@ -1766,7 +1785,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (محدث بالترتيب الجديد وعدد المستجيبين)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالكامل)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1778,7 +1797,12 @@ with tab7:
 
     st.markdown("---")
 
-    # عرض ترويسة جهة الدراسة والبحث العلمي والخطاب الموجه (قابل للتمديد/التقليص)
+    st.markdown(f"""
+    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
+        <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 15 دقيقة تقريباً لضمان دقة الاستجابات.</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     with st.expander("🏛️ عرض ترويسة جهة الدراسة والبحث العلمي والخطاب الموجه (اضغط للتمديد أو التقليص)", expanded=False):
         st.markdown(f"""
         <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 20px; line-height: 1.9;" dir="rtl">
@@ -1804,7 +1828,6 @@ with tab7:
         </div>
         """, unsafe_allow_html=True)
 
-    # عرض مصطلحات تعريفية
     with st.expander("📚 أولاً: مصطلحات تعريفية (اضغط للاطلاع على التعريفات الإجرائية)", expanded=False):
         st.markdown(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.9;">
@@ -1819,13 +1842,10 @@ with tab7:
         </div>
         """, unsafe_allow_html=True)
 
-    # -----------------------------------------------------------------
-    # القسم الأول: بيانات المشارك والمعلومات الأولية والمهنية (قابل للتمديد/التقليص)
-    # -----------------------------------------------------------------
     with st.expander("👤 ثانياً: بيانات المشارك ومعلومات أولية ومهنية (اضغط للتمديد أو التقليص)", expanded=True):
         col_inf1, col_inf2 = st.columns(2, gap="medium")
         with col_inf1:
-            survey_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="survey_bank_user_main")
+            survey_bank_sel = st.selectbox("اختر البنك المصرفي (إلزامي لجميع المستجيبين)", BANKS_LIST_AR, index=0, key="survey_bank_user_main")
             org_nature_u = st.selectbox("طبيعة المؤسسة", [
                 "بنك قطاع عام/ حكومي", "بنك قطاع خاص مشترك", "بنك إسلامي", "بنك عربي/ أجنبي",
                 "جهة رقابية ك(البنك المركزي / الرقابة المالية)", "مؤسسة أكاديمية أو شركة تكنولوجيا مالية", "أخرى"
@@ -1841,9 +1861,6 @@ with tab7:
 
         is_listed_u = st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟", ["نعم", "لا"], horizontal=True, key="is_listed_u_dyn")
 
-    # -----------------------------------------------------------------
-    # القسم الثاني: عبارات الاستبيان الـ 31 تفصيلياً (أصبحت ثالثاً) (قابل للتمديد/التقليص)
-    # -----------------------------------------------------------------
     statement_answers_dict = {}
     sip_scores = []
     ig_scores = []
@@ -1867,19 +1884,21 @@ with tab7:
         ans = st.radio(
             f"تقييم العبارة {num}",
             likert_options,
-            index=3,  # الافتراضي "موافق" (4)
+            index=None,
             horizontal=True,
             label_visibility="collapsed",
             key=f"stmt_{num}"
         )
-        statement_answers_dict[f"العبارة_{num}"] = f"{ans} ({likert_mapping[ans]})"
-        category_list.append(likert_mapping[ans])
+        if ans is not None:
+            statement_answers_dict[f"العبارة_{num}"] = likert_mapping[ans]
+            category_list.append(likert_mapping[ans])
+        else:
+            statement_answers_dict[f"العبارة_{num}"] = None
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
     with st.expander("📝 ثالثاً: عبارات الاستبيان الـ 31 تفصيلياً (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p style='color: #64748B;'>مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>", unsafe_allow_html=True)
 
-        # 1- متغير منصة المعلومات الذكية (1-11)
         st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 15px;'>1- متغير منصة المعلومات الذكية</h4>", unsafe_allow_html=True)
         render_statement(1, "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.", sip_scores)
         render_statement(2, "تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.", sip_scores)
@@ -1899,7 +1918,6 @@ with tab7:
         render_statement(10, "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.", sip_scores)
         render_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.", sip_scores)
 
-        # 2- متغير الحوكمة المؤسسية (12-19)
         st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 25px;'>2- متغير الحوكمة المؤسسية</h4>", unsafe_allow_html=True)
         st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الشفافية والإفصاح</div>", unsafe_allow_html=True)
         render_statement(12, "تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.", ig_scores)
@@ -1921,7 +1939,6 @@ with tab7:
         st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>مجلس الإدارة</div>", unsafe_allow_html=True)
         render_statement(19, "تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.", ig_scores)
 
-        # 3- متغير تقارير الاستدامة (20-31)
         st.markdown(f"<h4 style='color: {CBE_NAVY}; margin-top: 25px;'>3- متغير تقارير الاستدامة</h4>", unsafe_allow_html=True)
         st.markdown(f"<div style='background: #E2E8F0; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الاستراتيجية</div>", unsafe_allow_html=True)
         render_statement(20, "تعكس التقارير الصادرة عن النموذج دمجاً حقيقياً لأهداف التنمية المستدامة (SDGs) ورؤية مصر 2030 في استراتيجية البنك طويلة الأجل.", sr_scores)
@@ -1949,9 +1966,6 @@ with tab7:
         render_statement(30, "يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.", sr_scores)
         render_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.", sr_scores)
 
-    # -----------------------------------------------------------------
-    # القسم الرابع: الأوزان النسبية للمحاور (أصبحت رابعاً) (قابل للتمديد/التقليص)
-    # -----------------------------------------------------------------
     with st.expander("⚖️ رابعاً: الأوزان النسبية المقترحة للمحاور (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p>بناءً على خبرة سيادتك، ما هو الوزن النسبي (الأهمية) الذي تقترحونه لكل محور عند تقييم نضج البنك؟ (يجب أن يكون المجموع 100%)</p>", unsafe_allow_html=True)
         col_w1, col_w2, col_w3 = st.columns(3)
@@ -1970,17 +1984,15 @@ with tab7:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # حساب المتوسطات آلياً لتخزينها في الملف دون إظهارها كملخص بالواجهة
-    avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2)
-    avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2)
-    avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2)
+    avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2) if sip_scores else 0.0
+    avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2) if ig_scores else 0.0
+    avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2) if sr_scores else 0.0
 
     survey_comments = st.text_area("💬 مقترحات أخرى أو معوقات أو ملاحظات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:", placeholder="اكتب ملاحظاتك ومقترحاتك هنا...", key="user_survey_comments")
 
     all_surveys_data = load_survey_log_from_file()
     total_responses_count = len(all_surveys_data)
 
-    # عرض إجمالي عدد الاستجابات المستجيبة بشكل واضح وبارز
     st.markdown(f"""
     <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
         <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 16px;">📊 إجمالي عدد الاستجابات المسجلة حتى الآن: ({total_responses_count}) استجابة</span>
@@ -1991,9 +2003,11 @@ with tab7:
 
     if submit_survey_btn:
         if survey_bank_sel == "اختر البنك المصرفي":
-            st.warning("⚠️ يرجى اختيار البنك المصرفي الصحيح.")
+            st.warning("⚠️ حقل «اختر البنك المصرفي» إلزامي لجميع المستجيبين (بما في ذلك الجهات الرقابية والأكاديميين). يرجى اختيار البنك المتابع للمتابعة.")
         elif total_weight != 100:
             st.error("⚠️ لا يمكن الحفظ: مجموع الأوزان النسبية للمحاور يجب أن يساوي 100%.")
+        elif any(v is None for v in statement_answers_dict.values()):
+            st.error("⚠️ يرجى تقييم والإجابة عن كافة عبارات الاستبيان الـ 31 قبل الإرسال (لا يمكن ترك عبارة بلا إجابة).")
         else:
             new_survey_rec = {
                 "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
@@ -2026,7 +2040,6 @@ with tab7:
             except Exception as e:
                 st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
-    # عرض لوحة الإحصائيات للأدمن أو ملخص الاستجابات
     if st.session_state.get("role") == "admin":
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
@@ -2053,6 +2066,7 @@ with tab7:
         جميع الحقوق محفوظة للدراسة البحثية © 2026
     </div>
     """, unsafe_allow_html=True)
+
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
@@ -2085,13 +2099,6 @@ with tab8:
             <li><b>🌿 مولد تقارير الاستدامة والدليل العملي:</b> توليد مسودات تقارير الاستدامة (GRI/ISSB/SDG Impact) والاطلاع على 30 مؤشراً لـ (ESG).</li>
             <li><b>📋 استبيان فرق العمل المصرفي:</b> استمارة ميدانية لجمع استجابات العاملين بالبنوك في شيت الإكسيل وتحليلها وتصديرها.</li>
             <li><b>📖 دليل المستخدم الرسمي (هذا القسم):</b> توثيق شامل لكل وظائف المنصة وإتاحة التصدير المباشر للملفات.</li>
-        </ul>
-
-        <h3 style="color: {CBE_NAVY}; margin-top: 25px;">3️⃣ بيانات الدخول والصلاحيات</h3>
-        <p>لتشغيل المنصة واختبار صلاحيات المشرف (Admin) والمستخدم (User):</p>
-        <ul>
-            <li><b>صلاحيات المشرف (Admin):</b> اسم المستخدم <code>admin</code> | كلمة المرور <code>admin123</code> (تتيح الاطلاع على سجلات الزوار وعناوين IP وفحص تمايز الإجابات).</li>
-            <li><b>صلاحيات المستخدم العادي (User):</b> اسم المستخدم <code>user</code> | كلمة المرور <code>123</code> (تتيح كافة أقسام التحليلات والتشخيص والتقارير).</li>
         </ul>
     </div>
     """
