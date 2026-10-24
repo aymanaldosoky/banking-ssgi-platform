@@ -112,23 +112,24 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* تحديث لون وتصميم الأزرار باللون الأزرق المصرفي القاتم المميز للمنصة */
+/* تحديث لون وتصميم الأزرار (div.stButton > button) ليتطابق مع اللون الأزرق المصرفي القاتم والنقش البصري للمنصة */
 div.stButton > button {{
     width: 100% !important;
-    border-radius: 50px !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-weight: 700 !important;
     background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     color: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
-    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.25) !important;
+    border-radius: 50px !important;
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: 700 !important;
+    padding: 10px 20px !important;
     transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }}
 
 div.stButton > button:hover {{
-    background: linear-gradient(135deg, #1D4ED8 0% , {CBE_NAVY} 100%) !important;
+    background: linear-gradient(135deg, #1E40AF 0%, {CBE_NAVY} 100%) !important;
     border-color: #FFFFFF !important;
-    box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
     color: #FFFFFF !important;
 }}
 
@@ -181,7 +182,7 @@ div.stTabs {{
 }}
 
 .stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #002B49 100%) !important;
+    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
     color: #FFFFFF !important;
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
@@ -403,7 +404,7 @@ def log_visitor_action(username, role):
         pass
 
 # ==============================================================================
-# إدارة جلسة الدخول والصلاحيات الآمنة عبر st.secrets (مع منع تسجيل الخروج عند Refresh)
+# إدارة جلسة الدخول والصلاحيات الآمنة (مع استقرار حالة الجلسة عند عمل Refresh)
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -414,7 +415,6 @@ if "role" not in st.session_state:
 if "survey_submitted_by_user" not in st.session_state:
     st.session_state.survey_submitted_by_user = False
 
-# قراءة بيانات المشرف من st.secrets مع توفير قيم افتراضية آمنة
 ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
 ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 
@@ -1671,7 +1671,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالكامل)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالترتيب الجديد)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1782,6 +1782,7 @@ with tab7:
             statement_answers_dict[f"العبارة_{num}"] = None
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
+    # الترتيب الجديد المطلوب: ثالثاً عبارات الاستبيان، رابعاً الأوزان النسبية
     with st.expander("📝 ثالثاً: عبارات الاستبيان الـ 31 تفصيلياً (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p style='color: #64748B;'>مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>", unsafe_allow_html=True)
 
@@ -1889,7 +1890,7 @@ with tab7:
 
     if submit_survey_btn:
         if survey_bank_sel == "اختر البنك المصرفي":
-            st.warning("⚠️ حقل «اختر البنك المصرفي» إلزامي لجميع المستجيبين (بما في ذلك الجهات الرقابية والأكاديميين). يرجى اختيار البنك المتابع للمتابعة.")
+            st.warning("⚠️ حقل «اختر البنك المصرفي» إلزامي لجميع المستجيبين (بما في ذلك الجهات الرقابية والأكاديميين). يرجى اختيار البنك للمتابعة.")
         elif total_weight != 100:
             st.error("⚠️ لا يمكن الحفظ: مجموع الأوزان النسبية للمحاور يجب أن يساوي 100%.")
         elif any(v is None for v in statement_answers_dict.values()):
