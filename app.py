@@ -46,25 +46,29 @@ html, body, [class*="css"] {{
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
+    border: none !important;
 }}
 
 .stApp {{
     background-color: {CBE_BG} !important;
     direction: rtl !important;
     text-align: right !important;
+    border: none !important;
 }}
 
-/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر */
-div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.stTable, .element-container {{
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
+div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.stTable, .element-container, div[data-testid="stVerticalBlock"], div[data-testid="stHorizontalBlock"], section {{
     direction: rtl !important;
     text-align: right !important;
     outline: none !important;
     box-shadow: none !important;
+    border: none !important;
 }}
 
-*:focus {{
+*:focus, *:active, *:focus-visible {{
     outline: none !important;
     box-shadow: none !important;
+    border-color: transparent !important;
 }}
 
 div[data-baseweb="select"] *, 
@@ -74,6 +78,8 @@ div[role="listbox"] *,
 div[role="option"] {{
     direction: rtl !important;
     text-align: right !important;
+    border: none !important;
+    outline: none !important;
 }}
 
 /* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
@@ -125,7 +131,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل */
+/* توحيد تصميم الأزرار ومفاتيح التحميل بدون إطارات تركيز رمادية */
 div.stButton > button, div.stDownloadButton > button {{
     width: 100% !important;
     border-radius: 50px !important;
@@ -150,6 +156,7 @@ div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
+    border: none !important;
 }}
 
 .stTabs [data-baseweb="tab-list"] {{
@@ -2094,9 +2101,9 @@ with tab8:
         <p>استعراض وتحميل دليل المستخدم الرسمي والتوثيق المنهجي للمنصة لتمكين المحكمين والباحثين من الاطلاع الفوري على فلسفة وأقسام النظام.</p>
     </div>
     """, unsafe_allow_html=True)
-
+    
     st.markdown("---")
-
+    
     user_manual_html = f"""
     <div style="background: #FFFFFF; padding: 35px; border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 2.1;" dir="rtl">
         <h2 style="color: {CBE_NAVY}; margin-top: 0; text-align: center;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية</h2>
@@ -2119,7 +2126,7 @@ with tab8:
         </ul>
     </div>
     """
-
+    
     st.markdown(flat_html(user_manual_html), unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
