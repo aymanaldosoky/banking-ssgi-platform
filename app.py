@@ -54,9 +54,17 @@ html, body, [class*="css"] {{
     text-align: right !important;
 }}
 
-div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.stTable {{
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر */
+div.stMarkdown, div.stText, div.stSelectbox, div.stSlider, div.stDataFrame, div.stTable, .element-container {{
     direction: rtl !important;
     text-align: right !important;
+    outline: none !important;
+    box-shadow: none !important;
+}}
+
+*:focus {{
+    outline: none !important;
+    box-shadow: none !important;
 }}
 
 div[data-baseweb="select"] *, 
@@ -128,6 +136,7 @@ div.stButton > button, div.stDownloadButton > button {{
     border: 1.5px solid {CBE_GOLD} !important;
     transition: all 0.3s ease !important;
     box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15) !important;
+    outline: none !important;
 }}
 
 div.stButton > button:hover, div.stDownloadButton > button:hover {{
@@ -177,6 +186,8 @@ div.stTabs {{
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    outline: none !important;
+    box-shadow: none !important;
 }}
 
 .stTabs [data-baseweb="tab"]:hover {{
@@ -191,6 +202,7 @@ div.stTabs {{
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+    outline: none !important;
 }}
 
 .stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
@@ -847,7 +859,7 @@ with tab2:
                 fig_radar.update_layout(
                     polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
                     showlegend=True,
-                    title=f"التحليل الرداري لمحاور الحوكمة الذكية المستدامة - {bank_ssgi_sel}",
+                    title=dict(text=f"التحليل الرداري لمحاور الحوكمة الذكية المستدامة - {bank_ssgi_sel}", x=0.5, xanchor='center'),
                     font=dict(family="Cairo", size=12)
                 )
                 st.plotly_chart(fig_radar, use_container_width=True)
@@ -1034,7 +1046,7 @@ with tab2:
             color_discrete_map=dict(zip(axes_names_bank, custom_pie_colors_bank))
         )
         fig_pie_bank.update_layout(
-            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.99, xanchor='right'),
+            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.5, xanchor='center'),
             paper_bgcolor="#FFFFFF",
             font=dict(family="Cairo", size=13)
         )
@@ -1803,7 +1815,7 @@ with tab7:
     st.markdown("---")
 
     st.markdown(f"""
-    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
+    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
         <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 15 دقيقة تقريباً لضمان دقة الاستجابات.</span>
     </div>
     """, unsafe_allow_html=True)
@@ -1999,7 +2011,7 @@ with tab7:
     total_responses_count = len(all_surveys_data)
 
     st.markdown(f"""
-    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
+    <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-bottom: 15px;" dir="rtl">
         <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 16px;">📊 إجمالي عدد الاستجابات المسجلة حتى الآن: ({total_responses_count}) استجابة</span>
     </div>
     """, unsafe_allow_html=True)
@@ -2073,111 +2085,4 @@ with tab7:
     """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
-# ------------------------------------------------------------------------------
-with tab8:
-    st.markdown("""
-    <div dir="rtl" style="text-align: right;">
-        <h3>📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة الحوكمة المصرفية (PDF / Docs)</h3>
-        <p>استعراض وتحميل دليل المستخدم الرسمي والتوثيق المنهجي للمنصة لتمكين المحكمين والباحثين من الاطلاع الفوري على فلسفة وأقسام النظام.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    user_manual_html = f"""
-    <div style="background: #FFFFFF; padding: 35px; border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 2.1;" dir="rtl">
-        <h2 style="color: {CBE_NAVY}; margin-top: 0; text-align: center;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية</h2>
-        <p style="text-align: center; color: #475569; font-size: 14.5px;">دليل تشغيلي وتعريفي شامل موجه للمحكمين، أعضاء لجنة المناقشة، الباحثين، والقيادات المصرفية لاستخدام المنصة بكفاءة تامة.</p>
-        <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 25px 0;">
-
-        <h3 style="color: {CBE_NAVY};">1️⃣ نظرة عامة ورؤية المنصة</h3>
-        <p>تمثل هذه المنصة الإطار التطبيقي الميداني والبرمجي لرسالة الدكتوراه في العلوم البيئية (معهد التخطيط القومي - جامعة عين شمس) للباحث/ <b>أيمن الدسوقي</b>. تهدف المنصة إلى توفير بيئة ذكية متكاملة ومستقلة لتقييم وحوكمة البنوك المصرية عبر مؤشر الحوكمة الذكية المستدامة (SSGI)، مع دعم اتخاذ القرار، محاكاة السيناريوهات الاستراتيجية، جمع استبيانات فرق العمل، واستخلاص الإجابات والتقارير عبر محرك ذكاء اصطناعي مستقل (RAG).</p>
-
-        <h3 style="color: {CBE_NAVY}; margin-top: 25px;">2️⃣ دليل الأقسام والأقسام التفاعلية في المنصة</h3>
-        <ul>
-            <li><b>🎯 اسأل المنصة:</b> محرك استعلام ذكي ومخصص لكل بنك على حدة للإجابة عن أسئلة التأسيس، الحوكمة، والاستدامة مع منع التخمين والهلوسة.</li>
-            <li><b>📊 مؤشر الحوكمة المركب (SSGI):</b> أداة تشخيص قياسي تدمج منصات المعلومات (40%)، الحوكمة المؤسسية (30%)، وتقارير الاستدامة (30%) مع تحليل رداري وترتيب تنازلي.</li>
-            <li><b>📈 محاكي السياسات (Policy Simulator):</b> أداة استشرافية لاختبار أثر التدخلات الاستراتيجية والسيناريوهات (التشاؤمي، المعتدل، الطموح) وصافي التغير.</li>
-            <li><b>🛡️ لوحة دعم اتخاذ القرار:</b> توفير توصيات استراتيجية وتوجيهية مخصصة لكل بنك حسب قراءته التشخيصية.</li>
-            <li><b>📑 التقرير التنفيذي الموحد:</b> أداة لتوليد تقرير شامل ومحدث ديناميكياً لكافة البنوك المسجلة مع إمكانية التحميل بصيغة (Word).</li>
-            <li><b>🌿 مولد تقارير الاستدامة والدليل العملي:</b> توليد مسودات تقارير الاستدامة (GRI/ISSB/SDG Impact) والاطلاع على 30 مؤشراً لـ (ESG).</li>
-            <li><b>📋 استبيان فرق العمل المصرفي:</b> استمارة ميدانية لجمع استجابات العاملين بالبنوك في شيت الإكسيل وتحليلها وتصديرها.</li>
-            <li><b>📖 دليل المستخدم الرسمي (هذا القسم):</b> توثيق شامل لكل وظائف المنصة وإتاحة التصدير المباشر للملفات.</li>
-        </ul>
-    </div>
-    """
-
-    st.markdown(flat_html(user_manual_html), unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    manual_download_data = f"""
-    <html dir="rtl">
-    <head><meta charset="utf-8"><title>دليل المستخدم الرسمي للمنصة الوطنية الذكية</title></head>
-    <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-        {user_manual_html}
-        <hr>
-        <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
-        <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
-    </body>
-    </html>
-    """
-    
-    st.download_button(
-        label="📥 تحميل دليل المستخدم الرسمي والتوثيق المنهجي للمنصة (Word / PDF)",
-        data=manual_download_data.encode("utf-8-sig"),
-        file_name="دليل_المستخدم_الرسمي_للمنصة_المصرفية.doc",
-        mime="application/msword",
-        use_container_width=True
-    )
-
-# ------------------------------------------------------------------------------
-# التبويب التاسع: لوحة تحكم المشرف والزوار (Admin Dashboard)
-# ------------------------------------------------------------------------------
-if tab9 is not None:
-    with tab9:
-        st.markdown("""
-        <div dir="rtl" style="text-align: right;">
-            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP، بالإضافة إلى اختبار أداة تمايز الإجابات للمحرك.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
-        threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
-        
-        if st.button("🚀 تشغيل فحص تمايز الإجابات", type="primary"):
-            sample_questions = [
-                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
-            ]
-            with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
-                flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
-                if flagged_pairs:
-                    st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
-                    for q_item, b1, b2, ratio_val in flagged_pairs:
-                        st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
-                else:
-                    st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
-
-        st.markdown("---")
-        st.markdown("#### 📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)")
-        visitors_data_list = load_visitors_log_from_file()
-        if visitors_data_list:
-            df_v = pd.DataFrame(visitors_data_list)
-            st.dataframe(df_v, use_container_width=True)
-            
-            csv_visitors = df_v.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل سجل الزوار والأفراد وعناوين IP (CSV)",
-                data=csv_visitors,
-                file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.info("📂 لا توجد سجلات زيارات حتى الآن.")
-
-st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
+# التبويب الثامن: دليل المستخدم الرسمي
