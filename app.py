@@ -112,25 +112,24 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* تحديث لون وتصميم الأزرار (div.stButton > button) ليتطابق مع اللون الأزرق المصرفي القاتم والنقش البصري للمنصة */
+/* توحيد تصميم وتنسيق كافة الأزرار باللون الأزرق المصرفي القاتم (#002B49) والمفاتيح بما فيها تحميل التقرير */
 div.stButton > button {{
     width: 100% !important;
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    color: #FFFFFF !important;
-    border: 1.5px solid {CBE_GOLD} !important;
     border-radius: 50px !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: 700 !important;
-    padding: 10px 20px !important;
+    background-color: {CBE_NAVY} !important;
+    color: #FFFFFF !important;
+    border: 1.5px solid {CBE_GOLD} !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.25) !important;
 }}
 
 div.stButton > button:hover {{
-    background: linear-gradient(135deg, #1E40AF 0%, {CBE_NAVY} 100%) !important;
-    border-color: #FFFFFF !important;
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
+    background: linear-gradient(135deg, #001A33 0%, #1D4ED8 100%) !important;
     color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45) !important;
 }}
 
 div.stTabs {{
@@ -182,7 +181,7 @@ div.stTabs {{
 }}
 
 .stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
+    background: linear-gradient(135deg, #1E40AF 0%, #002B49 100%) !important;
     color: #FFFFFF !important;
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
@@ -404,7 +403,7 @@ def log_visitor_action(username, role):
         pass
 
 # ==============================================================================
-# إدارة جلسة الدخول والصلاحيات الآمنة (مع استقرار حالة الجلسة عند عمل Refresh)
+# إدارة جلسة الدخول والصلاحيات الآمنة عبر st.secrets وبقاء الجلسة ثابتة عند الـ Refresh
 # ==============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -415,6 +414,7 @@ if "role" not in st.session_state:
 if "survey_submitted_by_user" not in st.session_state:
     st.session_state.survey_submitted_by_user = False
 
+# قراءة بيانات المشرف من st.secrets مع توفير قيم افتراضية آمنة
 ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
 ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 
@@ -1278,7 +1278,7 @@ with tab5:
                     specific_policy_action = f"تأسيس 'لجنة استراتيجية للسيادة الرقمية'، تعظيم محفظة الأصول الخضراء، وتوظيف الأنظمة الرقابية المتقدمة (RegTech)."
                 elif b_score >= 51:
                     specific_strategic_angle = f"يسجل بنك ({b_name}) جاهزية متوسطة ({b_score}%) تواجه بعض الاختناقات الهيكلية في البنية التقنية أو لجان الالتزام؛ وهو ما يتطلب تدخلاً استباقياً لردم الفجوات."
-                    specific_policy_action = f"تنفيذ برامج تطوير منصات المعلومات (SIP)، تعزيز استقلالية لجان المراجعة، والتوسع في تدريب الكوادر."
+                    specific_policy_action = f"تنفيذ برامج تطوير منصات المعلومات (SIP), تعزيز استقلالية لجان المراجعة, والتوسع في تدريب الكوادر."
                 else:
                     specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
                     specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
@@ -1671,7 +1671,7 @@ with tab6:
         )
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالترتيب الجديد)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالترتيب المطلوب)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -1782,7 +1782,7 @@ with tab7:
             statement_answers_dict[f"العبارة_{num}"] = None
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-    # الترتيب الجديد المطلوب: ثالثاً عبارات الاستبيان، رابعاً الأوزان النسبية
+    # 3. ترتيب وتسمية العبارات لتكون ثالثاً
     with st.expander("📝 ثالثاً: عبارات الاستبيان الـ 31 تفصيلياً (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p style='color: #64748B;'>مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>", unsafe_allow_html=True)
 
@@ -1853,6 +1853,7 @@ with tab7:
         render_statement(30, "يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.", sr_scores)
         render_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.", sr_scores)
 
+    # 4. الأوزان النسبية للمحاور لتكون رابعاً
     with st.expander("⚖️ رابعاً: الأوزان النسبية المقترحة للمحاور (اضغط للتمديد أو التقليص)", expanded=True):
         st.markdown("<p>بناءً على خبرة سيادتك، ما هو الوزن النسبي (الأهمية) الذي تقترحونه لكل محور عند تقييم نضج البنك؟ (يجب أن يكون المجموع 100%)</p>", unsafe_allow_html=True)
         col_w1, col_w2, col_w3 = st.columns(3)
@@ -1890,7 +1891,7 @@ with tab7:
 
     if submit_survey_btn:
         if survey_bank_sel == "اختر البنك المصرفي":
-            st.warning("⚠️ حقل «اختر البنك المصرفي» إلزامي لجميع المستجيبين (بما في ذلك الجهات الرقابية والأكاديميين). يرجى اختيار البنك للمتابعة.")
+            st.warning("⚠️ حقل «اختر البنك المصرفي» إلزامي لجميع المستجيبين (بما في ذلك الجهات الرقابية والأكاديميين). يرجى اختيار البنك المتابع للمتابعة.")
         elif total_weight != 100:
             st.error("⚠️ لا يمكن الحفظ: مجموع الأوزان النسبية للمحاور يجب أن يساوي 100%.")
         elif any(v is None for v in statement_answers_dict.values()):
@@ -1979,7 +1980,7 @@ with tab8:
         <h3 style="color: {CBE_NAVY}; margin-top: 25px;">2️⃣ دليل الأقسام والأقسام التفاعلية في المنصة</h3>
         <ul>
             <li><b>🎯 اسأل المنصة:</b> محرك استعلام ذكي ومخصص لكل بنك على حدة للإجابة عن أسئلة التأسيس، الحوكمة، والاستدامة مع منع التخمين والهلوسة.</li>
-            <li><b>📊 مؤشر الحوكمة المركب (SSGI):</b> أداة تشخيص قياسي تدمج منصات المعلومات (40%)، الحوكمة المؤسسية (30%)، وتقارير الاستدامة (30%) مع تحليل رداري وترتيب تنازلي.</li>
+            <li><b>📊 مؤشر الحوكمة المركب (SSGI):</b> أداة تشخيص قياسي تدمج منصات المعلومات (40%), الحوكمة المؤسسية (30%), وتقارير الاستدامة (30%) مع تحليل رداري وترتيب تنازلي.</li>
             <li><b>📈 محاكي السياسات (Policy Simulator):</b> أداة استشرافية لاختبار أثر التدخلات الاستراتيجية والسيناريوهات (التشاؤمي، المعتدل، الطموح) وصافي التغير.</li>
             <li><b>🛡️ لوحة دعم اتخاذ القرار:</b> توفير توصيات استراتيجية وتوجيهية مخصصة لكل بنك حسب قراءته التشخيصية.</li>
             <li><b>📑 التقرير التنفيذي الموحد:</b> أداة لتوليد تقرير شامل ومحدث ديناميكياً لكافة البنوك المسجلة مع إمكانية التحميل بصيغة (Word).</li>
