@@ -68,7 +68,7 @@ div[role="option"] {{
     text-align: right !important;
 }}
 
-/* تصميم جدول RTL مخصص ومصغر ومريح بصرياً */
+/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -78,41 +78,46 @@ div[role="option"] {{
     margin-bottom: 12px !important;
     font-family: 'Cairo', sans-serif !important;
     background-color: #FFFFFF !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     overflow: hidden !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-    border: 1px solid #CBD5E1 !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03) !important;
+    border: 1px solid #E2E8F0 !important;
 }}
 
 .custom-rtl-table th {{
     background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
     color: #F8FAFC !important;
-    padding: 9px 8px !important;
+    padding: 10px 10px !important;
     font-weight: 700 !important;
-    border: 1px solid #475569 !important;
+    border-bottom: 2px solid {CBE_GOLD} !important;
+    border-right: none !important;
+    border-left: none !important;
     text-align: right !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
     white-space: nowrap !important;
 }}
 
 .custom-rtl-table td {{
-    padding: 7px 8px !important;
-    border: 1px solid #E2E8F0 !important;
+    padding: 8px 10px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
     color: #1E293B !important;
-    font-size: 12px !important;
+    font-size: 12.5px !important;
     text-align: right !important;
-    line-height: 1.4 !important;
+    line-height: 1.5 !important;
 }}
 
 .custom-rtl-table tr:nth-child(even) {{
-    background-color: #F8FAFC !important;
+    background-color: #FAFAFA !important;
 }}
 
 .custom-rtl-table tr:hover {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل ليطابق الأزرق المصرفي القاتم */
+/* توحيد تصميم الأزرار ومفاتيح التحميل */
 div.stButton > button, div.stDownloadButton > button {{
     width: 100% !important;
     border-radius: 50px !important;
@@ -122,14 +127,14 @@ div.stButton > button, div.stDownloadButton > button {{
     color: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15) !important;
 }}
 
 div.stButton > button:hover, div.stDownloadButton > button:hover {{
     background-color: #001A33 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: #FFFFFF !important;
-    box-shadow: 0 6px 16px rgba(0, 43, 73, 0.35) !important;
+    box-shadow: 0 6px 16px rgba(0, 43, 73, 0.3) !important;
 }}
 
 div.stTabs {{
@@ -148,7 +153,7 @@ div.stTabs {{
     padding: 10px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.25) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
     direction: rtl !important;
     box-sizing: border-box !important;
 }}
@@ -185,7 +190,7 @@ div.stTabs {{
     color: #FFFFFF !important;
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.45) !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
 }}
 
 .stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
@@ -202,7 +207,7 @@ div.stTabs {{
     padding: 35px 20px !important;
     border-radius: 16px !important;
     border-bottom: 5px solid {CBE_GOLD} !important;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.35) !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.2) !important;
     margin-bottom: 20px !important;
     direction: rtl !important;
 }}
@@ -212,7 +217,7 @@ div.stTabs {{
     font-size: 24px !important;
     font-weight: 800 !important;
     margin-bottom: 10px !important;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.7) !important;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
 }}
 
 .header-center h3 {{
@@ -230,7 +235,7 @@ div.stTabs {{
     border-bottom: 2px solid {CBE_GOLD};
     overflow: hidden;
     white-space: nowrap;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     margin-bottom: 25px;
     border-radius: 8px;
     direction: ltr !important;
@@ -424,7 +429,7 @@ if not st.session_state.authenticated:
         login_container = st.container()
         with login_container:
             st.markdown(f"""
-            <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: right;" dir="rtl">
+            <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right;" dir="rtl">
                 <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
                 <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
                     إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
