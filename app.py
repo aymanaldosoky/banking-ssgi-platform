@@ -2137,6 +2137,7 @@ with tab8:
         {user_manual_html}
         <hr>
         <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
+        <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
     </body>
     </html>
     """
