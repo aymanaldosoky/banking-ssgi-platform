@@ -13,13 +13,13 @@ import plotly.graph_objects as go
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
 # ==============================================================================
-# إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL)
+# إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL) - مع القائمة الجانبية المنظمة
 # ==============================================================================
 st.set_page_config(
     page_title="مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"  # جعل القائمة الجانبية مفتوحة ومنظمة افتراضياً
 )
 
 CBE_NAVY = "#002B49"        # أزرق مصرفي عميق
@@ -151,70 +151,6 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {{
     border-color: #FFFFFF !important;
     box-shadow: 0 6px 16px rgba(0, 43, 73, 0.3) !important;
 }}
-
-div.stTabs {{
-    width: 100% !important;
-    max-width: 100% !important;
-    direction: rtl !important;
-    border: none !important;
-}}
-
-.stTabs [data-baseweb="tab-list"] {{
-    display: flex !important;
-    flex-direction: row-reverse !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    gap: 6px !important;
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    padding: 10px !important;
-    border-radius: 12px !important;
-    border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-    direction: rtl !important;
-    box-sizing: border-box !important;
-}}
-
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 1 0% !important;
-    width: 100% !important;
-    max-width: none !important;
-    background-color: rgba(0, 43, 73, 0.85) !important;
-    color: #FFFFFF !important;
-    border-radius: 8px !important;
-    padding: 10px 4px !important;
-    font-weight: 700 !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-size: 12px !important;
-    border: 1px solid rgba(197, 160, 89, 0.3) !important;
-    text-align: center !important;
-    justify-content: center !important;
-    align-items: center !important;
-    transition: all 0.3s ease !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    outline: none !important;
-    box-shadow: none !important;
-}}
-
-.stTabs [data-baseweb="tab"]:hover {{
-    background-color: #1D4ED8 !important;
-    color: #FFFFFF !important;
-    border-color: #FFFFFF !important;
-}}
-
-.stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
-    color: #FFFFFF !important;
-    border: 2px solid #FFFFFF !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
-    outline: none !important;
-}}
-
-.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
-.stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
-.stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
 
 .header-center {{
     text-align: center !important;
@@ -570,7 +506,7 @@ if "draft_bank_name" not in st.session_state:
     st.session_state.draft_bank_name = ""
 
 # ==============================================================================
-# الهيدر والشريط الإخباري
+# الهيدر والشريط الإخباري والقائمة الجانبية (Sidebar Navigation)
 # ==============================================================================
 col_h1, col_h2 = st.columns([4, 1])
 with col_h2:
@@ -602,38 +538,49 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==============================================================================
-# التبويبات الرئيسة
-# ==============================================================================
-if st.session_state.role == "admin":
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "🎯 اسأل المنصة",
-        "📊 مؤشر الحوكمة المركب (SSGI)", 
-        "📈 محاكي السياسات (Policy Simulator)", 
-        "🛡️ لوحة دعم اتخاذ القرار", 
+# ------------------------------------------------------------------------------
+# هيكل القائمة الجانبية المنظمة (Sidebar Navigation)
+# ------------------------------------------------------------------------------
+with st.sidebar:
+    st.markdown(f"""
+    <div style="text-align: right; padding: 10px 0;" dir="rtl">
+        <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 16px;">🧭 التنقل الرئيسي للمنصة</h3>
+        <p style="color: #64748B; font-size: 12.5px;">اختر القسم المطلوب للتصفح والتشغيل:</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    navigation_options = [
+        "🎯 اسأل المنصة (الاستعلام الذكي)",
+        "📊 مؤشر الحوكمة المركب (SSGI)",
+        "📈 محاكي السياسات (Policy Simulator)",
+        "🛡️ لوحة دعم اتخاذ القرار",
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
         "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي PDF",
-        "🔒 لوحة تحكم المشرف والزوار (Admin)"
-    ])
-else:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-        "🎯 اسأل المنصة",
-        "📊 مؤشر الحوكمة المركب (SSGI)", 
-        "📈 محاكي السياسات (Policy Simulator)", 
-        "🛡️ لوحة دعم اتخاذ القرار", 
-        "📑 التقرير التنفيذي الموحد",
-        "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
-        "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي PDF"
-    ])
-    tab9 = None
+        "📖 دليل المستخدم الرسمي والتوجيهي"
+    ]
+    
+    if st.session_state.role == "admin":
+        navigation_options.append("🔒 لوحة تحكم المشرف والزوار (Admin)")
+        
+    selected_page = st.radio(
+        "اختر القسم:",
+        navigation_options,
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    st.markdown(f"""
+    <div style="text-align: right; font-size: 12px; color: #64748B;" dir="rtl">
+        <p><b>معاهد وجهات الإشراف:</b><br>• جامعة عين شمس<br>• معهد التخطيط القومي</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة
-# ------------------------------------------------------------------------------
-with tab1:
+# ==============================================================================
+# توجيه المحتوى بناءً على اختيار القائمة الجانبية (Sidebar Routing)
+# ==============================================================================
+
+if selected_page == "🎯 اسأل المنصة (الاستعلام الذكي)":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🎯 تحليل واستخلاص البيانات </h3>
@@ -664,7 +611,7 @@ with tab1:
                 "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
                 "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
                 "ما هي نسبة الأعضاء المستقلين وسياسات تجنب تعارض المصالح؟",
-                 "ما هي جهود البنك في تمكين المرأة والشمول المالي؟",
+                "ما هي جهود البنك في تمكين المرأة والشمول المالي؟",
                 "كيف يفصح البنك عن سياسات الشفافية والمساءلة ومكافحة الفساد؟",
                 "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"
             ]
@@ -729,10 +676,7 @@ with tab1:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/ الاستفسار.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
-# ------------------------------------------------------------------------------
-with tab2:
+elif selected_page == "📊 مؤشر الحوكمة المركب (SSGI)":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
@@ -944,125 +888,7 @@ with tab2:
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
 
-    st.markdown("---")
-    
-    # --------------------------------------------------------------------------
-    # استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
-    # --------------------------------------------------------------------------
-    with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
-        st.markdown("""
-        <div dir="rtl" style="text-align: right;">
-        <ul>
-            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة بعد النشر.</li>
-            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم سيادة القانون، العدالة والمساواة، المتابعة والمساءلة، المشاركة، الشفافية والإفصاح، ومجلس الإدارة.</li>
-            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف.</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
-        hierarchy_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 400px;">
-        <table class="custom-rtl-table">
-        <thead>
-        <tr>
-        <th>المحور الرئيسي</th>
-        <th>البعد الأساسي</th>
-        <th>العناصر الفرعية</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-        <td rowspan="4" style="font-weight: bold; color: #002B49; vertical-align: top;">أولاً: منصات المعلومات الذكية (SIP)</td>
-        <td>1. جودة المعلومات</td>
-        <td>1/1 جاهزية البنية التحتية الرقمية.<br>1/2 توافر البيانات وقابليتها للمعالجة الآلية.</td>
-        </tr>
-        <tr>
-        <td>2. التكامل والخصوصية</td>
-        <td>2/1 الترابط البيني التقني.<br>2/2 السيادة الرقمية وأمن المعلومات.</td>
-        </tr>
-        <tr>
-        <td>3. الامتثال التقني</td>
-        <td>3/1 الامتثال للمعايير القياسية.<br>3/2 حوكمة الخوارزميات والذكاء الاصطناعي.</td>
-        </tr>
-        <tr>
-        <td>4. التخطيط والمراقبة بعد النشر</td>
-        <td>4/1 الرصد والتحليل الآني.<br>4/2 دقة وموثوقية المخرجات الرقابية.</td>
-        </tr>
-        <tr>
-        <td rowspan="6" style="font-weight: bold; color: #002B49; vertical-align: top;">ثانياً: الحوكمة المؤسسية (IG)</td>
-        <td>1. سيادة القانون</td>
-        <td>1/1 التوافق التشريعي والتنظيمي مع البنك المركزي.<br>1/2 الأخلاقيات والسلوك المصرفي.</td>
-        </tr>
-        <tr>
-        <td>2. العدالة والمساواة</td>
-        <td>2/1 العدالة التنظيمية والوظيفية.<br>2/2 عدالة حقوق أصحاب المصلحة والمودعين.</td>
-        </tr>
-        <tr>
-        <td>3. المتابعة والمساءلة</td>
-        <td>3/1 وضوح هيكل المسؤوليات والصلاحيات.<br>3/2 فاعلية آليات الرقابة والتدقيق الداخلي.</td>
-        </tr>
-        <tr>
-        <td>4. المشاركة</td>
-        <td>4/1 تفاعل وانخراط أصحاب المصلحة.<br>4/2 المشاركة الفعالة في صنع القرار الاستراتيجي.</td>
-        </tr>
-        <tr>
-        <td>5. الشفافية والإفصاح</td>
-        <td>5/1 جودة ووضوح الإفصاح المالي وغير المالي.<br>5/2 توقيت ودورية الإفصاح.</td>
-        </tr>
-        <tr>
-        <td>6. مجلس الإدارة</td>
-        <td>6/1 كفاءة وفاعلية تشكيل المجلس والأعضاء المستقلين.<br>6/2 نشاط اللجان المنبثقة (المراجعة، المخاطر).<br>6/3 سياسات تجنب تعارض المصالح.</td>
-        </tr>
-        <tr>
-        <td rowspan="5" style="font-weight: bold; color: #002B49; vertical-align: top;">ثالثاً: تقارير الاستدامة (SR)</td>
-        <td>1. الاستراتيجية</td>
-        <td>1/1 الدمج الاستراتيجي لأهداف التنمية المستدامة.<br>1/2 التخصيص المالي والائتماني المستدام.</td>
-        </tr>
-        <tr>
-        <td>2. التنوع والشمول</td>
-        <td>2/1 تنوع الهيكل القيادي وتمكين المرأة.<br>2/2 شمول الخدمات المالية المصرفية.</td>
-        </tr>
-        <tr>
-        <td>3. إدارة المخاطر</td>
-        <td>3/1 دمج مخاطر المناخ ضمن إدارة المخاطر الكلية.<br>3/2 اختبارات الضغط والتحوط المرن.</td>
-        </tr>
-        <tr>
-        <td>4. الأبعاد التشغيلية</td>
-        <td>4/1 التمويل والاستثمار الأخضر والاقتصادي.<br>4/2 الكفاءة التشغيلية للموارد والبيئة.<br>4/3 أثر المسؤولية المجتمعية والإنفاق التنموي.</td>
-        </tr>
-        <tr>
-        <td>5. المقاييس والأهداف</td>
-        <td>5/1 أداء تحقيق المستهدفات البيئية والمجتمعية.<br>5/2 المواءمة المعيارية مع (GRI و ISSB) والتوكيد.</td>
-        </tr>
-        </tbody>
-        </table>
-        </div>
-        """
-        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
-
-        axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
-        weights_vals_bank = [40, 30, 30]
-        custom_pie_colors_bank = [CBE_NAVY, CBE_GOLD, "#475569"]
-
-        fig_pie_bank = px.pie(
-            names=axes_names_bank,
-            values=weights_vals_bank,
-            hole=0.4,
-            title="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)",
-            color=axes_names_bank,
-            color_discrete_map=dict(zip(axes_names_bank, custom_pie_colors_bank))
-        )
-        fig_pie_bank.update_layout(
-            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.5, xanchor='center'),
-            paper_bgcolor="#FFFFFF",
-            font=dict(family="Cairo", size=13)
-        )
-        st.plotly_chart(fig_pie_bank, use_container_width=True)
-
-# ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
-# ------------------------------------------------------------------------------
-with tab3:
+elif selected_page == "📈 محاكي السياسات (Policy Simulator)":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
@@ -1219,10 +1045,7 @@ with tab3:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار
-# ------------------------------------------------------------------------------
-with tab4:
+elif selected_page == "🛡️ لوحة دعم اتخاذ القرار":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🛡️ لوحة دعم اتخاذ القرار المصرفي</h3>
@@ -1366,10 +1189,7 @@ with tab4:
                 st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الخامس: التقرير التنفيذي الموحد
-# ------------------------------------------------------------------------------
-with tab5:
+elif selected_page == "📑 التقرير التنفيذي الموحد":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📑 أداة توليد التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>
@@ -1525,10 +1345,7 @@ with tab5:
                 use_container_width=True
             )
 
-# ------------------------------------------------------------------------------
-# التبويب السادس: مولد تقارير الاستدامة (GRI / ISSB)
-# ------------------------------------------------------------------------------
-with tab6:
+elif selected_page == "🌿 مولد تقارير الاستدامة (GRI/ISSB)":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🌿 نظام توليد تقارير الاستدامة المتقدم والدليل العملي الشامل (GRI / ISSB / SDG Impact)</h3>
@@ -1808,10 +1625,7 @@ with tab6:
             use_container_width=True
         )
 
-# ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل في البنوك (المحدث بالكامل)
-# ------------------------------------------------------------------------------
-with tab7:
+elif selected_page == "📋 استبيان فرق العمل المصرفي":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
@@ -2091,10 +1905,7 @@ with tab7:
     </div>
     """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
-# ------------------------------------------------------------------------------
-with tab8:
+elif selected_page == "📖 دليل المستخدم الرسمي والتوجيهي":
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة الحوكمة المصرفية (PDF / Docs)</h3>
@@ -2150,53 +1961,49 @@ with tab8:
         use_container_width=True
     )
 
-# ------------------------------------------------------------------------------
-# التبويب التاسع: لوحة تحكم المشرف والزوار (Admin Dashboard)
-# ------------------------------------------------------------------------------
-if tab9 is not None:
-    with tab9:
-        st.markdown("""
-        <div dir="rtl" style="text-align: right;">
-            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP، بالإضافة إلى اختبار أداة تمايز الإجابات للمحرك.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
-        threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
-        
-        if st.button("🚀 تشغيل فحص تمايز الإجابات", type="primary"):
-            sample_questions = [
-                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
-            ]
-            with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
-                flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
-                if flagged_pairs:
-                    st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
-                    for q_item, b1, b2, ratio_val in flagged_pairs:
-                        st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
-                else:
-                    st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
+elif selected_page == "🔒 لوحة تحكم المشرف والزوار (Admin)":
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
+        <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP، بالإضافة إلى اختبار أداة تمايز الإجابات للمحرك.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
+    threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
+    
+    if st.button("🚀 تشغيل فحص تمايز الإجابات", type="primary"):
+        sample_questions = [
+            "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
+            "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
+            "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
+        ]
+        with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
+            flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
+            if flagged_pairs:
+                st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
+                for q_item, b1, b2, ratio_val in flagged_pairs:
+                    st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
+            else:
+                st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
 
-        st.markdown("---")
-        st.markdown("#### 📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)")
-        visitors_data_list = load_visitors_log_from_file()
-        if visitors_data_list:
-            df_v = pd.DataFrame(visitors_data_list)
-            st.dataframe(df_v, use_container_width=True)
-            
-            csv_visitors = df_v.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل سجل الزوار والأفراد وعناوين IP (CSV)",
-                data=csv_visitors,
-                file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.info("📂 لا توجد سجلات زيارات حتى الآن.")
+    st.markdown("---")
+    st.markdown("#### 📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)")
+    visitors_data_list = load_visitors_log_from_file()
+    if visitors_data_list:
+        df_v = pd.DataFrame(visitors_data_list)
+        st.dataframe(df_v, use_container_width=True)
+        
+        csv_visitors = df_v.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 تحميل سجل الزوار والأفراد وعناوين IP (CSV)",
+            data=csv_visitors,
+            file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    else:
+        st.info("📂 لا توجد سجلات زيارات حتى الآن.")
 
 st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
