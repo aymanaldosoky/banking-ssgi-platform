@@ -87,39 +87,6 @@ html, body, [class*="css"] {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* تصميم أزرار الرقاقات التفاعلية (Quick Chips) */
-.chip-container {{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
-    direction: rtl;
-}}
-
-div[data-testid="stHorizontalBlock"] button[key*="chip_"] {{
-    background-color: #FFFFFF !important;
-    color: {CBE_NAVY} !important;
-    border: 1px solid #CBD5E1 !important;
-    border-radius: 20px !important;
-    padding: 6px 14px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.03) !important;
-    transition: all 0.25s ease !important;
-    white-space: normal !important;
-    height: auto !important;
-    min-height: 38px !important;
-    text-align: right !important;
-}}
-
-div[data-testid="stHorizontalBlock"] button[key*="chip_"]:hover {{
-    background-color: {CBE_NAVY} !important;
-    color: #FFFFFF !important;
-    border-color: {CBE_GOLD} !important;
-    box-shadow: 0 4px 10px rgba(0, 43, 73, 0.2) !important;
-    transform: translateY(-1px);
-}}
-
 /* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
@@ -631,8 +598,6 @@ if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
-if "trigger_query" not in st.session_state:
-    st.session_state.trigger_query = False
 if "draft_generated_state" not in st.session_state:
     st.session_state.draft_generated_state = False
 if "draft_bank_name" not in st.session_state:
@@ -700,7 +665,7 @@ else:
     tab9 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (مُطور بتجربة مستخدم Zero-Click & Quick Chips UX)
+# التبويب الأول: اسأل المنصة (مُطور بتجربة مستخدم Streaming & Skeleton Loaders)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
@@ -716,51 +681,50 @@ with tab1:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         ask_bank_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="ask_bank")
 
-        # دالة التنفيذ المباشر الفوري بنقرة واحدة عند الضغط على الرقاقات
-        def trigger_chip_query(question):
-            st.session_state.query_text_box = question
-            st.session_state.trigger_query = True
-
-        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>⚡ أسئلة سريعة (Zero-Click Quick Chips):</b>", unsafe_allow_html=True)
-
-        # 1. رقاقات الحوكمة والتأسيس
-        st.markdown("<div style='font-size: 12px; color: #64748B; margin-top: 4px;'>🏛️ الحوكمة والتأسيس والتاريخ:</div>", unsafe_allow_html=True)
-        chip_col1, chip_col2 = st.columns(2)
-        with chip_col1:
-            st.button("📜 متى تأسس البنك ومن مؤسسه وتفاصيل ملكيته؟", key="chip_ig_0", on_click=trigger_chip_query, args=("متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",), use_container_width=True)
-            st.button("👥 نسبة الأعضاء المستقلين وتجنب تعارض المصالح؟", key="chip_ig_2", on_click=trigger_chip_query, args=("ما هي نسبة الأعضاء المستقلين وسياسات تجنب تعارض المصالح؟",), use_container_width=True)
-        with chip_col2:
-            st.button("🏢 تعريف الحوكمة وتكوين مجلس الإدارة؟", key="chip_ig_1", on_click=trigger_chip_query, args=("عرف الحوكمة وتكوين مجلس الإدارة بالبنك",), use_container_width=True)
-            st.button("⚖️ الشفافية والمساءلة ومكافحة الفساد؟", key="chip_ig_4", on_click=trigger_chip_query, args=("كيف يفصح البنك عن سياسات الشفافية والمساءلة ومكافحة الفساد؟",), use_container_width=True)
-
-        # 2. رقاقات الاستدامة والمناخ
-        st.markdown("<div style='font-size: 12px; color: #64748B; margin-top: 6px;'>🌱 تقارير الاستدامة والتمويل الأخضر والمناخ:</div>", unsafe_allow_html=True)
-        chip_col3, chip_col4 = st.columns(2)
-        with chip_col3:
-            st.button("🌍 كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟", key="chip_sr_0", on_click=trigger_chip_query, args=("كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",), use_container_width=True)
-            st.button("📊 مدى الامتثال للمعايير الدولية (GRI و ISSB)؟", key="chip_sr_2", on_click=trigger_chip_query, args=("كيف يمتثل البنك للمعايير الدولية للإفصاح المالي (GRI و ISSB)؟",), use_container_width=True)
-        with chip_col4:
-            st.button("🌿 نسبة الأصول الخضراء ضمن محفظة الائتمان؟", key="chip_sr_1", on_click=trigger_chip_query, args=("ما هي نسبة الأصول الخضراء والمشروعات المستدامه ضمن محفظة الائتمان؟",), use_container_width=True)
-            st.button("🤝 مبادرات المسؤولية المجتمعية والإنفاق التنموي؟", key="chip_sr_3", on_click=trigger_chip_query, args=("ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟",), use_container_width=True)
-
-        # 3. رقاقات المنصات الذكية وحوكمة البيانات
-        st.markdown("<div style='font-size: 12px; color: #64748B; margin-top: 6px;'>🔒 المنصات الذكية وحوكمة البيانات والامتثال:</div>", unsafe_allow_html=True)
-        chip_col5, chip_col6 = st.columns(2)
-        with chip_col5:
-            st.button("🛡️ آليات حوكمة البيانات والامتثال الرقابي؟", key="chip_sip_0", on_click=trigger_chip_query, args=("ما هي آليات حوكمة البيانات والامتثال الرقابي وتأمينها؟",), use_container_width=True)
-            st.button("⚙️ جاهزية البنية التحتية الرقمية ومنصات SIP؟", key="chip_sip_2", on_click=trigger_chip_query, args=("ما هي جاهزية البنية التحتية الرقمية ومنصات المعلومات (SIP)؟",), use_container_width=True)
-        with chip_col6:
-            st.button("🔐 الحصانة السيبرانية ومنع تسريب البيانات؟", key="chip_sip_1", on_click=trigger_chip_query, args=("كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟",), use_container_width=True)
-            st.button("📱 التوافق مع قانون حماية البيانات والسيادة الرقمية؟", key="chip_sip_4", on_click=trigger_chip_query, args=("ما مدى التوافق مع قانون حماية البيانات الشخصية والسيادة الرقمية؟",), use_container_width=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        
         user_question = st.text_area(
-            "❓ أوه اكتب سؤالك المخصص هنا:",
+            "❓ اكتب سؤالك / استفسارك:",
             placeholder="مثال: متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-            height=90,
+            height=110,
             key="query_text_box"
         )
+
+        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
+
+        def set_suggested_question(question):
+            st.session_state.query_text_box = question
+
+        with st.expander("🏛️ محور الحوكمة والتأسيس والتاريخ (IG & History)"):
+            ig_questions = [
+                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
+                "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
+                "ما هي نسبة الأعضاء المستقلين وسياسات تجنب تعارض المصالح؟",
+                "ما هي جهود البنك في تمكين المرأة والشمول المالي؟",
+                "كيف يفصح البنك عن سياسات الشفافية والمساءلة ومكافحة الفساد؟",
+                "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"
+            ]
+            for i, q in enumerate(ig_questions):
+                st.button(q, key=f"btn_ig_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
+
+        with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
+            sr_questions = [
+                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
+                "ما هي نسبة الأصول الخضراء والمشروعات المستدامه ضمن محفظة الائتمان؟",
+                "كيف يمتثل البنك للمعايير الدولية للإفصاح المالي (GRI و ISSB)؟",
+                "ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟"
+            ]
+            for i, q in enumerate(sr_questions):
+                st.button(q, key=f"btn_sr_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
+
+        with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
+            sip_questions = [
+                "ما هي آليات حوكمة البيانات والامتثال الرقابي وتأمينها؟",
+                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟",
+                "ما هي جاهزية البنية التحتية الرقمية ومنصات المعلومات (SIP)؟",
+                "كيف يوظف البنك تقنيات الرقابة التنظيمية (RegTech) واسترجاع المعطيات؟",
+                "ما مدى التوافق مع قانون حماية البيانات الشخصية والسيادة الرقمية؟"
+            ]
+            for i, q in enumerate(sip_questions):
+                st.button(q, key=f"btn_sip_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
 
         ask_submit_btn = st.button("🚀 تقديم السؤال والتحليل المباشر", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -768,13 +732,7 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
 
-        # فحص إما ضغط زر التقديم أو الضغط الفوري على إحدى الرقاقات (One-Click Trigger)
-        is_triggered = ask_submit_btn or st.session_state.trigger_query
-
-        if is_triggered:
-            # إعادة ضبط حالة المحفز الفوري
-            st.session_state.trigger_query = False
-            
+        if ask_submit_btn:
             active_q = st.session_state.query_text_box
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
@@ -824,6 +782,7 @@ with tab1:
                     # 3. محاكاة التدفق المباشر (Streaming Generator)
                     # ----------------------------------------------------------
                     def stream_response_generator(text_html):
+                        # تقسيم المخرجات حسب الكلمات مع الحفاظ على وسم الـ HTML
                         tokens = text_html.split(" ")
                         for token in tokens:
                             yield token + " "
@@ -837,7 +796,7 @@ with tab1:
                         response_box.markdown(accumulated_text, unsafe_allow_html=True)
 
         else:
-            st.info("🎯 اختر البنك واضغط على أي رقاقة سؤال سريعة (Zero-Click) للحصول على التقرير التفاعلي فوراً.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/الاستفسار لمشاهدة التقرير التفاعلي المباشر.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
