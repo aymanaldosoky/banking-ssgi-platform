@@ -893,6 +893,8 @@ with tab2:
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
+                    status_border_color = "#10B981"  # Emerald Green
+                    status_bg_light = "#ECFDF5"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -908,6 +910,8 @@ with tab2:
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
+                    status_border_color = "#F59E0B"  # Amber
+                    status_bg_light = "#FFFBEB"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -923,6 +927,8 @@ with tab2:
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
+                    status_border_color = "#EF4444"  # Red
+                    status_bg_light = "#FEF2F2"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -937,31 +943,32 @@ with tab2:
                     """
 
                 # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية مؤطرة (Metric Cards UX)
+                # 3. عرض البطاقات الرقمية المؤطرة داخل Container Card (Enterprise UX)
                 # --------------------------------------------------------------
                 st.markdown(f"<h4 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>📊 ملخص النتائج والتشخيص القياسي - {clean_text(bank_ssgi_sel)}</h4>", unsafe_allow_html=True)
-                
-                # إطار خارجي بحلفية مميزة وتأطير احترافي للبطاقات الاربع
-                with st.container():
-                    st.markdown(f"""
-                    <div dir="rtl" style="
-                        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-                        border: 1px solid #E2E8F0;
-                        border-right: 5px solid {CBE_NAVY};
-                        border-radius: 12px;
-                        padding: 16px;
-                        margin-bottom: 15px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-                    ">
-                    """, unsafe_allow_html=True)
-                    
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
-                    m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
-                    m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
-                    m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
+
+                # بداية الحاوية المصرفية المؤطرة لبطاقات الأرقام والمؤشرات
+                st.markdown(flat_html(f"""
+                <div dir="rtl" style="
+                    background: linear-gradient(135deg, #FFFFFF 0%, {status_bg_light} 100%);
+                    border-radius: 12px;
+                    padding: 18px 20px 10px 20px;
+                    border: 1px solid #E2E8F0;
+                    border-right: 6px solid {status_border_color};
+                    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.05);
+                    margin-bottom: 15px;
+                ">
+                """), unsafe_allow_html=True)
+
+                # توزيع بطاقات metric القياسية الأربعة داخل الحاوية المؤطرة
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
+                m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
+                m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
+                m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+
+                st.markdown("</div>", unsafe_allow_html=True)
+                # نهاية الحاوية المؤطرة
 
                 # --------------------------------------------------------------
                 # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
