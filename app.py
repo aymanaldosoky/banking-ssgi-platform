@@ -1026,28 +1026,60 @@ with tab2:
     st.markdown("---")
     
     # --------------------------------------------------------------------------
-    # جداول تفاعلية مع مرشحات للنتائج التاريخية (Interactive DataTables UX)
+    # الجدول الأول: ترتيب وسجلات البنوك (تم تطبيق نفس الهوية البصرية للجدول الثاني)
     # --------------------------------------------------------------------------
-    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة (Interactive DataTable)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
     
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # عرض الجدول التفاعلي باستخدام st.dataframe المطور
-        st.dataframe(
-            df_history,
-            column_config={
-                "معرف السجل": st.column_config.TextColumn("معرف السجل / التوقيت", width="medium"),
-                "البنك": st.column_config.TextColumn("اسم البنك", width="medium"),
-                "مؤشر SSGI المركب": st.column_config.NumberColumn("مؤشر SSGI (%)", format="%.2f%%"),
-                "منصات المعلومات (40%)": st.column_config.NumberColumn("SIP (40%)", format="%.1f%%"),
-                "الحوكمة المؤسسية (30%)": st.column_config.NumberColumn("IG (30%)", format="%.1f%%"),
-                "تقارير الاستدامة (30%)": st.column_config.NumberColumn("SR (30%)", format="%.1f%%"),
-                "التقييم التشخيصي": st.column_config.TextColumn("التقييم التشخيصي القياسي", width="large"),
-            },
-            use_container_width=True,
-            hide_index=False
-        )
+        # صياغة جدول HTML مخصص متوافق مع نفس كلاس وألوان الجدول الثاني custom-rtl-table
+        history_table_html = """
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
+        <table class="custom-rtl-table">
+        <thead>
+        <tr>
+        <th style="width: 40px; text-align: center;">م</th>
+        <th>معرف السجل / التوقيت</th>
+        <th>اسم البنك</th>
+        <th style="text-align: center;">مؤشر SSGI (%)</th>
+        <th style="text-align: center;">SIP (40%)</th>
+        <th style="text-align: center;">IG (30%)</th>
+        <th style="text-align: center;">SR (30%)</th>
+        <th>التقييم التشخيصي القياسي</th>
+        </tr>
+        </thead>
+        <tbody>
+        """
+        
+        for idx, row in df_history.iterrows():
+            clean_bank_name = clean_text(str(row['البنك']))
+            clean_diag = clean_text(str(row['التقييم التشخيصي']))
+            rec_id = clean_text(str(row.get('معرف السجل', idx + 1)))
+            score_val = row['مؤشر SSGI المركب']
+            
+            # إعطاء إشارة ملونة لدرجة المؤشر
+            score_badge = f"<span style='color: {CBE_GOLD}; font-weight: 800;'>{score_val}%</span>"
+            
+            history_table_html += f"""
+            <tr>
+            <td style="text-align: center; font-weight: bold; color: {CBE_NAVY};">{idx + 1}</td>
+            <td style="font-size: 11.5px; color: #64748B;">{rec_id}</td>
+            <td style="font-weight: 700; color: {CBE_NAVY};">{clean_bank_name}</td>
+            <td style="text-align: center; font-size: 13px;">{score_badge}</td>
+            <td style="text-align: center;">{row['منصات المعلومات (40%)']}%</td>
+            <td style="text-align: center;">{row['الحوكمة المؤسسية (30%)']}%</td>
+            <td style="text-align: center;">{row['تقارير الاستدامة (30%)']}%</td>
+            <td style="font-size: 12px; color: #334155;">{clean_diag}</td>
+            </tr>
+            """
+            
+        history_table_html += """
+        </tbody>
+        </table>
+        </div>
+        """
+        st.markdown(flat_html(history_table_html), unsafe_allow_html=True)
 
         col_dl, col_del = st.columns([1, 1], gap="medium")
         with col_dl:
@@ -1076,7 +1108,7 @@ with tab2:
     st.markdown("---")
     
     # --------------------------------------------------------------------------
-    # استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
+    # الجدول الثاني: استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
     # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
         st.markdown("""
