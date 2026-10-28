@@ -937,15 +937,31 @@ with tab2:
                     """
 
                 # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية الرئيسية (Metric Cards UX)
+                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية مؤطرة (Metric Cards UX)
                 # --------------------------------------------------------------
                 st.markdown(f"<h4 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>📊 ملخص النتائج والتشخيص القياسي - {clean_text(bank_ssgi_sel)}</h4>", unsafe_allow_html=True)
                 
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
-                m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
-                m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
-                m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+                # إطار خارجي بحلفية مميزة وتأطير احترافي للبطاقات الاربع
+                with st.container():
+                    st.markdown(f"""
+                    <div dir="rtl" style="
+                        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+                        border: 1px solid #E2E8F0;
+                        border-right: 5px solid {CBE_NAVY};
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-bottom: 15px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+                    ">
+                    """, unsafe_allow_html=True)
+                    
+                    m1, m2, m3, m4 = st.columns(4)
+                    m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
+                    m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
+                    m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
+                    m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
 
                 # --------------------------------------------------------------
                 # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
