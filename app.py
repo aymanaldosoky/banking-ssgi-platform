@@ -598,6 +598,8 @@ if "decision_results_dict" not in st.session_state:
     st.session_state.decision_results_dict = {}
 if "query_text_box" not in st.session_state:
     st.session_state.query_text_box = ""
+if "trigger_search" not in st.session_state:
+    st.session_state.trigger_search = False
 if "draft_generated_state" not in st.session_state:
     st.session_state.draft_generated_state = False
 if "draft_bank_name" not in st.session_state:
@@ -665,7 +667,7 @@ else:
     tab9 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (مُطور بتجربة مستخدم Streaming & Skeleton Loaders)
+# التبويب الأول: اسأل المنصة (مُطور بالكامل - Zero-Click Trigger & Quick Chips UX)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
@@ -684,14 +686,16 @@ with tab1:
         user_question = st.text_area(
             "❓ اكتب سؤالك / استفسارك:",
             placeholder="مثال: متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-            height=110,
+            height=100,
             key="query_text_box"
         )
 
-        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة حسب المحاور:</b>", unsafe_allow_html=True)
+        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة (Zero-Click - اضغط للتنفيذ المباشر):</b>", unsafe_allow_html=True)
 
-        def set_suggested_question(question):
+        # دالة الاستجابة الفورية عند النقر على الأسئلة المقترحة
+        def trigger_instant_query(question):
             st.session_state.query_text_box = question
+            st.session_state.trigger_search = True
 
         with st.expander("🏛️ محور الحوكمة والتأسيس والتاريخ (IG & History)"):
             ig_questions = [
@@ -703,7 +707,7 @@ with tab1:
                 "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"
             ]
             for i, q in enumerate(ig_questions):
-                st.button(q, key=f"btn_ig_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
+                st.button(f"⚡ {q}", key=f"btn_ig_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
         with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
             sr_questions = [
@@ -713,7 +717,7 @@ with tab1:
                 "ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟"
             ]
             for i, q in enumerate(sr_questions):
-                st.button(q, key=f"btn_sr_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
+                st.button(f"⚡ {q}", key=f"btn_sr_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
         with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
             sip_questions = [
@@ -724,7 +728,7 @@ with tab1:
                 "ما مدى التوافق مع قانون حماية البيانات الشخصية والسيادة الرقمية؟"
             ]
             for i, q in enumerate(sip_questions):
-                st.button(q, key=f"btn_sip_{i}", on_click=set_suggested_question, args=(q,), use_container_width=True)
+                st.button(f"⚡ {q}", key=f"btn_sip_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
         ask_submit_btn = st.button("🚀 تقديم السؤال والتحليل المباشر", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -732,8 +736,14 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
 
-        if ask_submit_btn:
+        # التحقق مما إذا تم ضغط زر التقديم أو تمت إثارة السؤال فورياً عبر Zero-Click Trigger
+        should_execute = ask_submit_btn or st.session_state.get("trigger_search", False)
+
+        if should_execute:
+            # إعادة تعيين التنبيه الفوري للجلسة بعد بدء التنفيذ
+            st.session_state.trigger_search = False
             active_q = st.session_state.query_text_box
+
             if ask_bank_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح من القائمة لتنفيذ الاستعلام.")
             elif not active_q.strip():
@@ -786,7 +796,7 @@ with tab1:
                         tokens = text_html.split(" ")
                         for token in tokens:
                             yield token + " "
-                            time.sleep(0.012) # سرعة البث لتقليل Latency الظاهري
+                            time.sleep(0.01) # سرعة البث لتقليل Latency الظاهري
 
                     # تنفيذ العرض التفاعلي التدريجي
                     response_box = st.empty()
@@ -796,10 +806,9 @@ with tab1:
                         response_box.markdown(accumulated_text, unsafe_allow_html=True)
 
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح أو كتابة السؤال/الاستفسار لمشاهدة التقرير التفاعلي المباشر.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
         st.markdown('</div>', unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
 # ------------------------------------------------------------------------------
