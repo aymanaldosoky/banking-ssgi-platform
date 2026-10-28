@@ -894,7 +894,6 @@ with tab2:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
                     status_border_color = "#10B981"  # Emerald Green
-                    status_bg_light = "#ECFDF5"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -910,8 +909,7 @@ with tab2:
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
-                    status_border_color = "#F59E0B"  # Amber
-                    status_bg_light = "#FFFBEB"
+                    status_border_color = "#F59E0B"  # Amber Yellow
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -927,8 +925,7 @@ with tab2:
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
-                    status_border_color = "#EF4444"  # Red
-                    status_bg_light = "#FEF2F2"
+                    status_border_color = "#EF4444"  # Coral Red
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -943,32 +940,62 @@ with tab2:
                     """
 
                 # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية المؤطرة داخل Container Card (Enterprise UX)
+                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة (Executive Metric Container)
                 # --------------------------------------------------------------
-                st.markdown(f"<h4 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>📊 ملخص النتائج والتشخيص القياسي - {clean_text(bank_ssgi_sel)}</h4>", unsafe_allow_html=True)
-
-                # بداية الحاوية المصرفية المؤطرة لبطاقات الأرقام والمؤشرات
-                st.markdown(flat_html(f"""
+                metric_container_html = f"""
                 <div dir="rtl" style="
-                    background: linear-gradient(135deg, #FFFFFF 0%, {status_bg_light} 100%);
-                    border-radius: 12px;
-                    padding: 18px 20px 10px 20px;
-                    border: 1px solid #E2E8F0;
-                    border-right: 6px solid {status_border_color};
-                    box-shadow: 0 4px 12px rgba(0, 43, 73, 0.05);
-                    margin-bottom: 15px;
+                    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+                    border: 1.5px solid {CBE_GOLD};
+                    border-radius: 16px;
+                    padding: 20px;
+                    box-shadow: 0 10px 25px -5px rgba(0, 43, 73, 0.08);
+                    margin-bottom: 20px;
                 ">
-                """), unsafe_allow_html=True)
+                    <!-- عنوان الحاوية المؤسسية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
+                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                            🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
+                        </h4>
+                        <span style="background: #FFFFFF; color: {CBE_NAVY}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #CBD5E1;">
+                            {badge_status}
+                        </span>
+                    </div>
+                    
+                    <!-- شبكة البطاقات الرقمية الأربع -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                        
+                        <!-- بطاقة 1: SSGI -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
+                            <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
+                        </div>
 
-                # توزيع بطاقات metric القياسية الأربعة داخل الحاوية المؤطرة
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
-                m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
-                m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
-                m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+                        <!-- بطاقة 2: SIP -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
+                        </div>
 
-                st.markdown("</div>", unsafe_allow_html=True)
-                # نهاية الحاوية المؤطرة
+                        <!-- بطاقة 3: IG -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
+                        </div>
+
+                        <!-- بطاقة 4: SR -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
+                        </div>
+
+                    </div>
+                </div>
+                """
+                st.markdown(flat_html(metric_container_html), unsafe_allow_html=True)
 
                 # --------------------------------------------------------------
                 # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
@@ -987,7 +1014,7 @@ with tab2:
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
-                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 15px;">
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
                   <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">التشخيص القياسي المفصل:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
