@@ -10,7 +10,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import uuid
-import psycopg2  # <-- تمت إضافته هنا للاتصال بقاعدة بيانات Postgres / Supabase
+import psycopg2
 
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
@@ -45,11 +45,13 @@ header {{
     visibility: hidden !important;
 }}
 
+/* تأمين الألوان وتثبيتها للوضع الداكن (Dark Theme Fix) */
 html, body, [class*="css"] {{
     font-family: 'Cairo', sans-serif !important;
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
+    color: #1E293B !important;
     border: none !important;
 }}
 
@@ -57,6 +59,7 @@ html, body, [class*="css"] {{
     background-color: {CBE_BG} !important;
     direction: rtl !important;
     text-align: right !important;
+    color: #1E293B !important;
     border: none !important;
 }}
 
@@ -67,7 +70,7 @@ html, body, [class*="css"] {{
 }}
 
 .skeleton-card {{
-    background: #ffffff;
+    background: #ffffff !important;
     border-radius: 12px;
     border: 1.5px solid #E2E8F0;
     padding: 24px;
@@ -117,9 +120,11 @@ div[role="option"] {{
     text-align: right !important;
     border: none !important;
     outline: none !important;
+    color: #1E293B !important;
+    background-color: #FFFFFF !important;
 }}
 
-/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
+/* تصميم جدول RTL مخصص ونظيف متوافق مع كافة أنماط الشاشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -158,13 +163,14 @@ div[role="option"] {{
     font-size: 12.5px !important;
     text-align: right !important;
     line-height: 1.5 !important;
+    background-color: #FFFFFF !important;
 }}
 
-.custom-rtl-table tr:nth-child(even) {{
+.custom-rtl-table tr:nth-child(even) td {{
     background-color: #FAFAFA !important;
 }}
 
-.custom-rtl-table tr:hover {{
+.custom-rtl-table tr:hover td {{
     background-color: #FEF3C7 !important;
 }}
 
@@ -317,6 +323,30 @@ div.stTabs {{
     100% {{ transform: translate(100%, 0); }}
 }}
 
+/* تحسين تجربة الأجهزة المحمولة والحواسيب الكفية (Responsive Design @768px) */
+@media (max-width: 768px) {{
+    .stTabs [data-baseweb="tab-list"] {{
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        flex: 1 1 45% !important;
+        font-size: 11px !important;
+        padding: 8px 2px !important;
+    }}
+    .header-center h1 {{
+        font-size: 18px !important;
+    }}
+    .header-center h3 {{
+        font-size: 12.5px !important;
+    }}
+    .custom-rtl-table {{
+        display: block !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }}
+}}
+
 .footer-copyright {{
     text-align: center;
     color: #64748B;
@@ -353,7 +383,7 @@ def hash_password(password: str) -> str:
 # ==============================================================================
 BANK_PROFILE_DATA = {
     "بنك مصر BM": {
-        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصاددي الوطني محمد طلعت حرب باشا.",
+        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصادي الوطني محمد طلعت حرب باشا.",
         "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية (مؤسسة مالية حكومية كبرى).",
         "profile": "أول بنك مصري بالكامل يهدف إلى استثمار المدخرات الوطنية وتوجيهها لخدمة الاقتصاد القومي والتنمية المستدامة."
     },
@@ -795,7 +825,6 @@ with tab1:
                     # 3. محاكاة التدفق المباشر (Streaming Generator)
                     # ----------------------------------------------------------
                     def stream_response_generator(text_html):
-                        # تقسيم المخرجات حسب الكلمات مع الحفاظ على وسم الـ HTML
                         tokens = text_html.split(" ")
                         for token in tokens:
                             yield token + " "
@@ -812,8 +841,9 @@ with tab1:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
         st.markdown('</div>', unsafe_allow_html=True)
+
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - مُطور بتجربة مستخدم عالمية (Enterprise UX)
+# التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown("""
@@ -842,9 +872,6 @@ with tab2:
             if bank_ssgi_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
-                # --------------------------------------------------------------
-                # 1. عرض Skeleton Loader أثناء التجهيز والحساب
-                # --------------------------------------------------------------
                 skeleton_placeholder = st.empty()
                 skeleton_html = flat_html(f"""
                 <div class="skeleton-card">
@@ -860,12 +887,9 @@ with tab2:
                 </div>
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
-                time.sleep(0.3) # إعطاء إحساس تفاعلي بالمعالجة
+                time.sleep(0.3)
                 skeleton_placeholder.empty()
 
-                # --------------------------------------------------------------
-                # 2. احتساب المؤشر المركب والصياغات التشخيصية
-                # --------------------------------------------------------------
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
@@ -896,7 +920,7 @@ with tab2:
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
-                    status_border_color = "#10B981"  # Emerald Green
+                    status_border_color = "#10B981"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -912,7 +936,7 @@ with tab2:
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
-                    status_border_color = "#F59E0B"  # Amber Yellow
+                    status_border_color = "#F59E0B"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -928,7 +952,7 @@ with tab2:
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
-                    status_border_color = "#EF4444"  # Coral Red
+                    status_border_color = "#EF4444"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -942,9 +966,6 @@ with tab2:
                     </div>
                     """
 
-                # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة (Executive Metric Container)
-                # --------------------------------------------------------------
                 metric_container_html = f"""
                 <div dir="rtl" style="
                     background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
@@ -954,7 +975,6 @@ with tab2:
                     box-shadow: 0 10px 25px -5px rgba(0, 43, 73, 0.08);
                     margin-bottom: 20px;
                 ">
-                    <!-- عنوان الحاوية المؤسسية -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
                         <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                             🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
@@ -964,45 +984,35 @@ with tab2:
                         </span>
                     </div>
                     
-                    <!-- شبكة البطاقات الرقمية الأربع -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                        
-                        <!-- بطاقة 1: SSGI -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
                             <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
                         </div>
 
-                        <!-- بطاقة 2: SIP -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
                         </div>
 
-                        <!-- بطاقة 3: IG -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
 
-                        <!-- بطاقة 4: SR -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
-
                     </div>
                 </div>
                 """
                 st.markdown(flat_html(metric_container_html), unsafe_allow_html=True)
 
-                # --------------------------------------------------------------
-                # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
-                # --------------------------------------------------------------
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -1025,9 +1035,6 @@ with tab2:
                 </div>
                 """), unsafe_allow_html=True)
 
-                # --------------------------------------------------------------
-                # 5. عرض الرسوم البيانية التفاعلية المزدوجة (Plotly Charts)
-                # --------------------------------------------------------------
                 st.markdown("<br>", unsafe_allow_html=True)
                 ch_col1, ch_col2 = st.columns(2)
 
@@ -1077,16 +1084,11 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    
-    # --------------------------------------------------------------------------
-    # الجدول الأول: ترتيب وسجلات البنوك (تم تطبيق نفس الهوية البصرية للجدول الثاني)
-    # --------------------------------------------------------------------------
     st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
     
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # صياغة جدول HTML مخصص متوافق مع نفس كلاس وألوان الجدول الثاني custom-rtl-table
         history_table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
         <table class="custom-rtl-table">
@@ -1110,8 +1112,6 @@ with tab2:
             clean_diag = clean_text(str(row['التقييم التشخيصي']))
             rec_id = clean_text(str(row.get('معرف السجل', idx + 1)))
             score_val = row['مؤشر SSGI المركب']
-            
-            # إعطاء إشارة ملونة لدرجة المؤشر
             score_badge = f"<span style='color: {CBE_GOLD}; font-weight: 800;'>{score_val}%</span>"
             
             history_table_html += f"""
@@ -1158,129 +1158,14 @@ with tab2:
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك المصرفية.")
 
-    st.markdown("---")
-    
-    # --------------------------------------------------------------------------
-    # الجدول الثاني: استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
-    # --------------------------------------------------------------------------
-    with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
-        st.markdown("""
-        <div dir="rtl" style="text-align: right; line-height: 1.8;">
-        <ul>
-            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة بعد النشر.</li>
-            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم سيادة القانون، العدالة والمساواة، المتابعة والمساءلة، المشاركة، الشفافية والإفصاح، ومجلس الإدارة.</li>
-            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف.</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
-        hierarchy_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 400px;">
-        <table class="custom-rtl-table">
-        <thead>
-        <tr>
-        <th>المحور الرئيسي</th>
-        <th>البعد الأساسي</th>
-        <th>العناصر الفرعية</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-        <td rowspan="4" style="font-weight: bold; color: #002B49; vertical-align: top;">أولاً: منصات المعلومات الذكية (SIP)</td>
-        <td>1. جودة المعلومات</td>
-        <td>1/1 جاهزية البنية التحتية الرقمية.<br>1/2 توافر البيانات وقابليتها للمعالجة الآلية.</td>
-        </tr>
-        <tr>
-        <td>2. التكامل والخصوصية</td>
-        <td>2/1 الترابط البيني التقني.<br>2/2 السيادة الرقمية وأمن المعلومات.</td>
-        </tr>
-        <tr>
-        <td>3. الامتثال التقني</td>
-        <td>3/1 الامتثال للمعايير القياسية.<br>3/2 حوكمة الخوارزميات والذكاء الاصطناعي.</td>
-        </tr>
-        <tr>
-        <td>4. التخطيط والمراقبة بعد النشر</td>
-        <td>4/1 الرصد والتحليل الآني.<br>4/2 دقة وموثوقية المخرجات الرقابية.</td>
-        </tr>
-        <tr>
-        <td rowspan="6" style="font-weight: bold; color: #002B49; vertical-align: top;">ثانياً: الحوكمة المؤسسية (IG)</td>
-        <td>1. سيادة القانون</td>
-        <td>1/1 التوافق التشريعي والتنظيمي مع البنك المركزي.<br>1/2 الأخلاقيات والسلوك المصرفي.</td>
-        </tr>
-        <tr>
-        <td>2. العدالة والمساواة</td>
-        <td>2/1 العدالة التنظيمية والوظيفية.<br>2/2 عدالة حقوق أصحاب المصلحة والمودعين.</td>
-        </tr>
-        <tr>
-        <td>3. المتابعة والمساءلة</td>
-        <td>3/1 وضوح هيكل المسؤوليات والصلاحيات.<br>3/2 فاعلية آليات الرقابة والتدقيق الداخلي.</td>
-        </tr>
-        <tr>
-        <td>4. المشاركة</td>
-        <td>4/1 تفاعل وانخراط أصحاب المصلحة.<br>4/2 المشاركة الفعالة في صنع القرار الاستراتيجي.</td>
-        </tr>
-        <tr>
-        <td>5. الشفافية والإفصاح</td>
-        <td>5/1 جودة ووضوح الإفصاح المالي وغير المالي.<br>5/2 توقيت ودورية الإفصاح.</td>
-        </tr>
-        <tr>
-        <td>6. مجلس الإدارة</td>
-        <td>6/1 كفاءة وفاعلية تشكيل المجلس والأعضاء المستقلين.<br>6/2 نشاط اللجان المنبثقة (المراجعة، المخاطر).<br>6/3 سياسات تجنب تعارض المصالح.</td>
-        </tr>
-        <tr>
-        <td rowspan="5" style="font-weight: bold; color: #002B49; vertical-align: top;">ثالثاً: تقارير الاستدامة (SR)</td>
-        <td>1. الاستراتيجية</td>
-        <td>1/1 الدمج الاستراتيجي لأهداف التنمية المستدامة.<br>1/2 التخصيص المالي والائتماني المستدام.</td>
-        </tr>
-        <tr>
-        <td>2. التنوع والشمول</td>
-        <td>2/1 تنوع الهيكل القيادي وتمكين المرأة.<br>2/2 شمول الخدمات المالية المصرفية.</td>
-        </tr>
-        <tr>
-        <td>3. إدارة المخاطر</td>
-        <td>3/1 دمج مخاطر المناخ ضمن إدارة المخاطر الكلية.<br>3/2 اختبارات الضغط والتحوط المرن.</td>
-        </tr>
-        <tr>
-        <td>4. الأبعاد التشغيلية</td>
-        <td>4/1 التمويل والاستثمار الأخضر والاقتصادي.<br>4/2 الكفاءة التشغيلية للموارد والبيئة.<br>4/3 أثر المسؤولية المجتمعية والإنفاق التنموي.</td>
-        </tr>
-        <tr>
-        <td>5. المقاييس والأهداف</td>
-        <td>5/1 أداء تحقيق المستهدفات البيئية والمجتمعية.<br>5/2 المواءمة المعيارية مع (GRI و ISSB) والتوكيد.</td>
-        </tr>
-        </tbody>
-        </table>
-        </div>
-        """
-        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
-
-        axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
-        weights_vals_bank = [40, 30, 30]
-        custom_pie_colors_bank = [CBE_NAVY, CBE_GOLD, "#475569"]
-
-        fig_pie_bank = px.pie(
-            names=axes_names_bank,
-            values=weights_vals_bank,
-            hole=0.4,
-            title="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)",
-            color=axes_names_bank,
-            color_discrete_map=dict(zip(axes_names_bank, custom_pie_colors_bank))
-        )
-        fig_pie_bank.update_layout(
-            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.5, xanchor='center'),
-            paper_bgcolor="#FFFFFF",
-            font=dict(family="Cairo", size=13)
-        )
-        st.plotly_chart(fig_pie_bank, use_container_width=True)
-
 # ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
+# التبويب الثالث: محاكي السياسات (Policy Simulator) - متكامل لمنع فقدان التقرير
 # ------------------------------------------------------------------------------
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات.</p>
+        <p>استشراف أثر التدخلات والسياسات المستقبلية مع توليد المخرجات كاملة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1312,41 +1197,43 @@ with tab3:
                 st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                 st.rerun()
 
+            # إصلاح كامل لتشيد تقرير الـ Word HTML الشامل التراكمي بدون فقدان أية بيانات
             sim_word_html = f"""
             <html dir="rtl">
             <head><meta charset="utf-8"><title>تقرير محاكي السياسات المصرفية</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
+            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B;">
                 <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
                 <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
-                <hr>
-                <h3>📋 عرض السيناريوهات للبنوك:</h3>
+                <hr style="border: 1px solid {CBE_GOLD};">
+                <h3>📋 عرض كافة السيناريوهات المحاكاة للقطاع المصرفي:</h3>
             """
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
                     sim_word_html += f"""
-                    <div style="border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
-                        <h4>معرف السيناريو: {k}</h4>
+                    <div style="border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF;">
+                        <h4 style="color: {CBE_NAVY}; margin-top: 0;">معرف السيناريو: {k}</h4>
                         <div>{v['html']}</div>
                         <div style="margin-top: 10px;">{v['deep']}</div>
                     </div>
                     """
             else:
-                sim_word_html += "<p>لا توجد سيناريوهات مسجلة حالياً.</p>"
+                sim_word_html += "<p style='color: #64748B;'>لا توجد سيناريوهات مسجلة حالياً.</p>"
                 
             sim_word_html += f"""
-                <hr>
+                <hr style="border: 1px solid {CBE_GOLD};">
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                <p>يغطي هذا التقرير مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفيية.</p>
+                <p>يغطي هذا التقرير مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفية بوضوح تام ودون سقوط أية بيانات.</p>
                 <hr>
                 <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
                 <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
             </body>
             </html>
             """
+            
             st.download_button(
-                label="📥 تحميل تقرير محاكي السياسات (Word)",
+                label="📥 تحميل تقرير محاكي السياسات الشامل (Word)",
                 data=sim_word_html.encode("utf-8-sig"),
-                file_name="تقرير_محاكي_السياسات_المصرفية.doc",
+                file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
                 use_container_width=True
             )
@@ -1401,9 +1288,9 @@ with tab3:
                     box_html = f"""
                     <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
                       <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة بنك: {sim_bank_sel} | السيناريو: {scenario_dropdown}</h3>
-                      <p style="font-size: 15px; margin-bottom: 8px;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
+                      <p style="font-size: 15px; margin-bottom: 8px; color: #1E293B;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
                       <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
-                        <p style="margin-bottom: 6px;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
+                        <p style="margin-bottom: 6px; color: #1E293B;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
                         <p style="margin: 0 0 8px 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action_plan}</p>
                       </div>
                     </div>
