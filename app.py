@@ -2080,7 +2080,7 @@ with tab7:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # تهيئة إدارة الجلسة وتحديد المسار (Session State & Adaptive Routing Setup)
+    # تهيئة إدارة الجلسة وتحديد المسار التكيفي (Adaptive Routing Setup)
     # --------------------------------------------------------------------------
     if "survey_wizard_step" not in st.session_state:
         st.session_state.survey_wizard_step = 1
@@ -2094,28 +2094,33 @@ with tab7:
     }
     likert_options = ["غير موافق تماماً", "غير موافق", "محايد", "موافق", "موافق تماماً"]
 
-    # تحديد نطاق الأسئلة الإلزامية وخريطة المراحل وفق مجال التخصص الوظيفي
+    # جلب التخصص الحقيقي المختار من الجلسة
     current_spec = st.session_state.get("spec_field_u_dyn", None)
 
-    # الشامل (مجلس الإدارة / الإدارة العليا / البحث والتطوير) يمر عبر 4 مراحل، والتخصصات الفنية تمر عبر 3 مراحل
-    is_full_assessment = current_spec in ["مجلس الإدارة/ الإدارة العليا العامة", "البحث/ التطوير أو أخرى", None]
+    # توحيد التحقق من نمط المسار (المسار الشامل مقابل المسار المخصص)
+    is_full_assessment = current_spec in [
+        "مجلس الإدارة/ الإدارة العليا العامة", 
+        "البحث/ التطوير أو أخرى", 
+        None
+    ]
 
+    # ربط العبارات المطلوبة صراحة بنوع التخصص للحجب المباشر
     if current_spec == "تكنولوجيا المعلومات/ التحول الرقمي":
-        required_stmts = list(range(1, 12))  # SIP 1..11
+        required_stmts = list(range(1, 12))    # SIP 1..11
     elif current_spec in ["الحوكمة/ الالتزام/ المراجعة الداخلية", "إدارة المخاطر/ الائتمان"]:
-        required_stmts = list(range(12, 20))  # IG 12..19
+        required_stmts = list(range(12, 20))   # IG 12..19
     elif current_spec == "الاستدامة/ المسؤولية المجتمعية":
-        required_stmts = list(range(20, 32))  # SR 20..31
+        required_stmts = list(range(20, 32))   # SR 20..31
     else:
-        required_stmts = list(range(1, 32))   # الشامل 1..31
+        required_stmts = list(range(1, 32))    # الشامل 1..31
 
-    # حساب نسبة التقدم الإجمالية بناءً على العبارات المطلوبة الفعلية
+    # حساب نسبة التقدم الإجمالية بناءً على عدد العبارات المخصصة الفعلية
     answered_count = sum(1 for i in required_stmts if st.session_state.get(f"stmt_{i}") is not None)
     total_req_count = len(required_stmts)
     progress_percentage = int((answered_count / total_req_count) * 100) if total_req_count > 0 else 0
 
     # --------------------------------------------------------------------------
-    # شريط التقدم التفاعلي المتكيف ديناميكياً
+    # شريط التقدم التفاعلي والمتكيف ديناميكياً
     # --------------------------------------------------------------------------
     step_num = st.session_state.survey_wizard_step
 
@@ -2131,7 +2136,7 @@ with tab7:
         max_wizard_steps = 3
         step_titles = {
             1: "المرحلة الأولى: البيانات الأولية والمهنية",
-            2: f"المرحلة الثانية: عبارات التقييم التخصصي المباشر ({current_spec})",
+            2: f"المرحلة الثانية: العبارات التخصصية المباشرة ({current_spec})",
             3: "المرحلة الثالثة: تخصيص الأوزان النسبية والملاحظات والإرسال النهائي"
         }
 
@@ -2139,7 +2144,7 @@ with tab7:
     <div dir="rtl" style="background: #FFFFFF; border: 1.5px solid {CBE_GOLD}; border-radius: 12px; padding: 18px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 15px;">📍 {step_titles.get(step_num, 'المرحلة الحالية')}</span>
-            <span style="font-weight: 800; color: {CBE_GOLD}; font-size: 14px;">نسبة إكمال عبارات التخصص: {progress_percentage}%</span>
+            <span style="font-weight: 800; color: {CBE_GOLD}; font-size: 14px;">نسبة إكمال العبارات المخصصة: {progress_percentage}%</span>
         </div>
         <div style="background-color: #E2E8F0; border-radius: 10px; height: 10px; width: 100%; overflow: hidden;">
             <div style="background: linear-gradient(90deg, {CBE_GOLD} 0%, {CBE_NAVY} 100%); width: {progress_percentage}%; height: 100%; transition: width 0.4s ease;"></div>
@@ -2156,10 +2161,12 @@ with tab7:
         """, unsafe_allow_html=True)
         
         saved_val = st.session_state.get(f"stmt_{num}", None)
+        idx_val = likert_options.index(saved_val) if saved_val in likert_options else None
+        
         ans = st.radio(
             f"تقييم العبارة {num}",
             likert_options,
-            index=likert_options.index(saved_val) if saved_val in likert_options else None,
+            index=idx_val,
             horizontal=True,
             label_visibility="collapsed",
             key=f"stmt_{num}"
@@ -2174,7 +2181,7 @@ with tab7:
         st.markdown(f"""
         <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
             <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 10px;">👤 المرحلة الأولى: بيانات المشارك والمعلومات الأولية والمهنية</h4>
-            <p style="color: #EF4444; font-size: 13px; font-weight: 700;">⚠️ جميع البيانات إضافية وإلزامية؛ ولا يمكن الانتقال للخطوة التالية إلا بعد اختيار كافة الحقول.</p>
+            <p style="color: #EF4444; font-size: 13px; font-weight: 700;">⚠️ جميع الحقول السبعة التالية إلزامية بالكامل؛ ولا يمكن فتح مرحلة التقييم الميداني بدون استكمالها.</p>
         """, unsafe_allow_html=True)
         
         col_inf1, col_inf2 = st.columns(2, gap="medium")
@@ -2196,33 +2203,42 @@ with tab7:
         job_opts = ["رئيس/ عضو مجلس إدارة", "رئيس قطاع/ مساعد مدير عام", "مدير إدارة/ مدير عام", "خبير/ مستشار/ كبير أخصائيين", "مستوى إشرافي", "أخرى"]
         exp_opts = ["أقل من 10 سنوات", "من 10 سنوات إلى أقل من 15 سنة", "من 15 سنة إلى أقل من 20 سنة", "20 سنة فأكثر"]
 
+        # استعادة الفهارس بدقة لضمان بقائها خالية (None) عند الفتح الأول
+        val_bank = st.session_state.get("survey_bank_user_main")
+        val_org = st.session_state.get("org_nat_u_dyn")
+        val_sci = st.session_state.get("sci_deg_u_dyn")
+        val_spec = st.session_state.get("spec_field_u_dyn")
+        val_job = st.session_state.get("job_level_u_dyn")
+        val_exp = st.session_state.get("exp_yrs_u_dyn")
+        val_listed = st.session_state.get("is_listed_u_dyn")
+
         with col_inf1:
-            sel_bank = st.selectbox("اختر البنك المصرفي (إلزامي)", banks_opts, index=banks_opts.index(st.session_state.get("survey_bank_user_main")) if st.session_state.get("survey_bank_user_main") in banks_opts else None, placeholder="اختر البنك المصرفي...", key="survey_bank_user_main")
-            sel_org = st.selectbox("طبيعة المؤسسة (إلزامي)", org_opts, index=org_opts.index(st.session_state.get("org_nat_u_dyn")) if st.session_state.get("org_nat_u_dyn") in org_opts else None, placeholder="اختر طبيعة المؤسسة...", key="org_nat_u_dyn")
-            sel_sci = st.selectbox("المؤهل العلمي (إلزامي)", sci_opts, index=sci_opts.index(st.session_state.get("sci_deg_u_dyn")) if st.session_state.get("sci_deg_u_dyn") in sci_opts else None, placeholder="اختر المؤهل العلمي...", key="sci_deg_u_dyn")
+            st.selectbox("اختر البنك المصرفي (إلزامي)", banks_opts, index=banks_opts.index(val_bank) if val_bank in banks_opts else None, placeholder="اختر البنك المصرفي...", key="survey_bank_user_main")
+            st.selectbox("طبيعة المؤسسة (إلزامي)", org_opts, index=org_opts.index(val_org) if val_org in org_opts else None, placeholder="اختر طبيعة المؤسسة...", key="org_nat_u_dyn")
+            st.selectbox("المؤهل العلمي (إلزامي)", sci_opts, index=sci_opts.index(val_sci) if val_sci in sci_opts else None, placeholder="اختر المؤهل العلمي...", key="sci_deg_u_dyn")
 
         with col_inf2:
-            sel_spec = st.selectbox("مجال التخصص الوظيفي (إلزامي - يحدد مسار الاستبيان)", spec_opts, index=spec_opts.index(st.session_state.get("spec_field_u_dyn")) if st.session_state.get("spec_field_u_dyn") in spec_opts else None, placeholder="اختر التخصص الوظيفي الدقيق...", key="spec_field_u_dyn")
-            sel_job = st.selectbox("المستوى الوظيفي (إلزامي)", job_opts, index=job_opts.index(st.session_state.get("job_level_u_dyn")) if st.session_state.get("job_level_u_dyn") in job_opts else None, placeholder="اختر المستوى الوظيفي...", key="job_level_u_dyn")
-            sel_exp = st.selectbox("سنوات الخبرة في القطاع المصرفي (إلزامي)", exp_opts, index=exp_opts.index(st.session_state.get("exp_yrs_u_dyn")) if st.session_state.get("exp_yrs_u_dyn") in exp_opts else None, placeholder="اختر سنوات الخبرة...", key="exp_yrs_u_dyn")
+            st.selectbox("مجال التخصص الوظيفي (إلزامي - يحدد مسار العبارات)", spec_opts, index=spec_opts.index(val_spec) if val_spec in spec_opts else None, placeholder="اختر التخصص الوظيفي...", key="spec_field_u_dyn")
+            st.selectbox("المستوى الوظيفي (إلزامي)", job_opts, index=job_opts.index(val_job) if val_job in job_opts else None, placeholder="اختر المستوى الوظيفي...", key="job_level_u_dyn")
+            st.selectbox("سنوات الخبرة في القطاع المصرفي (إلزامي)", exp_opts, index=exp_opts.index(val_exp) if val_exp in exp_opts else None, placeholder="اختر سنوات الخبرة...", key="exp_yrs_u_dyn")
 
         listed_opts = ["نعم", "لا"]
-        sel_listed = st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)", listed_opts, index=listed_opts.index(st.session_state.get("is_listed_u_dyn")) if st.session_state.get("is_listed_u_dyn") in listed_opts else None, horizontal=True, key="is_listed_u_dyn")
+        st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)", listed_opts, index=listed_opts.index(val_listed) if val_listed in listed_opts else None, horizontal=True, key="is_listed_u_dyn")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المراحل التقييمية التخصصية الشارطة للمسار (Adaptive Routing Logic)
+    # المراحل التقييمية التخصصية الشارطة للمسار (Adaptive Routing Engine)
     # --------------------------------------------------------------------------
     else:
-        # 1. التخصصات الفنية المباشرة (المسار الموجه المختصر - 3 مراحل)
+        # 1. المسار الفني المباشر (3 مراحل مختارات فقط مع حجب باقي العبارات)
         if not is_full_assessment:
             if step_num == 2:
-                # أ) مسار تكنولوجيا المعلومات والتحول الرقمي (SIP 1 إلى 11 فقط)
+                # أ) مسار تكنولوجيا المعلومات والتحول الرقمي (عرض 1 إلى 11 فقط)
                 if current_spec == "تكنولوجيا المعلومات/ التحول الرقمي":
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                         <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">💻 العبارات الخاصة بـ: منصة المعلومات الذكية (SIP)</h4>
-                        <p style="color: #64748B; font-size: 13px;">تظهر العبارات المخصصة لتخصصكم فقط (من 1 إلى 11) | مقياس التقييم (1 إلى 5)</p>
+                        <p style="color: #64748B; font-size: 13px;">مخصصة لمتخصصي IT والتحول الرقمي (العبارات 1 إلى 11) | مقياس التقييم الخماسي</p>
                     """, unsafe_allow_html=True)
 
                     render_wizard_statement(1, "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.")
@@ -2244,12 +2260,12 @@ with tab7:
                     render_wizard_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                # ب) مسار الحوكمة والالتزام وإدارة المخاطر والائتمان (IG 12 إلى 19 فقط)
+                # ب) مسار الحوكمة والالتزام وإدارة المخاطر والائتمان (عرض 12 إلى 19 فقط)
                 elif current_spec in ["الحوكمة/ الالتزام/ المراجعة الداخلية", "إدارة المخاطر/ الائتمان"]:
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                         <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🏛️ العبارات الخاصة بـ: الحوكمة المؤسسية والامتثال (IG)</h4>
-                        <p style="color: #64748B; font-size: 13px;">تظهر العبارات المخصصة لتخصصكم فقط (من 12 إلى 19)</p>
+                        <p style="color: #64748B; font-size: 13px;">مخصصة لقطاعات الحوكمة والالتزام والمخاطر (العبارات 12 إلى 19)</p>
                     """, unsafe_allow_html=True)
 
                     st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الشفافية والإفصاح</div>", unsafe_allow_html=True)
@@ -2269,12 +2285,12 @@ with tab7:
                     render_wizard_statement(19, "تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                # ج) مسار الاستدامة والمسؤولية المجتمعية (SR 20 إلى 31 فقط)
+                # ج) مسار الاستدامة والمسؤولية المجتمعية (عرض 20 إلى 31 فقط)
                 elif current_spec == "الاستدامة/ المسؤولية المجتمعية":
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                         <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🌱 العبارات الخاصة بـ: تقارير الاستدامة ومخاطر المناخ (SR)</h4>
-                        <p style="color: #64748B; font-size: 13px;">تظهر العبارات المخصصة لتخصصكم فقط (من 20 إلى 31)</p>
+                        <p style="color: #64748B; font-size: 13px;">مخصصة لقطاع الاستدامة والمسؤولية المجتمعية (العبارات 20 إلى 31)</p>
                     """, unsafe_allow_html=True)
 
                     st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الاستراتيجية والبعد البيئي والاجتماعي والاقتصادي</div>", unsafe_allow_html=True)
@@ -2295,11 +2311,11 @@ with tab7:
                     st.markdown("</div>", unsafe_allow_html=True)
 
             elif step_num == 3:
-                # خطوة الأوزان النسبية الإلزامية والملاحظات والتأكيد
+                # صفحة الأوزان والملاحظات المباشرة للتخصصات الفنية
                 st.markdown(f"""
                 <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                     <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;">⚖️ الخطوة الأخيرة: تحديد الأوزان النسبية للمحاور وملاحظات التطبيق</h4>
-                    <p style="color: #64748B; font-size: 13.5px;">تخصيص وتحديد النسب المئوية للمحاور الثلاثة من منظور خبرتكم المصرفية، بشرط أن يكون المجموع الكلي مساوياً لـ 100%.</p>
+                    <p style="color: #64748B; font-size: 13.5px;">حدد الوزن المئوي لكل محور حسب تقدير خبرتكم المصرفية (المجموع الكلي = 100%).</p>
                 """, unsafe_allow_html=True)
 
                 col_w1, col_w2, col_w3 = st.columns(3)
@@ -2317,7 +2333,7 @@ with tab7:
                     st.success("✅ مجموع الأوزان النسبية متطابق وصحيح (100%).")
 
                 st.markdown("<br>", unsafe_allow_html=True)
-                survey_comments = st.text_area(
+                st.text_area(
                     "💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
                     value=st.session_state.get("user_survey_comments", ""),
                     placeholder="اكتب الملاحظات أو المعوقات أو المقترحات التطبيقية هنا...",
@@ -2326,7 +2342,7 @@ with tab7:
                 )
                 st.markdown("</div>", unsafe_allow_html=True)
 
-        # 2. قيادات الإدارة العليا والبحث والتطوير (المسار الشامل - 4 مراحل كاملة)
+        # 2. المسار الشامل (4 مراحل كاملة لمجلس الإدارة والإدارة العليا والبحث والتطوير)
         else:
             if step_num == 2:
                 # العبارات 1 إلى 11 (SIP)
@@ -2414,7 +2430,7 @@ with tab7:
                 else:
                     st.success("✅ مجموع الأوزان النسبية متطابق وصحيح (100%).")
 
-                survey_comments = st.text_area(
+                st.text_area(
                     "💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
                     value=st.session_state.get("user_survey_comments", ""),
                     placeholder="اكتب ملاحظاتك ومقترحاتك هنا...",
@@ -2424,7 +2440,7 @@ with tab7:
                 st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # أزرار التنقل والتوجيه الديناميكي الموحد (Previous / Next / Submit Controls)
+    # أزرار التنقل والتوجيه الديناميكي المصححة بالكامل (Previous / Next / Submit)
     # --------------------------------------------------------------------------
     col_prev, col_spacer, col_next = st.columns([1, 2, 1])
 
@@ -2435,7 +2451,7 @@ with tab7:
                 st.rerun()
 
     with col_next:
-        # التحكم في الانتقال من الخطوة الأولى
+        # 1. القفل البرمجي للخطوة الأولى حتى يتم استكمال كافة البيانات
         if step_num == 1:
             bank_ok = st.session_state.get("survey_bank_user_main") is not None
             org_ok = st.session_state.get("org_nat_u_dyn") is not None
@@ -2452,20 +2468,20 @@ with tab7:
                     st.session_state.survey_wizard_step = 2
                     st.rerun()
             else:
-                st.button("الخطوة التالية ➡️", use_container_width=True, disabled=True, help="يرجى تعبئة واستكمال جميع البيانات الأولية الإلزامية أولاً.")
+                st.button("الخطوة التالية ➡️", use_container_width=True, disabled=True, help="يرجى استكمال جميع البيانات الأولية السبعة الإلزامية أولاً.")
 
-        # التحكم في خطوات الوسط
+        # 2. التنقل في خطوات الوسط
         elif step_num < max_wizard_steps:
             if st.button("الخطوة التالية ➡️", use_container_width=True, type="primary"):
                 st.session_state.survey_wizard_step += 1
                 st.rerun()
 
-        # زر الإرسال النهائي في الخطوة الأخيرة (خطوة 3 للتخصصات المباشرة، خطوة 4 للشامل)
+        # 3. معالجة الإرسال النهائي في الخطوة الأخيرة المحسوبة برمجياً
         elif step_num == max_wizard_steps:
             submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary", key="submit_survey_final_btn")
 
             if submit_survey_btn:
-                # تجميع كافة التقييمات للعبارات
+                # تجميع الإجابات والأوزان
                 statement_answers_dict = {}
                 sip_scores, ig_scores, sr_scores = [], [], []
 
@@ -2489,7 +2505,7 @@ with tab7:
                 w_sr_val = st.session_state.get("weight_sr_input", 30)
                 tot_w = w_sip_val + w_ig_val + w_sr_val
 
-                # التحقق من إجابات العبارات المطلوبة المحددة بحسب التخصص
+                # التحقق الحاسم من إجابات العبارات الخاصة بتخصص المستجيب فقط
                 missing_stmts = [i for i in required_stmts if statement_answers_dict.get(f"العبارة_{i}") is None]
 
                 if not survey_bank_sel:
