@@ -2212,6 +2212,100 @@ def load_survey_log_from_cloud():
 
 
 # ------------------------------------------------------------------------------
+# ==============================================================================
+# دوال الاتصال بقاعدة بيانات Supabase / Postgres مع دعم الـ Pooler وإعادة المحاولة
+# ==============================================================================
+
+def get_db_connection():
+    """الاتصال بـ Supabase باستخدام رابط Connection Pooler المحدث والآمن"""
+    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
+        conn_str = st.secrets["postgres"]["url"]
+        # ضبط معلمات الاتصال السحابي لمنع مهلة الانتظار أثناء ضعف الشبكة
+        if "?" not in conn_str:
+            conn_str += "?sslmode=require&connect_timeout=10"
+        return psycopg2.connect(conn_str)
+    else:
+        raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
+
+def init_db():
+    """إنشاء جدول survey_responses تلقائياً في Supabase إذا لم يكن موجوداً"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS survey_responses (
+                response_id TEXT PRIMARY KEY,
+                bank_name TEXT,
+                org_type TEXT,
+                degree TEXT,
+                specialty TEXT,
+                job_level TEXT,
+                exp_years TEXT,
+                is_listed TEXT,
+                survey_route TEXT,
+                w_sip INT,
+                w_ig INT,
+                w_sr INT,
+                avg_sip FLOAT,
+                avg_ig FLOAT,
+                avg_sr FLOAT,
+                answers JSONB,
+                comments TEXT,
+                submitted_at TEXT
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        # إظهار تنبيه هادئ دون تعطيل استكمال التصفح للباحث أو المستخدم
+        st.warning(f"⚠️ يتعذر الاتصال بقاعدة البيانات السحابية حالياً: {e}")
+        return False
+
+def save_survey_to_cloud(rec):
+    """حفظ بيانات الاستجابة مباشرة في السحابة مع التأكد من وجود الجدول أولاً"""
+    init_db()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # فصل العبارات الـ 31 المعتمدة في كائن JSON للحفاظ على هيكلية الجدول
+    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
+    
+    cur.execute("""
+        INSERT INTO survey_responses (
+            response_id, bank_name, org_type, degree, specialty, job_level,
+            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
+            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """, (
+        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
+        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
+        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
+        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
+        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
+    ))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def load_survey_log_from_cloud():
+    """استرجاع كافة البيانات المخزنة من Supabase للوحة التحليل الإداري"""
+    try:
+        conn = get_db_connection()
+        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
+        conn.close()
+        
+        # تفكيك كائن JSON الخاص بالعبارات لتعود كأعمدة مستقلة في شيت الإكسيل
+        if not df.empty and 'answers' in df.columns:
+            answers_df = pd.json_normalize(df['answers'])
+            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
+        return df
+    except Exception as e:
+        st.warning(f"لم يتم جلب الاستجابات من السحابة: {e}")
+        return pd.DataFrame()
+
+        # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Routing UX)
 # ------------------------------------------------------------------------------
 with tab7:
@@ -2556,7 +2650,7 @@ with tab7:
                         "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     }
                     try:
-                        # الحفظ المباشر في قاعدة بيانات Supabase (يقوم بتهيئة الجدول تلقائياً إذا لم يكن موجوداً)
+                        # الحفظ المباشر عبر Connection Pooler
                         save_survey_to_cloud(rec)
                         S["submitted_id"] = resp_id
                         st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
@@ -2571,10 +2665,10 @@ with tab7:
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
         
-        # إمكانية إجراء اختبار مباشر لتهيئة قاعدة البيانات يدويًا من لوحة الأدمن
+        # خيار الفحص المباشر لقاعدة البيانات
         if st.button("🔄 اختبار الاتصال وتأكيد جدول Supabase", key="admin_test_db"):
             if init_db():
-                st.success("✅ تم الاتصال بقاعدة بيانات Supabase وجدول `survey_responses` جاهز ومتوفر الآن!")
+                st.success("✅ تم الاتصال بقاعدة بيانات Supabase عبر الـ Pooler بنجاح وجدول `survey_responses` جاهز!")
             
         df_surveys = load_survey_log_from_cloud()
         if not df_surveys.empty:
