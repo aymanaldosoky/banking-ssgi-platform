@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 import uuid
 import psycopg2  # <-- تمت إضافته هنا للاتصال بقاعدة بيانات Postgres / Supabase
 
+
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
@@ -2207,17 +2208,30 @@ def save_survey_to_cloud(rec):
     cur.close()
 
 def load_survey_log_from_cloud():
-    """استرجاع الاستجابات وتفكيك العبارات الـ 31 إلى أعمدة تفصيلية مستقلة"""
+    """استرجاع الاستجابات وتفكيك العبارات الـ 31 حتماً إلى أعمدة تفصيلية مستقلة"""
     try:
         conn = get_db_connection()
         df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
         
         if not df.empty and 'answers' in df.columns:
-            # تحويل سلسلة JSON إلى قاموس ثم تفكيكها إلى أعمدة منفصلة (العبارة_1 إلى العبارة_31)
-            answers_parsed = df['answers'].apply(lambda x: json.loads(x) if isinstance(x, str) else (x if isinstance(x, dict) else {}))
-            answers_df = pd.json_normalize(answers_parsed)
+            def _parse_ans(val):
+                if isinstance(val, dict):
+                    return val
+                if isinstance(val, str):
+                    try:
+                        return json.loads(val)
+                    except Exception:
+                        return {}
+                return {}
+
+            parsed_series = df['answers'].apply(_parse_ans)
+            answers_df = pd.json_normalize(parsed_series)
             
-            # اعادة ترتيب الأعمدة بشكل احترافي
+            # ترتيب أعمدة العبارات من 1 إلى 31
+            stmt_cols = [f"العبارة_{i}" for i in range(1, 32) if f"العبارة_{i}" in answers_df.columns]
+            other_stmt_cols = [c for c in answers_df.columns if c not in stmt_cols]
+            answers_df = answers_df[stmt_cols + other_stmt_cols]
+
             df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
         return df
     except Exception as e:
@@ -2259,7 +2273,7 @@ with tab7:
             </div>
             <p>ونظراً لما تتمتعون به من خبرة ودراية في هذا المجال الحيوي؛ نتشرف بدعوة سيادتكم للمشاركة في هذا البحث من خلال الإجابة على عبارات الاستبيان المرفق، وتحديد مدى موافقتكم عليها بما ترونه مناسباً، علما بأن هذه الدراسة تهدف إلى تقديم حلول مبتكرة تعتمد على الذكاء الاصطناعي لتعزيز الحوكمة المؤسسية ودعم السيادة الرقمية في البنوك المصرية.</p>
             <p>كما نؤكد لسيادتكم أن كافة البيانات والآراء ستحاط بالسرية التامة، ولن تستخدم إلا لأغراض البحث العلمي فقط.</p>
-            <p><b>وتفضلوا بقبول فائق التقدير والاحترام،,,</b></p>
+            <p><b>وتفضلوا بقبول فائق التتقدير والاحترام،,,</b></p>
             <p style="margin-bottom: 0;">
                 <b>الباحث:</b> أيمن محمد إبراهيم الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)<br>
                 <b>تحت إشراف:</b><br>
@@ -2273,7 +2287,7 @@ with tab7:
     with st.expander("📚 أولاً: مصطلحات تعريفية (اضغط للاطلاع على التعريفات الإجرائية)", expanded=False):
         st.markdown(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.9;">
-            <p>لضمان وحدة المفهوم ودقة الاستجابة، يرجى التكرم بالاطلاع على التعريفات الإجرائية التالية للمصطلحات المستخدمة في هذا الاستبيان:</p>
+            <p>لضمان وحدة المفهوم ودقة الاستجابة، يرجى التكرم بالاططلاع على التعريفات الإجرائية التالية للمصطلحات المستخدمة في هذا الاستبيان:</p>
             <ul>
                 <li><b>منصة المعلومات الذكية (Smart Information Platform - SIP):</b> نظام تقني متكامل يعتمد على دمج تقنيات البيانات الضخمة وخوارزميات الذكاء الاصطناعي التوليدي.</li>
                 <li><b>نماذج اللغة الكبيرة الموطنة (Localized Large Language Models - LLMs):</b> استخدام نماذج الذكاء الاصطناعي التأمينية ومواءمتها مع متطلبات السرية المصرفية.</li>
@@ -2560,6 +2574,7 @@ with tab7:
                         "سنوات الخبرة": S.get("exp", ""),
                         "مقيدة بالبورصة": S.get("listed", ""),
                         "مسار الاستبيان": "شامل" if is_full_assessment else "مخصص",
+                        "round(sum(sc)/len(sc),2)": None,
                         "وزن منصات المعلومات (%)": S.get("w_sip", 40),
                         "وزن الحوكمة المؤسسية (%)": S.get("w_ig", 30),
                         "وزن تقارير الاستدامة (%)": S.get("w_sr", 30),
@@ -2577,7 +2592,7 @@ with tab7:
                         st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن (مفككة الأعمدة ومتوافقة مع اللغة العربية)
+    # لوحة التحليل الإداري للأدمن (التصدير بصيغة Excel نقية ومتوافقة مع العربية)
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
@@ -2595,13 +2610,17 @@ with tab7:
             st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
-            # التصدير بترميز utf-8-sig لضمان قراءة اللغة العربية بوضوح تام في Excel
-            csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
+            # تحويل البيانات إلى شيت Excel حقيقي بـ Openpyxl لمنع مشكلة الرموز تماماً
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                df_surveys.to_excel(writer, index=False, sheet_name='استجابات الاستبيان')
+            excel_data = buffer.getvalue()
+
             st.download_button(
-                label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني المفصل باللغة العربية (Excel/CSV)",
-                data=csv_surveys_bytes,
-                file_name="شيت_استجابات_الاستبيان_الميداني_المفصل.csv",
-                mime="text/csv",
+                label="📥 تحميل شيت إكسيل استجابات الاستبيان المفصل بالعربية (Excel .xlsx)",
+                data=excel_data,
+                file_name="شيت_استجابات_الاستبيان_الميداني_المفصل.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
         else:
