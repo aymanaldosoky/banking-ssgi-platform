@@ -2018,7 +2018,7 @@ with tab6:
             use_container_width=True
         )
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل (Form Design & Ergonomics UX المطور)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Wizard UX)
 # ------------------------------------------------------------------------------
 with tab7:
     st.markdown("""
@@ -2028,7 +2028,7 @@ with tab7:
     </div>
     """, unsafe_allow_html=True)
 
-    # تنويه مدة تعبئة الاستبيان (تعديل إلى 10 دقائق)
+    # تنويه مدة تعبئة الاستبيان (تعديل لـ 10 دقائق)
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 12px 18px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);" dir="rtl">
         <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة واستجابة التقييم الميداني.</span>
@@ -2068,8 +2068,8 @@ with tab7:
         <div dir="rtl" style="text-align: right; line-height: 1.9;">
             <p>لضمان وحدة المفهوم ودقة الاستجابة، يرجى التكرم بالاطلاع على التعريفات الإجرائية التالية للمصطلحات المستخدمة في هذا الاستبيان:</p>
             <ul>
-                <li><b>منصة المعلومات الذكية (Smart Information Platform - SIP):</b> نظام تقني متكامل يعتمد على دمج تقنيات البيانات الضخمة وخوارزميات الذكاء الاصطناعي التوليدي المعزز بآليات الاسترجاع.</li>
-                <li><b>نماذج اللغة الكبيرة الموطنة (Localized Large Language Models - LLMs):</b> استخدام نماذج الذكاء الاصطناعي التأمينية ومواءمتها مع متطلبات السرية المصرفية.</li>
+                <li><b>منصة المعلومات الذكية (Smart Information Platform - SIP):</b> نظام تقني متكامل يعتمد على دمج تقنيات البيانات الضخمة وخوارزميات الذكاء الاصطناعي التوليدي المعزز بآليات الاسترجاع (RAG).</li>
+                <li><b>نماذج اللغة الكبيرة الموطنة (Localized Large Language Models - LLMs):</b> استخدام نماذج الذكاء الاصطناعي المشفرة والمطابقة لمعايير أمن البيانات والسرية المصرفية.</li>
                 <li><b>الحوكمة المؤسسية (Institutional Governance - IG):</b> الإطار الشامل من القواعد والعمليات التي تضمن توجيه وإدارة المؤسسة المصرفية بنزاهة وشفافية.</li>
                 <li><b>تقارير الاستدامة (Sustainability Reporting - SR):</b> عملية الإفصاح الدوري عن أداء البنك في المجالات البيئية والاجتماعية والحوكمة (ESG).</li>
                 <li><b>مؤشر الحوكمة الذكية المستدامة (SSGI):</b> مؤشر مركب مقترح لقياس مستوى نضج البنك في دمج ممارسات الحوكمة مع متطلبات الاستدامة عبر التمكين الرقمي.</li>
@@ -2080,7 +2080,7 @@ with tab7:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # تهيئة إدارة الجلسة والتأكد من ثبات الإجابات (Auto-Save State Management)
+    # تهيئة إدارة الحالة وتثبيت الاستجابات (Auto-Save State Management)
     # --------------------------------------------------------------------------
     if "survey_wizard_step" not in st.session_state:
         st.session_state.survey_wizard_step = 1
@@ -2094,7 +2094,7 @@ with tab7:
     }
     likert_options = ["غير موافق تماماً", "غير موافق", "محايد", "موافق", "موافق تماماً"]
 
-    # تحديد نطاق الأسئلة الإلزامية حسب مجال التخصص الوظيفي
+    # تحديد نطاق الأسئلة الإلزامية حسب مجال التخصص الوظيفي المحدد
     current_spec = st.session_state.get("spec_field_u_dyn", None)
     if current_spec == "تكنولوجيا المعلومات/ التحول الرقمي":
         required_stmts = list(range(1, 12))  # SIP 1..11
@@ -2102,10 +2102,10 @@ with tab7:
         required_stmts = list(range(12, 20))  # IG 12..19
     elif current_spec == "الاستدامة/ المسؤولية المجتمعية":
         required_stmts = list(range(20, 32))  # SR 20..31
-    else:  # الشامل (مجلس الإدارة، الإدارة العليا، البحث والتطوير، أو غير محدد)
+    else:  # شامل (مجلس الإدارة، الإدارة العليا، البحث والتطوير، أو القوائم غير المحكومة)
         required_stmts = list(range(1, 32))
 
-    # حساب نسبة التقدم الإجمالية بناءً على التخصص المختار
+    # حساب نسبة الإكمال ديناميكياً
     answered_count = sum(1 for i in required_stmts if st.session_state.get(f"stmt_{i}") is not None)
     total_req_count = len(required_stmts)
     progress_percentage = int((answered_count / total_req_count) * 100) if total_req_count > 0 else 0
@@ -2115,8 +2115,8 @@ with tab7:
     # --------------------------------------------------------------------------
     step_titles = {
         1: "المرحلة الأولى: البيانات الأولية والمهنية للمستجيب",
-        2: "المرحلة الثانية: العبارات المخصصة وفق مجال التخصص الوظيفي",
-        3: "المرحلة الثالثة: تحديد الأوزان النسبية والملاحظات والإرسال النهائي"
+        2: "المرحلة الثانية: تقييم العبارات المخصصة للمجال الوظيفي",
+        3: "المرحلة الثالثة: تحدييد الأوزان النسبية والملاحظات والإرسال"
     }
 
     step_num = st.session_state.survey_wizard_step
@@ -2131,14 +2131,14 @@ with tab7:
             <div style="background: linear-gradient(90deg, {CBE_GOLD} 0%, {CBE_NAVY} 100%); width: {progress_percentage}%; height: 100%; transition: width 0.4s ease;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; font-weight: 700; color: #64748B;">
-            <span style="color: {'#002B49' if step_num == 1 else '#94A3B8'};">1. البيانات الأولية والمهنية</span>
+            <span style="color: {'#002B49' if step_num == 1 else '#94A3B8'};">1. البيانات الأولية</span>
             <span style="color: {'#002B49' if step_num == 2 else '#94A3B8'};">2. تقييم عبارات التخصص</span>
-            <span style="color: {'#002B49' if step_num == 3 else '#94A3B8'};">3. الأوزان النسبية والإرسال</span>
+            <span style="color: {'#002B49' if step_num == 3 else '#94A3B8'};">3. الأوزان والملاحظات</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # دالة تعريض وتثبيت تقييم العبارة المصرفية
+    # دالة تعريض وتقييم العبارة المصرفية مع ثبات الحفظ
     def render_wizard_statement(num, text):
         st.markdown(f"""
         <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 8px;" dir="rtl">
@@ -2159,18 +2159,17 @@ with tab7:
         return ans
 
     # --------------------------------------------------------------------------
-    # المرحلة الأولى: البيانات الأولية والمهنية (وضع التزامي بدون خيارات افتراضية)
+    # المرحلة الأولى: البيانات الأولية والمهنية (Mandatory Unset Inputs)
     # --------------------------------------------------------------------------
     if step_num == 1:
         st.markdown(f"""
         <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
             <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 10px;">👤 المرحلة الأولى: بيانات المشارك والمعلومات الأولية والمهنية</h4>
-            <p style="color: #EF4444; font-size: 13px; font-weight: 700;">⚠️ جميع الحقول التالية إلزامية لفتح عبارات التقييم بالخطوة التالية.</p>
+            <p style="color: #EF4444; font-size: 13px; font-weight: 700;">⚠️ كافة الخيارات التالية إلزامية بالكامل لتحديد مسار الاستبيان المناسب لتخصصكم.</p>
         """, unsafe_allow_html=True)
         
         col_inf1, col_inf2 = st.columns(2, gap="medium")
         
-        # تحضير الخيارات بدون افتراضات أولية (index=None)
         banks_opts = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
         org_opts = [
             "بنك قطاع عام/ حكومي", "بنك قطاع خاص مشترك", "بنك إسلامي", "بنك عربي/ أجنبي",
@@ -2194,7 +2193,7 @@ with tab7:
             sel_sci = st.selectbox("المؤهل العلمي (إلزامي)", sci_opts, index=sci_opts.index(st.session_state.get("sci_deg_u_dyn")) if st.session_state.get("sci_deg_u_dyn") in sci_opts else None, placeholder="اختر المؤهل العلمي...", key="sci_deg_u_dyn")
 
         with col_inf2:
-            sel_spec = st.selectbox("مجال التخصص الوظيفي (إلزامي - يحدد مسار الاستبيان)", spec_opts, index=spec_opts.index(st.session_state.get("spec_field_u_dyn")) if st.session_state.get("spec_field_u_dyn") in spec_opts else None, placeholder="اختر التخصص الوظيفي الدقيق...", key="spec_field_u_dyn")
+            sel_spec = st.selectbox("مجال التخصص الوظيفي (إلزامي - يحدد مسار الاستبيان)", spec_opts, index=spec_opts.index(st.session_state.get("spec_field_u_dyn")) if st.session_state.get("spec_field_u_dyn") in spec_opts else None, placeholder="اختر مجال التخصص الدقيق...", key="spec_field_u_dyn")
             sel_job = st.selectbox("المستوى الوظيفي (إلزامي)", job_opts, index=job_opts.index(st.session_state.get("job_level_u_dyn")) if st.session_state.get("job_level_u_dyn") in job_opts else None, placeholder="اختر المستوى الوظيفي...", key="job_level_u_dyn")
             sel_exp = st.selectbox("سنوات الخبرة في القطاع المصرفي (إلزامي)", exp_opts, index=exp_opts.index(st.session_state.get("exp_yrs_u_dyn")) if st.session_state.get("exp_yrs_u_dyn") in exp_opts else None, placeholder="اختر سنوات الخبرة...", key="exp_yrs_u_dyn")
 
@@ -2203,7 +2202,7 @@ with tab7:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المرحلة الثانية: العبارات التخصصية المشروطة بمسار التخصص الوظيفي
+    # المرحلة الثانية: العبارات المخصصة حسب التخصص الوظيفي (Adaptive Routing)
     # --------------------------------------------------------------------------
     elif step_num == 2:
         spec_field = st.session_state.get("spec_field_u_dyn")
@@ -2235,7 +2234,7 @@ with tab7:
             render_wizard_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.")
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 2. مسار الحوكمة والالتزام وإدارة المخاطر والائتمان (محور IG - 12 إلى 19)
+        # 2. مسار الحوكمة، الالتزام، إدارة المخاطر والائتمان (محور IG - 12 إلى 19)
         elif spec_field in ["الحوكمة/ الالتزام/ المراجعة الداخلية", "إدارة المخاطر/ الائتمان"]:
             st.markdown(f"""
             <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
@@ -2285,29 +2284,29 @@ with tab7:
             render_wizard_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.")
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 4. باقي التخصصات (مجلس الإدارة، الإدارة العليا، البحث والتطوير): عرض كافة العبارات الـ 31
+        # 4. باقي التخصصات (مجلس الإدارة، الإدارة العليا، البحث والتطوير): تقييم كافة العبارات الـ 31
         else:
             st.markdown(f"""
             <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-                <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🌐 تقييم العبارات الشاملة للمستجيبين من القيادات العليا والبحث والتطوير</h4>
+                <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🌐 تقييم العبارات الشاملة للقيادات العليا والبحث والتطوير</h4>
                 <p style="color: #64748B; font-size: 13px;">تتضمن تقييم العبارات الـ 31 عبر المحاور الثلاثة (SIP, IG, SR)</p>
             """, unsafe_allow_html=True)
 
             st.markdown("<h5 style='color: #002B49; font-weight: 800;'>أولاً: منصات المعلومات الذكية (SIP)</h5>", unsafe_allow_html=True)
+            stmt_texts = [
+                "", "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.",
+                "تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.",
+                "يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.",
+                "يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.",
+                "يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.",
+                "تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.",
+                "تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).",
+                "يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.",
+                "تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.",
+                "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.",
+                "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة."
+            ]
             for i in range(1, 12):
-                stmt_texts = [
-                    "", "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.",
-                    "تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.",
-                    "يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.",
-                    "يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.",
-                    "يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.",
-                    "تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.",
-                    "تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).",
-                    "يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.",
-                    "تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.",
-                    "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.",
-                    "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة."
-                ]
                 render_wizard_statement(i, stmt_texts[i])
 
             st.markdown("<h5 style='color: #002B49; font-weight: 800; margin-top: 20px;'>ثانياً: الحوكمة المؤسسية والامتثال (IG)</h5>", unsafe_allow_html=True)
@@ -2344,13 +2343,13 @@ with tab7:
             st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المرحلة الثالثة: تحديد الأوزان النسبية والملاحظات والإرسال النهائي
+    # المرحلة الثالثة: تحديد الأوزان النسبية والملاحظات والإرسال
     # --------------------------------------------------------------------------
     elif step_num == 3:
         st.markdown(f"""
         <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;">⚖️ الخطوة الأخيرة: اقتراح الأوزان النسبية للمحاور الثلاثة والملاحظات</h4>
-            <p style="color: #64748B; font-size: 13.5px;">تخصيص وتحديد النسب المئوية للمحاور الثلاثة من منظور خبرتكم المصرفية، بشرط أن يكون المجموع الكلي مساوياً لـ 100%.</p>
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;">⚖️ الخطوة الأخيرة: تحديد الأوزان النسبية المقترحة والملاحظات</h4>
+            <p style="color: #64748B; font-size: 13.5px;">يرجى تحديد النسب المئوية للمحاور الثلاثة من واقع خبرتكم المصرفية، بحيث يكون المجموع الكلي مساوياً لـ 100%.</p>
         """, unsafe_allow_html=True)
 
         col_w1, col_w2, col_w3 = st.columns(3)
@@ -2363,22 +2362,22 @@ with tab7:
 
         total_weight = w_sip + w_ig + w_sr
         if total_weight != 100:
-            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب أن يكون المجموع الكلي مساوياً لـ 100% تماماً لإتمام الإرسال.")
+            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب أن يكون المجموع الكلي مساوياً لـ 100% تماماً.")
         else:
-            st.success("✅ مجموع الأوزان النسبية متطابق وصحيح (100%).")
+            st.success("✅ مجموع الأوزان متطابق وصحيح (100%).")
 
         st.markdown("<br>", unsafe_allow_html=True)
         survey_comments = st.text_area(
             "💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
             value=st.session_state.get("user_survey_comments", ""),
-            placeholder="اكتب الملاحظات أو المعوقات أو المقترحات التطبيقية هنا...",
+            placeholder="اكتب ملاحظاتك أو مقترحاتك هنا...",
             key="user_survey_comments",
             height=120
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # أزرار التنقل والتوجيه الديناميكي (Previous / Next Buttons)
+    # أزرار التنقل والتوجيه (Previous / Next Buttons)
     # --------------------------------------------------------------------------
     col_prev, col_spacer, col_next = st.columns([1, 2, 1])
 
@@ -2390,7 +2389,7 @@ with tab7:
 
     with col_next:
         if step_num == 1:
-            # التحقق من استكمال جميع بيانات المرحلة الأولى الإلزامية قبل السماح بالتنقل
+            # التحقق من استكمال الخيارات الإلزامية في المرحلة الأولى قبل الانتقال
             bank_ok = st.session_state.get("survey_bank_user_main") is not None
             org_ok = st.session_state.get("org_nat_u_dyn") is not None
             sci_ok = st.session_state.get("sci_deg_u_dyn") is not None
@@ -2404,10 +2403,10 @@ with tab7:
                     st.session_state.survey_wizard_step = 2
                     st.rerun()
             else:
-                st.button("الخطوة التالية ➡️", use_container_width=True, disabled=True, help="يرجى استكمال جميع خيارات البيانات الأولية الإلزامية أولاً.")
+                st.button("الخطوة التالية ➡️", use_container_width=True, disabled=True, help="يرجى استكمال جميع الخيارات الإلزامية أولاً.")
 
         elif step_num == 2:
-            if st.button("الانتقال لخطوة الأوزان والملاحظات ➡️", use_container_width=True, type="primary"):
+            if st.button("الانتقال للأوزان والملاحظات ➡️", use_container_width=True, type="primary"):
                 st.session_state.survey_wizard_step = 3
                 st.rerun()
 
@@ -2415,7 +2414,6 @@ with tab7:
             submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary", key="submit_survey_final_btn")
 
             if submit_survey_btn:
-                # تجميع كافة التقييمات المسجلة
                 statement_answers_dict = {}
                 sip_scores, ig_scores, sr_scores = [], [], []
 
@@ -2439,15 +2437,14 @@ with tab7:
                 w_sr_val = st.session_state.get("weight_sr_input", 30)
                 tot_w = w_sip_val + w_ig_val + w_sr_val
 
-                # التحقق من الإجابات الإلزامية الخاصة بتخصص المستجيب
                 missing_stmts = [i for i in required_stmts if statement_answers_dict.get(f"العبارة_{i}") is None]
 
                 if not survey_bank_sel:
                     st.warning("⚠️ يرجى العودة للمرحلة الأولى واختيار البنك المصرفي قبل الإرسال.")
                 elif tot_w != 100:
-                    st.error("⚠️ لا يمكن الحفظ: مجموع الأوزان النسبية للمحاور يجب أن يساوي 100% تماماً.")
+                    st.error("⚠️ لا يمكن الحفظ: مجموع الأوزان النسبية للمحاور يجب أن يساوي 100%.")
                 elif missing_stmts:
-                    st.error(f"⚠️ يرجى تقييم العبارات المخصصة لتخصصكم الوظيفي بالكامل قبل الإرسال. العبارات المتبقية: {missing_stmts}")
+                    st.error(f"⚠️ يرجى تقييم كافة العبارات المخصصة لتخصصكم الوظيفي قبل الإرسال. العبارات المتبقية: {missing_stmts}")
                 else:
                     avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2) if sip_scores else 0.0
                     avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2) if ig_scores else 0.0
@@ -2479,7 +2476,7 @@ with tab7:
                         pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
                         st.markdown("""
                         <div style="background: #D1FAE5; padding: 18px; border-radius: 10px; border: 1.5px solid #059669; text-align: center; margin-top: 15px;" dir="rtl">
-                            <h4 style="color: #065F46; margin: 0;">✅ تم تسجيل وحفظ الاستجابة الميدانية بنجاح بكافة تفاصيل التقييم والأوزان المخصصة!</h4>
+                            <h4 style="color: #065F46; margin: 0;">✅ تم تسجيل وحفظ الاستجابة بنجاح بكافة تفاصيل العبارات والأوزان في شيت الإكسيل الميداني!</h4>
                         </div>
                         """, unsafe_allow_html=True)
                     except Exception as e:
@@ -2494,7 +2491,7 @@ with tab7:
         updated_surveys_data = load_survey_log_from_file()
         if updated_surveys_data:
             df_surveys = pd.DataFrame(updated_surveys_data)
-            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل الميداني:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
+            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
             csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
