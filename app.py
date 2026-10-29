@@ -809,7 +809,6 @@ with tab1:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
         st.markdown('</div>', unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - مُطور بتجربة مستخدم عالمية (Enterprise UX)
 # ------------------------------------------------------------------------------
@@ -894,6 +893,7 @@ with tab2:
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
+                    status_border_color = "#10B981"  # Emerald Green
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -909,6 +909,7 @@ with tab2:
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
+                    status_border_color = "#F59E0B"  # Amber Yellow
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -924,6 +925,7 @@ with tab2:
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
+                    status_border_color = "#EF4444"  # Coral Red
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -938,15 +940,62 @@ with tab2:
                     """
 
                 # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية الرئيسية (Metric Cards UX)
+                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة (Executive Metric Container)
                 # --------------------------------------------------------------
-                st.markdown(f"<h4 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>📊 ملخص النتائج والتشخيص القياسي - {clean_text(bank_ssgi_sel)}</h4>", unsafe_allow_html=True)
-                
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
-                m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
-                m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
-                m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+                metric_container_html = f"""
+                <div dir="rtl" style="
+                    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+                    border: 1.5px solid {CBE_GOLD};
+                    border-radius: 16px;
+                    padding: 20px;
+                    box-shadow: 0 10px 25px -5px rgba(0, 43, 73, 0.08);
+                    margin-bottom: 20px;
+                ">
+                    <!-- عنوان الحاوية المؤسسية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
+                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                            🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
+                        </h4>
+                        <span style="background: #FFFFFF; color: {CBE_NAVY}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #CBD5E1;">
+                            {badge_status}
+                        </span>
+                    </div>
+                    
+                    <!-- شبكة البطاقات الرقمية الأربع -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                        
+                        <!-- بطاقة 1: SSGI -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
+                            <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
+                        </div>
+
+                        <!-- بطاقة 2: SIP -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
+                        </div>
+
+                        <!-- بطاقة 3: IG -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
+                        </div>
+
+                        <!-- بطاقة 4: SR -->
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
+                        </div>
+
+                    </div>
+                </div>
+                """
+                st.markdown(flat_html(metric_container_html), unsafe_allow_html=True)
 
                 # --------------------------------------------------------------
                 # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
@@ -965,7 +1014,7 @@ with tab2:
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
-                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 15px;">
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
                   <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">التشخيص القياسي المفصل:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
@@ -1027,28 +1076,60 @@ with tab2:
     st.markdown("---")
     
     # --------------------------------------------------------------------------
-    # جداول تفاعلية مع مرشحات للنتائج التاريخية (Interactive DataTables UX)
+    # الجدول الأول: ترتيب وسجلات البنوك (تم تطبيق نفس الهوية البصرية للجدول الثاني)
     # --------------------------------------------------------------------------
-    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة (Interactive DataTable)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
     
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        # عرض الجدول التفاعلي باستخدام st.dataframe المطور
-        st.dataframe(
-            df_history,
-            column_config={
-                "معرف السجل": st.column_config.TextColumn("معرف السجل / التوقيت", width="medium"),
-                "البنك": st.column_config.TextColumn("اسم البنك", width="medium"),
-                "مؤشر SSGI المركب": st.column_config.NumberColumn("مؤشر SSGI (%)", format="%.2f%%"),
-                "منصات المعلومات (40%)": st.column_config.NumberColumn("SIP (40%)", format="%.1f%%"),
-                "الحوكمة المؤسسية (30%)": st.column_config.NumberColumn("IG (30%)", format="%.1f%%"),
-                "تقارير الاستدامة (30%)": st.column_config.NumberColumn("SR (30%)", format="%.1f%%"),
-                "التقييم التشخيصي": st.column_config.TextColumn("التقييم التشخيصي القياسي", width="large"),
-            },
-            use_container_width=True,
-            hide_index=False
-        )
+        # صياغة جدول HTML مخصص متوافق مع نفس كلاس وألوان الجدول الثاني custom-rtl-table
+        history_table_html = """
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
+        <table class="custom-rtl-table">
+        <thead>
+        <tr>
+        <th style="width: 40px; text-align: center;">م</th>
+        <th>معرف السجل / التوقيت</th>
+        <th>اسم البنك</th>
+        <th style="text-align: center;">مؤشر SSGI (%)</th>
+        <th style="text-align: center;">SIP (40%)</th>
+        <th style="text-align: center;">IG (30%)</th>
+        <th style="text-align: center;">SR (30%)</th>
+        <th>التقييم التشخيصي القياسي</th>
+        </tr>
+        </thead>
+        <tbody>
+        """
+        
+        for idx, row in df_history.iterrows():
+            clean_bank_name = clean_text(str(row['البنك']))
+            clean_diag = clean_text(str(row['التقييم التشخيصي']))
+            rec_id = clean_text(str(row.get('معرف السجل', idx + 1)))
+            score_val = row['مؤشر SSGI المركب']
+            
+            # إعطاء إشارة ملونة لدرجة المؤشر
+            score_badge = f"<span style='color: {CBE_GOLD}; font-weight: 800;'>{score_val}%</span>"
+            
+            history_table_html += f"""
+            <tr>
+            <td style="text-align: center; font-weight: bold; color: {CBE_NAVY};">{idx + 1}</td>
+            <td style="font-size: 11.5px; color: #64748B;">{rec_id}</td>
+            <td style="font-weight: 700; color: {CBE_NAVY};">{clean_bank_name}</td>
+            <td style="text-align: center; font-size: 13px;">{score_badge}</td>
+            <td style="text-align: center;">{row['منصات المعلومات (40%)']}%</td>
+            <td style="text-align: center;">{row['الحوكمة المؤسسية (30%)']}%</td>
+            <td style="text-align: center;">{row['تقارير الاستدامة (30%)']}%</td>
+            <td style="font-size: 12px; color: #334155;">{clean_diag}</td>
+            </tr>
+            """
+            
+        history_table_html += """
+        </tbody>
+        </table>
+        </div>
+        """
+        st.markdown(flat_html(history_table_html), unsafe_allow_html=True)
 
         col_dl, col_del = st.columns([1, 1], gap="medium")
         with col_dl:
@@ -1077,7 +1158,7 @@ with tab2:
     st.markdown("---")
     
     # --------------------------------------------------------------------------
-    # استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
+    # الجدول الثاني: استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)
     # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
         st.markdown("""
