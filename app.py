@@ -2080,13 +2080,10 @@ with tab7:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # تهيئة إدارة الحالة (Session State Initialization & Auto-Save)
+    # تهيئة إدارة الحالة (Session State Initialization & Auto-Save Management)
     # --------------------------------------------------------------------------
     if "survey_wizard_step" not in st.session_state:
         st.session_state.survey_wizard_step = 1
-
-    if "survey_answers" not in st.session_state:
-        st.session_state.survey_answers = {}
 
     likert_mapping = {
         "غير موافق تماماً": 1,
@@ -2097,45 +2094,58 @@ with tab7:
     }
     likert_options = ["غير موافق تماماً", "غير موافق", "محايد", "موافق", "موافق تماماً"]
 
-    # حساب عدد العبارات المجاب عنها ديناميكياً لتحديث شريط التقدم
-    answered_count = sum(1 for i in range(1, 32) if st.session_state.get(f"stmt_{i}") is not None)
-    progress_percentage = int((answered_count / 31) * 100)
+    # --------------------------------------------------------------------------
+    # حساب نسبة الإكمال الحقيقية الديناميكية (Dynamic Completion Calculation)
+    # --------------------------------------------------------------------------
+    # 1. إجابات البيانات الديموغرافية والمهنية (7 حقول رئيسية)
+    demo_fields = ["survey_bank_user_main", "org_nat_u_dyn", "sci_deg_u_dyn", "spec_field_u_dyn", "job_level_u_dyn", "exp_yrs_u_dyn", "is_listed_u_dyn"]
+    demo_completed = sum(1 for field in demo_fields if st.session_state.get(field) and st.session_state.get(field) != "اختر البنك المصرفي")
+    
+    # 2. إجابات العبارات الـ 31
+    statements_completed = sum(1 for i in range(1, 32) if st.session_state.get(f"stmt_{i}") in likert_options)
+    
+    # 3. إدخال الأوزان والملاحظات (مكتملة افتراضياً بالأوزان القياسية 40/30/30)
+    weights_completed = 1 if (st.session_state.get("weight_sip_input", 40) + st.session_state.get("weight_ig_input", 30) + st.session_state.get("weight_sr_input", 30)) == 100 else 0
+
+    total_required_items = 7 + 31 + 1  # الإجمالي 39 عنصراً مسجلاً
+    completed_items = demo_completed + statements_completed + weights_completed
+    progress_percentage = int((completed_items / total_required_items) * 100)
 
     # --------------------------------------------------------------------------
-    # مؤشر وشريط التقدم التفاعلي
+    # مؤشر وشريط التقدم التفاعلي والمرحلي
     # --------------------------------------------------------------------------
     step_titles = {
-        1: "المرحلة الأولى: البيانات الأولية والمهنية",
-        2: "المرحلة الثانية: منصات المعلومات الذكية (SIP)",
-        3: "المرحلة الثالثة: الحوكمة المؤسسية (IG)",
-        4: "المرحلة الرابعة: تقارير الاستدامة (SR) والأوزان والملاحظات"
+        1: "المرحلة الأولى: البيانات الديموغرافية والوظيفية والمهنية للمستجيب",
+        2: "المرحلة الثانية: عبارات منصات المعلومات الذكية (SIP) [1 - 11]",
+        3: "المرحلة الثالثة: عبارات الحوكمة المؤسسية والامتثال (IG) [12 - 19]",
+        4: "المرحلة الرابعة: عبارات تقارير الاستدامة (SR) [20 - 31] والأوزان والإرسال"
     }
 
     step_num = st.session_state.survey_wizard_step
 
     st.markdown(f"""
-    <div dir="rtl" style="background: #FFFFFF; border: 1.5px solid {CBE_GOLD}; border-radius: 12px; padding: 18px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 15px;">📍 {step_titles[step_num]}</span>
-            <span style="font-weight: 800; color: {CBE_GOLD}; font-size: 14px;">نسبة إكمال العبارات: {progress_percentage}%</span>
+    <div dir="rtl" style="background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); border: 1.5px solid {CBE_GOLD}; border-radius: 14px; padding: 18px 22px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 15.5px;">📍 {step_titles[step_num]}</span>
+            <span style="background: {CBE_NAVY}; color: {CBE_GOLD}; padding: 4px 14px; border-radius: 20px; font-weight: 800; font-size: 13.5px;">نسبة الإكمال الكلية: {progress_percentage}%</span>
         </div>
-        <div style="background-color: #E2E8F0; border-radius: 10px; height: 10px; width: 100%; overflow: hidden;">
+        <div style="background-color: #E2E8F0; border-radius: 10px; height: 11px; width: 100%; overflow: hidden;">
             <div style="background: linear-gradient(90deg, {CBE_GOLD} 0%, {CBE_NAVY} 100%); width: {progress_percentage}%; height: 100%; transition: width 0.4s ease;"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; font-weight: 700; color: #64748B;">
-            <span style="color: {'#002B49' if step_num == 1 else '#94A3B8'};">1. البيانات الأولية</span>
-            <span style="color: {'#002B49' if step_num == 2 else '#94A3B8'};">2. منصات SIP</span>
-            <span style="color: {'#002B49' if step_num == 3 else '#94A3B8'};">3. الحوكمة IG</span>
-            <span style="color: {'#002B49' if step_num == 4 else '#94A3B8'};">4. الاستدامة SR والأوزان</span>
+        <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 12px; font-weight: 700;">
+            <span style="color: {'#002B49' if step_num == 1 else '#94A3B8'}; border-bottom: {f'2px solid {CBE_GOLD}' if step_num == 1 else 'none'}; padding-bottom: 2px;">1. البيانات الأولية</span>
+            <span style="color: {'#002B49' if step_num == 2 else '#94A3B8'}; border-bottom: {f'2px solid {CBE_GOLD}' if step_num == 2 else 'none'}; padding-bottom: 2px;">2. منصات SIP (1-11)</span>
+            <span style="color: {'#002B49' if step_num == 3 else '#94A3B8'}; border-bottom: {f'2px solid {CBE_GOLD}' if step_num == 3 else 'none'}; padding-bottom: 2px;">3. الحوكمة IG (12-19)</span>
+            <span style="color: {'#002B49' if step_num == 4 else '#94A3B8'}; border-bottom: {f'2px solid {CBE_GOLD}' if step_num == 4 else 'none'}; padding-bottom: 2px;">4. الاستدامة SR (20-31) والأوزان</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # دالة تعريض وتقييم العبارة المصرفية
+    # دالة تعريض وتقييم العبارة المصرفية الفاخرة
     def render_wizard_statement(num, text):
         st.markdown(f"""
-        <div style="background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 8px;" dir="rtl">
-            <span style="font-weight: bold; color: {CBE_NAVY}; font-size: 14px;">({num}) {text}</span>
+        <div style="background: #FFFFFF; padding: 14px 18px; border-radius: 10px; border-right: 4px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);" dir="rtl">
+            <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">({num}) {text}</span>
         </div>
         """, unsafe_allow_html=True)
         
@@ -2148,16 +2158,16 @@ with tab7:
             label_visibility="collapsed",
             key=f"stmt_{num}"
         )
-        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
         return ans
 
     # --------------------------------------------------------------------------
-    # المرحلة الأولى: البيانات الأولية والمهنية للمشاركين
+    # المرحلة الأولى: البيانات الديموغرافية والوظيفية والمهنية
     # --------------------------------------------------------------------------
     if step_num == 1:
         st.markdown(f"""
-        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 15px;">👤 المرحلة الأولى: بيانات المشارك والمعلومات الأولية والمهنية</h4>
+        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 15px;">👤 المرحلة الأولى: البيانات الديموغرافية والوظيفية والمهنية للمستجيب</h4>
         """, unsafe_allow_html=True)
         
         col_inf1, col_inf2 = st.columns(2, gap="medium")
@@ -2181,72 +2191,73 @@ with tab7:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المرحلة الثانية: منصات المعلومات الذكية SIP (العبارات 1 إلى 11)
+    # المرحلة الثانية: العبارات الخاصة بـ (منصات المعلومات الذكية SIP) [1 إلى 11]
     # --------------------------------------------------------------------------
     elif step_num == 2:
         st.markdown(f"""
-        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 10px;">💻 المرحلة الثانية: محور منصة المعلومات الذكية (SIP)</h4>
-            <p style="color: #64748B; font-size: 13px;">مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
+        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 6px;">💻 المرحلة الثانية: محور منصات المعلومات الذكية (SIP) [العبارات من 1 إلى 11]</h4>
+            <p style="color: #64748B; font-size: 13px; margin-bottom: 15px;">مقياس التقييم الخماسي: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
         """, unsafe_allow_html=True)
 
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 12px 0 10px 0; border-right: 3px solid {CBE_GOLD};'>جودة البيانات والبنية الرقمية</div>", unsafe_allow_html=True)
         render_wizard_statement(1, "يمتلك البنك بنية تحتية تتيح تجميع البيانات التاريخية والآنية من كافة الفروع والإدارات بشكل مركزي وموحد.")
         render_wizard_statement(2, "تتطلب طبيعة البيانات المصرفية الضخمة وغير المهيكلة اعتماد منصة ذكية تتجاوز قدرات النظم التقليدية في التجميع والتحليل.")
         render_wizard_statement(3, "يساهم الاعتماد على تقنية الاسترجاع المعزز بالتوليد (RAG) في ضمان دقة نتائج الذكاء الاصطناعي وتقليل احتمالات الهلوسة المعلوماتية.")
         render_wizard_statement(4, "يعد دمج نماذج اللغة الكبيرة (LLMs) توجهاً ضرورياً لتحويل النصوص السردية في التقارير إلى مؤشرات رقمية قابلة للقياس.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 12px 0;'>الامتثال التقني</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_GOLD};'>الامتثال التقني</div>", unsafe_allow_html=True)
         render_wizard_statement(5, "يسهم تطبيق العمل بمنصات الذكاء الاصطناعي التوليدي (GenAI) في تقليل الاعتماد البشري في إعداد التقارير، مما يخفض الأخطاء والتحيزات.")
         render_wizard_statement(6, "تساهم قدرة النموذج المقترح على استيعاب معايير (IFRS S1/S2) بشكل آلي في تحقيق مرونة عالية مع التغيرات التنظيمية السريعة.")
         render_wizard_statement(7, "تعمل الخوارزميات الذكية بالمنصة على التحقق الآلي من استيفاء كافة العناصر الإلزامية التي يفرضها البنك المركزي المصري (CBE).")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 12px 0;'>التخطيط والمراقبة بعد النشر</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_GOLD};'>التخطيط والمراقبة بعد النشر</div>", unsafe_allow_html=True)
         render_wizard_statement(8, "يوفر النموذج تغذية راجعة (Feedback Loop) تسمح بتعديل الخطط بناءً على المتغيرات وفجوات الأداء المرصودة.")
         render_wizard_statement(9, "تساهم أدوات المراقبة الذكية في الكشف المبكر عن أي شبهة غسل أخضر (Greenwashing) في البيانات قبل تفاقمها.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 12px 0;'>التكامل والخصوصية</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_GOLD};'>التكامل والخصوصية</div>", unsafe_allow_html=True)
         render_wizard_statement(10, "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.")
         render_wizard_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المرحلة الثالثة: الحوكمة المؤسسية IG (العبارات 12 إلى 19)
+    # المرحلة الثالثة: العبارات الخاصة بـ (الحوكمة المؤسسية IG) [12 إلى 19]
     # --------------------------------------------------------------------------
     elif step_num == 3:
         st.markdown(f"""
-        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 10px;">🏛️ المرحلة الثالثة: محور الحوكمة المؤسسية والامتثال (IG)</h4>
-            <p style="color: #64748B; font-size: 13px;">مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
+        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 6px;">🏛️ المرحلة الثالثة: محور الحوكمة المؤسسية والامتثال (IG) [العبارات من 12 إلى 19]</h4>
+            <p style="color: #64748B; font-size: 13px; margin-bottom: 15px;">مقياس التقييم الخماسي: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الشفافية والإفصاح</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 10px 0; border-right: 3px solid {CBE_NAVY};'>الشفافية والإفصاح</div>", unsafe_allow_html=True)
         render_wizard_statement(12, "تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.")
         render_wizard_statement(13, "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>المتابعة والمساءلة</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_NAVY};'>المتابعة والمساءلة</div>", unsafe_allow_html=True)
         render_wizard_statement(14, "يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.")
         render_wizard_statement(15, "يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>العدالة والمساواة</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_NAVY};'>العدالة والمساواة</div>", unsafe_allow_html=True)
         render_wizard_statement(16, "تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>المشاركة وسيادة القانون ومجلس الإدارة</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_NAVY};'>المشاركة وسيادة القانون ومجلس الإدارة</div>", unsafe_allow_html=True)
         render_wizard_statement(17, "يسهم النموذج في تعزيز التواصل الفعال وإشراك الأطراف المعنية في تحديد الموضوعات الجوهرية (Materiality).")
         render_wizard_statement(18, "يعزز النموذج من قدرة البنك على الاستجابة الفورية للتعديلات التشريعية والمصرفية ورصد حالات عدم الامتثال القانوني بدقة.")
         render_wizard_statement(19, "تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # المرحلة الرابعة: تقارير الاستدامة SR والأوزان والملاحظات (العبارات 20 إلى 31 والإرسال)
+    # المرحلة الرابعة: العبارات الخاصة بـ (تقارير الاستدامة SR) [20 إلى 31] والأوزان
     # --------------------------------------------------------------------------
     elif step_num == 4:
         st.markdown(f"""
-        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 10px;">🌱 المرحلة الرابعة: محور تقارير الاستدامة (SR) والأوزان والملاحظات</h4>
-            <p style="color: #64748B; font-size: 13px;">مقياس التقييم: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
+        <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 6px;">🌱 المرحلة الرابعة: محور تقارير الاستدامة (SR) [العبارات من 20 إلى 31] وتحديد الأوزان والإرسال</h4>
+            <p style="color: #64748B; font-size: 13px; margin-bottom: 15px;">مقياس التقييم الخماسي: (1) غير موافق تماماً | (2) غير موافق | (3) محايد | (4) موافق | (5) موافق تماماً</p>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>الاستراتيجية والبعد البيئي والاجتماعي والاقتصادي</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 10px 0; border-right: 3px solid {CBE_GOLD};'>الاستراتيجية والبعد البيئي والاجتماعي والاقتصادي</div>", unsafe_allow_html=True)
         render_wizard_statement(20, "تعكس التقارير الصادرة عن النموذج دمجاً حقيقياً لأهداف التنمية المستدامة (SDGs) ورؤية مصر 2030 في استراتيجية البنك طويلة الأجل.")
         render_wizard_statement(21, "يتيح النموذج قياس والإفصاح بدقة عن البصمة الكربونية للبنك (النطاقات 1، 2، 3) وتوضيح حجم التمويل الأخضر والطاقة المتجددة (Green Finance).")
         render_wizard_statement(22, "يوفر النموذج مؤشرات كمية دقيقة لقياس كفاءة رصد معدلات خفض استهلاك الموارد الداخلية (الطاقة، المياه، الورق).")
@@ -2254,7 +2265,7 @@ with tab7:
         render_wizard_statement(24, "يتم قياس أثر مبادرات المسؤولية المجتمعية (CSR) وتوضيح العائد الاجتماعي منها (SROI) بشكل كمي.")
         render_wizard_statement(25, "توضح التقارير العوائد الاقتصادية المباشرة وغير المباشرة لتبني ممارسات الاستدامة ودعم التوجه نحو المشتريات المستدامة.")
 
-        st.markdown(f"<div style='background: {CBE_BG}; padding: 6px 12px; font-weight: bold; color: {CBE_NAVY}; border-radius: 4px; margin: 10px 0;'>إدارة المخاطر والمقاييس والتنوع</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background: {CBE_BG}; padding: 8px 14px; font-weight: bold; color: {CBE_NAVY}; border-radius: 6px; margin: 16px 0 10px 0; border-right: 3px solid {CBE_GOLD};'>إدارة المخاطر والمقاييس والتنوع</div>", unsafe_allow_html=True)
         render_wizard_statement(26, "يتم دمج مخاطر المناخ والاستدامة (ESG Risks) ضمن إطار إدارة المخاطر الكلي للبنك بشكل منهجي.")
         render_wizard_statement(27, "توجد خطط طوارئ واستمرارية أعمال محدثة لمواجهة الأزمات المحتملة المرتبطة بالاستدامة أو التقنية.")
         render_wizard_statement(28, "يتم وضع أهداف مستقبلية (Targets) ذكية ومحددة زمنياً لكل محور من محاور الاستدامة.")
@@ -2262,20 +2273,20 @@ with tab7:
         render_wizard_statement(30, "يحرص البنك على تنوع الخبرات والخلفيات المهنية في تشكيل مجلس الإدارة والإدارة العليا.")
         render_wizard_statement(31, "تسمح المنصة برصد ومتابعة معدلات تمكين المرأة وزيادة تمثيلها في المناصب القيادية ومراكز اتخاذ القرار بالقطاع المصرفي.")
 
-        st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
-        st.markdown("<h5 style='color: #002B49; font-weight: 800;'>⚖️ تحديث الأوزان النسبية المقترحة للمحاور (المجموع = 100%)</h5>", unsafe_allow_html=True)
+        st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
+        st.markdown(f"<h5 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>⚖️ تحديد الأوزان النسبية المقترحة للمحاور الثلاثة (يجب أن يساوي المجموع 100%)</h5>", unsafe_allow_html=True)
         
         col_w1, col_w2, col_w3 = st.columns(3)
         with col_w1:
-            w_sip = st.number_input("منصات المعلومات الذكية: (%)", min_value=0, max_value=100, value=40, key="weight_sip_input")
+            w_sip = st.number_input("1. منصات المعلومات الذكية: (%)", min_value=0, max_value=100, value=40, key="weight_sip_input")
         with col_w2:
-            w_ig = st.number_input("الحوكمة المؤسسية: (%)", min_value=0, max_value=100, value=30, key="weight_ig_input")
+            w_ig = st.number_input("2. الحوكمة المؤسسية: (%)", min_value=0, max_value=100, value=30, key="weight_ig_input")
         with col_w3:
-            w_sr = st.number_input("تقارير الاستدامة: (%)", min_value=0, max_value=100, value=30, key="weight_sr_input")
+            w_sr = st.number_input("3. تقارير الاستدامة: (%)", min_value=0, max_value=100, value=30, key="weight_sr_input")
 
         total_weight = w_sip + w_ig + w_sr
         if total_weight != 100:
-            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب أن يكون المجموع الكلي مساوياً لـ 100% تماماً.")
+            st.error(f"⚠️ مجموع الأوزان الحالية هو ({total_weight}%). يجب ضبط الأوزان ليصبح المجموع الكلي مساوياً لـ 100% تماماً.")
         else:
             st.success("✅ مجموع الأوزان متطابق وصحيح (100%).")
 
@@ -2283,9 +2294,9 @@ with tab7:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # أزرار التوجيه والتنقل بالمعالج (Previous / Next Buttons)
+    # أزرار التوجيه والتنقل بالمعالج (Previous / Next / Submit Buttons)
     # --------------------------------------------------------------------------
-    col_prev, col_spacer, col_next = st.columns([1, 2, 1])
+    col_prev, col_spacer, col_next = st.columns([1, 1.5, 1.2])
 
     with col_prev:
         if step_num > 1:
@@ -2370,7 +2381,7 @@ with tab7:
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن
+    # لوحة التحليل الإداري للأدمن (Admin Dashboard & Log Export)
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
