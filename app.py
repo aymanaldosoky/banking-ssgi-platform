@@ -2120,12 +2120,27 @@ def load_survey_log_from_cloud():
         return pd.DataFrame()
 
 
+import io
+import os
+import json
+import re
+import hashlib
+import time
+from datetime import datetime
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+import uuid
+import psycopg2
+
 # ==============================================================================
-# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres
+# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (محسّنة وسريعة)
 # ==============================================================================
 
+@st.cache_resource
 def get_db_connection():
-    """الاتصال بقاعدة بيانات Supabase باستخدام رابط Secrets المحدث"""
+    """الاتصال السريع السحابي بقاعدة بيانات Supabase باستخدام cacher الاتصال"""
     if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
         conn_str = st.secrets["postgres"]["url"]
         if "?" not in conn_str:
@@ -2163,14 +2178,12 @@ def init_db():
         """)
         conn.commit()
         cur.close()
-        conn.close()
         return True, "تم الاتصال وتهيئة الجدول بنجاح!"
     except Exception as e:
         return False, str(e)
 
 def save_survey_to_cloud(rec):
-    """حفظ بيانات الاستجابة مباشرة في السحابة مع التأكد من وجود الجدول أولاً"""
-    init_db()
+    """حفظ بيانات الاستجابة مباشرة وبسرعة عالية في السحابة"""
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -2192,18 +2205,19 @@ def save_survey_to_cloud(rec):
     ))
     conn.commit()
     cur.close()
-    conn.close()
 
 def load_survey_log_from_cloud():
-    """استرجاع كافة البيانات المخزنة من Supabase للوحة التحليل الإداري"""
+    """استرجاع الاستجابات وتفكيك العبارات الـ 31 إلى أعمدة تفصيلية مستقلة"""
     try:
         conn = get_db_connection()
         df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
-        conn.close()
         
-        # تفكيك كائن JSON الخاص بالعبارات لتعود كأعمدة مستقلة في شيت الإكسيل
         if not df.empty and 'answers' in df.columns:
-            answers_df = pd.json_normalize(df['answers'])
+            # تحويل سلسلة JSON إلى قاموس ثم تفكيكها إلى أعمدة منفصلة (العبارة_1 إلى العبارة_31)
+            answers_parsed = df['answers'].apply(lambda x: json.loads(x) if isinstance(x, str) else (x if isinstance(x, dict) else {}))
+            answers_df = pd.json_normalize(answers_parsed)
+            
+            # اعادة ترتيب الأعمدة بشكل احترافي
             df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
         return df
     except Exception as e:
@@ -2227,11 +2241,6 @@ with tab7:
         <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة الاستجابات والتقييم الميداني.</span>
     </div>
     """, unsafe_allow_html=True)
-
-    # محاولة تهيئة قاعدة البيانات السحابية عند تحميل الصفحة
-    db_ok, db_msg = init_db()
-    if not db_ok and st.session_state.get("role") == "admin":
-        st.warning(f"⚠️ تنبيه إداري حول الاتصال بقاعدة البيانات: {db_msg}")
 
     # --------------------------------------------------------------------------
     # القوائم الموسعة للخطاب الموجه والتعريفات الإجرائية
@@ -2560,7 +2569,6 @@ with tab7:
                         "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     }
                     try:
-                        # الحفظ المباشر عبر Connection Pooler
                         save_survey_to_cloud(rec)
                         S["submitted_id"] = resp_id
                         st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
@@ -2569,13 +2577,12 @@ with tab7:
                         st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن
+    # لوحة التحليل الإداري للأدمن (مفككة الأعمدة ومتوافقة مع اللغة العربية)
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
         
-        # خيار الفحص والتأكيد المباشر لإنشاء الجدول على Supabase فوراً
         if st.button("🔄 اختبار الاتصال وتأكيد إنشاء جدول Supabase", key="admin_test_db"):
             is_success, msg = init_db()
             if is_success:
@@ -2588,11 +2595,12 @@ with tab7:
             st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
+            # التصدير بترميز utf-8-sig لضمان قراءة اللغة العربية بوضوح تام في Excel
             csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني بالكامل (Excel/CSV)",
+                label="📥 تحميل شيت إكسيل استجابات الاستبيان الميداني المفصل باللغة العربية (Excel/CSV)",
                 data=csv_surveys_bytes,
-                file_name="شيت_إكسيل_استجابات_استبيان_فرق_العمل_المصرفي_التفصيلي.csv",
+                file_name="شيت_استجابات_الاستبيان_الميداني_المفصل.csv",
                 mime="text/csv",
                 use_container_width=True
             )
