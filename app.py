@@ -811,13 +811,13 @@ with tab1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
+# التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - مُطور بتجربة مستخدم عالمية (Enterprise UX)
 # ------------------------------------------------------------------------------
 with tab2:
     st.markdown("""
-    <div dir="rtl" style="text-align: right;">
-        <h3>🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p>إمكانية تشخيص البنوك عبر المحاور الثلاثة الرئيسة.</p>
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
+        <p style="color: #475569; font-size: 14px;">إمكانية تشخيص قياس أداء البنوك المصرية عبر المحاور الثلاثة الرئيسة بالأوزان النسبية المعتمدة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -840,6 +840,30 @@ with tab2:
             if bank_ssgi_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
+                # --------------------------------------------------------------
+                # 1. عرض Skeleton Loader أثناء التجهيز والحساب
+                # --------------------------------------------------------------
+                skeleton_placeholder = st.empty()
+                skeleton_html = flat_html(f"""
+                <div class="skeleton-card">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line skeleton-badge"></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-body-1"></div>
+                    <div class="skeleton-line skeleton-body-2"></div>
+                </div>
+                """)
+                skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
+                time.sleep(0.3) # إعطاء إحساس تفاعلي بالمعالجة
+                skeleton_placeholder.empty()
+
+                # --------------------------------------------------------------
+                # 2. احتساب المؤشر المركب والصياغات التشخيصية
+                # --------------------------------------------------------------
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
@@ -869,8 +893,9 @@ with tab2:
 
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
+                    badge_status = "أداء مرتفع 🟢"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14.5px;">
+                    <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
@@ -883,8 +908,9 @@ with tab2:
                     """
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
+                    badge_status = "أداء متوسط 🟡"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14.5px;">
+                    <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
@@ -897,8 +923,9 @@ with tab2:
                     """
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
+                    badge_status = "فجوة حرجة 🔴"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14.5px;">
+                    <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
@@ -910,6 +937,20 @@ with tab2:
                     </div>
                     """
 
+                # --------------------------------------------------------------
+                # 3. عرض البطاقات الرقمية الرئيسية (Metric Cards UX)
+                # --------------------------------------------------------------
+                st.markdown(f"<h4 style='color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;'>📊 ملخص النتائج والتشخيص القياسي - {clean_text(bank_ssgi_sel)}</h4>", unsafe_allow_html=True)
+                
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric(label="مؤشر SSGI المركب", value=f"{final_score}%", delta=badge_status)
+                m2.metric(label="منصات المعلومات (SIP)", value=f"{sip_val}%", delta="وزن 40%")
+                m3.metric(label="الحوكمة المؤسسية (IG)", value=f"{ig_val}%", delta="وزن 30%")
+                m4.metric(label="تقارير الاستدامة (SR)", value=f"{sr_val}%", delta="وزن 30%")
+
+                # --------------------------------------------------------------
+                # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
+                # --------------------------------------------------------------
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -924,106 +965,114 @@ with tab2:
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
-                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.9; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                  <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 12px;">📊 نتيجة حساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-                  <p style="font-size: 15px; margin-bottom: 8px;"><b>اسم البنك:</b> <span style="color: {CBE_NAVY}; font-weight: bold;">{clean_text(bank_ssgi_sel)}</span></p>
-                  <p style="font-size: 16px; margin-bottom: 12px;"><b>القيمة المركبة للمؤشر (SSGI):</b> <span style="font-size: 18px;">{score_str_plain}</span></p>
-                  <div style="background: {CBE_BG}; padding: 16px; border-radius: 8px; border-right: 5px solid {CBE_GOLD}; margin-top: 10px;">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY};">التشخيص القياسي:</p>
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 15px;">
+                  <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">التشخيص القياسي المفصل:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
                   </div>
                 </div>
                 """), unsafe_allow_html=True)
 
-                categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
-                fig_radar = go.Figure()
-                fig_radar.add_trace(go.Scatterpolar(
-                    r=[sip_val, ig_val, sr_val],
-                    theta=categories,
-                    fill='toself',
-                    name=bank_ssgi_sel,
-                    line_color=CBE_GOLD
-                ))
-                fig_radar.update_layout(
-                    polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                    showlegend=True,
-                    title=dict(text=f"التحليل الرداري لمحاور الحوكمة الذكية المستدامة - {bank_ssgi_sel}", x=0.5, xanchor='center'),
-                    font=dict(family="Cairo", size=12)
-                )
-                st.plotly_chart(fig_radar, use_container_width=True)
+                # --------------------------------------------------------------
+                # 5. عرض الرسوم البيانية التفاعلية المزدوجة (Plotly Charts)
+                # --------------------------------------------------------------
+                st.markdown("<br>", unsafe_allow_html=True)
+                ch_col1, ch_col2 = st.columns(2)
+
+                with ch_col1:
+                    categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
+                    fig_radar = go.Figure()
+                    fig_radar.add_trace(go.Scatterpolar(
+                        r=[sip_val, ig_val, sr_val],
+                        theta=categories,
+                        fill='toself',
+                        name=bank_ssgi_sel,
+                        line_color=CBE_GOLD,
+                        fillcolor='rgba(197, 160, 89, 0.25)'
+                    ))
+                    fig_radar.update_layout(
+                        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                        showlegend=False,
+                        title=dict(text="التحليل الرداري لمحاور SSGI", x=0.5, xanchor='center'),
+                        font=dict(family="Cairo", size=11),
+                        margin=dict(l=20, r=20, t=40, b=20),
+                        height=320
+                    )
+                    st.plotly_chart(fig_radar, use_container_width=True)
+
+                with ch_col2:
+                    fig_bar = px.bar(
+                        x=categories,
+                        y=[sip_val, ig_val, sr_val],
+                        labels={'x': 'المحور', 'y': 'الدرجة (%)'},
+                        title="مقارنة الدرجات الفعلية للمحاور الثلاثة",
+                        color=categories,
+                        color_discrete_sequence=[CBE_NAVY, CBE_GOLD, "#475569"]
+                    )
+                    fig_bar.update_layout(
+                        showlegend=False,
+                        font=dict(family="Cairo", size=11),
+                        yaxis=dict(range=[0, 100]),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        margin=dict(l=20, r=20, t=40, b=20),
+                        height=320
+                    )
+                    st.plotly_chart(fig_bar, use_container_width=True)
 
         else:
-            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض النتائج والتحليل الرداري.")
+            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض البطاقات الرقمية والتحليل القياسي المباشر.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     
-    st.markdown("### 📋 قائمة البنوك والسجلات المختصرة (تقتصر على ذكر البنك مرة واحدة حسب آخر تعديل)")
+    # --------------------------------------------------------------------------
+    # جداول تفاعلية مع مرشحات للنتائج التاريخية (Interactive DataTables UX)
+    # --------------------------------------------------------------------------
+    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة (Interactive DataTable)</h3>", unsafe_allow_html=True)
+    
     if st.session_state.history_state:
         df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
         
-        table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 320px;">
-        <table class="custom-rtl-table">
-        <thead>
-        <tr>
-        <th style="width: 35px; text-align: center;">م</th>
-        <th>معرف السجل / التوقيت</th>
-        <th>اسم البنك</th>
-        <th>المؤشر المركب (SSGI)</th>
-        <th>منصات المعلومات (40%)</th>
-        <th>الحوكمة المؤسسية (30%)</th>
-        <th>تقارير الاستدامة (30%)</th>
-        <th>التقييم التشخيصي</th>
-        </tr>
-        </thead>
-        <tbody>
-        """
-        
-        for idx, row in df_history.iterrows():
-            clean_bank_name = clean_text(str(row['البنك']))
-            clean_diag = clean_text(str(row['التقييم التشخيصي']))
-            rec_id = clean_text(str(row.get('معرف السجل', idx)))
-            table_html += f"""
-            <tr>
-            <td style="text-align: center; font-weight: bold;">{idx + 1}</td>
-            <td style="font-size: 11px; color: #64748B;">{rec_id}</td>
-            <td style="font-weight: bold; color: {CBE_NAVY};">{clean_bank_name}</td>
-            <td style="font-weight: bold; color: {CBE_GOLD};">{row['مؤشر SSGI المركب']}%</td>
-            <td>{row['منصات المعلومات (40%)']}%</td>
-            <td>{row['الحوكمة المؤسسية (30%)']}%</td>
-            <td>{row['تقارير الاستدامة (30%)']}%</td>
-            <td style="font-size: 11.5px;">{clean_diag}</td>
-            </tr>
-            """
-        table_html += """
-        </tbody>
-        </table>
-        </div>
-        """
-        st.markdown(flat_html(table_html), unsafe_allow_html=True)
-
-        csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            label="📥 تحميل جدول ترتيب السجلات والبنوك (Excel/CSV)",
-            data=csv_data,
-            file_name="ترتيب_البنوك_المصرية_SSGI.csv",
-            mime="text/csv",
-            use_container_width=True
+        # عرض الجدول التفاعلي باستخدام st.dataframe المطور
+        st.dataframe(
+            df_history,
+            column_config={
+                "معرف السجل": st.column_config.TextColumn("معرف السجل / التوقيت", width="medium"),
+                "البنك": st.column_config.TextColumn("اسم البنك", width="medium"),
+                "مؤشر SSGI المركب": st.column_config.NumberColumn("مؤشر SSGI (%)", format="%.2f%%"),
+                "منصات المعلومات (40%)": st.column_config.NumberColumn("SIP (40%)", format="%.1f%%"),
+                "الحوكمة المؤسسية (30%)": st.column_config.NumberColumn("IG (30%)", format="%.1f%%"),
+                "تقارير الاستدامة (30%)": st.column_config.NumberColumn("SR (30%)", format="%.1f%%"),
+                "التقييم التشخيصي": st.column_config.TextColumn("التقييم التشخيصي القياسي", width="large"),
+            },
+            use_container_width=True,
+            hide_index=False
         )
 
-        col_del1, col_del2 = st.columns([2, 1])
-        with col_del1:
+        col_dl, col_del = st.columns([1, 1], gap="medium")
+        with col_dl:
+            csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل جدول ترتيب البنوك والسجلات (Excel / CSV)",
+                data=csv_data,
+                file_name="ترتيب_البنوك_المصرية_SSGI.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+        with col_del:
             recorded_ids = [item.get("معرف السجل", item["البنك"]) for item in st.session_state.history_state]
-            id_to_delete = st.selectbox("اختر السجل المحدد لحذفه", recorded_ids, key="del_rec_box")
-        with col_del2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️ حذف السجل المحدد", use_container_width=True, type="secondary"):
-                st.session_state.history_state = [item for item in st.session_state.history_state if item.get("معرف السجل", item["البنك"]) != id_to_delete]
-                st.success("✅ تم حذف السجل بنجاح.")
-                st.rerun()
+            col_sel, col_btn = st.columns([2, 1])
+            with col_sel:
+                id_to_delete = st.selectbox("اختر سجلاً لحذفه", recorded_ids, key="del_rec_box", label_visibility="collapsed")
+            with col_btn:
+                if st.button("🗑️ حذف السجل", use_container_width=True, type="secondary"):
+                    st.session_state.history_state = [item for item in st.session_state.history_state if item.get("معرف السجل", item["البنك"]) != id_to_delete]
+                    st.success("✅ تم حذف السجل بنجاح.")
+                    st.rerun()
     else:
-        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم إجراء التشخيص في الأعلى لتسجيل وترتيب البنوك.")
+        st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك المصرفية.")
 
     st.markdown("---")
     
@@ -1032,7 +1081,7 @@ with tab2:
     # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية لمؤشر الحوكمة (SSGI)", expanded=False):
         st.markdown("""
-        <div dir="rtl" style="text-align: right;">
+        <div dir="rtl" style="text-align: right; line-height: 1.8;">
         <ul>
             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة بعد النشر.</li>
             <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم سيادة القانون، العدالة والمساواة، المتابعة والمساءلة، المشاركة، الشفافية والإفصاح، ومجلس الإدارة.</li>
