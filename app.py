@@ -10,6 +10,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import uuid
+import psycopg2  # <-- تمت إضافته هنا للاتصال بقاعدة بيانات Postgres / Supabase
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation
@@ -2119,6 +2120,97 @@ def load_survey_log_from_cloud():
         return pd.DataFrame()
 
 
+# ==============================================================================
+# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres
+# ==============================================================================
+
+def get_db_connection():
+    """الاتصال بقاعدة بيانات Supabase باستخدام الرابط الموجود في Secrets"""
+    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
+        return psycopg2.connect(st.secrets["postgres"]["url"])
+    else:
+        raise ValueError("رابط الاتصال بقاعدة البيانات غير معرف في st.secrets['postgres']['url']")
+
+def init_db():
+    """إنشاء جدول الاستبيان تلقائياً في Supabase إذا لم يكن موجوداً"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS survey_responses (
+                response_id TEXT PRIMARY KEY,
+                bank_name TEXT,
+                org_type TEXT,
+                degree TEXT,
+                specialty TEXT,
+                job_level TEXT,
+                exp_years TEXT,
+                is_listed TEXT,
+                survey_route TEXT,
+                w_sip INT,
+                w_ig INT,
+                w_sr INT,
+                avg_sip FLOAT,
+                avg_ig FLOAT,
+                avg_sr FLOAT,
+                answers JSONB,
+                comments TEXT,
+                submitted_at TEXT
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"⚠️ خطأ أثناء اتصال أو تهيئة قاعدة بيانات Supabase: {e}")
+        return False
+
+def save_survey_to_cloud(rec):
+    """حفظ بيانات الاستجابة سحابياً وتأكيد إنشاء الجدول أولاً"""
+    # التأكد من وجود الجدول أولاً
+    init_db()
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # فصل العبارات الـ 31 في كائن JSON للحفاظ على مرونة الجدول
+    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
+    
+    cur.execute("""
+        INSERT INTO survey_responses (
+            response_id, bank_name, org_type, degree, specialty, job_level,
+            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
+            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """, (
+        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
+        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
+        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
+        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
+        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
+    ))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def load_survey_log_from_cloud():
+    """جلب كافة الاستجابات المخزنة من السحابة للوحة التحليل"""
+    try:
+        conn = get_db_connection()
+        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
+        conn.close()
+        
+        # تفكيك عمود JSON الخاص بالعبارات ليعود كأعمدة تفصيلية مستقلة
+        if not df.empty and 'answers' in df.columns:
+            answers_df = pd.json_normalize(df['answers'])
+            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
+        return df
+    except Exception as e:
+        st.warning(f"لم يتم جلب البيانات من السحابة: {e}")
+        return pd.DataFrame()
+
+
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Routing UX)
 # ------------------------------------------------------------------------------
@@ -2412,7 +2504,7 @@ with tab7:
                          key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
 
     # ==========================================================================
-    # 5) أزرار التنقل والحفظ السحابي
+    # 5) أزرار التنقل والإرسال بـ Callback آمن
     # ==========================================================================
     def _go(delta):
         st.session_state.survey_wizard_step += delta
@@ -2438,7 +2530,7 @@ with tab7:
                         val = LIKERT.get(S.get(f"stmt_{n}")) if n in required_stmts else None
                         answers[f"العبارة_{n}"] = val
                     for ax in axes_required:
-                        axis_scores[ax] = [answers[f"العبارة_{n}"] for n in SURVEY_AXES[ax]["nums"] if answers[f"العبارة_{n}"] is not None]
+                        axis_scores[ax] = [answers[f"العبارة_{n}"] for n in SURVEY_AXES[ax]["nums"]]
 
                     def _avg(ax):
                         sc = axis_scores[ax]
@@ -2464,18 +2556,26 @@ with tab7:
                         "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     }
                     try:
+                        # الحفظ المباشر في قاعدة بيانات Supabase (يقوم بتهيئة الجدول تلقائياً إذا لم يكن موجوداً)
                         save_survey_to_cloud(rec)
                         S["submitted_id"] = resp_id
+                        st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
+                        st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # 6) لوحة التحليل الإداري للأدمن
+    # لوحة التحليل الإداري للأدمن
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
+        
+        # إمكانية إجراء اختبار مباشر لتهيئة قاعدة البيانات يدويًا من لوحة الأدمن
+        if st.button("🔄 اختبار الاتصال وتأكيد جدول Supabase", key="admin_test_db"):
+            if init_db():
+                st.success("✅ تم الاتصال بقاعدة بيانات Supabase وجدول `survey_responses` جاهز ومتوفر الآن!")
+            
         df_surveys = load_survey_log_from_cloud()
         if not df_surveys.empty:
             st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
