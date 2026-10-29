@@ -2144,7 +2144,7 @@ with tab7:
     <div dir="rtl" style="background: #FFFFFF; border: 1.5px solid {CBE_GOLD}; border-radius: 12px; padding: 18px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 15px;">📍 {step_titles.get(step_num, 'المرحلة الحالية')}</span>
-            <span style="font-weight: 800; color: {CBE_GOLD}; font-size: 14px;">نسبة إكمال العبارات المخصصة: {progress_percentage}%</span>
+            <span style="font-weight: 800; color: {CBE_GOLD}; font-size: 14px;">نسبة إكمال العبارات المخصصة: {progress_percentage}% ({answered_count} من {total_req_count})</span>
         </div>
         <div style="background-color: #E2E8F0; border-radius: 10px; height: 10px; width: 100%; overflow: hidden;">
             <div style="background: linear-gradient(90deg, {CBE_GOLD} 0%, {CBE_NAVY} 100%); width: {progress_percentage}%; height: 100%; transition: width 0.4s ease;"></div>
@@ -2203,7 +2203,6 @@ with tab7:
         job_opts = ["رئيس/ عضو مجلس إدارة", "رئيس قطاع/ مساعد مدير عام", "مدير إدارة/ مدير عام", "خبير/ مستشار/ كبير أخصائيين", "مستوى إشرافي", "أخرى"]
         exp_opts = ["أقل من 10 سنوات", "من 10 سنوات إلى أقل من 15 سنة", "من 15 سنة إلى أقل من 20 سنة", "20 سنة فأكثر"]
 
-        # استعادة الفهارس بدقة لضمان بقائها خالية (None) عند الفتح الأول
         val_bank = st.session_state.get("survey_bank_user_main")
         val_org = st.session_state.get("org_nat_u_dyn")
         val_sci = st.session_state.get("sci_deg_u_dyn")
@@ -2230,10 +2229,8 @@ with tab7:
     # المراحل التقييمية التخصصية الشارطة للمسار (Adaptive Routing Engine)
     # --------------------------------------------------------------------------
     else:
-        # 1. المسار الفني المباشر (3 مراحل مختارات فقط مع حجب باقي العبارات)
         if not is_full_assessment:
             if step_num == 2:
-                # أ) مسار تكنولوجيا المعلومات والتحول الرقمي (عرض 1 إلى 11 فقط)
                 if current_spec == "تكنولوجيا المعلومات/ التحول الرقمي":
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
@@ -2260,7 +2257,6 @@ with tab7:
                     render_wizard_statement(11, "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                # ب) مسار الحوكمة والالتزام وإدارة المخاطر والائتمان (عرض 12 إلى 19 فقط)
                 elif current_spec in ["الحوكمة/ الالتزام/ المراجعة الداخلية", "إدارة المخاطر/ الائتمان"]:
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
@@ -2285,7 +2281,6 @@ with tab7:
                     render_wizard_statement(19, "تسهم لوحات المعلومات التفاعلية والتقارير الفورية التي توفرها المنصة في دعم مجلس الإدارة في المراقبة الاستباقية وصنع القرار.")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                # ج) مسار الاستدامة والمسؤولية المجتمعية (عرض 20 إلى 31 فقط)
                 elif current_spec == "الاستدامة/ المسؤولية المجتمعية":
                     st.markdown(f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
@@ -2311,7 +2306,6 @@ with tab7:
                     st.markdown("</div>", unsafe_allow_html=True)
 
             elif step_num == 3:
-                # صفحة الأوزان والملاحظات المباشرة للتخصصات الفنية
                 st.markdown(f"""
                 <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                     <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 12px;">⚖️ الخطوة الأخيرة: تحديد الأوزان النسبية للمحاور وملاحظات التطبيق</h4>
@@ -2342,10 +2336,8 @@ with tab7:
                 )
                 st.markdown("</div>", unsafe_allow_html=True)
 
-        # 2. المسار الشامل (4 مراحل كاملة لمجلس الإدارة والإدارة العليا والبحث والتطوير)
         else:
             if step_num == 2:
-                # العبارات 1 إلى 11 (SIP)
                 st.markdown(f"""
                 <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                     <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">💻 المرحلة الثانية: محور منصة المعلومات الذكية (SIP)</h4>
@@ -2369,7 +2361,6 @@ with tab7:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             elif step_num == 3:
-                # العبارات 12 إلى 19 (IG)
                 st.markdown(f"""
                 <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                     <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🏛️ المرحلة الثالثة: محور الحوكمة المؤسسية والامتثال (IG)</h4>
@@ -2390,7 +2381,6 @@ with tab7:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             elif step_num == 4:
-                # العبارات 20 إلى 31 (SR) + الأوزان والملاحظات
                 st.markdown(f"""
                 <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border-top: 1px solid #E2E8F0; border-left: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
                     <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-bottom: 5px;">🌱 المرحلة الرابعة: تقارير الاستدامة (SR) والتسليم النهائي</h4>
@@ -2451,7 +2441,6 @@ with tab7:
                 st.rerun()
 
     with col_next:
-        # 1. القفل البرمجي للخطوة الأولى حتى يتم استكمال كافة البيانات
         if step_num == 1:
             bank_ok = st.session_state.get("survey_bank_user_main") is not None
             org_ok = st.session_state.get("org_nat_u_dyn") is not None
@@ -2470,18 +2459,15 @@ with tab7:
             else:
                 st.button("الخطوة التالية ➡️", use_container_width=True, disabled=True, help="يرجى استكمال جميع البيانات الأولية السبعة الإلزامية أولاً.")
 
-        # 2. التنقل في خطوات الوسط
         elif step_num < max_wizard_steps:
             if st.button("الخطوة التالية ➡️", use_container_width=True, type="primary"):
                 st.session_state.survey_wizard_step += 1
                 st.rerun()
 
-        # 3. معالجة الإرسال النهائي في الخطوة الأخيرة المحسوبة برمجياً
         elif step_num == max_wizard_steps:
             submit_survey_btn = st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary", key="submit_survey_final_btn")
 
             if submit_survey_btn:
-                # تجميع الإجابات والأوزان
                 statement_answers_dict = {}
                 sip_scores, ig_scores, sr_scores = [], [], []
 
@@ -2505,7 +2491,6 @@ with tab7:
                 w_sr_val = st.session_state.get("weight_sr_input", 30)
                 tot_w = w_sip_val + w_ig_val + w_sr_val
 
-                # التحقق الحاسم من إجابات العبارات الخاصة بتخصص المستجيب فقط
                 missing_stmts = [i for i in required_stmts if statement_answers_dict.get(f"العبارة_{i}") is None]
 
                 if not survey_bank_sel:
@@ -2515,9 +2500,9 @@ with tab7:
                 elif missing_stmts:
                     st.error(f"⚠️ يرجى تقييم كافة العبارات المخصصة لتخصصكم الوظيفي قبل الإرسال. العبارات الغير مكتملة: {missing_stmts}")
                 else:
-                    avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2) if sip_scores else 0.0
-                    avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2) if ig_scores else 0.0
-                    avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2) if sr_scores else 0.0
+                    avg_sip_val = round(sum(sip_scores) / len(sip_scores), 2) if sip_scores else None
+                    avg_ig_val = round(sum(ig_scores) / len(ig_scores), 2) if ig_scores else None
+                    avg_sr_val = round(sum(sr_scores) / len(sr_scores), 2) if sr_scores else None
 
                     new_survey_rec = {
                         "معرف الاستجابة": f"SRV-{datetime.now().strftime('%H%M%S')}",
