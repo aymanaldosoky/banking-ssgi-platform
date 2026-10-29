@@ -2019,6 +2019,106 @@ with tab6:
             mime="application/msword",
             use_container_width=True
         )
+import uuid
+import json
+import psycopg2
+import pandas as pd
+import streamlit as st
+from datetime import datetime
+
+# ==============================================================================
+# 1) دالتا الاتصال بـ Supabase وتهيئة جدول البيانات
+# ==============================================================================
+def get_db_connection():
+    """إنشاء اتصال مع قاعدة البيانات السحابية عبر secrets.toml"""
+    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
+        return psycopg2.connect(st.secrets["postgres"]["url"])
+    raise ValueError("لم يتم العثور على إعدادات [postgres] url في secrets.toml")
+
+def init_db():
+    """إنشاء جدول الاستجابات تلقائياً إن لم يكن موجوداً"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS survey_responses (
+                response_id TEXT PRIMARY KEY,
+                bank_name TEXT,
+                org_type TEXT,
+                degree TEXT,
+                specialty TEXT,
+                job_level TEXT,
+                exp_years TEXT,
+                is_listed TEXT,
+                survey_route TEXT,
+                w_sip INT,
+                w_ig INT,
+                w_sr INT,
+                avg_sip FLOAT,
+                avg_ig FLOAT,
+                avg_sr FLOAT,
+                answers JSONB,
+                comments TEXT,
+                submitted_at TEXT
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        st.warning(f"تنبيه تهيئة قاعدة البيانات السحابية: {e}")
+
+# تهيئة جدول قاعدة البيانات السحابية
+init_db()
+
+# ==============================================================================
+# 2) دالة التخزين السحابي للاستجابة
+# ==============================================================================
+def save_survey_to_cloud(rec):
+    """حفظ الاستجابة الميدانية في Supabase"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # استخلاص تقييمات العبارات الـ 31 في كائن JSON
+    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
+    
+    cur.execute("""
+        INSERT INTO survey_responses (
+            response_id, bank_name, org_type, degree, specialty, job_level,
+            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
+            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """, (
+        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
+        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
+        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
+        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
+        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
+    ))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# ==============================================================================
+# 3) دالة قراءة الاستجابات للوحة التحكم الإدارية
+# ==============================================================================
+def load_survey_log_from_cloud():
+    """استرجاع الاستجابات وتسطيح عمود JSON للعبارات إلى أعمدة تفصيلية"""
+    try:
+        conn = get_db_connection()
+        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
+        conn.close()
+        
+        if not df.empty and 'answers' in df.columns:
+            # تفكيك كائن الـ JSON الخاص بإجابات العبارات
+            answers_df = pd.json_normalize(df['answers'])
+            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
+        return df
+    except Exception as e:
+        st.error(f"خطأ أثناء قراءة الاستجابات من السحابة: {e}")
+        return pd.DataFrame()
+
+
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Routing UX)
 # ------------------------------------------------------------------------------
@@ -2030,7 +2130,7 @@ with tab7:
     </div>
     """, unsafe_allow_html=True)
 
-    # تنويه مدة تعبئة الاستبيان المعدلة لـ 10 دقائق
+    # تنويه مدة تعبئة الاستبيان
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 12px 18px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);" dir="rtl">
         <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة الاستجابات والتقييم الميداني.</span>
@@ -2082,7 +2182,7 @@ with tab7:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================================================
-    # 1) البيانات الثابتة (مصدر واحد للحقيقة)
+    # 1) البيانات الثابتة
     # ==========================================================================
     LIKERT = {"غير موافق تماماً": 1, "غير موافق": 2, "محايد": 3, "موافق": 4, "موافق تماماً": 5}
     likert_options = list(LIKERT.keys())
@@ -2143,7 +2243,6 @@ with tab7:
         },
     }
 
-    # التوجيه التكيفي: أي تخصص غير وارد هنا = المسار الشامل
     ROLE_ROUTES = {
         "تكنولوجيا المعلومات/ التحول الرقمي": ["SIP"],
         "الحوكمة/ الالتزام/ المراجعة الداخلية": ["IG"],
@@ -2152,7 +2251,7 @@ with tab7:
     }
 
     banks_opts = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
-    PROFILE_FIELDS = [  # (مفتاح التخزين, التسمية, الخيارات)
+    PROFILE_FIELDS = [
         ("bank", "اختر البنك المصرفي (إلزامي)", banks_opts),
         ("spec", "مجال التخصص الوظيفي (إلزامي - يحدد مسار العبارات)", [
             "مجلس الإدارة/ الإدارة العليا العامة", "تكنولوجيا المعلومات/ التحول الرقمي",
@@ -2173,7 +2272,7 @@ with tab7:
     ]
 
     # ==========================================================================
-    # 2) المخزن الدائم للإجابات (لا يتأثر بحذف الـ widgets عند تغيير المرحلة)
+    # 2) المخزن الدائم للإجابات
     # ==========================================================================
     if "survey_store" not in st.session_state:
         st.session_state.survey_store = {}
@@ -2203,14 +2302,13 @@ with tab7:
         st.markdown("<div style='margin-bottom:10px;'></div>", unsafe_allow_html=True)
 
     # ==========================================================================
-    # 3) تحديد المسار (من المخزن وليس من widget)
+    # 3) تحديد المسار
     # ==========================================================================
     current_spec = S.get("spec")
     axes_required = ROLE_ROUTES.get(current_spec, ["SIP", "IG", "SR"])
     is_full_assessment = current_spec not in ROLE_ROUTES
     required_stmts = [n for ax in axes_required for n in SURVEY_AXES[ax]["nums"]]
 
-    # خطوات المعالج: بيانات أولية ← محاور التقييم ← مرحلة الأوزان والإرسال
     steps = ["profile"] + axes_required + ["final"]
     max_wizard_steps = len(steps)
     step_num = min(max(st.session_state.survey_wizard_step, 1), max_wizard_steps)
@@ -2239,7 +2337,7 @@ with tab7:
                 and all(S.get(f"stmt_{n}") is not None for n in required_stmts))
 
     # --------------------------------------------------------------------------
-    # شريط التقدم (يظهر نسبة العبارات فقط بعد معرفة التخصص)
+    # شريط التقدم
     # --------------------------------------------------------------------------
     progress_txt = (f"نسبة إكمال العبارات المخصصة: {progress_percentage}% ({answered_count} من {total_req_count})"
                     if current_spec else "اختر التخصص الوظيفي لتحديد مسار العبارات")
@@ -2256,7 +2354,7 @@ with tab7:
 
     already_submitted = S.get("submitted_id") is not None
     if already_submitted:
-        st.success(f"✅ تم تسجيل استجابتكم بنجاح (رقم: {S['submitted_id']}). شكراً لمشاركتكم.")
+        st.success(f"✅ تم تسجيل استجابتكم بنجاح بالسحابة (رقم: {S['submitted_id']}). شكراً لمشاركتكم.")
         if st.button("📝 تعبئة استجابة جديدة", key="survey_new_response"):
             S.clear()
             st.session_state.survey_wizard_step = 1
@@ -2314,7 +2412,7 @@ with tab7:
                          key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
 
     # ==========================================================================
-    # 5) أزرار التنقل (بـ callbacks؛ لا حاجة لـ st.rerun)
+    # 5) أزرار التنقل والحفظ السحابي
     # ==========================================================================
     def _go(delta):
         st.session_state.survey_wizard_step += delta
@@ -2334,15 +2432,15 @@ with tab7:
                 can_submit = step_complete("final")
                 if st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary",
                              disabled=not can_submit, key="submit_survey_final_btn"):
-                    # الحفظ يعتمد على العبارات المطلوبة فقط؛ أي إجابات قديمة من مسار سابق تُهمل
+                    
                     answers, axis_scores = {}, {ax: [] for ax in SURVEY_AXES}
                     for n in range(1, 32):
                         val = LIKERT.get(S.get(f"stmt_{n}")) if n in required_stmts else None
                         answers[f"العبارة_{n}"] = val
                     for ax in axes_required:
-                        axis_scores[ax] = [answers[f"العبارة_{n}"] for n in SURVEY_AXES[ax]["nums"]]
+                        axis_scores[ax] = [answers[f"العبارة_{n}"] for n in SURVEY_AXES[ax]["nums"] if answers[f"العبارة_{n}"] is not None]
 
-                    def _avg(ax):  # None للمحور غير المطلوب: لا قيم وهمية في SSGI
+                    def _avg(ax):
                         sc = axis_scores[ax]
                         return round(sum(sc) / len(sc), 2) if ax in axes_required and sc else None
 
@@ -2366,24 +2464,21 @@ with tab7:
                         "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     }
                     try:
-                        current_surveys = load_survey_log_from_file()
-                        current_surveys.append(rec)
-                        pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding="utf-8-sig")
+                        save_survey_to_cloud(rec)
                         S["submitted_id"] = resp_id
                         st.rerun()
                     except Exception as e:
-                        st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
+                        st.error(f"حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن
+    # 6) لوحة التحليل الإداري للأدمن
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
-        updated_surveys_data = load_survey_log_from_file()
-        if updated_surveys_data:
-            df_surveys = pd.DataFrame(updated_surveys_data)
-            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في شيت الإكسيل الميداني:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
+        df_surveys = load_survey_log_from_cloud()
+        if not df_surveys.empty:
+            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
             csv_surveys_bytes = df_surveys.to_csv(index=False).encode('utf-8-sig')
@@ -2395,7 +2490,7 @@ with tab7:
                 use_container_width=True
             )
         else:
-            st.info("📋 لم يتم تسجيل أي استجابات في شيت الإكسيل حتى الآن.")
+            st.info("📋 لم يتم تسجيل أي استجابات في قاعدة البيانات السحابية حتى الآن.")
 
     st.markdown("---")
     st.markdown("""
