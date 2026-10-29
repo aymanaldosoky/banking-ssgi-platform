@@ -2125,11 +2125,14 @@ def load_survey_log_from_cloud():
 # ==============================================================================
 
 def get_db_connection():
-    """الاتصال بقاعدة بيانات Supabase باستخدام الرابط الموجود في Secrets"""
+    """الاتصال بقاعدة بيانات Supabase باستخدام رابط Secrets المحدث"""
     if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
-        return psycopg2.connect(st.secrets["postgres"]["url"])
+        conn_str = st.secrets["postgres"]["url"]
+        if "?" not in conn_str:
+            conn_str += "?sslmode=require&connect_timeout=15"
+        return psycopg2.connect(conn_str)
     else:
-        raise ValueError("رابط الاتصال بقاعدة البيانات غير معرف في st.secrets['postgres']['url']")
+        raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
 
 def init_db():
     """إنشاء جدول الاستبيان تلقائياً في Supabase إذا لم يكن موجوداً"""
@@ -2161,107 +2164,9 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
-        return True
+        return True, "تم الاتصال وتهيئة الجدول بنجاح!"
     except Exception as e:
-        st.error(f"⚠️ خطأ أثناء اتصال أو تهيئة قاعدة بيانات Supabase: {e}")
-        return False
-
-def save_survey_to_cloud(rec):
-    """حفظ بيانات الاستجابة سحابياً وتأكيد إنشاء الجدول أولاً"""
-    # التأكد من وجود الجدول أولاً
-    init_db()
-    
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # فصل العبارات الـ 31 في كائن JSON للحفاظ على مرونة الجدول
-    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
-    
-    cur.execute("""
-        INSERT INTO survey_responses (
-            response_id, bank_name, org_type, degree, specialty, job_level,
-            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
-            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """, (
-        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
-        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
-        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
-        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
-        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
-    ))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def load_survey_log_from_cloud():
-    """جلب كافة الاستجابات المخزنة من السحابة للوحة التحليل"""
-    try:
-        conn = get_db_connection()
-        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
-        conn.close()
-        
-        # تفكيك عمود JSON الخاص بالعبارات ليعود كأعمدة تفصيلية مستقلة
-        if not df.empty and 'answers' in df.columns:
-            answers_df = pd.json_normalize(df['answers'])
-            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
-        return df
-    except Exception as e:
-        st.warning(f"لم يتم جلب البيانات من السحابة: {e}")
-        return pd.DataFrame()
-
-
-# ------------------------------------------------------------------------------
-# ==============================================================================
-# دوال الاتصال بقاعدة بيانات Supabase / Postgres مع دعم الـ Pooler وإعادة المحاولة
-# ==============================================================================
-
-def get_db_connection():
-    """الاتصال بـ Supabase باستخدام رابط Connection Pooler المحدث والآمن"""
-    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
-        conn_str = st.secrets["postgres"]["url"]
-        # ضبط معلمات الاتصال السحابي لمنع مهلة الانتظار أثناء ضعف الشبكة
-        if "?" not in conn_str:
-            conn_str += "?sslmode=require&connect_timeout=10"
-        return psycopg2.connect(conn_str)
-    else:
-        raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
-
-def init_db():
-    """إنشاء جدول survey_responses تلقائياً في Supabase إذا لم يكن موجوداً"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS survey_responses (
-                response_id TEXT PRIMARY KEY,
-                bank_name TEXT,
-                org_type TEXT,
-                degree TEXT,
-                specialty TEXT,
-                job_level TEXT,
-                exp_years TEXT,
-                is_listed TEXT,
-                survey_route TEXT,
-                w_sip INT,
-                w_ig INT,
-                w_sr INT,
-                avg_sip FLOAT,
-                avg_ig FLOAT,
-                avg_sr FLOAT,
-                answers JSONB,
-                comments TEXT,
-                submitted_at TEXT
-            );
-        """)
-        conn.commit()
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        # إظهار تنبيه هادئ دون تعطيل استكمال التصفح للباحث أو المستخدم
-        st.warning(f"⚠️ يتعذر الاتصال بقاعدة البيانات السحابية حالياً: {e}")
-        return False
+        return False, str(e)
 
 def save_survey_to_cloud(rec):
     """حفظ بيانات الاستجابة مباشرة في السحابة مع التأكد من وجود الجدول أولاً"""
@@ -2269,7 +2174,7 @@ def save_survey_to_cloud(rec):
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # فصل العبارات الـ 31 المعتمدة في كائن JSON للحفاظ على هيكلية الجدول
+    # فصل العبارات الـ 31 المعتمدة في كائن JSON للحفاظ على مرونة هيكل الجدول
     answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
     
     cur.execute("""
@@ -2302,10 +2207,10 @@ def load_survey_log_from_cloud():
             df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
         return df
     except Exception as e:
-        st.warning(f"لم يتم جلب الاستجابات من السحابة: {e}")
         return pd.DataFrame()
 
-        # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Routing UX)
 # ------------------------------------------------------------------------------
 with tab7:
@@ -2322,6 +2227,11 @@ with tab7:
         <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة الاستجابات والتقييم الميداني.</span>
     </div>
     """, unsafe_allow_html=True)
+
+    # محاولة تهيئة قاعدة البيانات السحابية عند تحميل الصفحة
+    db_ok, db_msg = init_db()
+    if not db_ok and st.session_state.get("role") == "admin":
+        st.warning(f"⚠️ تنبيه إداري حول الاتصال بقاعدة البيانات: {db_msg}")
 
     # --------------------------------------------------------------------------
     # القوائم الموسعة للخطاب الموجه والتعريفات الإجرائية
@@ -2665,10 +2575,13 @@ with tab7:
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
         
-        # خيار الفحص المباشر لقاعدة البيانات
-        if st.button("🔄 اختبار الاتصال وتأكيد جدول Supabase", key="admin_test_db"):
-            if init_db():
-                st.success("✅ تم الاتصال بقاعدة بيانات Supabase عبر الـ Pooler بنجاح وجدول `survey_responses` جاهز!")
+        # خيار الفحص والتأكيد المباشر لإنشاء الجدول على Supabase فوراً
+        if st.button("🔄 اختبار الاتصال وتأكيد إنشاء جدول Supabase", key="admin_test_db"):
+            is_success, msg = init_db()
+            if is_success:
+                st.success("✅ تم الاتصال وسحب التحديثات من Supabase؛ جدول `survey_responses` متوفر وجاهز الآن!")
+            else:
+                st.error(f"❌ خطأ الاتصال: {msg}")
             
         df_surveys = load_survey_log_from_cloud()
         if not df_surveys.empty:
