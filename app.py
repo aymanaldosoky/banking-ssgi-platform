@@ -1273,19 +1273,19 @@ with tab2:
         )
         st.plotly_chart(fig_pie_bank, use_container_width=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الثالث: محاكي السياسات (Policy Simulator)
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# التبويب الثالث: محاكي السياسات (Policy Simulator) - مطور بالكامل
+# ==============================================================================
 with tab3:
     st.markdown("""
-    <div dir="rtl" style="text-align: right;">
-        <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات.</p>
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
+        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية المخصصة للبنوك.</p>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.history_state:
-        st.warning("يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في القسم السابق.")
+        st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني للتمكن من تشغيل المحاكي.")
     else:
         col_sim_in, col_sim_out = st.columns([1, 2], gap="large")
 
@@ -1312,41 +1312,62 @@ with tab3:
                 st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                 st.rerun()
 
+            # ------------------------------------------------------------------
+            # بناء الآلية التجميعية لتقرير محاكي السياسات بالكامل لملف Word HTML
+            # ------------------------------------------------------------------
             sim_word_html = f"""
             <html dir="rtl">
-            <head><meta charset="utf-8"><title>تقرير محاكي السياسات المصرفية</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-                <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
-                <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
+            <head>
+                <meta charset="utf-8">
+                <title>تقرير محاكي السياسات المصرفية</title>
+                <style>
+                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.6; }}
+                    h1 {{ color: {CBE_NAVY}; text-align: center; margin-bottom: 5px; }}
+                    .sub-header {{ text-align: center; color: #64748B; font-size: 13px; margin-bottom: 20px; }}
+                    .card {{ border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF; }}
+                    .card-title {{ color: {CBE_NAVY}; font-size: 16px; margin-top: 0; font-weight: bold; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; }}
+                    .box-inner {{ background-color: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px; }}
+                    .action-plan {{ color: {CBE_GOLD}; font-weight: bold; margin-top: 8px; }}
+                    .deep-sec {{ background-color: #F8FAFC; padding: 12px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 12px; }}
+                    ul {{ margin: 0; padding-right: 20px; }}
+                    hr {{ border: none; border-top: 1px solid {CBE_GOLD}; margin: 25px 0; }}
+                    .footer {{ text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px; }}
+                </style>
+            </head>
+            <body>
+                <h1>تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
+                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة - تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                 <hr>
-                <h3>📋 عرض السيناريوهات للبنوك:</h3>
+                <h3>📋 عرض كافة السيناريوهات المحاكاة للقطاع المصرفي:</h3>
             """
+            
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
                     sim_word_html += f"""
-                    <div style="border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
-                        <h4>معرف السيناريو: {k}</h4>
+                    <div class="card">
+                        <div class="card-title">معرف السيناريو: {k}</div>
                         <div>{v['html']}</div>
-                        <div style="margin-top: 10px;">{v['deep']}</div>
+                        <div class="deep-sec">{v['deep']}</div>
                     </div>
                     """
             else:
-                sim_word_html += "<p>لا توجد سيناريوهات مسجلة حالياً.</p>"
+                sim_word_html += "<p style='color: #64748B;'>لا توجد سيناريوهات محاكاة مسجلة حالياً في الجلسة.</p>"
                 
             sim_word_html += f"""
                 <hr>
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                <p>يغطي هذا التقرير مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفيية.</p>
+                <p>يغطي هذا التقرير كافة مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفية بوضوح تام ودون بتر أو سقوط لأي بيانات.</p>
                 <hr>
-                <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
-                <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
+                <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والمتابعة مع البنك المركزي المصري</p>
+                <p style="text-align: center; font-size: 11px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
             </body>
             </html>
             """
+            
             st.download_button(
-                label="📥 تحميل تقرير محاكي السياسات (Word)",
+                label="📥 تحميل تقرير محاكي السياسات الشامل (Word)",
                 data=sim_word_html.encode("utf-8-sig"),
-                file_name="تقرير_محاكي_السياسات_المصرفية.doc",
+                file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
                 use_container_width=True
             )
@@ -1381,7 +1402,7 @@ with tab3:
                     else:
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
                         analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
-                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech), وتصدر التصنيفات الإقليمية في التمويل الأخضر."
+                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة الرقابة التنظيمية (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
 
                     simulated_val = round(simulated_val, 2)
                     delta = round(simulated_val - base_val, 2)
@@ -1401,9 +1422,9 @@ with tab3:
                     box_html = f"""
                     <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
                       <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة بنك: {sim_bank_sel} | السيناريو: {scenario_dropdown}</h3>
-                      <p style="font-size: 15px; margin-bottom: 8px;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
+                      <p style="font-size: 15px; margin-bottom: 8px; color: #1E293B;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
                       <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
-                        <p style="margin-bottom: 6px;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
+                        <p style="margin-bottom: 6px; color: #1E293B;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
                         <p style="margin: 0 0 8px 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action_plan}</p>
                       </div>
                     </div>
@@ -1433,19 +1454,20 @@ with tab3:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# التبويب الرابع: لوحة دعم اتخاذ القرار
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# التبويب الرابع: لوحة دعم اتخاذ القرار (Decision Support Dashboard) - مطور بالكامل
+# ==============================================================================
 with tab4:
     st.markdown("""
-    <div dir="rtl" style="text-align: right;">
-        <h3>🛡️ لوحة دعم اتخاذ القرار المصرفي</h3>
-        <p>استعراض وتثبيت التوصيات الاستراتيجية المخصصة لكل بنك في القطاع المصرفي المصري.</p>
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي</h3>
+        <p style="color: #475569; font-size: 14px;">استعراض وتثبيت التوصيات الاستراتيجية المخصصة والتحليلات العميقة لكل بنك في القطاع المصرفي المصري.</p>
     </div>
     """, unsafe_allow_html=True)
 
     if not st.session_state.history_state:
-        st.warning("يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في القسم الأول.")
+        st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني للتمكن من توليد لوحة القرار والتوصيات.")
     else:
         col_dec_in, col_dec_out = st.columns([1, 2], gap="large")
 
@@ -1460,46 +1482,69 @@ with tab4:
                 st.success("✅ تم مسح جميع توصيات لوحة القرار بنجاح.")
                 st.rerun()
 
+            # ------------------------------------------------------------------
+            # بناء الآلية التجميعية لتقرير لوحة دعم القرار بالكامل لملف Word HTML
+            # ------------------------------------------------------------------
             dec_word_html = f"""
             <html dir="rtl">
-            <head><meta charset="utf-8"><title>تقرير لوحة دعم القرار المصرفي</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-                <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير لوحة دعم اتخاذ القرار والسياسات المصرفية</h1>
-                <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
+            <head>
+                <meta charset="utf-8">
+                <title>تقرير لوحة دعم القرار المصرفي</title>
+                <style>
+                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.6; }}
+                    h1 {{ color: {CBE_NAVY}; text-align: center; margin-bottom: 5px; }}
+                    .sub-header {{ text-align: center; color: #64748B; font-size: 13px; margin-bottom: 20px; }}
+                    .card {{ border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF; }}
+                    .card-title {{ color: {CBE_NAVY}; font-size: 16px; margin-top: 0; font-weight: bold; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; }}
+                    .box-inner {{ background-color: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px; }}
+                    ul {{ margin: 0; padding-right: 20px; }}
+                    li {{ margin-bottom: 6px; }}
+                    hr {{ border: none; border-top: 1px solid {CBE_GOLD}; margin: 25px 0; }}
+                    .footer {{ text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px; }}
+                </style>
+            </head>
+            <body>
+                <h1>تقرير لوحة دعم اتخاذ القرار والسياسات المصرفية</h1>
+                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة - تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                 <hr>
-                <h3>🛡️ تقرير وتوصيات البنوك المسجلة:</h3>
+                <h3>🛡️ تقرير وتوصيات البنوك المسجلة بالكامل:</h3>
             """
+            
             if st.session_state.decision_results_dict:
                 for k, v in st.session_state.decision_results_dict.items():
                     dec_word_html += f"""
-                    <div style="border: 1px solid #CBD5E1; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
-                        <h3>تقرير وتوصيات بنك: {v['bank']} (المؤشر المركب: {v['score_str']})</h3>
-                        <p><b>🎯 التوصيات الاستراتيجية الموجهة:</b></p>
-                        <ul>
-                            <li>{v['recs'][0]}</li>
-                            <li>{v['recs'][1]}</li>
-                        </ul>
-                        <p><b>💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</b></p>
-                        <div>{v['deep']}</div>
+                    <div class="card">
+                        <div class="card-title">تقرير وتوصيات بنك: {v['bank']} (المؤشر المركب: {v['score_str']})</div>
+                        <div class="box-inner">
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">🎯 التوصيات الاستراتيجية الموجهة:</p>
+                            <ul>
+                                <li>{v['recs'][0]}</li>
+                                <li>{v['recs'][1]}</li>
+                            </ul>
+                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 10px 0;">
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
+                            <div>{v['deep']}</div>
+                        </div>
                     </div>
                     """
             else:
-                dec_word_html += "<p>لا توجد توصيات مسجلة حالياً.</p>"
+                dec_word_html += "<p style='color: #64748B;'>لا توجد توصيات مسجلة حالياً في الجلسة.</p>"
                 
             dec_word_html += f"""
                 <hr>
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                <p>تعكس هذه التوصيات متطلبات الحوكمة المؤسسية والسيادة الرقمية وتوطين معايير الاستدامة.</p>
+                <p>تعكس هذه التوصيات متطلبات الحوكمة المؤسسية والسيادة الرقمية وتوطين معايير الاستدامة وفق توجيهات البنك المركزي المعمول بها.</p>
                 <hr>
-                <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
-                <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
+                <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والرفع بها للجان الحوكمة والمراجعة</p>
+                <p style="text-align: center; font-size: 11px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
             </body>
             </html>
             """
+            
             st.download_button(
-                label="📥 تحميل تقرير لوحة دعم القرار (Word)",
+                label="📥 تحميل تقرير لوحة دعم القرار الشامل (Word)",
                 data=dec_word_html.encode("utf-8-sig"),
-                file_name="تقرير_لوحة_دعم_القرار_المصرفي.doc",
+                file_name="تقرير_لوحة_دعم_القرار_المصرفي_الشامل.doc",
                 mime="application/msword",
                 use_container_width=True
             )
@@ -1509,7 +1554,7 @@ with tab4:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
             if generate_decision_btn:
                 if not st.session_state.history_state or decision_bank_sel == "اختر البنك المصرفي":
-                    st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في القسم الأول.")
+                    st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني.")
                 else:
                     bank_data = next((item for item in st.session_state.history_state if item["البنك"] == decision_bank_sel), None)
                     if bank_data:
@@ -1522,7 +1567,7 @@ with tab4:
                         if score >= 80:
                             recs_list = [
                                 f"<b>تعزيز ريادة الابتكار المصرفي لـ ({decision_bank_sel}):</b> توظيف منصات المعلومات المتقدمة ({s_val}%) لتصدير الخدمات المالية الرقمية وقيادة التحول نحو المعايير المستدامة.",
-                                f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة واللتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
+                                f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة والالتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
                             ]
                         elif score >= 51:
                             recs_list = [
@@ -1536,14 +1581,14 @@ with tab4:
                             ]
 
                         if r_val >= 80:
-                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للججاهزية المرتفعة في الاستدامة ({r_val}%)."
+                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للجاهزية المرتفعة في الاستدامة ({r_val}%)."
                         elif r_val >= 50:
                             sustainability_comment = f"الاستمرار في توجيه الائتمان المصرفي نحو المشروعات الخضراء لتعزيز الأداء في الاستدامة ({r_val}%)."
                         else:
                             sustainability_comment = f"إطلاق برامج عاجلة لتطوير الإفصاح المالي وغير المالي وفق معايير الاستدامة لتعويض الضعف في ({r_val}%)."
 
                         deep_items = [
-                            f"يتطلب متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).",
+                            f"يتطلب من متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية (RegTech)'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).",
                             sustainability_comment,
                             f"تحديث أطر إدارة المخاطر الكلية والتحوط المرن بالتوازي مع متطلبات الحوكمة ({i_val}%)."
                         ]
@@ -1577,9 +1622,8 @@ with tab4:
                     """
                     st.markdown(flat_html(card_html), unsafe_allow_html=True)
             else:
-                st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات هنا.")
+                st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات والتحليلات المخصصة هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
