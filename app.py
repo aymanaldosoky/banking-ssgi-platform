@@ -12,7 +12,6 @@ import plotly.graph_objects as go
 import uuid
 import psycopg2
 
-
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation
 
@@ -35,18 +34,16 @@ CUSTOM_CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 
-header {{
+/* إخفاء الهيدر وشريط الأدوات التابع لـ Streamlit */
+header, .stAppToolbar, div[data-testid="stHeader"] {{
     visibility: hidden !important;
     display: none !important;
 }}
 
-.stAppToolbar, div[data-testid="stHeader"] {{
-    display: none !important;
-    visibility: hidden !important;
-}}
-
-/* تأمين الألوان وتثبيتها للوضع الداكن (Dark Theme Fix) */
-html, body, [class*="css"] {{
+/* ==========================================================================
+   1. تأمين ألوان المنصة بالكامل وضمان عدم اختفائها في الوضع الداكن (Dark Mode)
+   ========================================================================== */
+html, body, .stApp, [class*="css"] {{
     font-family: 'Cairo', sans-serif !important;
     direction: rtl !important;
     text-align: right !important;
@@ -55,15 +52,34 @@ html, body, [class*="css"] {{
     border: none !important;
 }}
 
-.stApp {{
-    background-color: {CBE_BG} !important;
-    direction: rtl !important;
-    text-align: right !important;
+/* تثبيت خلفيات وألوان عناصر الإدخال والنصوص في Streamlit ضد Dark Mode Override */
+div[data-baseweb="input"] > div,
+div[data-baseweb="base-input"],
+div[data-baseweb="textarea"] > textarea,
+div[data-baseweb="select"] > div {{
+    background-color: #FFFFFF !important;
     color: #1E293B !important;
-    border: none !important;
+    border-color: #CBD5E1 !important;
 }}
 
-/* تصميم Skeleton Loader ذكي ومخصص */
+input, textarea, select {{
+    color: #1E293B !important;
+    background-color: #FFFFFF !important;
+}}
+
+div[data-baseweb="popover"], div[role="listbox"], div[role="option"] {{
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+}}
+
+/* إصلاح التسميات والأوصاف فوق خانات الإدخال */
+label, div[data-testid="stMarkdownContainer"] p {{
+    color: #1E293B !important;
+}}
+
+/* ==========================================================================
+   2. تصميم Skeleton Loader ذكي ومخصص
+   ========================================================================== */
 @keyframes skeleton-shimmer {{
     0% {{ background-position: -200px 0; }}
     100% {{ background-position: 200px 0; }}
@@ -93,7 +109,7 @@ html, body, [class*="css"] {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
+/* إزالة أي إطارات رمادية أو تأثيرات تركيز عند التفاعل */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -111,20 +127,9 @@ div[data-testid="stHorizontalBlock"], section {{
     border-color: transparent !important;
 }}
 
-div[data-baseweb="select"] *, 
-div[data-baseweb="popover"] *, 
-ul[data-baseweb="menu"] *, 
-div[role="listbox"] *,
-div[role="option"] {{
-    direction: rtl !important;
-    text-align: right !important;
-    border: none !important;
-    outline: none !important;
-    color: #1E293B !important;
-    background-color: #FFFFFF !important;
-}}
-
-/* تصميم جدول RTL مخصص ونظيف متوافق مع كافة أنماط الشاشة */
+/* ==========================================================================
+   3. تصميم جدول RTL مخصص ونظيف متوافق مع الوضع الداكن والشاشات المختلفة
+   ========================================================================== */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -142,23 +147,18 @@ div[role="option"] {{
 
 .custom-rtl-table th {{
     background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
-    color: #F8FAFC !important;
-    padding: 10px 10px !important;
+    color: #FFFFFF !important;
+    padding: 12px 10px !important;
     font-weight: 700 !important;
     border-bottom: 2px solid {CBE_GOLD} !important;
-    border-right: none !important;
-    border-left: none !important;
     text-align: right !important;
     font-size: 13px !important;
     white-space: nowrap !important;
 }}
 
 .custom-rtl-table td {{
-    padding: 8px 10px !important;
+    padding: 10px 10px !important;
     border-bottom: 1px solid #F1F5F9 !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-left: none !important;
     color: #1E293B !important;
     font-size: 12.5px !important;
     text-align: right !important;
@@ -167,14 +167,14 @@ div[role="option"] {{
 }}
 
 .custom-rtl-table tr:nth-child(even) td {{
-    background-color: #FAFAFA !important;
+    background-color: #F8FAFC !important;
 }}
 
 .custom-rtl-table tr:hover td {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل بدون إطارات تركيز رمادية */
+/* توحيد تصميم الأزرار ومفاتيح التحميل */
 div.stButton > button, div.stDownloadButton > button {{
     width: 100% !important;
     border-radius: 50px !important;
@@ -195,6 +195,9 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {{
     box-shadow: 0 6px 16px rgba(0, 43, 73, 0.3) !important;
 }}
 
+/* ==========================================================================
+   4. ضبط التبويبات (Tabs Layout)
+   ========================================================================== */
 div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
@@ -220,7 +223,6 @@ div.stTabs {{
 .stTabs [data-baseweb="tab"] {{
     flex: 1 1 0% !important;
     width: 100% !important;
-    max-width: none !important;
     background-color: rgba(0, 43, 73, 0.85) !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
@@ -236,14 +238,11 @@ div.stTabs {{
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    outline: none !important;
-    box-shadow: none !important;
 }}
 
 .stTabs [data-baseweb="tab"]:hover {{
     background-color: #1D4ED8 !important;
     color: #FFFFFF !important;
-    border-color: #FFFFFF !important;
 }}
 
 .stTabs [aria-selected="true"] {{
@@ -252,13 +251,13 @@ div.stTabs {{
     border: 2px solid #FFFFFF !important;
     font-weight: 800 !important;
     box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
-    outline: none !important;
 }}
 
-.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
+.stTabs [data-baseweb="tab"] p {{ color: #FFFFFF !important; }}
 .stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
 .stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
 
+/* الهيدر الرئيسي */
 .header-center {{
     text-align: center !important;
     background: linear-gradient(135deg, rgba(0, 43, 73, 0.95) 0%, rgba(0, 26, 51, 0.90) 100%),
@@ -290,6 +289,7 @@ div.stTabs {{
     margin-bottom: 6px !important;
 }}
 
+/* الشريط الإخباري المتحرك */
 .ticker-wrap {{
     width: 100%;
     background: linear-gradient(90deg, {CBE_NAVY} 0%, #001F35 100%);
@@ -323,7 +323,9 @@ div.stTabs {{
     100% {{ transform: translate(100%, 0); }}
 }}
 
-/* تحسين تجربة الأجهزة المحمولة والحواسيب الكفية (Responsive Design @768px) */
+/* ==========================================================================
+   5. تحسين الاستجابة للشاشات الصغيرة والمحمولة (Responsive Design @768px)
+   ========================================================================== */
 @media (max-width: 768px) {{
     .stTabs [data-baseweb="tab-list"] {{
         flex-wrap: wrap !important;
@@ -344,6 +346,9 @@ div.stTabs {{
         display: block !important;
         overflow-x: auto !important;
         white-space: nowrap !important;
+    }}
+    div[style*="grid-template-columns"] {{
+        grid-template-columns: 1fr !important;
     }}
 }}
 
@@ -725,7 +730,6 @@ with tab1:
 
         st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة (Zero-Click - اضغط للتنفيذ المباشر):</b>", unsafe_allow_html=True)
 
-        # دالة الاستجابة الفورية عند النقر على الأسئلة المقترحة
         def trigger_instant_query(question):
             st.session_state.query_text_box = question
             st.session_state.trigger_search = True
@@ -769,11 +773,9 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
 
-        # التحقق مما إذا تم ضغط زر التقديم أو تمت إثارة السؤال فورياً عبر Zero-Click Trigger
         should_execute = ask_submit_btn or st.session_state.get("trigger_search", False)
 
         if should_execute:
-            # إعادة تعيين التنبيه الفوري للجلسة بعد بدء التنفيذ
             st.session_state.trigger_search = False
             active_q = st.session_state.query_text_box
 
@@ -782,9 +784,6 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال للإجابة عليه.")
             else:
-                # --------------------------------------------------------------
-                # 1. عرض Skeleton Loader أثناء التجهيز الأولي
-                # --------------------------------------------------------------
                 skeleton_placeholder = st.empty()
                 skeleton_html = flat_html(f"""
                 <div class="skeleton-card">
@@ -797,9 +796,6 @@ with tab1:
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
 
-                # --------------------------------------------------------------
-                # 2. معالجة الحالات الخاصة وتوليد الإجابة
-                # --------------------------------------------------------------
                 if ask_bank_sel == "البنك الأهلي اليوناني" and ("تأسس" in active_q or "مؤسسه" in active_q):
                     skeleton_placeholder.empty()
                     st.markdown(flat_html(f"""
@@ -815,22 +811,15 @@ with tab1:
                     </div>
                     """), unsafe_allow_html=True)
                 else:
-                    # جلب النص النهائي من محرك RAG
                     full_response = process_rag_gemini_query(ask_bank_sel, active_q)
-
-                    # تفريغ الـ Skeleton وإفراغ المساحة للـ Streaming
                     skeleton_placeholder.empty()
 
-                    # ----------------------------------------------------------
-                    # 3. محاكاة التدفق المباشر (Streaming Generator)
-                    # ----------------------------------------------------------
                     def stream_response_generator(text_html):
                         tokens = text_html.split(" ")
                         for token in tokens:
                             yield token + " "
-                            time.sleep(0.01) # سرعة البث لتقليل Latency الظاهري
+                            time.sleep(0.01)
 
-                    # تنفيذ العرض التفاعلي التدريجي
                     response_box = st.empty()
                     accumulated_text = ""
                     for chunk in stream_response_generator(flat_html(full_response)):
@@ -1165,7 +1154,7 @@ with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
         <h3>🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p>استشراف أثر التدخلات والسياسات المستقبلية مع توليد المخرجات كاملة.</p>
+        <p>استشراف أثر التدخلات والسياسات المستقبلية مع توليد المخرجات كاملة دون بتر.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1197,11 +1186,11 @@ with tab3:
                 st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                 st.rerun()
 
-            # إصلاح كامل لتشيد تقرير الـ Word HTML الشامل التراكمي بدون فقدان أية بيانات
+            # تشييد تقرير Word HTML المجمع والشامل لمنع حدوث أي بتر في المخرجات
             sim_word_html = f"""
             <html dir="rtl">
             <head><meta charset="utf-8"><title>تقرير محاكي السياسات المصرفية</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B;">
+            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF;">
                 <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
                 <p style="text-align: center; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة</p>
                 <hr style="border: 1px solid {CBE_GOLD};">
@@ -1319,6 +1308,276 @@ with tab3:
             else:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# التبويب الرابع: لوحة دعم اتخاذ القرار
+# ------------------------------------------------------------------------------
+with tab4:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار والتحليل الاستراتيجي</h3>
+        <p style="color: #475569; font-size: 14px;">توفير توصيات موجهة للقيادات المصرفية بناءً على مخرجات القياس والنمذجة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not st.session_state.history_state:
+        st.warning("⚠️ يرجى أولاً إجراء التشخيص وحساب مؤشر SSGI لأي بنك في التبويب الثاني للتمكن من توليد التوصيات.")
+    else:
+        dec_bank_list = list(set([item["البنك"] for item in st.session_state.history_state]))
+        dec_bank_sel = st.selectbox("اختر البنك لاستعراض لوحة القرار والتوصيات", dec_bank_list, key="dec_bank_select")
+
+        selected_record = next((item for item in st.session_state.history_state if item["البنك"] == dec_bank_sel), None)
+
+        if selected_record:
+            score = selected_record["مؤشر SSGI المركب"]
+            sip = selected_record["منصات المعلومات (40%)"]
+            ig = selected_record["الحوكمة المؤسسية (30%)"]
+            sr = selected_record["تقارير الاستدامة (30%)"]
+
+            st.markdown(f"""
+            <div dir="rtl" style="background: #FFFFFF; padding: 20px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 20px;" text-align: right;>
+                <h4 style="color: {CBE_NAVY}; font-weight: 800; margin-top: 0;">📊 الوضع الحالي لبنك: {dec_bank_sel}</h4>
+                <p><b>القيمة المركبة للمؤشر (SSGI):</b> {get_colored_score_html(score)}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_d1, col_d2, col_d3 = st.columns(3)
+            with col_d1:
+                st.markdown(f"""
+                <div dir="rtl" style="background: #F8FAFC; padding: 15px; border-radius: 10px; border-right: 4px solid {CBE_NAVY};">
+                    <h5 style="color: {CBE_NAVY}; margin: 0 0 8px 0;">💻 البنية التقنية (SIP)</h5>
+                    <p style="font-size: 13px; margin: 0; color: #334155;">{describe_sip(sip)}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_d2:
+                st.markdown(f"""
+                <div dir="rtl" style="background: #F8FAFC; padding: 15px; border-radius: 10px; border-right: 4px solid {CBE_GOLD};">
+                    <h5 style="color: {CBE_NAVY}; margin: 0 0 8px 0;">🏛️ الحوكمة (IG)</h5>
+                    <p style="font-size: 13px; margin: 0; color: #334155;">{describe_ig(ig)}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_d3:
+                st.markdown(f"""
+                <div dir="rtl" style="background: #F8FAFC; padding: 15px; border-radius: 10px; border-right: 4px solid #10B981;">
+                    <h5 style="color: {CBE_NAVY}; margin: 0 0 8px 0;">🌿 الاستدامة (SR)</h5>
+                    <p style="font-size: 13px; margin: 0; color: #334155;">{describe_sr(sr)}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("#### 🎯 التدخلات الاستراتيجية الموصى بها للقيادة المصرفية:", unsafe_allow_html=True)
+
+            recs = []
+            if sip < 75:
+                recs.append("تسريع عمليات أتمتة التقارير الرقابية وربط البنية التحتية بنظام RegTech لتفادي المخاطر التشغيلية.")
+            if ig < 75:
+                recs.append("إعادة النظر في تمثيل الأعضاء المستقلين بلجان المراجعة وتفعيل سياسة تجنب تعارض المصالح وفق تعليمات البنك المركزي.")
+            if sr < 75:
+                recs.append("توسيع نسبة التمويل المستدام والأصول الخضراء بالمحفظة والامتثال لمعايير الإفصاح الدولية GRI و ISSB.")
+            if not recs:
+                recs.append("المحافظة على المستوى الريادي المتميز وتوسيع نطاق الابتكار المصرفي والسيادة الرقمية الإقليمية.")
+
+            for r in recs:
+                st.markdown(f"- {r}")
+
+# ------------------------------------------------------------------------------
+# التبويب الخامس: التقرير التنفيذي الموحد
+# ------------------------------------------------------------------------------
+with tab5:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📑 التقرير التنفيذي الموحد لتشخيص القطاع المصرفي</h3>
+        <p style="color: #475569; font-size: 14px;">تجميع المخرجات الشاملة في تقرير موحد قابل للعرض والتصدير.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not st.session_state.history_state:
+        st.info("📂 لا توجد سجلات حالية لتوليد التقرير التنفيذي الموحد. يرجى إدخال وتخزين بيانات البنوك أولاً.")
+    else:
+        df_exec = pd.DataFrame(st.session_state.history_state)
+        
+        st.markdown("#### 📊 جدول ملخص النتائج التنفيذية كافة البنوك:")
+        st.dataframe(df_exec, use_container_width=True)
+
+        exec_html = f"""
+        <html dir="rtl">
+        <head><meta charset="utf-8"><title>التقرير التنفيذي الموحد</title></head>
+        <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl;">
+            <h2 style="color: {CBE_NAVY}; text-align: center;">التقرير التنفيذي الموحد لتشخيص البنوك المصرية</h2>
+            <hr>
+            {df_exec.to_html(index=False, classes='table table-bordered')}
+            <br>
+            <p style="text-align: center; color: #64748B; font-size: 12px;">تم التوليد بواسطة المنصة الوطنية الذكية - 2026</p>
+        </body>
+        </html>
+        """
+
+        st.download_button(
+            label="📥 تحميل التقرير التنفيذي الموحد (Word / HTML)",
+            data=exec_html.encode("utf-8-sig"),
+            file_name="التقرير_التنفيذي_الموحد.doc",
+            mime="application/msword",
+            use_container_width=True
+        )
+
+# ------------------------------------------------------------------------------
+# التبويب السادس: مولد تقارير الاستدامة (GRI/ISSB)
+# ------------------------------------------------------------------------------
+with tab6:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🌿 مولد تقارير الاستدامة والإفصاح المالي (GRI / ISSB)</h3>
+        <p style="color: #475569; font-size: 14px;">إعداد مسودات التقارير الفنية المتوافقة مع الأطر الدولية للإفصاح عن البيئة والحوكمة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_g1, col_g2 = st.columns([1, 2])
+    with col_g1:
+        s_bank_name = st.selectbox("اختر البنك لإعداد مسودة التقرير", BANKS_LIST_AR, key="s_bank_gen")
+        report_type = st.selectbox("معيار الإفصاح المستهدف", ["المعيار الدولي GRI Standards", "معيار ISSB (S1 & S2)", "إفصاحات البنك المركزي المصري للتمويل المستدام"])
+        
+        if st.button("🚀 توليد مسودة تقرير الاستدامة", use_container_width=True, type="primary"):
+            if s_bank_name != "اختر البنك المصرفي":
+                st.session_state.draft_generated_state = True
+                st.session_state.draft_bank_name = s_bank_name
+            else:
+                st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح.")
+
+    with col_g2:
+        if st.session_state.get("draft_generated_state", False):
+            b_name = st.session_state.get("draft_bank_name", "")
+            st.success(f"✅ تم توليد مسودة تقرير الاستدامة المبدئية بنجاح لـ ({b_name})")
+            
+            draft_text = f"""
+            ### 🌿 مسودة إفصاح الاستدامة الموحدة - {b_name}
+            **المعيار المعتمد:** {report_type}  
+            **تاريخ التوليد:** {datetime.now().strftime('%Y-%m-%d')}  
+            
+            ---
+            #### 1. الحوكمة البيئية والاجتماعية (ESG Governance)
+            يمتثل {b_name} بإشراف مجلس الإدارة للسياسات الاستثمارية المستدامة، مع دمجه لمخاطر المناخ ضمن إطار إدارة المخاطر الكلية.
+
+            #### 2. التمويل الأخضر والمستدام (Green Financing)
+            تتضمن محفظة الائتمان بالبنك تمويلات موجهة للمشاريع الخضراء، الطاقة المتجددة، والمبادرات الاجتماعية وفقاً لتوجيهات البنك المركزي المصري.
+
+            #### 3. كفاءة الموارد والسيادة الرقمية (SIP & RegTech)
+            يعتمد البنك على منصات معلوماتية ذكية (SIP) تعزز من كفاءة الشفافية وتقليل الانبعاثات الكربونية الناتجة عن المعاملات الورقية.
+            """
+            st.markdown(draft_text)
+        else:
+            st.info("👈 قم باختيار البنك والمعيار وانقر على الزر لتوليد المسودة هنا.")
+
+# ------------------------------------------------------------------------------
+# التبويب السابع: استبيان فرق العمل المصرفي
+# ------------------------------------------------------------------------------
+with tab7:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 استبيان قياس جاهزية البنوك (عينة الدراسة الميدانية)</h3>
+        <p style="color: #475569; font-size: 14px;">تجميع مرئيات واستجابات الكوادر المصرفية لتدعيم نتائج البحث العلمي.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.form("survey_form", clear_on_submit=True):
+        sur_bank = st.selectbox("البنك المصرفي", BANKS_LIST_AR)
+        sur_role = st.text_input("المسمى الوظيفي / الإدارة", placeholder="مثال: مدير إدارة الامتثال / الحوكمة")
+        sur_exp = st.number_input("سنوات الخبرة في القطاع المصرفي", min_value=1, max_value=40, value=5)
+
+        st.markdown("---")
+        q1 = st.slider("مدى جاهزية منصات المعلومات (SIP) في البنك للتكامل الرقابي الآلي؟", 1, 5, 4)
+        q2 = st.slider("مدى استقلالية لجان المراجعة والالتزام بمعايير الحوكمة (IG)؟", 1, 5, 4)
+        q3 = st.slider("مدى كفاءة البنك في إصدار تقارير الاستدامة والتمويل الأخضر (SR)؟", 1, 5, 3)
+
+        notes = st.text_area("ملاحظات أو مقترحات إضافية لتعزيز الحوكمة والاستدامة:")
+
+        submitted = st.form_submit_button("📤 إرسال الاستجابة وتثبيتها")
+
+        if submitted:
+            if sur_bank == "اختر البنك المصرفي":
+                st.error("⚠️ يرجى تحديد اسم البنك.")
+            else:
+                resp_id = str(uuid.uuid4())[:8]
+                new_survey = {
+                    "معرف الاستجابة": resp_id,
+                    "اسم البنك": sur_bank,
+                    "المسمى الوظيفي / الإدارة": sur_role,
+                    "سنوات الخبرة": sur_exp,
+                    "محور منصات المعلومات": q1,
+                    "محور الحوكمة المؤسسية": q2,
+                    "محور تقارير الاستدامة": q3,
+                    "ملاحظات وتوصيات إضافية": notes,
+                    "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                logs = load_survey_log_from_file()
+                logs.append(new_survey)
+                pd.DataFrame(logs).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+                st.success("✅ تم حفظ الاستجابة بنجاح! شكراً لمشاركتك في البحث العلمي.")
+
+# ------------------------------------------------------------------------------
+# التبويب الثامن: دليل المستخدم الرسمي PDF
+# ------------------------------------------------------------------------------
+with tab8:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📖 دليل المستخدم الرسمي والتوثيق المنهجي</h3>
+        <p style="color: #475569; font-size: 14px;">استعراض المنهجية والأدبيات والمكونات الإجرائية المعتمدة للمنصة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    doc_text = """
+    ### 🏛️ التوثيق المنهجي والتشغيلي للمنصة الوطنية الذكية
+
+    #### 1. المقدمة والأهداف:
+    تهدف هذه المنصة الاستشرافية إلى تقديم نموذج تطبيقي متكامل لحوكمة القطاع المصرفي المصري، والربط بين **منصات المعلومات الذكية (SIP)**، **الحوكمة المؤسسية (IG)**، و**تقارير الاستدامة (SR)**.
+
+    #### 2. معادلة قياس مؤشر SSGI المركب:
+    $$SSGI = (SIP \times 0.40) + (IG \times 0.30) + (SR \times 0.30)$$
+
+    #### 3. أوزان المحاور الرئيسة:
+    - **محور منصات المعلومات والبنية التقنية (SIP - 40%):** يقيس مدى كفاءة البنية الرقمية وأتمتة الالتزام الرقابي (RegTech).
+    - **محور الحوكمة المؤسسية والامتثال (IG - 30%):** يقيس مدى استقلالية مجلس الإدارة والشفافية.
+    - **محور تقارير الاستدامة والتمويل الأخضر (SR - 30%):** يقيس الالتزام بالمعايير الدولية (GRI/ISSB) وإفصاحات المناخ.
+    """
+    st.markdown(doc_text)
+
+# ------------------------------------------------------------------------------
+# التبويب التاسع: لوحة تحكم المشرف والزوار (Admin)
+# ------------------------------------------------------------------------------
+if tab9 is not None:
+    with tab9:
+        st.markdown("""
+        <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+            <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجلات الزوار</h3>
+            <p style="color: #475569; font-size: 14px;">إدارة وحصر دخول الزوار واستجابات الاستبيانات الميدانية.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_a1, col_a2 = st.columns(2)
+
+        with col_a1:
+            st.markdown("#### 👤 سجلات الزوار والمستخدمين:")
+            v_logs = load_visitors_log_from_file()
+            if v_logs:
+                st.dataframe(pd.DataFrame(v_logs), use_container_width=True)
+            else:
+                st.info("لا توجد سجلات دخول حتى الآن.")
+
+        with col_a2:
+            st.markdown("#### 📋 استجابات الاستبيان الميداني:")
+            s_logs = load_survey_log_from_file()
+            if s_logs:
+                st.dataframe(pd.DataFrame(s_logs), use_container_width=True)
+            else:
+                st.info("لا توجد استجابات استبيان مسجلة.")
+
+# ==============================================================================
+# الفوتر والتذييل
+# ==============================================================================
+st.markdown(f"""
+<div class="footer-copyright">
+🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة © 2026 | جميع الحقوق محفوظة للدراسة البحثية
+</div>
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # التبويب الرابع: لوحة دعم اتخاذ القرار
