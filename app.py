@@ -10,7 +10,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import uuid
-import psycopg2
+import psycopg2  # الاتصال بقاعدة بيانات Postgres / Supabase
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
 from bank_rag_engine import process_rag_gemini_query, audit_differentiation
@@ -22,7 +22,7 @@ st.set_page_config(
     page_title="مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="expanded"  # تم تفعيله لتوفير تنقل مريح وسلس
+    initial_sidebar_state="expanded"  # جعل القائمة الجانبية مفتوحة افتراضياً لسهولة التنقل
 )
 
 CBE_NAVY = "#002B49"         # أزرق مصرفي عميق
@@ -59,32 +59,36 @@ html, body, [class*="css"] {{
     border: none !important;
 }}
 
-/* تصميم Sidebar المخصص للحد من الإرهاق الإدراكي */
+/* ==========================================================================
+   تحسين القائمة الجانبية (Sidebar) وتقليل الحمل الإدراكي
+   ========================================================================== */
 section[data-testid="stSidebar"] {{
-    background-color: #FFFFFF !important;
+    background-color: #001F35 !important;
     border-left: 2px solid {CBE_GOLD} !important;
     direction: rtl !important;
+}}
+
+section[data-testid="stSidebar"] * {{
+    color: #FFFFFF !important;
+    direction: rtl !important;
     text-align: right !important;
+    font-family: 'Cairo', sans-serif !important;
 }}
 
-section[data-testid="stSidebar"] .stRadio > label {{
-    font-weight: 800 !important;
-    color: {CBE_NAVY} !important;
-    font-size: 15px !important;
-}}
-
-section[data-testid="stSidebar"] div[role="radiogroup"] > label {{
-    background-color: #F8FAFC !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 8px !important;
+section[data-testid="stSidebar"] .stRadio label {{
+    background: rgba(255, 255, 255, 0.05) !important;
     padding: 10px 14px !important;
+    border-radius: 8px !important;
     margin-bottom: 6px !important;
-    transition: all 0.2s ease !important;
+    border: 1px solid rgba(197, 160, 89, 0.2) !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
 }}
 
-section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {{
-    background-color: #FEF3C7 !important;
-    border-color: {CBE_GOLD} !important;
+section[data-testid="stSidebar"] .stRadio label:hover {{
+    background: {CBE_GOLD} !important;
+    color: {CBE_NAVY} !important;
+    font-weight: bold !important;
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -117,7 +121,7 @@ section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -216,7 +220,6 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {{
     box-shadow: 0 6px 16px rgba(0, 43, 73, 0.3) !important;
 }}
 
-/* تحسين شكل التبويبات الفرعية المتكاملة */
 div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
@@ -229,7 +232,7 @@ div.stTabs {{
     flex-direction: row-reverse !important;
     width: 100% !important;
     max-width: 100% !important;
-    gap: 8px !important;
+    gap: 6px !important;
     background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     padding: 10px !important;
     border-radius: 12px !important;
@@ -246,10 +249,10 @@ div.stTabs {{
     background-color: rgba(0, 43, 73, 0.85) !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 12px 6px !important;
+    padding: 10px 4px !important;
     font-weight: 700 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     border: 1px solid rgba(197, 160, 89, 0.3) !important;
     text-align: center !important;
     justify-content: center !important;
@@ -381,7 +384,7 @@ def hash_password(password: str) -> str:
 # ==============================================================================
 BANK_PROFILE_DATA = {
     "بنك مصر BM": {
-        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصاددي الوطني محمد طلعت حرب باشا.",
+        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصادي الوطني محمد طلعت حرب باشا.",
         "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية (مؤسسة مالية حكومية كبرى).",
         "profile": "أول بنك مصري بالكامل يهدف إلى استثمار المدخرات الوطنية وتوجيهها لخدمة الاقتصاد القومي والتنمية المستدامة."
     },
@@ -670,45 +673,47 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# هيكلة التنقل الذكية المجمعة في الشريط الجانبي (Reducing Cognitive Load)
+# التنقل الهيكلي المطور القائم على الإفصاح التدريجي (Progressive Disclosure)
 # ==============================================================================
 with st.sidebar:
     st.markdown(f"""
-    <div style="text-align: center; padding: 10px 0; border-bottom: 2px solid {CBE_GOLD}; margin-bottom: 15px;">
-        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0;">🏛️ التقديم والتنقل</h4>
-        <span style="font-size: 11px; color: #64748B;">قائمة القطاعات الرئيسية للمنصة</span>
+    <div style="text-align: center; padding: 10px; border-bottom: 2px solid {CBE_GOLD}; margin-bottom: 15px;">
+        <h3 style="color: {CBE_GOLD}; font-size: 17px; font-weight: 800; margin: 0;">🧭 التنقل الذكي بالمنصة</h3>
+        <p style="color: #CBD5E1; font-size: 11.5px; margin-top: 4px;">تقليل الحمل الإدراكي وإفصاح تدريجي</p>
     </div>
     """, unsafe_allow_html=True)
 
     main_category = st.radio(
-        "📌 اختر القطاع الرئيسي:",
+        "اختر الموديول الرئيسي:",
         [
-            "1️⃣ التحليل والاستعلام الذكي",
-            "2️⃣ التقارير والدعم القيادي",
-            "3️⃣ الدراسة الميدانية والتوثيق"
+            "🔍 1. التحليل والاستعلام الذكي",
+            "📊 2. التقارير والدعم القيادي",
+            "📚 3. الدراسة الميدانية والتوثيق",
+            "🔒 4. لوحة المشرف (Admin)"
+        ] if st.session_state.role == "admin" else [
+            "🔍 1. التحليل والاستعلام الذكي",
+            "📊 2. التقارير والدعم القيادي",
+            "📚 3. الدراسة الميدانية والتوثيق"
         ],
         index=0
     )
 
-    st.markdown("---")
-    st.markdown(f"<div style='font-size: 12px; color: #64748B; text-align: center;'>المستخدم الحالي: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color: rgba(197, 160, 89, 0.3);'>", unsafe_allow_html=True)
 
 # ==============================================================================
-# العرض المتكيف استناداً للقطاع المختار (Progressive Disclosure)
+# القسم الأول: التحليل والاستعلام الذكي
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
-# 1️⃣ قطاع التحليل والاستعلام الذكي
-# ------------------------------------------------------------------------------
-if main_category.startswith("1️⃣"):
-    sub_tab1, sub_tab2, sub_tab3 = st.tabs([
-        "🎯 اسأل المنصة",
+if main_category.startswith("🔍"):
+    tab1, tab2, tab3 = st.tabs([
+        "🎯 اسأل المنصة (RAG Engine)",
         "📊 مؤشر الحوكمة المركب (SSGI)",
         "📈 محاكي السياسات (Policy Simulator)"
     ])
 
-    # --- التبويب: اسأل المنصة ---
-    with sub_tab1:
+    # --------------------------------------------------------------------------
+    # 1.1: اسأل المنصة
+    # --------------------------------------------------------------------------
+    with tab1:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (RAG Engine)</h3>
@@ -826,14 +831,14 @@ if main_category.startswith("1️⃣"):
                         for chunk in stream_response_generator(flat_html(full_response)):
                             accumulated_text += chunk
                             response_box.markdown(accumulated_text, unsafe_allow_html=True)
-
             else:
                 st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
-
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- التبويب: مؤشر SSGI ---
-    with sub_tab2:
+    # --------------------------------------------------------------------------
+    # 1.2: مؤشر الحوكمة المركب (SSGI)
+    # --------------------------------------------------------------------------
+    with tab2:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
@@ -909,50 +914,27 @@ if main_category.startswith("1️⃣"):
                         diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                         badge_status = "أداء مرتفع 🟢"
                         status_border_color = "#10B981"
-                        detailed_diag = f"""
-                        <div style="line-height: 1.8; font-size: 14px;">
-                            <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
-                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                            <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                            <ul style="margin: 0; padding-right: 20px;">
-                                <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
-                                <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
-                                <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
-                            </ul>
-                        </div>
-                        """
                     elif final_score >= 51:
                         diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                         badge_status = "أداء متوسط 🟡"
                         status_border_color = "#F59E0B"
-                        detailed_diag = f"""
-                        <div style="line-height: 1.8; font-size: 14px;">
-                            <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
-                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                            <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                            <ul style="margin: 0; padding-right: 20px;">
-                                <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
-                                <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
-                                <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
-                            </ul>
-                        </div>
-                        """
                     else:
                         diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                         badge_status = "فجوة حرجة 🔴"
                         status_border_color = "#EF4444"
-                        detailed_diag = f"""
-                        <div style="line-height: 1.8; font-size: 14px;">
-                            <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
-                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                            <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                            <ul style="margin: 0; padding-right: 20px;">
-                                <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
-                                <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
-                                <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
-                            </ul>
-                        </div>
-                        """
+
+                    detailed_diag = f"""
+                    <div style="line-height: 1.8; font-size: 14px;">
+                        <p><b>التشخيص التفصيلي:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
+                        <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
+                        </ul>
+                    </div>
+                    """
 
                     metric_container_html = f"""
                     <div dir="rtl" style="
@@ -964,7 +946,7 @@ if main_category.startswith("1️⃣"):
                         margin-bottom: 20px;
                     ">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
-                            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                            <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px;">
                                 🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
                             </h4>
                             <span style="background: #FFFFFF; color: {CBE_NAVY}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #CBD5E1;">
@@ -973,25 +955,25 @@ if main_category.startswith("1️⃣"):
                         </div>
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; shadow: 0 2px 8px rgba(0,0,0,0.03);">
                                 <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
                                 <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
                                 <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
                             </div>
 
-                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; shadow: 0 2px 8px rgba(0,0,0,0.03);">
                                 <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
                                 <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
                                 <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
                             </div>
 
-                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; shadow: 0 2px 8px rgba(0,0,0,0.03);">
                                 <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
                                 <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
                                 <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                             </div>
 
-                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; shadow: 0 2px 8px rgba(0,0,0,0.03);">
                                 <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
                                 <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
                                 <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
@@ -1066,7 +1048,6 @@ if main_category.startswith("1️⃣"):
                             height=320
                         )
                         st.plotly_chart(fig_bar, use_container_width=True)
-
             else:
                 st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض البطاقات الرقمية والتحليل القياسي المباشر.")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1146,17 +1127,19 @@ if main_category.startswith("1️⃣"):
         else:
             st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك المصرفية.")
 
-    # --- التبويب: محاكي السياسات ---
-    with sub_tab3:
+    # --------------------------------------------------------------------------
+    # 1.3: محاكي السياسات (Policy Simulator) - متكامل للدمج المباشر للتجميع والتصدير
+    # --------------------------------------------------------------------------
+    with tab3:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-            <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية المخصصة للبنوك.</p>
+            <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية مع توليد المخرجات كاملة دون بتر.</p>
         </div>
         """, unsafe_allow_html=True)
 
         if not st.session_state.history_state:
-            st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في القسم السابق.")
+            st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب السابق.")
         else:
             col_sim_in, col_sim_out = st.columns([1, 2], gap="large")
 
@@ -1183,6 +1166,7 @@ if main_category.startswith("1️⃣"):
                     st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                     st.rerun()
 
+                # آلية التجميع لتقرير Word HTML المجمع والشامل دون بتر
                 sim_word_html = f"""
                 <html dir="rtl">
                 <head>
@@ -1195,7 +1179,6 @@ if main_category.startswith("1️⃣"):
                         .card {{ border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF; }}
                         .card-title {{ color: {CBE_NAVY}; font-size: 16px; margin-top: 0; font-weight: bold; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; }}
                         .deep-sec {{ background-color: #F8FAFC; padding: 12px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 12px; }}
-                        ul {{ margin: 0; padding-right: 20px; }}
                         hr {{ border: none; border-top: 1px solid {CBE_GOLD}; margin: 25px 0; }}
                         .footer {{ text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px; }}
                     </style>
@@ -1206,7 +1189,6 @@ if main_category.startswith("1️⃣"):
                     <hr>
                     <h3>📋 عرض كافة السيناريوهات المحاكاة للقطاع المصرفي:</h3>
                 """
-                
                 if st.session_state.simulated_results_dict:
                     for k, v in st.session_state.simulated_results_dict.items():
                         sim_word_html += f"""
@@ -1217,14 +1199,14 @@ if main_category.startswith("1️⃣"):
                         </div>
                         """
                 else:
-                    sim_word_html += "<p style='color: #64748B;'>لا توجد سيناريوهات محاكاة مسجلة حالياً في الجلسة.</p>"
+                    sim_word_html += "<p style='color: #64748B;'>لا توجد سيناريوهات مسجلة حالياً.</p>"
                     
                 sim_word_html += f"""
                     <hr>
                     <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                    <p>يغطي هذا التقرير كافة مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفية بوضوح تام ودون بتر أو سقوط لأي بيانات.</p>
+                    <p>يغطي هذا التقرير مخرجات النمذجة القياسية ومتغيرات التحفيز الاستراتيجي للقيادات المصرفية بوضوح تام ودون سقوط أية بيانات.</p>
                     <hr>
-                    <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والمتابعة مع البنك المركزي المصري</p>
+                    <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
                     <p style="text-align: center; font-size: 11px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
                 </body>
                 </html>
@@ -1268,7 +1250,7 @@ if main_category.startswith("1️⃣"):
                         else:
                             simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
                             analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
-                            action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة الرقابة التنظيمية (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
+                            action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
 
                         simulated_val = round(simulated_val, 2)
                         delta = round(simulated_val - base_val, 2)
@@ -1320,19 +1302,20 @@ if main_category.startswith("1️⃣"):
                     st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-
-# ------------------------------------------------------------------------------
-# 2️⃣ قطاع التقارير والدعم القيادي
-# ------------------------------------------------------------------------------
-elif main_category.startswith("2️⃣"):
-    sub_tab1, sub_tab2, sub_tab3 = st.tabs([
+# ==============================================================================
+# القسم الثاني: التقارير والدعم القيادي
+# ==============================================================================
+elif main_category.startswith("📊"):
+    tab4, tab5, tab6 = st.tabs([
         "🛡️ لوحة دعم اتخاذ القرار",
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)"
     ])
 
-    # --- التبويب: لوحة دعم القرار ---
-    with sub_tab1:
+    # --------------------------------------------------------------------------
+    # 2.1: لوحة دعم اتخاذ القرار
+    # --------------------------------------------------------------------------
+    with tab4:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي</h3>
@@ -1341,7 +1324,7 @@ elif main_category.startswith("2️⃣"):
         """, unsafe_allow_html=True)
 
         if not st.session_state.history_state:
-            st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في قطاع التحليل والاستعلام للتمكن من توليد لوحة القرار والتوصيات.")
+            st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في قسم 'التحليل والاستعلام الذكي'.")
         else:
             col_dec_in, col_dec_out = st.columns([1, 2], gap="large")
 
@@ -1356,6 +1339,7 @@ elif main_category.startswith("2️⃣"):
                     st.success("✅ تم مسح جميع توصيات لوحة القرار بنجاح.")
                     st.rerun()
 
+                # آلية التجميع لتقرير لوحة دعم القرار بالكامل لملف Word HTML
                 dec_word_html = f"""
                 <html dir="rtl">
                 <head>
@@ -1496,8 +1480,10 @@ elif main_category.startswith("2️⃣"):
                     st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات والتحليلات المخصصة هنا.")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- التبويب: التقرير التنفيذي الموحد ---
-    with sub_tab2:
+    # --------------------------------------------------------------------------
+    # 2.2: التقرير التنفيذي الموحد
+    # --------------------------------------------------------------------------
+    with tab5:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📑 التقرير التنفيذي الموحد لتشخيص القطاع المصرفي</h3>
@@ -1534,8 +1520,10 @@ elif main_category.startswith("2️⃣"):
                 use_container_width=True
             )
 
-    # --- التبويب: مولد تقارير الاستدامة ---
-    with sub_tab3:
+    # --------------------------------------------------------------------------
+    # 2.3: مولد تقارير الاستدامة (GRI/ISSB)
+    # --------------------------------------------------------------------------
+    with tab6:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🌿 مولد تقارير الاستدامة والإفصاح المالي (GRI / ISSB)</h3>
@@ -1579,25 +1567,19 @@ elif main_category.startswith("2️⃣"):
             else:
                 st.info("👈 قم باختيار البنك والمعيار وانقر على الزر لتوليد المسودة هنا.")
 
-# ------------------------------------------------------------------------------
-# 3️⃣ قطاع الدراسة الميدانية والتوثيق
-# ------------------------------------------------------------------------------
-else:
-    if st.session_state.role == "admin":
-        sub_tab1, sub_tab2, sub_tab3 = st.tabs([
-            "📋 استبيان فرق العمل المصرفي",
-            "📖 دليل المستخدم الرسمي PDF",
-            "🔒 لوحة تحكم المشرف والزوار (Admin)"
-        ])
-    else:
-        sub_tab1, sub_tab2 = st.tabs([
-            "📋 استبيان فرق العمل المصرفي",
-            "📖 دليل المستخدم الرسمي PDF"
-        ])
-        sub_tab3 = None
+# ==============================================================================
+# القسم الثالث: الدراسة الميدانية والتوثيق
+# ==============================================================================
+elif main_category.startswith("📚"):
+    tab7, tab8 = st.tabs([
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي PDF"
+    ])
 
-    # --- التبويب: استبيان فرق العمل ---
-    with sub_tab1:
+    # --------------------------------------------------------------------------
+    # 3.1: استبيان فرق العمل المصرفي
+    # --------------------------------------------------------------------------
+    with tab7:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 استبيان قياس جاهزية البنوك (عينة الدراسة الميدانية)</h3>
@@ -1640,8 +1622,10 @@ else:
                     pd.DataFrame(logs).to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
                     st.success("✅ تم حفظ الاستجابة بنجاح! شكراً لمشاركتك في البحث العلمي.")
 
-    # --- التبويب: دليل المستخدم الرسمي ---
-    with sub_tab2:
+    # --------------------------------------------------------------------------
+    # 3.2: دليل المستخدم الرسمي PDF
+    # --------------------------------------------------------------------------
+    with tab8:
         st.markdown("""
         <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
             <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📖 دليل المستخدم الرسمي والتوثيق المنهجي</h3>
@@ -1665,33 +1649,34 @@ else:
         """
         st.markdown(doc_text)
 
-    # --- التبويب: لوحة التحكم (للمشرفين) ---
-    if sub_tab3 is not None:
-        with sub_tab3:
-            st.markdown("""
-            <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-                <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجلات الزوار</h3>
-                <p style="color: #475569; font-size: 14px;">إدارة وحصر دخول الزوار واستجابات الاستبيانات الميدانية.</p>
-            </div>
-            """, unsafe_allow_html=True)
+# ==============================================================================
+# القسم الرابع: لوحة تحكم المشرف والزوار (Admin)
+# ==============================================================================
+elif main_category.startswith("🔒"):
+    st.markdown("""
+    <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجلات الزوار</h3>
+        <p style="color: #475569; font-size: 14px;">إدارة وحصر دخول الزوار واستجابات الاستبيانات الميدانية.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-            col_a1, col_a2 = st.columns(2)
+    col_a1, col_a2 = st.columns(2)
 
-            with col_a1:
-                st.markdown("#### 👤 سجلات الزوار والمستخدمين:")
-                v_logs = load_visitors_log_from_file()
-                if v_logs:
-                    st.dataframe(pd.DataFrame(v_logs), use_container_width=True)
-                else:
-                    st.info("لا توجد سجلات دخول حتى الآن.")
+    with col_a1:
+        st.markdown("#### 👤 سجلات الزوار والمستخدمين:")
+        v_logs = load_visitors_log_from_file()
+        if v_logs:
+            st.dataframe(pd.DataFrame(v_logs), use_container_width=True)
+        else:
+            st.info("لا توجد سجلات دخول حتى الآن.")
 
-            with col_a2:
-                st.markdown("#### 📋 استجابات الاستبيان الميداني:")
-                s_logs = load_survey_log_from_file()
-                if s_logs:
-                    st.dataframe(pd.DataFrame(s_logs), use_container_width=True)
-                else:
-                    st.info("لا توجد استجابات استبيان مسجلة.")
+    with col_a2:
+        st.markdown("#### 📋 استجابات الاستبيان الميداني:")
+        s_logs = load_survey_log_from_file()
+        if s_logs:
+            st.dataframe(pd.DataFrame(s_logs), use_container_width=True)
+        else:
+            st.info("لا توجد استجابات استبيان مسجلة.")
 
 # ==============================================================================
 # الفوتر والتذييل
@@ -1701,7 +1686,6 @@ st.markdown(f"""
 🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة © 2026 | جميع الحقوق محفوظة للدراسة البحثية
 </div>
 """, unsafe_allow_html=True)
-
 
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مُطور بالكامل - Zero-Click Trigger & Quick Chips UX)
