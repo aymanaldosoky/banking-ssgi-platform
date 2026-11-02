@@ -51,6 +51,7 @@ def is_valid_arabic_question(text):
 # 2) تصنيف نية السؤال (Intent) بالأوزان بدل التطابق الأعمى
 # ==============================================================================
 INTENT_KEYWORDS = {
+    "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm"],
     "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك"],
     "history": ["تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "ملكيه", "اول بنك", "مساهمين", "ملاك"],
     "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه"],
@@ -81,7 +82,7 @@ def classify_intent(question: str):
 
 
 # ==============================================================================
-# 3) ملفات تعريف البنوك (حقائق فقط — الحقل الناقص يُترك ولا يُختلق)
+# 3) ملفات تعريف البنوك الكاملة (PROFILES) - تغطي كافة قائمة BANKS_LIST_AR
 # ==============================================================================
 TYPE_LABEL = {
     "state": "بنك مملوك للدولة",
@@ -90,16 +91,16 @@ TYPE_LABEL = {
     "private": "بنك قطاع خاص",
 }
 
-_STATE = ["بنك مصر BM", "البنك الأهلي المصري NBE", "بنك القاهرة Banque du Caire", "بنك الزراعي المصري",
+_STATE = ["بنك مصر BM", "البنك الأهلي المصري NBE", "بنك القاهرة Banque du Caire", "البنك الزراعي المصري",
           "بنك ناصر الاجتماعي", "بنك الاستثمار القومي", "بنك تنمية الصادرات EBANK",
-          "بنك التنمية الصناعية IDB", "بنك العقاري المصري العربي EALB"]
+          "بنك التنمية الصناعية IDB", "البنك العقاري المصري العربي EALB"]
 _ISLAMIC = ["بنك فيصل الإسلامي", "بنك البركة الإسلامي", "مصرف أبو ظبي الإسلامي ADIB",
             "بنك بيت التمويل الكويتي KFH", "بنك الأهلي المتحد KFH"]
 _FOREIGN = ["بنك قطر الوطني الأهلي QNB", "بنك كريدي أجريكول", "بنك الإسكندرية", "بنك أبوظبي الأول مصر FABMISR",
             "بنك الإمارات دبي الوطني NDB", "بنك HSBC", "التجاري وفا بنك", "بنك المؤسسة العربية المصرفية ABC",
             "المصرف العربي الدولي AIB", "ستاندرد تشارترد – مصر", "بنك الكويت الوطني NBK", "بنك المشرق",
             "بنك الأهلي الكويتي مصر ABK", "البنك العربي", "البنك العربي الأفريقي", "بنك أبوظبي التجاري ADCB",
-            "بنوك بلوم BLOM", "البنك الأهلي اليوناني أو البنك الوطني اليوناني", "بنك سيتي بنك CITIBANK"]
+            "بنوك بلوم BLOM", "البنك الأهلي اليوناني", "بنك سيتي بنك CITIBANK"]
 
 
 def bank_type(bank):
@@ -111,10 +112,6 @@ def bank_type(bank):
         return "foreign"
     return "private"
 
-
-# ==============================================================================
-# 3) ملفات تعريف البنوك الكاملة (PROFILES) - تغطي كافة قائمة BANKS_LIST_AR
-# ==============================================================================
 
 PROFILES = {
     "بنك مصر BM": dict(
@@ -426,14 +423,45 @@ def profile_of(bank):
 
 
 # ------------------------- مولّدات المحتوى حسب النية -------------------------
+def comp_branches(bank, p):
+    branches_info = p.get("branches")
+    
+    # 1. إذا كانت البيانات متوفرة في البروفايل
+    if branches_info:
+        b = [
+            ("شبكة الفروع والتواجد الميداني", branches_info),
+            ("الانتشار الجغرافي والشمول المالي", _t(p, bank, {
+                "state": "تتميز شبكة فروع {b} بالانتشار الأفقِي والوصول إلى القرى والمراكز ضمن المبادرات الرئاسية للشمول المالي وتحديث القنوات الرقمية.",
+                "islamic": "تتوزع فروع {b} استراتيجياً في المحافظات الكبرى لتلبية الطلب المرتفع على المعاملات والمنتجات المصرفية الإسلامية.",
+                "foreign": "تركز شبكة فروع {b} على المراكز الاقتصادية الرئيسية والمحافظات الكبرى مع الاعتماد الموازِي على المنصات الرقمية للمجموعة.",
+                "private": "تعتمد شبكة {b} على الموازنة بين الفروع الذكية والتوسع في خدمات الصراف الآلي والإنستاباي لخدمة الأفراد والشركات."
+            }))
+        ]
+        return f"{bank}: شبكة الفروع والتواجد الجغرافي", _bullets_html(f"{bank}: شبكة الفروع والتواجد الجغرافي", b)
+
+    # 2. إذا لم تتوافر أرقام دقيقة بالبروفايل، يتم التوليد عبر الذكاء الاصطناعي بدقة دون ادعاء
+    if llm_available():
+        dynamic_prompt = f"""أنت محلل حوكمة وانتشار مصرفي في مصر.
+اكتب تحليلاً عن التواجد الجغرافي وشبكة فروع '{bank}' (نوعه: {TYPE_LABEL.get(p.get('type'), 'بنك مصرفي')}).
+إذا لم تكن متأكداً من الرقم الدقيق التقريبي لعدد الفروع، اذكر أنه بنك متوسع جغرافيًا مع التوجيه للتقرير السنوي، ووضح دور الشبكة في الشمول المالي.
+قدم الإجابة في نقاط عريضة تبدأ بـ '- '."""
+        ai_res = call_llm(dynamic_prompt)
+        if ai_res:
+            return f"{bank}: شبكة الفروع والتواجد الجغرافي", ai_res
+
+    # 3. احتياطي
+    b = [
+        ("بيانات شبكة الفروع", f"يتوسع {bank} في مختلف محافظات مصر عبر فروع تقليدية ورقمية، ويُنصح بالاطلاع على التقرير السنوي الأخير لحصر العدد الدقيق للعام الحالي.")
+    ]
+    return f"{bank}: شبكة الفروع والتواجد الجغرافي", _bullets_html(f"{bank}: شبكة الفروع والتواجد الجغرافي", b)
+
+
 def comp_vision_mission(bank, p):
-    # بناء سياق خاص لكل بنك بناءً على هويته ومجموعته أو نوع ملكيته لمنع التشابه النمطي
     btype = TYPE_LABEL.get(p.get("type"), "مؤسسة مصرفية")
     ownership_info = p.get("ownership") or ""
     group_info = f"المجموعة الأم: {p.get('group')}" if p.get("group") else ""
     mandate_info = p.get("mandate") or p.get("origin") or ""
     
-    # محاولة توليد تحليل ديناميكي فريد عبر الطبقة الثالثة بصورة أساسية ومباشرة
     if llm_available():
         dynamic_prompt = f"""أنت محلل حوكمة مصرفية وتنافسية مؤسسية في مصر.
 اكتب "الرؤية والرسالة والقيم المؤسسية" الخاصة بـ "{bank}" فقط، على أن تكون الإجابة فريدة وخاصة بهذا البنك وحده ولا تشبه أي بنك آخر.
@@ -453,7 +481,6 @@ def comp_vision_mission(bank, p):
         if ai_res:
             return f"{bank}: الرؤية والرسالة المؤسسية", ai_res
 
-    # احتياطي في حال غياب الاتصال بالذكاء الاصطناعي
     b = [
         ("الرسالة الاستراتيجية", f"تستهدف استراتيجية {bank} بصفته ({btype}) تقديم خدمات مصرفية متطورة تدعم الاقتصاد المصري وتلبي احتياجات العملاء."),
         ("الرؤية الاستراتيجية", f"ترتكز رؤية {bank} على التميز الرقمي المستدام وتعزيز مكانته التنافسية في القطاع المصرفي."),
@@ -464,7 +491,7 @@ def comp_vision_mission(bank, p):
 
 def comp_history(bank, p):
     if not (p.get("origin") or p.get("founded")):
-        return None  # لا حقائق موثقة → الطبقة الثالثة
+        return None
     b = []
     if p.get("founded"):
         b.append(("تاريخ التأسيس", p["founded"]))
@@ -640,24 +667,25 @@ def comp_pdpl(bank, p):
 
 
 COMPOSERS = {
-    "branches": comp_branches, # <--- أضف هذا السطر
+    "branches": comp_branches,
     "vision_mission": comp_vision_mission,
-    "history": comp_history, 
-    "board": comp_board, 
+    "history": comp_history,
+    "board": comp_board,
     "independence": comp_independence,
-    "transparency": comp_transparency, 
-    "cbe_compliance": comp_cbe, 
+    "transparency": comp_transparency,
+    "cbe_compliance": comp_cbe,
     "women": comp_women,
-    "climate": comp_climate, 
-    "green_assets": comp_green_assets, 
+    "climate": comp_climate,
+    "green_assets": comp_green_assets,
     "reporting": comp_reporting,
-    "csr": comp_csr, 
-    "data_gov": comp_data_gov, 
-    "cyber": comp_cyber, 
+    "csr": comp_csr,
+    "data_gov": comp_data_gov,
+    "cyber": comp_cyber,
     "sip": comp_sip,
-    "regtech": comp_regtech, 
+    "regtech": comp_regtech,
     "pdpl": comp_pdpl,
 }
+
 # ==============================================================================
 # 5) أرشيف المعرفة JSON — محدث لدعم الأجزاء الستة ودمجها تلقائياً
 # ==============================================================================
@@ -738,7 +766,6 @@ def call_llm(prompt):
                 {"contents": [{"parts": [{"text": prompt}]}]}, {"content-type": "application/json"})
             return out["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
-        # يمكنك طباعة الخطأ للتتبع أثناء التطوير
         print(f"LLM Call Error: {e}")
         return None
     return None
@@ -834,16 +861,14 @@ def process_rag_gemini_query(bank_name, question):
                 return render_card(bank_name, question, md_to_html(txt), "llm")
         return render_card(bank_name, question, arch, "archive")
 
-    # --- الطبقة 2: ملف التعريف + الإطار التنظيمي (أو التوليد الذكي للرؤية والرسالة)
+    # --- الطبقة 2: ملف التعريف + الإطار التنظيمي (أو التوليد الذكي)
     comp = COMPOSERS.get(intent)
     result = comp(bank_name, p) if comp else None
     if result:
         title, generated_content = result
-        # إذا كانت النتيجة من التحليل الذكي للرؤية والرسالة (نص مباشر أو HTML)
         if intent == "vision_mission" and isinstance(generated_content, str) and not generated_content.startswith("<p><b>"):
             return render_card(bank_name, question, md_to_html(generated_content), "llm")
         
-        # بقية النوايا الاعتيادية
         if intent != "history":
             sig = [v for v in (p.get("ownership"), p.get("group") and "المجموعة الأم: " + p["group"], p.get("mandate")) if v]
             if sig and isinstance(generated_content, str) and "<ul>" not in generated_content:
