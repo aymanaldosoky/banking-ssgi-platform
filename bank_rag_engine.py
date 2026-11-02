@@ -640,14 +640,24 @@ def comp_pdpl(bank, p):
 
 
 COMPOSERS = {
+    "branches": comp_branches, # <--- أضف هذا السطر
     "vision_mission": comp_vision_mission,
-    "history": comp_history, "board": comp_board, "independence": comp_independence,
-    "transparency": comp_transparency, "cbe_compliance": comp_cbe, "women": comp_women,
-    "climate": comp_climate, "green_assets": comp_green_assets, "reporting": comp_reporting,
-    "csr": comp_csr, "data_gov": comp_data_gov, "cyber": comp_cyber, "sip": comp_sip,
-    "regtech": comp_regtech, "pdpl": comp_pdpl,
+    "history": comp_history, 
+    "board": comp_board, 
+    "independence": comp_independence,
+    "transparency": comp_transparency, 
+    "cbe_compliance": comp_cbe, 
+    "women": comp_women,
+    "climate": comp_climate, 
+    "green_assets": comp_green_assets, 
+    "reporting": comp_reporting,
+    "csr": comp_csr, 
+    "data_gov": comp_data_gov, 
+    "cyber": comp_cyber, 
+    "sip": comp_sip,
+    "regtech": comp_regtech, 
+    "pdpl": comp_pdpl,
 }
-
 # ==============================================================================
 # 5) أرشيف المعرفة JSON — محدث لدعم الأجزاء الستة ودمجها تلقائياً
 # ==============================================================================
