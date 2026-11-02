@@ -495,24 +495,25 @@ def llm_available():
 
 
 def call_llm(prompt):
-    # تعيين مفتاح جيميناي مباشرة بالمفتاح المخصص المعتمد
     api_key = os.getenv("GEMINI_API_KEY") or "AQ.Ab8RN6IWu748mayng_1PWfSE8TS-R1Y1NuSnXncAN6uGrfzemA" 
     try:
         if os.getenv("ANTHROPIC_API_KEY"):
             out = _post_json(
                 "https://api.anthropic.com/v1/messages",
-                {"model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-sonnet-5-5"),
+                {"model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022"),
                  "max_tokens": 1500, "messages": [{"role": "user", "content": prompt}]},
                 {"content-type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
                  "anthropic-version": "2023-06-01"})
             return "".join(b.get("text", "") for b in out.get("content", []))
         elif api_key:
-            model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+            model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
             out = _post_json(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
                 {"contents": [{"parts": [{"text": prompt}]}]}, {"content-type": "application/json"})
             return out["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception:
+    except Exception as e:
+        # يمكنك طباعة الخطأ للتتبع أثناء التطوير
+        print(f"LLM Call Error: {e}")
         return None
     return None
 
