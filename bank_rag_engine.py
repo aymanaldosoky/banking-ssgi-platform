@@ -48,14 +48,15 @@ def is_valid_arabic_question(text):
 
 
 # ==============================================================================
-# 2) تصنيف نية السؤال (Intent) بالأوزان بدل التطابق الأعمى (تم توسيع النطاق)
+# 2) تصنيف نية السؤال (Intent) بالأوزان المطورة لدعم الاستعلامات المركبة
 # ==============================================================================
 INTENT_KEYWORDS = {
     "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm"],
     "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك"],
     "history": [
         "تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "ملكيه", "اول بنك", "مساهمين", "ملاك", "تخارج", "تصفية",
-        "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التأسيس", "مالك البنك", "من يملك", "هيكل ملكيه"
+        "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التأسيس", "مالك البنك", "من يملك", "هيكل ملكيه",
+        "من المؤسس", "متى تاسس البنك", "من هو مؤسسه", "ما هي ملكيته", "التاسيس"
     ],
     "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه"],
     "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
@@ -78,12 +79,22 @@ INTENT_KEYWORDS = {
 
 def classify_intent(question: str):
     q = norm(question)
+    q_words = set(q.split())
     best, best_score = None, 0
     for intent, kws in INTENT_KEYWORDS.items():
-        score = sum(len(norm(k)) for k in kws if norm(k) in q)
+        score = 0
+        for kw in kws:
+            nk = norm(kw)
+            if nk in q:
+                score += len(nk) * 2
+            else:
+                nk_words = set(nk.split())
+                matched = nk_words.intersection(q_words)
+                if matched:
+                    score += sum(len(w) for w in matched)
         if score > best_score:
             best, best_score = intent, score
-    return best
+    return best if best_score > 0 else None
 
 
 # ==============================================================================
@@ -877,83 +888,4 @@ def render_card(bank, question, inner_html, tier):
       <h3 style="color:{CBE_NAVY}; font-weight:bold; margin-bottom:12px;">🎯 التقرير التحليلي المفصل ({html.escape(bank)})</h3>
       <p style="font-size:14.5px; margin-bottom:8px;"><b>السؤال / الاستفسار المطروح:</b> "{html.escape(question)}"</p>
       <p style="font-size:12.5px; font-weight:bold; color:{color}; margin-bottom:10px;">{label}</p>
-      <div style="background:{CBE_BG}; padding:18px; border-radius:8px; border-right:5px solid {CBE_GOLD}; margin-top:8px; color:#1E293B; font-size:14.5px;">
-        {inner_html}
-      </div>
-    </div>"""
-
-
-def _bullets_html(title, bullets, foot=True):
-    lis = "".join(f"<li><b>{html.escape(k)}:</b> {v}</li>" for k, v in bullets)
-    f = f'<p style="font-size:12px;color:#64748B;margin-top:10px;">{FOOT}</p>' if foot else ""
-    return f"<p><b>{html.escape(title)}</b></p><ul>{lis}</ul>{f}"
-
-
-# ==============================================================================
-# 8) الدالة الرئيسية — بديل مباشر لـ process_rag_gemini_query
-# ==============================================================================
-def process_rag_gemini_query(bank_name, question):
-    if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
-        return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
-    if not is_valid_arabic_question(question):
-        return "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
-
-    p = profile_of(bank_name)
-    intent = classify_intent(question)
-
-    # --- الطبقة 1: الأرشيف
-    arch = archive_lookup(bank_name, question, intent)
-    if arch:
-        if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
-            txt = call_llm(build_prompt(bank_name, question, p, archive_text=arch))
-            if txt:
-                return render_card(bank_name, question, md_to_html(txt), "llm")
-        return render_card(bank_name, question, arch, "archive")
-
-    # --- الطبقة 2: ملف التعريف + الإطار التنظيمي (أو التوليد الذكي)
-    comp = COMPOSERS.get(intent)
-    result = comp(bank_name, p) if comp else None
-    if result:
-        title, generated_content = result
-        if intent == "vision_mission" and isinstance(generated_content, str) and not generated_content.startswith("<p><b>"):
-            return render_card(bank_name, question, md_to_html(generated_content), "llm")
-        
-        if intent != "history":
-            sig = [v for v in (p.get("ownership"), p.get("group") and "المجموعة الأم: " + p["group"], p.get("mandate")) if v]
-            if sig and isinstance(generated_content, str) and "<ul>" not in generated_content:
-                pass
-        return render_card(bank_name, question, generated_content, "profile")
-
-    # --- الطبقة 3: نموذج لغة لأي سؤال خارج النوايا المعروفة أو بيانات ناقصة
-    if llm_available():
-        txt = call_llm(build_prompt(bank_name, question, p))
-        if txt:
-            return render_card(bank_name, question, md_to_html(txt), "llm")
-
-    # --- الطبقة 4: فجوة صريحة (معدلة لتناسب الهيكلية المختصرة المطلوب ظهورها للمستخدم)
-    gap = (f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
-           f"ولن تُقدَّم إجابة مبنية على التخمين.</p>"
-           f"<ul><li><b>مصدر مقترح:</b> تقرير الاستدامة والتقرير السنوي المنشوران للبنك.</li></ul>")
-    return render_card(bank_name, question, gap, "gap")
-
-
-# ==============================================================================
-# 9) أداة تدقيق التمايز (ل للمشرف/للبحث): تقيس التشابه بين إجابات البنوك
-# ==============================================================================
-def _plain(html_text, bank):
-    t = re.sub(r"<[^>]+>", " ", html_text)
-    return norm(t.replace(bank, ""))
-
-
-def audit_differentiation(banks, questions, threshold=0.90):
-    """ترجع قائمة بالأزواج (سؤال، بنك1، بنك2، نسبة التشابه) التي تتجاوز العتبة."""
-    flagged = []
-    for q in questions:
-        answers = {b: _plain(process_rag_gemini_query(b, q), b) for b in banks if b != "اختر البنك المصرفي"}
-        items = list(answers.items())
-        for i in range(len(items)):
-            for j in range(i + 1, len(items)):
-                r = difflib.SequenceMatcher(None, items[i][1].split(), items[j][1].split(), autojunk=False).ratio()
-                if r >= threshold:
-                    flagged.append((q, items[i][0], items[j][0], round(r, 3)))
-    return flagged
+      <div style="background:{CBE_BG}; padding:18px; border-radius:8px; border-right:5px solid {CBE_GOLD}; margin-top:8px; color:#1E293B; font-
