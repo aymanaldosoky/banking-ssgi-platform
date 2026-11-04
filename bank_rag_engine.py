@@ -42,20 +42,20 @@ def norm(s: str) -> str:
 
 
 def is_valid_arabic_question(text):
-    if not text or len(text.strip()) < 5:
+    if not text or len(text.strip()) < 3:
         return False
-    return len(re.findall(r"[\u0600-\u06FF]", text)) >= 4
+    return len(re.findall(r"[\u0600-\u06FF]", text)) >= 3
 
 
 # ==============================================================================
-# 2) تصنيف نية السؤال (Intent) بالأوزان بدقة عالية للأسئلة المركبة
+# 2) تصنيف نية السؤال (Intent) بالأوزان والمطابقة المحسنة
 # ==============================================================================
 INTENT_KEYWORDS = {
     "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm"],
     "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك"],
     "history": [
         "تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "مؤسسه", "ملكيه", "ملكيته", "اول بنك", "مساهمين", "ملاك", "تخارج", "تصفية",
-        "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التاسيس", "مالك البنك", "من يملك", "هيكل ملكيه", "من اسسه", "ملكيته"
+        "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التأسيس", "مالك البنك", "من يملك", "هيكل ملكيه", "متى تاسس البنك", "تاسس البنك"
     ],
     "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه"],
     "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
@@ -85,13 +85,12 @@ def classify_intent(question: str):
         for k in kws:
             nk = norm(k)
             if nk in q:
-                # وزن أعلى لمطابقة العبارات الكاملة أو الكلمات المركبة
-                score += len(nk) * 3
+                score += len(nk) * 3  # وزناً أعلى عند وجود العبارة مباشرة
             elif set(nk.split()).issubset(q_words):
                 score += len(nk) * 2
         if score > best_score:
             best, best_score = intent, score
-    return best
+    return best if best_score > 0 else None
 
 
 # ==============================================================================
@@ -583,7 +582,7 @@ def comp_financial_ratios(bank, p):
     b = [
         ("نسبة القروض إلى الودائع والائتمان", "سجل متوسط القطاع 64.3% سبتمبر 2025 (56.1% للعملة المحلية و91.2% للعملات الأجنبية). تلتزم إدارة الائتمان بالبنك بهذه السقوف الاحترازية."),
         ("تمويل القطاع الخاص", "بلغت حصة القطاع الخاص 43% من إجمالي الإقراض بالقطاع المصرفي، ويشكل التوسع في تمويله اختباراً لمرونة البنك الائتمانية."),
-        ("استثمارات الأوراق المالية", "ارتفع استثمار البنوك في الأوراق المالية وأذون الخزانة لتصل إلى 7.662 تريليون جنيه، وتمثل محافظ الأوراق المالية نحو 20.3% من إجمالي الأصول."),
+        ("استثمارات الأوراق المالية", "ارتفعت استثمارات البنوك في الأوراق المالية وأذون الخزانة لتصل إلى 7.662 تريليون جنيه، وتمثل محافظ الأوراق المالية نحو 20.3% من إجمالي الأصول."),
         ("السياق التنظيمي للبنك", _t(p, bank, {
             "state": "يتوازن التمويل في {b} بين المشروعات القومية والتوسع في إقراض القطاع الخاص تماشياً مع مؤشرات المركزي.",
             "islamic": "تتمحور النسب الائتمانية في {b} حول صيغ المرابحة والمشاركة المتوافقة مع الشريعة.",
@@ -793,7 +792,7 @@ def archive_lookup(bank, question, intent, kb=None):
 
 
 # ==============================================================================
-# 6) طبقة نموذج اللغة (Claude أو Gemini) — مقيدة بالسياق ومحاطة بقواعد صدق
+# 6) طبقة نموذج اللغة (Claude أو Gemini) — مقيدة بالسياق
 # ==============================================================================
 def _post_json(url, payload, headers, timeout=45):
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
@@ -802,11 +801,11 @@ def _post_json(url, payload, headers, timeout=45):
 
 
 def llm_available():
-    return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY"))
+    return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY") or True)
 
 
 def call_llm(prompt):
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY") or "AQ.Ab8RN6IWu748mayng_1PWfSE8TS-R1Y1NuSnXncAN6uGrfzemA" 
     try:
         if os.getenv("ANTHROPIC_API_KEY"):
             out = _post_json(
@@ -918,18 +917,13 @@ def process_rag_gemini_query(bank_name, question):
                 return render_card(bank_name, question, md_to_html(txt), "llm")
         return render_card(bank_name, question, arch, "archive")
 
-    # --- الطبقة 2: ملف التعريف + الإطار التنظيمي (أو التوليد الذكي)
+    # --- الطبقة 2: ملف التعريف + الإطار التنظيمي
     comp = COMPOSERS.get(intent)
     result = comp(bank_name, p) if comp else None
     if result:
         title, generated_content = result
         if intent == "vision_mission" and isinstance(generated_content, str) and not generated_content.startswith("<p><b>"):
             return render_card(bank_name, question, md_to_html(generated_content), "llm")
-        
-        if intent != "history":
-            sig = [v for v in (p.get("ownership"), p.get("group") and "المجموعة الأم: " + p["group"], p.get("mandate")) if v]
-            if sig and isinstance(generated_content, str) and "<ul>" not in generated_content:
-                pass
         return render_card(bank_name, question, generated_content, "profile")
 
     # --- الطبقة 3: نموذج لغة لأي سؤال خارج النوايا المعروفة أو بيانات ناقصة
@@ -946,7 +940,7 @@ def process_rag_gemini_query(bank_name, question):
 
 
 # ==============================================================================
-# 9) أداة تدقيق التمايز
+# 9) أداة تدقيق التمايز (للمشرف/للبحث)
 # ==============================================================================
 def _plain(html_text, bank):
     t = re.sub(r"<[^>]+>", " ", html_text)
@@ -954,7 +948,6 @@ def _plain(html_text, bank):
 
 
 def audit_differentiation(banks, questions, threshold=0.90):
-    """ترجع قائمة بالأزواج (سؤال، بنك1، بنك2، نسبة التشابه) التي تتجاوز العتبة."""
     flagged = []
     for q in questions:
         answers = {b: _plain(process_rag_gemini_query(b, q), b) for b in banks if b != "اختر البنك المصرفي"}
