@@ -2499,7 +2499,6 @@ def load_survey_log_from_cloud():
     except Exception as e:
         return pd.DataFrame()
 
-
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Role-Based Adaptive Routing UX)
 # ------------------------------------------------------------------------------
@@ -2746,9 +2745,21 @@ with tab7:
     # ==========================================================================
     elif step_key == "profile":
         with st.container(border=True):
-            st.markdown(f"<div dir='rtl'><h4 style='color:{CBE_NAVY};font-weight:800;'>👤 بيانات المشارك والمعلومات الأولية والمهنية</h4>"
-                        f"<p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول السبعة إلزامية، ولا يمكن فتح التقييم دون استكمالها.</p></div>",
-                        unsafe_allow_html=True)
+            st.markdown(f"""
+            <div dir='rtl'>
+                <h4 style='color:{CBE_NAVY};font-weight:800;margin-bottom:4px;'>👤 بيانات المشارك والمعلومات الأولية والمهنية</h4>
+                <div style='background:#F0F9FF;padding:10px 14px;border-radius:6px;border-right:4px solid #0284C7;margin-bottom:12px;font-size:13px;color:#0369A1;'>
+                    🔒 <b>تنويه السرية:</b> جميع البيانات والمعلومات الواردة تحاط بالسرية التامة ولن تُستخدم إلا لأغراض البحث العلمي فقط.
+                </div>
+                <p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول السبعة التالية إلزامية (باستثناء الاسم فهو اختياري)، ولا يمكن فتح التقييم دون استكمالها.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # إضافة خانة الاسم الاختيارية
+            st.text_input("الاسم الكريم (اختياري - لمن يرغب في تلقي ملخص نتائج الدراسة):", 
+                          value=S.get("name", ""), placeholder="اكتب الاسم هنا أو اتركه فارغاً...",
+                          key="wi_name", on_change=_sync, args=("wi_name", "name"))
+
             c1, c2 = st.columns(2, gap="medium")
             for i, (skey, label, opts) in enumerate(PROFILE_FIELDS):
                 with (c1 if i % 2 == 0 else c2):
@@ -2828,6 +2839,7 @@ with tab7:
                     resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                     rec = {
                         "معرف الاستجابة": resp_id,
+                        "الاسم (اختياري)": clean_text(S.get("name", "")),
                         "اسم البنك": clean_text(S.get("bank", "")),
                         "طبيعة المؤسسة": clean_text(S.get("org", "")),
                         "المؤهل العلمي": clean_text(S.get("sci", "")),
@@ -2836,7 +2848,6 @@ with tab7:
                         "سنوات الخبرة": S.get("exp", ""),
                         "مقيدة بالبورصة": S.get("listed", ""),
                         "مسار الاستبيان": "شامل" if is_full_assessment else "مخصص",
-                        "round(sum(sc)/len(sc),2)": None,
                         "وزن منصات المعلومات (%)": S.get("w_sip", 40),
                         "وزن الحوكمة المؤسسية (%)": S.get("w_ig", 30),
                         "وزن تقارير الاستدامة (%)": S.get("w_sr", 30),
@@ -2854,7 +2865,7 @@ with tab7:
                         st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن (التصدير بصيغة Excel نقية ومتوافقة مع العربية)
+    # لوحة التحليل الإداري للأدمن
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
@@ -2872,7 +2883,6 @@ with tab7:
             st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
-            # تحويل البيانات إلى شيت Excel حقيقي بـ Openpyxl لمنع مشكلة الرموز تماماً
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 df_surveys.to_excel(writer, index=False, sheet_name='استجابات الاستبيان')
