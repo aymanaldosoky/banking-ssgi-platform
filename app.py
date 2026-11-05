@@ -2631,6 +2631,8 @@ with tab7:
     }
 
     banks_opts = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
+    
+    # قائمة حقول البيانات الأولية المحدثة (إصدار الحقول الإلزامية والاختيارية)
     PROFILE_FIELDS = [
         ("bank", "اختر البنك المصرفي (إلزامي)", banks_opts),
         ("spec", "مجال التخصص الوظيفي (إلزامي - يحدد مسار العبارات)", [
@@ -2650,6 +2652,9 @@ with tab7:
             "أقل من 10 سنوات", "من 10 سنوات إلى أقل من 15 سنة",
             "من 15 سنة إلى أقل من 20 سنة", "20 سنة فأكثر"]),
     ]
+
+    # قائمة الحقول الإلزامية المطلوبة لفتح خطوة التقييم
+    PROFILE_FIELDS_REQUIRED = [f for f, _, _ in PROFILE_FIELDS]
 
     # ==========================================================================
     # 2) المخزن الدائم للإجابات
@@ -2710,7 +2715,7 @@ with tab7:
 
     def step_complete(k):
         if k == "profile":
-            return all(S.get(f) for f, _, _ in PROFILE_FIELDS) and S.get("listed") is not None
+            return all(S.get(f) for f in PROFILE_FIELDS_REQUIRED) and S.get("listed") is not None
         if k in SURVEY_AXES:
             return all(S.get(f"stmt_{n}") is not None for n in SURVEY_AXES[k]["nums"])
         return (w_sip_cur + w_ig_cur + w_sr_cur == 100
@@ -2747,18 +2752,21 @@ with tab7:
         with st.container(border=True):
             st.markdown(f"""
             <div dir='rtl'>
-                <h4 style='color:{CBE_NAVY};font-weight:800;margin-bottom:4px;'>👤 بيانات المشارك والمعلومات الأولية والمهنية</h4>
-                <div style='background:#F0F9FF;padding:10px 14px;border-radius:6px;border-right:4px solid #0284C7;margin-bottom:12px;font-size:13px;color:#0369A1;'>
-                    🔒 <b>تنويه السرية:</b> جميع البيانات والمعلومات الواردة تحاط بالسرية التامة ولن تُستخدم إلا لأغراض البحث العلمي فقط.
+                <h4 style='color:{CBE_NAVY};font-weight:800;margin-bottom:6px;'>👤 بيانات المشارك والمعلومات الأولية والمهنية</h4>
+                <div style='background:#F0FDF4;border:1px solid #BBF7D0;border-right:4px solid #166534;padding:10px 14px;border-radius:6px;margin-bottom:14px;'>
+                    <span style='color:#166534;font-size:13px;font-weight:700;'>🔒 تنويه السرية والخصوصية: كافة البيانات والمعلومات الواردة بهذا الاستبيان تخضع للسرية التامة، ولن تُستخدم إلا لأغراض البحث العلمي والدراسة الأكاديمية فقط.</span>
                 </div>
-                <p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول السبعة التالية إلزامية (باستثناء الاسم فهو اختياري)، ولا يمكن فتح التقييم دون استكمالها.</p>
+                <p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول المعلّمة بـ (إلزامي) مطلوبة لاستكمال التقييم فتح المسار.</p>
             </div>
             """, unsafe_allow_html=True)
-
-            # إضافة خانة الاسم الاختيارية
-            st.text_input("الاسم الكريم (اختياري - لمن يرغب في تلقي ملخص نتائج الدراسة):", 
-                          value=S.get("name", ""), placeholder="اكتب الاسم هنا أو اتركه فارغاً...",
-                          key="wi_name", on_change=_sync, args=("wi_name", "name"))
+            
+            # إضافة خانة الاسم الاختيارية في الأعلى
+            st.text_input("اسم المشارك / البنك (اختياري - يترك فارغاً في حال تفضيل عدم الإفصاح):",
+                          value=S.get("respondent_name", ""),
+                          placeholder="اكتب اسمك الكفؤ أو اتركه فارغاً...",
+                          key="w_respondent_name", on_change=_sync, args=("w_respondent_name", "respondent_name"))
+            
+            st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
 
             c1, c2 = st.columns(2, gap="medium")
             for i, (skey, label, opts) in enumerate(PROFILE_FIELDS):
@@ -2819,7 +2827,7 @@ with tab7:
                 ok = step_complete(step_key)
                 st.button("الخطوة التالية ➡️", use_container_width=True, type="primary", disabled=not ok,
                           on_click=_go, args=(1,), key="nav_next",
-                          help=None if ok else "يرجى استكمال جميع الحقول/العبارات في هذه المرحلة أولاً.")
+                          help=None if ok else "يرجى استكمال جميع الحقول الإلزامية والعبارات في هذه المرحلة أولاً.")
             else:
                 can_submit = step_complete("final")
                 if st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary",
@@ -2839,7 +2847,7 @@ with tab7:
                     resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                     rec = {
                         "معرف الاستجابة": resp_id,
-                        "الاسم (اختياري)": clean_text(S.get("name", "")),
+                        "اسم المشارك": clean_text(S.get("respondent_name", "غير مفصح")),
                         "اسم البنك": clean_text(S.get("bank", "")),
                         "طبيعة المؤسسة": clean_text(S.get("org", "")),
                         "المؤهل العلمي": clean_text(S.get("sci", "")),
@@ -2865,7 +2873,7 @@ with tab7:
                         st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
 
     # --------------------------------------------------------------------------
-    # لوحة التحليل الإداري للأدمن
+    # لوحة التحليل الإداري للأدمن (التصدير بصيغة Excel نقية ومتوافقة مع العربية)
     # --------------------------------------------------------------------------
     if st.session_state.get("role") == "admin":
         st.markdown("---")
@@ -2883,6 +2891,7 @@ with tab7:
             st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية:</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
             st.dataframe(df_surveys, use_container_width=True)
 
+            # تحويل البيانات إلى شيت Excel حقيقي بـ Openpyxl لمنع مشكلة الرموز تماماً
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 df_surveys.to_excel(writer, index=False, sheet_name='استجابات الاستبيان')
@@ -2898,6 +2907,9 @@ with tab7:
         else:
             st.info("📋 لم يتم تسجيل أي استجابات في قاعدة البيانات السحابية حتى الآن.")
 
+    # --------------------------------------------------------------------------
+    # الترويسة النهائية وحقوق الطبع (تم الإبقاء على سطر واحد فقط لمنع التكرار)
+    # --------------------------------------------------------------------------
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #64748B; font-size: 13px; padding: 10px 0;" dir="rtl">
