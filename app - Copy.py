@@ -927,7 +927,6 @@ def generate_ssgi_evaluation_excel():
 
     return output.getvalue()
 
-
 # ==============================================================================
 # التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - مُطور بتجربة مستخدم عالمية (Enterprise UX)
 # ==============================================================================
@@ -940,7 +939,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # 1. إضافة زر تحميل شيت الإكسيل والتلميحة النصية المؤسسية
+    # 1. إضافة زر تحميل شيت الإكسيل والتلميحة النصية المؤسسية (مُصَحَّحة CSS)
     # --------------------------------------------------------------------------
     col_dl_excel, col_info_box = st.columns([1, 1], gap="medium")
     
@@ -958,7 +957,7 @@ with tab2:
     with col_info_box:
         st.markdown("""
         <div dir="rtl" style="background-color: #F8FAFC; border-right: 4px solid #C5A059; padding: 10px 14px; border-radius: 6px; margin-bottom: 15px;">
-            <p style="color: #002B49; font-size: 13px; font-weight: 700; margin: 0; line-line: 1.5;">
+            <p style="color: #002B49; font-size: 13px; font-weight: 700; margin: 0; line-height: 1.5;">
                 💡 <b>تلميحة منهجية:</b> تُدخل قيم المحاور الرئيسة بناءً على المخرجات النهائية لشيت التقييم التفصيلي للمتغيرات الفرعية (الـ 63 متغيراً)، أو بغرض إجراء محاكاة سريعة للسيناريوهات.
             </p>
         </div>
@@ -1006,7 +1005,7 @@ with tab2:
                 </div>
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
-                time.sleep(0.3) # إعطاء إحساس تفاعلي بالمعالجة
+                time.sleep(0.3)
                 skeleton_placeholder.empty()
 
                 # --------------------------------------------------------------
@@ -1042,7 +1041,7 @@ with tab2:
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
-                    status_border_color = "#10B981"  # Emerald Green
+                    status_border_color = "#10B981"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -1058,7 +1057,7 @@ with tab2:
                 elif final_score >= 51:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
-                    status_border_color = "#F59E0B"  # Amber Yellow
+                    status_border_color = "#F59E0B"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -1074,7 +1073,7 @@ with tab2:
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
-                    status_border_color = "#EF4444"  # Coral Red
+                    status_border_color = "#EF4444"
                     detailed_diag = f"""
                     <div style="line-height: 1.8; font-size: 14px;">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
@@ -1089,7 +1088,7 @@ with tab2:
                     """
 
                 # --------------------------------------------------------------
-                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة (Executive Metric Container)
+                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة
                 # --------------------------------------------------------------
                 metric_container_html = f"""
                 <div dir="rtl" style="
@@ -1100,7 +1099,6 @@ with tab2:
                     box-shadow: 0 10px 25px -5px rgba(0, 43, 73, 0.08);
                     margin-bottom: 20px;
                 ">
-                    <!-- عنوان الحاوية المؤسسية -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
                         <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                             🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
@@ -1110,37 +1108,30 @@ with tab2:
                         </span>
                     </div>
                     
-                    <!-- شبكة البطاقات الرقمية الأربع -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                        
-                        <!-- بطاقة 1: SSGI -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
                             <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
                         </div>
 
-                        <!-- بطاقة 2: SIP -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
                         </div>
 
-                        <!-- بطاقة 3: IG -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
 
-                        <!-- بطاقة 4: SR -->
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                             <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
                             <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
-
                     </div>
                 </div>
                 """
