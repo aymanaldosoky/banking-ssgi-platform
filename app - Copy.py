@@ -812,46 +812,10 @@ with tab1:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
         st.markdown('</div>', unsafe_allow_html=True)
-import io
-import time
-from datetime import datetime
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import streamlit as st
+
 
 # ==============================================================================
-# الثوابت الملونة والقوائم الافتراضية (لتجنب NameError)
-# ==============================================================================
-CBE_NAVY = "#002B49"
-CBE_GOLD = "#C5A059"
-CBE_BG = "#F8FAFC"
-
-BANKS_LIST_AR = [
-    "اختر البنك المصرفي",
-    "البنك الأهلي المصري",
-    "بنك مصر",
-    "البنك التجاري الدولي (CIB)",
-    "بنك القاهرة",
-    "بنك الإسكندرية"
-]
-
-if "history_state" not in st.session_state:
-    st.session_state.history_state = []
-
-# دوال مساعدة للتنظيف والتنسيق
-def clean_text(text):
-    return str(text).strip()
-
-def flat_html(html_str):
-    return "".join([line.strip() for line in html_str.split("\n")])
-
-def get_colored_score_html(score):
-    color = "#10B981" if score >= 80 else ("#F59E0B" if score >= 50 else "#EF4444")
-    return f'<span style="color: {color}; font-weight: 800;">{score}%</span>'
-
-# ==============================================================================
-# ثوابت المحاور والأوزان النسبية المعتمدة (مجموع 100% تماماً)
+# ثوابت المحاور والأوزان النسبية المعتمدة (تضمن مجموع 100% تماماً)
 # ==============================================================================
 AXIS_WEIGHTS = {
     "أولاً: منصات المعلومات الذكية (SIP)": 0.40,
@@ -860,8 +824,9 @@ AXIS_WEIGHTS = {
 }
 
 # ==============================================================================
-# دالة تجميع وإعداد هيكل المتغيرات الـ 63
+# دالة تجميع وإعداد هيكل المتغيرات الـ 63 وتوزيع الأوزان الدقيقة
 # ==============================================================================
+@st.cache_data
 def get_ssgi_variables_df():
     raw_variables = [
         ("أولاً: منصات المعلومات الذكية (SIP)", "1. جودة المعلومات", "1/1 نسبة تغطية الفروع بشبكة البيانات المركزية الموحدة"),
@@ -940,12 +905,13 @@ def get_ssgi_variables_df():
     return df_vars[["م", "المحور الرئيسي", "البعد الأساسي", "المتغير الفرعي (63 متغيراً)", "الوزن النسبي (AHP)"]]
 
 # ==============================================================================
-# دالة توليد ملف Excel التقييمي
+# دالة توليد ملف Excel التقييمي التفصيلي المعزز بالمعادلات وورقة الملخص
 # ==============================================================================
+@st.cache_data
 def generate_ssgi_evaluation_excel():
     df = get_ssgi_variables_df().copy()
     n = len(df)
-    last = n + 1
+    last = n + 1  # آخر صف بيانات في الإكسيل
 
     def _note(v):
         if "مؤشر عكسي" in v:
@@ -974,9 +940,9 @@ def generate_ssgi_evaluation_excel():
             ws.write(0, col_num, value, header_format)
         for i, w in enumerate(df["الوزن النسبي (AHP)"]):
             r = i + 1
-            ws.write_number(r, 4, w, w_fmt)
-            ws.write_blank(r, 5, None, in_fmt)
-            ws.write_formula(r, 6, f'=IF(F{r+1}="","",E{r+1}*F{r+1})', calc_fmt, "")
+            ws.write_number(r, 4, w, w_fmt)                 # E: الوزن
+            ws.write_blank(r, 5, None, in_fmt)              # F: خانة الإدخال
+            ws.write_formula(r, 6, f'=IF(F{r+1}="","",E{r+1}*F{r+1})', calc_fmt, "")  # G: حاصل الضرب
         ws.data_validation(1, 5, n, 5, {
             'validate': 'decimal', 'criteria': 'between', 'minimum': 0, 'maximum': 100,
             'input_title': 'درجة الامتثال', 'input_message': 'أدخل رقماً من 0 إلى 100',
@@ -990,7 +956,7 @@ def generate_ssgi_evaluation_excel():
         ws.freeze_panes(1, 0)
         ws.right_to_left()
 
-        # ورقة الملخص
+        # ---------------- ورقة الملخص: نتيجة كل محور تلقائياً ----------------
         ss = wb.add_worksheet('ملخص_المحاور')
         ss.right_to_left()
         txt = wb.add_format({'border': 1})
@@ -1013,6 +979,7 @@ def generate_ssgi_evaluation_excel():
             ss.write_number(r, 1, w, pct0)
             ss.write_formula(r, 2, f'=COUNTIF({B},A{x})', pct0, cnt)
             ss.write_formula(r, 3, f'=COUNTIFS({B},A{x},{F},"<>")', pct0, 0)
+            # لا تظهر النتيجة إلا بعد استكمال كل متغيرات المحور
             ss.write_formula(r, 4, f'=IF(D{x}<C{x},"",SUMIF({B},A{x},{G})/SUMIF({B},A{x},{E}))', num2, "")
             ss.write_formula(r, 5, f'=IF(E{x}="","",ROUND(E{x},0))', bold_gold, "")
         ss.write(4, 0, "مؤشر SSGI المركب (للاطلاع فقط)", txt)
@@ -1033,12 +1000,9 @@ def generate_ssgi_evaluation_excel():
 
 
 # ==============================================================================
-# التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
+# التبويب الثاني: مؤشر الحوكمة المركب (SSGI) - مُطور بتجربة مستخدم عالمية (Enterprise UX)
 # ==============================================================================
-# ملاحظة: إذا لم تكن تبويبات st.tabs قد أنشئت سابقاً، سيستخدم الصفحة الرئيسية
-tab2_container = st.container()
-
-with tab2_container:
+with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
@@ -1046,6 +1010,12 @@ with tab2_container:
     </div>
     """, unsafe_allow_html=True)
 
+    # شارة التحقق من إصدار النسخة النشطة
+    st.caption("🔖 إصدار الواجهة: SSGI-v3 (2026-11-07)")
+
+    # --------------------------------------------------------------------------
+    # 1. زر تحميل شيت الإكسيل وصندوق تعليمات الاستخدام المحدث
+    # --------------------------------------------------------------------------
     col_dl_excel, col_info_box = st.columns([1, 1], gap="medium")
 
     with col_dl_excel:
@@ -1076,6 +1046,7 @@ with tab2_container:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="t1_bank")
 
+        # التلميحة المباشرة للتحكم في المنزلقات
         st.caption("ℹ️ *تُدخل قيم المحاور الرئيسة بناءً على المخرجات النهائية لشيت التقييم التفصيلي للمتغيرات الفرعية (الـ 63 متغيراً)، أو بغرض إجراء محاكاة سريعة للسيناريوهات.*")
 
         sip_val = st.slider("1. محور منصات المعلومات والبنية الرقمية (SIP - 40%)", 0, 100, 88, key="t1_sip", help="يعكس حصيلة تقييم الـ 16 متغيراً الفرعياً المكونة لمحور منصات المعلومات الذكية")
@@ -1091,6 +1062,30 @@ with tab2_container:
             if bank_ssgi_sel == "اختر البنك المصرفي":
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
+                # --------------------------------------------------------------
+                # 1. عرض Skeleton Loader أثناء التجهيز والحساب
+                # --------------------------------------------------------------
+                skeleton_placeholder = st.empty()
+                skeleton_html = flat_html(f"""
+                <div class="skeleton-card">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line skeleton-badge"></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                        <div class="skeleton-line" style="flex: 1; height: 50px;"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-body-1"></div>
+                    <div class="skeleton-line skeleton-body-2"></div>
+                </div>
+                """)
+                skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
+                time.sleep(0.3)
+                skeleton_placeholder.empty()
+
+                # --------------------------------------------------------------
+                # 2. احتساب المؤشر المركب والصياغات التشخيصية (معالجة ثغرة التصنيف)
+                # --------------------------------------------------------------
                 final_score = round((sip_val * 0.40) + (ig_val * 0.30) + (sr_val * 0.30), 2)
                 score_str_plain = get_colored_score_html(final_score)
 
@@ -1121,29 +1116,55 @@ with tab2_container:
                 if final_score >= 80:
                     diagnosis = "🟢 أداء مصرفي مرتفع ومنتظم، نحو الريادة والسيادة الرقمية المستدامة."
                     badge_status = "أداء مرتفع 🟢"
-                    status_border_color = "#10B981"
+                    status_border_color = "#10B981"  # Emerald Green
+                    detailed_diag = f"""
+                    <div style="line-height: 1.8; font-size: 14px;">
+                        <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
+                        <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
+                        </ul>
+                    </div>
+                    """
                 elif final_score >= 50:
                     diagnosis = "🟡 أداء متوسط، يتطلب تعزيزاً استباقياً لمعالجة الفجوات الهيكلية."
                     badge_status = "أداء متوسط 🟡"
-                    status_border_color = "#F59E0B"
+                    status_border_color = "#F59E0B"  # Amber Yellow
+                    detailed_diag = f"""
+                    <div style="line-height: 1.8; font-size: 14px;">
+                        <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
+                        <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
+                        </ul>
+                    </div>
+                    """
                 else:
                     diagnosis = "🔴 فجوة هيكلية حرجة تستوجب التدخل الفوري وتفعيل محاكي السياسات."
                     badge_status = "فجوة حرجة 🔴"
-                    status_border_color = "#EF4444"
+                    status_border_color = "#EF4444"  # Coral Red
+                    detailed_diag = f"""
+                    <div style="line-height: 1.8; font-size: 14px;">
+                        <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
+                        <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
+                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                        <ul style="margin: 0; padding-right: 20px;">
+                            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
+                            <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
+                            <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
+                        </ul>
+                    </div>
+                    """
 
-                detailed_diag = f"""
-                <div style="line-height: 1.8; font-size: 14px;">
-                    <p><b>حالة النضج: {badge_status}</b> - بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
-                    <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                    <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                    <ul style="margin: 0; padding-right: 20px;">
-                        <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
-                        <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
-                        <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
-                    </ul>
-                </div>
-                """
-
+                # --------------------------------------------------------------
+                # 3. عرض البطاقات الرقمية الرئيسية داخل حاوية فخمة (Executive Metric Container)
+                # --------------------------------------------------------------
                 metric_container_html = f"""
                 <div dir="rtl" style="
                     background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
@@ -1154,7 +1175,7 @@ with tab2_container:
                     margin-bottom: 20px;
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
-                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px;">
+                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                             🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
                         </h4>
                         <span style="background: #FFFFFF; color: {CBE_NAVY}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #CBD5E1;">
@@ -1163,30 +1184,37 @@ with tab2_container:
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color};">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block;">مؤشر SSGI المركب</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY};">{final_score}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
+                            <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY};">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block;">منصات المعلومات (SIP)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY};">{sip_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD};">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block;">الحوكمة المؤسسية (IG)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY};">{ig_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569;">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block;">تقارير الاستدامة (SR)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY};">{sr_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
+                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
+                            <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
                     </div>
                 </div>
                 """
                 st.markdown(flat_html(metric_container_html), unsafe_allow_html=True)
 
+                # --------------------------------------------------------------
+                # 4. حفظ البيانات والتحديث الفوري للذاكرة الجلسية
+                # --------------------------------------------------------------
                 entry = {
                     "معرف السجل": f"{clean_text(bank_ssgi_sel)} [{datetime.now().strftime('%H:%M:%S')}]",
                     "البنك": clean_text(bank_ssgi_sel),
@@ -1201,7 +1229,7 @@ with tab2_container:
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
-                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; margin-top: 10px;">
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
                   <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
                     <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">التشخيص القياسي المفصل:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
@@ -1209,6 +1237,9 @@ with tab2_container:
                 </div>
                 """), unsafe_allow_html=True)
 
+                # --------------------------------------------------------------
+                # 5. عرض الرسوم البيانية التفاعلية المزدوجة (Plotly Charts)
+                # --------------------------------------------------------------
                 st.markdown("<br>", unsafe_allow_html=True)
                 ch_col1, ch_col2 = st.columns(2)
 
@@ -1259,6 +1290,9 @@ with tab2_container:
 
     st.markdown("---")
 
+    # --------------------------------------------------------------------------
+    # الجدول الأول: ترتيب وسجلات البنوك المُشخَّصة
+    # --------------------------------------------------------------------------
     st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
 
     if st.session_state.history_state:
@@ -1266,17 +1300,17 @@ with tab2_container:
 
         history_table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
-        <table style="width:100%; border-collapse: collapse; text-align: right;">
+        <table class="custom-rtl-table">
         <thead>
-        <tr style="background-color: #002B49; color: white;">
-        <th style="padding: 8px; text-align: center;">م</th>
-        <th style="padding: 8px;">معرف السجل / التوقيت</th>
-        <th style="padding: 8px;">اسم البنك</th>
-        <th style="padding: 8px; text-align: center;">مؤشر SSGI (%)</th>
-        <th style="padding: 8px; text-align: center;">SIP (40%)</th>
-        <th style="padding: 8px; text-align: center;">IG (30%)</th>
-        <th style="padding: 8px; text-align: center;">SR (30%)</th>
-        <th style="padding: 8px;">التقييم التشخيصي القياسي</th>
+        <tr>
+        <th style="width: 40px; text-align: center;">م</th>
+        <th>معرف السجل / التوقيت</th>
+        <th>اسم البنك</th>
+        <th style="text-align: center;">مؤشر SSGI (%)</th>
+        <th style="text-align: center;">SIP (40%)</th>
+        <th style="text-align: center;">IG (30%)</th>
+        <th style="text-align: center;">SR (30%)</th>
+        <th>التقييم التشخيصي القياسي</th>
         </tr>
         </thead>
         <tbody>
@@ -1290,15 +1324,15 @@ with tab2_container:
             score_badge = f"<span style='color: {CBE_GOLD}; font-weight: 800;'>{score_val}%</span>"
 
             history_table_html += f"""
-            <tr style="border-bottom: 1px solid #E2E8F0;">
-            <td style="text-align: center; font-weight: bold; color: {CBE_NAVY}; padding: 8px;">{idx + 1}</td>
-            <td style="font-size: 11.5px; color: #64748B; padding: 8px;">{rec_id}</td>
-            <td style="font-weight: 700; color: {CBE_NAVY}; padding: 8px;">{clean_bank_name}</td>
-            <td style="text-align: center; font-size: 13px; padding: 8px;">{score_badge}</td>
-            <td style="text-align: center; padding: 8px;">{row['منصات المعلومات (40%)']}%</td>
-            <td style="text-align: center; padding: 8px;">{row['الحوكمة المؤسسية (30%)']}%</td>
-            <td style="text-align: center; padding: 8px;">{row['تقارير الاستدامة (30%)']}%</td>
-            <td style="font-size: 12px; color: #334155; padding: 8px;">{clean_diag}</td>
+            <tr>
+            <td style="text-align: center; font-weight: bold; color: {CBE_NAVY};">{idx + 1}</td>
+            <td style="font-size: 11.5px; color: #64748B;">{rec_id}</td>
+            <td style="font-weight: 700; color: {CBE_NAVY};">{clean_bank_name}</td>
+            <td style="text-align: center; font-size: 13px;">{score_badge}</td>
+            <td style="text-align: center;">{row['منصات المعلومات (40%)']}%</td>
+            <td style="text-align: center;">{row['الحوكمة المؤسسية (30%)']}%</td>
+            <td style="text-align: center;">{row['تقارير الاستدامة (30%)']}%</td>
+            <td style="font-size: 12px; color: #334155;">{clean_diag}</td>
             </tr>
             """
 
@@ -1332,6 +1366,155 @@ with tab2_container:
                     st.rerun()
     else:
         st.info("📂 لا توجد بنوك مسجلة حتى الآن. قم بإجراء التشخيص في الأعلى لتسجيل وترتيب البنوك المصرفية.")
+
+    st.markdown("---")
+
+    # --------------------------------------------------------------------------
+    # الجدول الثاني: استعراض المصفوفة الهرمية المحدثة بالكامل وجدول أوزان المتغيرات
+    # --------------------------------------------------------------------------
+    with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية الـ 63 لمؤشر الحوكمة (SSGI)", expanded=False):
+        st.markdown("""
+        <div dir="rtl" style="text-align: right; line-height: 1.8;">
+        <ul>
+            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم 16 متغيراً فرعياً موزعة على 4 أبعاد (جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة).</li>
+            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم 25 متغيراً فرعياً موزعة على 6 أبعاد (سيادة القانون، العدالة، المتابعة، المشاركة، الشفافية، ومجلس الإدارة).</li>
+            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم 22 متغيراً فرعياً موزعة على 5 أبعاد (الاستراتيجية، التنوع، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس).</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+        hierarchy_table_html = """
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 450px;">
+        <table class="custom-rtl-table">
+        <thead>
+        <tr>
+        <th style="width: 25%;">المحور الرئيسي</th>
+        <th style="width: 25%;">البعد الأساسي</th>
+        <th style="width: 50%;">العناصر الفرعية (الـ 63 متغيراً التفصيلية)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- منصات المعلومات -->
+        <tr>
+        <td rowspan="4" style="font-weight: bold; color: #002B49; vertical-align: top;">أولاً: منصات المعلومات الذكية (SIP - 40%)</td>
+        <td>1. جودة المعلومات</td>
+        <td>1/1 نسبة تغطية الفروع بشبكة البيانات المركزية.<br>1/2 سعة التخزين السحابي/المحلي.<br>1/3 نسبة البيانات المهيكلة (Structured).<br>1/4 نسبة اكتمال حقول البيانات (Data Completeness).</td>
+        </tr>
+        <tr>
+        <td>2. التكامل والخصوصية</td>
+        <td>2/1 عدد الأنظمة الفرعية المربوطة بـ (APIs).<br>2/2 معدل وقت التشغيل (System Uptime).<br>2/3 نسبة البيانات المستضافة محلياً (On-Premise).<br>2/4 عدد حوادث اختراق البيانات المسجلة.</td>
+        </tr>
+        <tr>
+        <td>3. الامتثال التقني</td>
+        <td>3/1 نسبة ضوابط معيار (ISO 27001).<br>3/2 عدد شهادات الامتثال التقني السارية.<br>3/3 عدد عمليات التدقيق على نماذج الذكاء الاصطناعي.<br>3/4 نسبة النماذج الموثقة بسجلات شرح النتائج.</td>
+        </tr>
+        <tr>
+        <td>4. التخطيط والمراقبة بعد النشر</td>
+        <td>4/1 متوسط الزمن المستغرق لاكتشاف الخطأ (MTTD).<br>4/2 عدد التنبيهات الآلية الصحيحة.<br>4/3 معدل دقة التنبؤات (AI Accuracy Rate).<br>4/4 نسبة التقارير التي تطلبت تصحيحاً يدوياً.</td>
+        </tr>
+        <!-- الحوكمة المؤسسية -->
+        <tr>
+        <td rowspan="6" style="font-weight: bold; color: #002B49; vertical-align: top;">ثانياً: الحوكمة المؤسسية (IG - 30%)</td>
+        <td>1. سيادة القانون</td>
+        <td>1/1 نسبة السياسات الداخلية المحدثة.<br>1/2 قيمة الغرامات المالية الموقعة.<br>1/3 نسبة الموظفين الموقعين على مدونة السلوك.<br>1/4 عدد بلاغات المخالفات الأخلاقية.</td>
+        </tr>
+        <tr>
+        <td>2. العدالة والمساواة</td>
+        <td>2/1 نسبة فجوة الأجور بين الجنسين.<br>2/2 نسبة الترقيات الداخلية مقارنة بالتعيينات.<br>2/3 نسبة توزيعات الأرباح إلى صافي الربح.<br>2/4 عدد القضايا المرفوعة ضد البنك.</td>
+        </tr>
+        <tr>
+        <td>3. المتابعة والمساءلة</td>
+        <td>3/1 نسبة العمليات الموثقة بمصفوفة (RACI).<br>3/2 عدد الأوصاف الوظيفية المحدثة للقيادات.<br>3/3 نسبة توصيات المراجعة الداخلية المنفذة.<br>3/4 عدد اجتماعات لجان الحوكمة والمخاطر.</td>
+        </tr>
+        <tr>
+        <td>4. المشاركة</td>
+        <td>4/1 معدل الاستجابة لشكاوى العملاء.<br>4/2 عدد قنوات التواصل الرقمية الفعالة.<br>4/3 نسبة القرارات الاستراتيجية التي خضعت لاستطلاع الرأي.</td>
+        </tr>
+        <tr>
+        <td>5. الشفافية والإفصاح</td>
+        <td>5/1 درجة سهولة القراءة (Readability Score).<br>5/2 عدد صفحات الإفصاح عن المخاطر غير المالية.<br>5/3 الفجوة الزمنية لنشر التقرير.<br>5/4 عدد الإفصاحات الفورية عن الأحداث الجوهرية.</td>
+        </tr>
+        <tr>
+        <td>6. مجلس الإدارة</td>
+        <td>6/1 نسبة حضور أعضاء مجلس الإدارة.<br>6/2 متوسط سنوات خبرة الأعضاء بالاستدامة.<br>6/3 عدد اجتماعات لجنة الترشيحات والمكافآت.<br>6/4 نسبة التزام المجلس بتقييم الأداء السنوي.<br>6/5 نسبة اللجان السيادية برئاسة أعضاء مستقلين.<br>6/6 عدد حالات تعارض المصالح المرصودة.</td>
+        </tr>
+        <!-- تقارير الاستدامة -->
+        <tr>
+        <td rowspan="5" style="font-weight: bold; color: #002B49; vertical-align: top;">ثالثاً: تقارير الاستدامة (SR - 30%)</td>
+        <td>1. الاستراتيجية</td>
+        <td>1/1 عدد أهداف التنمية المستدامة المتبناة.<br>1/2 نسبة الأهداف المحققة من المخطط.<br>1/3 نسبة ميزانية R&D والتحول الأخضر.<br>1/4 حجم الاستثمار في البنية التحتية المستدامة.</td>
+        </tr>
+        <tr>
+        <td>2. التنوع والشمول</td>
+        <td>2/1 نسبة تمثيل المرأة في مجلس الإدارة.<br>2/2 نسبة الأعضاء المستقلين في المجلس.<br>2/3 نسبة ذوي الهمم من إجمالي القوى العاملة.<br>2/4 نسبة الموظفين من خارج العاصمة (الأقاليم).</td>
+        </tr>
+        <tr>
+        <td>3. إدارة المخاطر</td>
+        <td>3/1 نسبة محفظة الائتمان المقيمة بيئياً.<br>3/2 القيمة المعرضة للخطر (VaR) المناخية.<br>3/3 عدد سيناريوهات اختبارات الضغط المناخية.<br>3/4 نسبة كفاية رأس المال (CAR) المناخية.</td>
+        </tr>
+        <tr>
+        <td>4. الأبعاد التشغيلية</td>
+        <td>4/1 نسبة الأصول الخضراء (GAR).<br>4/2 حجم القروض الموجهة للمشروعات الصغرى والمتوسطة.<br>4/3 إجمالي انبعاثات الكربون لكل موظف.<br>4/4 نسبة استهلاك الطاقة المتجددة.<br>4/5 نسبة الإنفاق على (CSR).<br>4/6 عدد المستفيدين من الشمول المالي.</td>
+        </tr>
+        <tr>
+        <td>5. المقاييس والأهداف</td>
+        <td>5/1 نسبة التغير السنوي في خفض الانبعاثات.<br>5/2 معدل تحقيق مؤشرات الأداء الرئيسية.<br>5/3 نسبة تغطية مؤشرات (GRI).<br>5/4 مستوى التوكيد الخارجي.</td>
+        </tr>
+        </tbody>
+        </table>
+        </div>
+        """
+        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
+
+        # ---------------- عرض جدول الأوزان المعتمدة الـ 63 تلقائياً ----------------
+        df_w = get_ssgi_variables_df()
+        w_rows = ""
+        for (axis, dim), g in df_w.groupby(["المحور الرئيسي", "البعد الأساسي"], sort=False):
+            wv = g["الوزن النسبي (AHP)"]
+            w_rows += f"""
+            <tr>
+            <td>{axis}</td>
+            <td>{dim}</td>
+            <td style="text-align: center;">{len(g)}</td>
+            <td style="text-align: center;">{wv.iloc[0]*100:.3f}%</td>
+            <td style="text-align: center;">{wv.sum()*100:.2f}%</td>
+            </tr>"""
+        w_rows += f"""
+            <tr style="font-weight: bold;">
+            <td colspan="2">الإجمالي</td>
+            <td style="text-align: center;">{len(df_w)}</td>
+            <td style="text-align: center;">-</td>
+            <td style="text-align: center;">{df_w['الوزن النسبي (AHP)'].sum()*100:.2f}%</td>
+            </tr>"""
+        st.markdown("<p dir='rtl' style='text-align:right;font-weight:800;color:#002B49;margin-top:14px;'>⚖️ الأوزان المعتمدة للمتغيرات الـ 63</p>", unsafe_allow_html=True)
+        st.markdown(flat_html(f"""
+        <div dir="rtl" style="width: 100%; overflow-x: auto;">
+        <table class="custom-rtl-table">
+        <thead><tr><th>المحور الرئيسي</th><th>البعد</th><th style="text-align:center;">عدد المتغيرات</th>
+        <th style="text-align:center;">وزن كل متغير</th><th style="text-align:center;">وزن البعد من المؤشر</th></tr></thead>
+        <tbody>{w_rows}</tbody>
+        </table>
+        </div>
+        """), unsafe_allow_html=True)
+
+        axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
+        weights_vals_bank = [40, 30, 30]
+        custom_pie_colors_bank = [CBE_NAVY, CBE_GOLD, "#475569"]
+
+        fig_pie_bank = px.pie(
+            names=axes_names_bank,
+            values=weights_vals_bank,
+            hole=0.4,
+            title="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)",
+            color=axes_names_bank,
+            color_discrete_map=dict(zip(axes_names_bank, custom_pie_colors_bank))
+        )
+        fig_pie_bank.update_layout(
+            title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.5, xanchor='center'),
+            paper_bgcolor="#FFFFFF",
+            font=dict(family="Cairo", size=13)
+        )
+        st.plotly_chart(fig_pie_bank, use_container_width=True)
 # ------------------------------------------------------------------------------
 # التبويب الثالث: محاكي السياسات (Policy Simulator)
 # ------------------------------------------------------------------------------
