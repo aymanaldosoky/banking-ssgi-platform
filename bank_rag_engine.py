@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v3 - Integrated Edition)
+bank_rag_engine.py  (v3.1 - Dynamic Multi-Bank JSON Integrated Edition)
 محرك "اسأل المنصة" المطوَّر والمنظومة المكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -103,7 +103,7 @@ INTENT_KEYWORDS = {
                    "stakeholder", "الفرق بين حوكمه الشركات والحوكمه المؤسسيه"],
     "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
     "transparency": ["الشفافيه", "المساءله", "مكافحه الفساد", "غسل الاموال", "يفصح عن سياسات"],
-    "cbe_compliance": ["الالتزام التام", "القوانين", "اللوائح", "الصادره عن البنك المركزي", "يمتثل للرقابه"],
+    "cbe_compliance": ["الالتزام التام", "القوانين", "اللوائح", "الصادره عن البنك المركزي", "يمتثل للرقابه", "خطوط الدفاع الثلاثة"],
     "balance_sheet": ["المركز المالي", "اجمالي الاصول", "ميزانيه", "اجمالي الودائع", "ودائع العملاء",
                       "راس المال المدفوع", "الارصده النقديه"],
     "asset_quality": ["القروض المتعثره", "متعثره", "تعثر", "المخصصات", "تغطيه المخصصات", "جوده الاصول",
@@ -122,10 +122,11 @@ INTENT_KEYWORDS = {
     "csr": ["المسوءوليه المجتمعيه", "المسؤوليه المجتمعيه", "الانفاق التنموي", "مبادرات البنك", "csr"],
     "data_gov": ["حوكمه البيانات", "الامتثال الرقابي", "تامينها", "اليات حوكمه"],
     "cyber": ["الحصانه السيبرانيه", "السيبراني", "تسريب", "هجمات", "اختراق"],
-    "sip": ["البنيه التحتية", "جاهزيه", "منصات المعلومات", "sip", "التحول الرقمي"],
+    "sip": ["البنيه التحتية", "جاهزيه", "منصات المعلومات", "sip"],
     "regtech": ["regtech", "الرقابه التنظيميه", "استرجاع المعطيات", "تقنيات الرقابه",
                 "الذكاء الاصطناعي التوليدي", "ssgi"],
     "pdpl": ["حمايه البيانات الشخصية", "السياده الرقميه", "قانون حماية", "التوافق مع قانون"],
+    "ai": ["التحول الرقمي", "الذكاء الاصطناعي", "تطبيقات الذكاء الاصطناعي", "الأتمتة", "الذكاء الإصطناعي"],
 }
 
 _NORM_KW = {i: [norm(k) for k in kws] for i, kws in INTENT_KEYWORDS.items()}
@@ -188,7 +189,7 @@ def bank_type(bank):
 
 FOUNDERS = {
     "بنك مصر BM": "الاقتصادي الوطني محمد طلعت حرب باشا",
-    "البنك الأهلي المصري NBE": "تأسس بأمر عالٍ في عهد الخديوي عباس حلمي الثاني بمبادرة من السير إرنست كاسل",
+    "البنك الأهلي المصري NBE": "تأسس بأمر عالٍ في عهد الخديوي عباس حلمي الثاني بمبادرة من السير إرنست كاسل ورافائيل سوارس",
     "بنك فيصل الإسلامي": "الأمير محمد الفيصل آل سعود ونخبة من الشخصيات المصرية",
 }
 
@@ -202,7 +203,7 @@ PROFILES = {
     ),
     "البنك الأهلي المصري NBE": dict(
         founded="25 يونيو 1898",
-        origin="تأسس بأمر عالٍ في عهد الخديوي عباس حلمي الثاني بمبادرة من السير إرنست كاسل، وقام بدور بنك الإصدار (البنك المركزي) حتى عام 1961.",
+        origin="تأسس بأمر عالٍ في عهد الخديوي عباس حلمي الثاني بمبادرة من السير إرنست كاسل ورافائيل سوارس، وقام بدور بنك الإصدار (البنك المركزي) حتى عام 1961.",
         ownership="مملوك بالكامل للدولة المصرية (بنك حكومي)",
         branches="يمتلك أضخم شبكة فروع في مصر تتجاوز 650 فرعاً ووحدة مصرفية، ومكاتب تمثيل وفروع خارجية في لندن، نيويورك، الخرطوم، جوبا، وشنغهاي، بالإضافة إلى أكثر من 6,700 ماكينة صراف آلي.",
         mandate="أكبر بنك في مصر والشرق الأوسط من حيث الأصول والودائع، والممول الرئيسي للقطاعات الاقتصادية الكبرى والحكومية.",
@@ -792,6 +793,11 @@ def comp_pdpl(bank, p):
          ("السيادة الرقمية والسرية المصرفية", "حظر نقل البيانات المصرفية خارج مصر إلا بضوابط وترخيص والالتزام ببدائل التوطين المعتمدة.")]
     return _pack(f"{bank}: قانون حماية البيانات والسيادة الرقمية", b)
 
+def comp_ai(bank, p):
+    b = [("التطبيق المصرفي", "تبني حلول التحول الرقمي، التحليلات التنبؤية، وأنظمة التعلم الآلي للكشف عن الاحتيال وفق تعليمات البنك المركزي."),
+         ("أطر الحوكمة الرقمية", "الالتزام بأمن المعلومات، وحوكمة البيانات لضمان الجاهزية للتوسع في خوارزميات الذكاء الاصطناعي.")]
+    return _pack(f"{bank}: تطبيقات الذكاء الاصطناعي والتحول الرقمي", b)
+
 COMPOSERS = {
     "branches": comp_branches, "vision_mission": comp_vision_mission, "history": comp_history,
     "board": comp_board, "gov_theory": comp_gov_theory, "independence": comp_independence,
@@ -801,6 +807,7 @@ COMPOSERS = {
     "women": comp_women, "climate": comp_climate, "green_assets": comp_green_assets,
     "reporting": comp_reporting, "csr": comp_csr, "data_gov": comp_data_gov,
     "cyber": comp_cyber, "sip": comp_sip, "regtech": comp_regtech, "pdpl": comp_pdpl,
+    "ai": comp_ai
 }
 
 def _compose(intent, bank, p, question):
@@ -810,19 +817,33 @@ def _compose(intent, bank, p, question):
     return comp(bank, p, question) if intent == "history" else comp(bank, p)
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON
+# 5) أرشيف المعرفة JSON (تحميل ديناميكي آلي متعدد البنوك)
 # ==============================================================================
 _KB_CACHE = {"sig": None, "data": {}}
 
 def _kb_signature():
     files = [f"archive_part_{i}.json" for i in range(1, 7)] + [JSON_KNOWLEDGE_FILE]
+    # إضافة مصفوفة تواريخ تعديل كافة ملفات الـ JSON في المجلد الحالي
+    try:
+        json_files = [f for f in os.listdir(".") if f.endswith(".json")]
+        for jf in json_files:
+            if jf not in files:
+                files.append(jf)
+    except Exception:
+        pass
     return tuple((f, os.path.getmtime(f)) for f in files if os.path.exists(f))
 
 def load_json_knowledge():
+    """
+    تحميل أرشيف المعرفة الموحد بالإضافة إلى أي ملفات JSON مستخرجة فردية للبنوك تلقائياً.
+    """
     sig = _kb_signature()
     if sig == _KB_CACHE["sig"]:
         return _KB_CACHE["data"]
+        
     combined_data = {}
+    
+    # 1. قراءة الملفات المجمعة السابقة إن وجدت
     for i in range(1, 7):
         part_filename = f"archive_part_{i}.json"
         if os.path.exists(part_filename):
@@ -833,12 +854,29 @@ def load_json_knowledge():
                         combined_data.update(part_data)
             except Exception:
                 pass
+                
     if not combined_data and os.path.exists(JSON_KNOWLEDGE_FILE):
         try:
             with open(JSON_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
                 combined_data = json.load(f)
         except Exception:
             pass
+
+    # 2. قراءة واكتشاف كافة ملفات JSON الخاصة بالبنوك في المجلد تلقائياً (مثل nbe_governance.json)
+    try:
+        for file in os.listdir("."):
+            if file.endswith(".json") and file != JSON_KNOWLEDGE_FILE and not file.startswith("archive_part_"):
+                with open(file, "r", encoding="utf-8") as f:
+                    bank_file_data = json.load(f)
+                    if isinstance(bank_file_data, dict):
+                        for b_name, b_intents in bank_file_data.items():
+                            if b_name not in combined_data:
+                                combined_data[b_name] = {}
+                            if isinstance(b_intents, dict):
+                                combined_data[b_name].update(b_intents)
+    except Exception as e:
+        print(f"Error reading dynamic bank JSON files: {e}")
+
     _KB_CACHE["sig"], _KB_CACHE["data"] = sig, combined_data
     return combined_data
 
@@ -970,7 +1008,7 @@ def process_rag_gemini_query(bank_name, question):
     intents = classify_intents(question)
     primary = intents[0] if intents else None
 
-    # الطبقة 1: الأرشيف
+    # الطبقة 1: الأرشيف (بما في ذلك ملفات JSON المستخرجة لكل بنك)
     arch = archive_lookup(bank_name, question, primary)
     if arch:
         if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
