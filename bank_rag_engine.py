@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v3.1 - Dynamic Multi-Bank JSON Integrated Edition)
+bank_rag_engine.py  (v3.2 - Advanced Dynamic JSON Retrieval & Expanded Answer Edition)
 محرك "اسأل المنصة" المطوَّر والمنظومة المكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -881,26 +881,62 @@ def load_json_knowledge():
     return combined_data
 
 def archive_lookup(bank, question, intent, kb=None):
+    """
+    البحث الذكي والمرن داخل أرشيف الـ JSON:
+    1. يطابق أولاً بواسطة رمز النية (Intent code) مثل "women", "independence".
+    2. يطابق بالمستندات العميقة والكلمات المفتاحية في حال كان الملف يحتوي أسماء عربية للمجالات.
+    """
     kb = kb if kb is not None else load_json_knowledge()
     d = kb.get(bank) if isinstance(kb, dict) else None
+    
     if not d:
+        # البحث في حالة كان اسم البنك مفصلاً في الـ JSON بطريقة مختلفة قليلاً
+        for b_name in kb.keys():
+            if norm(bank) in norm(b_name) or norm(b_name) in norm(bank):
+                d = kb[b_name]
+                break
+                
+    if not d or not isinstance(d, dict):
         return None
+
+    # أ) مطابقة مباشرة بواسطة النية (Intent)
     if intent and intent in d:
-        return d[intent]
-    q = norm(question)
-    qwords = {w for w in q.split() if len(w) > 3}
-    best, best_score = None, 0
-    for key, text in d.items():
-        k = norm(key)
-        if k in q:
-            return text
-        kw = {w for w in k.split() if len(w) > 3}
-        if not kw:
-            continue
-        score = len(kw & qwords) / len(kw)
-        if score > best_score:
-            best, best_score = text, score
-    return best if best_score >= 0.6 else None
+        res = d[intent]
+        if isinstance(res, dict):
+            # إذا كانت النتيجة تحتوي على نص موسع محدد
+            return res.get("full_text") or res.get("text") or str(res)
+        return str(res)
+
+    # ب) المطابقة بواسطة العناوين أو الأسئلة داخل الـ JSON (Fuzzy / Semantic Matching)
+    q_norm = norm(question)
+    q_tokens = set(_tokens(q_norm))
+    
+    best_text = None
+    max_overlap = 0
+
+    for k, val in d.items():
+        k_norm = norm(k)
+        # 1. إذا كان اسم النية أو المفتاح موجوداً في السؤال
+        if k_norm in q_norm or q_norm in k_norm:
+            if isinstance(val, dict):
+                return val.get("full_text") or val.get("text") or str(val)
+            return val if isinstance(val, str) else str(val)
+        
+        # 2. حساب نسبة تقاطع الكلمات
+        k_tokens = set(_tokens(k_norm))
+        if k_tokens:
+            overlap = len(k_tokens & q_tokens) / len(k_tokens)
+            if overlap > max_overlap:
+                max_overlap = overlap
+                best_text = val
+
+    # إذا تم إيجاد مطابقة تتجاوز 40% نعيد النص الموسع فوراً
+    if max_overlap >= 0.4 and best_text:
+        if isinstance(best_text, dict):
+            return best_text.get("full_text") or best_text.get("text") or str(best_text)
+        return best_text if isinstance(best_text, str) else str(best_text)
+
+    return None
 
 # ==============================================================================
 # 6) طبقة نموذج اللغة (LLM Layer)
@@ -1008,16 +1044,21 @@ def process_rag_gemini_query(bank_name, question):
     intents = classify_intents(question)
     primary = intents[0] if intents else None
 
-    # الطبقة 1: الأرشيف (بما في ذلك ملفات JSON المستخرجة لكل بنك)
+    # 🟢 1. البحث أولاً في أرشيف الـ JSON عن النص الموسّع الكامل
     arch = archive_lookup(bank_name, question, primary)
     if arch:
+        # إذا تم العثور على نص الـ JSON الموسّع، نقوم بتنسيقه وتحويله إلى HTML جميل
+        formatted_arch = md_to_html(arch) if not arch.strip().startswith("<") else arch
+        
+        # إثراء النص بـ LLM إن كان الخيار مفعلاً، وإلا إرجاع نص JSON الموسّع كاملاً
         if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
             txt = call_llm(build_prompt(bank_name, question, p, archive_text=arch))
             if txt:
                 return render_card(bank_name, question, md_to_html(txt), "llm")
-        return render_card(bank_name, question, arch, "archive")
+                
+        return render_card(bank_name, question, formatted_arch, "archive")
 
-    # الطبقة 2: ملف التعريف + الإطار التنظيمي
+    # 🟡 2. إذا لم يتوفر النص الموسّع في الـ JSON، نلجأ إلى القوالب المقتضبة (Fallback)
     parts = []
     for it in intents:
         r = _compose(it, bank_name, p, question)
@@ -1033,13 +1074,13 @@ def process_rag_gemini_query(bank_name, question):
             tier = "llm" if all(t == "llm" for _, _, t in parts) else "profile"
         return render_card(bank_name, question, body, tier)
 
-    # الطبقة 3: نموذج اللغة
+    # 🔵 3. استخدام النموذج التوليدي
     if llm_available():
         txt = call_llm(build_prompt(bank_name, question, p))
         if txt:
             return render_card(bank_name, question, md_to_html(txt), "llm")
 
-    # الطبقة 4: الفجوة
+    # ⚪ 4. حالة عدم توفر البيانات
     gap = (f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
            f"ولن تُقدَّم إجابة مبنية على التخمين.</p>")
     return render_card(bank_name, question, gap, "gap")
