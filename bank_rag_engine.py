@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v3.2 - Advanced Dynamic JSON Retrieval & Expanded Answer Edition)
+bank_rag_engine.py  (v3.2 - Enhanced Deep JSON RAG & Structural Matching Edition)
 محرك "اسأل المنصة" المطوَّر والمنظومة المكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -823,7 +823,6 @@ _KB_CACHE = {"sig": None, "data": {}}
 
 def _kb_signature():
     files = [f"archive_part_{i}.json" for i in range(1, 7)] + [JSON_KNOWLEDGE_FILE]
-    # إضافة مصفوفة تواريخ تعديل كافة ملفات الـ JSON في المجلد الحالي
     try:
         json_files = [f for f in os.listdir(".") if f.endswith(".json")]
         for jf in json_files:
@@ -903,7 +902,6 @@ def archive_lookup(bank, question, intent, kb=None):
     if intent and intent in d:
         res = d[intent]
         if isinstance(res, dict):
-            # إذا كانت النتيجة تحتوي على نص موسع محدد
             return res.get("full_text") or res.get("text") or str(res)
         return str(res)
 
@@ -916,11 +914,10 @@ def archive_lookup(bank, question, intent, kb=None):
 
     for k, val in d.items():
         k_norm = norm(k)
-        # 1. إذا كان اسم النية أو المفتاح موجوداً في السؤال
+        # 1. إذا كان اسم النواية أو المفتاح موجود في السؤال
         if k_norm in q_norm or q_norm in k_norm:
-            if isinstance(val, dict):
-                return val.get("full_text") or val.get("text") or str(val)
-            return val if isinstance(val, str) else str(val)
+            val_text = val.get("full_text") or val.get("text") if isinstance(val, dict) else val
+            return str(val_text)
         
         # 2. حساب نسبة تقاطع الكلمات
         k_tokens = set(_tokens(k_norm))
@@ -928,13 +925,11 @@ def archive_lookup(bank, question, intent, kb=None):
             overlap = len(k_tokens & q_tokens) / len(k_tokens)
             if overlap > max_overlap:
                 max_overlap = overlap
-                best_text = val
+                best_text = val.get("full_text") or val.get("text") if isinstance(val, dict) else val
 
     # إذا تم إيجاد مطابقة تتجاوز 40% نعيد النص الموسع فوراً
     if max_overlap >= 0.4 and best_text:
-        if isinstance(best_text, dict):
-            return best_text.get("full_text") or best_text.get("text") or str(best_text)
-        return best_text if isinstance(best_text, str) else str(best_text)
+        return str(best_text)
 
     return None
 
@@ -994,18 +989,26 @@ def build_prompt(bank, question, p, archive_text=None, draft=None):
 """
 
 def md_to_html(text):
+    if not text:
+        return ""
+    # تحويل العناوين الماركدون والروابط والقوائم
+    lines = text.splitlines()
     out, in_ul = [], False
-    for line in html.escape(text).splitlines():
-        line = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line.strip())
-        if line.startswith("- "):
+    for line in lines:
+        line_str = html.escape(line.strip())
+        line_str = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line_str)
+        # تحويل الروابط الفائقة URL إلى عناصر أتش تي إم إلمنت قابلة للنقر
+        line_str = re.sub(r"(https?://[^\s<]+)", r'<a href="\1" target="_blank" style="color:#C5A059;text-decoration:underline;">\1</a>', line_str)
+        
+        if line_str.startswith("- ") or line_str.startswith("• "):
             if not in_ul:
-                out.append("<ul>"); in_ul = True
-            out.append(f"<li>{line[2:]}</li>")
+                out.append("<ul style='margin-right:20px;margin-bottom:10px;'>"); in_ul = True
+            out.append(f"<li>{line_str[2:]}</li>")
         else:
             if in_ul:
                 out.append("</ul>"); in_ul = False
-            if line:
-                out.append(f"<p>{line}</p>")
+            if line_str:
+                out.append(f"<p style='margin-bottom:8px;'>{line_str}</p>")
     if in_ul:
         out.append("</ul>")
     return "\n".join(out)
@@ -1384,4 +1387,4 @@ def render_tab_7_survey():
 
 if __name__ == "__main__":
     print("Classified Intent:", classify_intents("عرف الحوكمة في البنك الأهلي المصري وما هي منظومة الرقابة الداخلية؟"))
-    print("Query Output Preview:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي المصري NBE", "عرف الحوكمة في البنك الأهلي المصري وما هي منظومة الرقابة الداخلية؟"))[:800])
+    print("Query Output Preview:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي المصري NBE", "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"))[:800])
