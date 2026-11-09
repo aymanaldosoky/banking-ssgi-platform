@@ -329,7 +329,7 @@ PROFILES = {
         origin="تأسس باسم «البنك البريطاني للشرق الأوسط في مصر»، وتغيرت هويته إلى HSBC مصر مع تعزيز استثمارات المجموعة العالمية.",
         ownership="تابع لمجموعة HSBC العالمية (HSBC Holdings plc) - المملكة المتحدة",
         branches="شبكة تضم أكثر من 60 فرعاً ومكتباً في المدن الكبرى والمناطق الاقتصادية، وشبكة صراف آلي واسعة النطاق.",
-        mandate="ربط الشركات المصرية بالأسوق العالمية، وتقديم الخدمات المصرفية الدولية الممتازة والتجارة الخارجية."
+        mandate="ربط الشركات المصرية بالأسواق العالمية، وتقديم الخدمات المصرفية الدولية الممتازة والتجارة الخارجية."
     ),
     "التجاري وفا بنك": dict(
         founded="2017 (عبر الاستحواذ على باركليز بنك مصر 1862)",
@@ -1243,8 +1243,8 @@ def render_tab_7_survey():
             else:
                 st.success("✅ مجموع الأوزان النسبية صحيح (100%).")
             st.text_area("💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
-                         value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
-                         key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
+                        value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
+                        key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
 
     def _go(delta):
         st.session_state.survey_wizard_step += delta
@@ -1304,5 +1304,5 @@ def render_tab_7_survey():
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
 if __name__ == "__main__":
-    print("Classified Intent:", classify_intents("متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"))
-    print("Query Output Preview:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي اليوناني", "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"))[:600])
+    print("Classified Intent:", classify_intents("عرف الحوكمة في البنك الأهلي المصري وما هي منظومة الرقابة الداخلية؟"))
+    print("Query Output Preview:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي المصري NBE", "عرف الحوكمة في البنك الأهلي المصري وما هي منظومة الرقابة الداخلية؟"))[:800])
