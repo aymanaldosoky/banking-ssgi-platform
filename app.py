@@ -2726,37 +2726,24 @@ def load_survey_log_from_cloud():
 
 import streamlit.components.v1 as components
 
-# ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل (مدمج عبر KoboToolbox)
-# ------------------------------------------------------------------------------
-with tab7:
-    st.markdown("""
-    <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
-        <p style="color: #475569; font-size: 14px;">استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل والقيادات المصرفية حول محاور المنصة.</p>
-    </div>
-    """, unsafe_allow_html=True)
+import streamlit.components.v1 as components
 
-    # ضع رابط KoboToolbox النهائي هنا
-    KOBO_SURVEY_URL = "https://ee.kobotoolbox.org/x/XXXXXXXX"
+KOBO_URL = "https://ee.kobotoolbox.org/x/eSYulrAD"
 
-    # زر لفتح الاستبيان في نافذة مستقلة (مفيد للهواتف أو الشاشات الصغيرة)
-    st.markdown(f"""
-    <div dir="rtl" style="background: #F8FAFC; padding: 12px 18px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span style="font-weight: 700; color: {CBE_NAVY}; font-size: 14px;">💡 يمكنك تعبئة الاستبيان مباشرة أدناه أو فتحه في نافذة مستقلة:</span>
-        <a href="{KOBO_SURVEY_URL}" target="_blank" style="background-color: {CBE_NAVY}; color: #FFFFFF; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13.5px;">🔗 فتح الاستبيان في نافذة مستقلة</a>
-    </div>
-    """, unsafe_allow_html=True)
+# زر بديل لفتح الاستبيان في تبويب مستقل (مفيد لمستخدمي الهواتف أو متصفحات البنوك المقيدة)
+st.markdown(f"""
+<div dir="rtl" style="text-align: center; margin-bottom: 15px;">
+    <a href="{KOBO_URL}" target="_blank" style="
+        display: inline-block; background-color: {CBE_NAVY}; color: #FFFFFF;
+        padding: 10px 24px; border-radius: 8px; text-decoration: none;
+        font-weight: 700; border: 1.5px solid {CBE_GOLD}; font-size: 14px;">
+        🔗 فتح الاستبيان في نافذة مستقلة (في حال عدم الظهور بالأسفل)
+    </a>
+</div>
+""", unsafe_allow_html=True)
 
-    # تضمين استمارة KoboToolbox داخل المنصة
-    components.iframe(KOBO_SURVEY_URL, height=900, scrolling=True)
-
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #64748B; font-size: 13px; padding: 10px 0;" dir="rtl">
-        جميع الحقوق محفوظة للدراسة البحثية © 2026
-    </div>
-    """, unsafe_allow_html=True)
+# تضمين استبيان KoboToolbox مباشرة داخل المنصة
+components.iframe(KOBO_URL, height=900, scrolling=True)
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
