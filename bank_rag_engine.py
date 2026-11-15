@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v3.2 - Enhanced Deep JSON RAG & Structural Matching Edition)
-محرك "اسأل المنصة" المطوَّر والمنظومة المكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
+bank_rag_engine.py  (v4.0 - Enhanced Morphological Stemming, Fuzzy RAG & Self-Contained Survey)
+محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
 import os
@@ -45,16 +45,19 @@ BANKS_LIST_AR = [
 ]
 
 # ==============================================================================
-# 1) أدوات اللغة والمعالجة النصية (تطبيع + تجذيع خفيف)
+# 1) أدوات اللغة والمعالجة النصية المطورة (تطبيع + تجذيع صرفي + مطابقة تقريبية)
 # ==============================================================================
 _DIAC = re.compile(r"[\u064B-\u0652\u0640]")
 _TOKEN = re.compile(r"[\u0621-\u064Aa-z0-9\u0660-\u0669]+")
 _ASCII_KW = re.compile(r"^[a-z0-9 ]+$")
+_STOPWORDS = {"من", "هو", "هي", "ما", "متى", "اين", "كيف", "كم", "هل", "في", "على", "عن", "الى", "و", "او", "تم", "التي", "الذي"}
 
 def norm(s: str) -> str:
     s = _DIAC.sub("", (s or "").lower())
     s = re.sub("[إأآ]", "ا", s).replace("ى", "ي").replace("ة", "ه")
     s = s.replace("ؤ", "و").replace("ئ", "ي")
+    # توحيد التاء المربوطة المتصلة بضمائر (مثل ملكيته -> ملكيه)
+    s = re.sub(r"يت(ه|ها|هم|نا|ك)$", "ي", s)
     return re.sub(r"\s+", " ", s).strip()
 
 def clean_text(text: str) -> str:
@@ -63,14 +66,14 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+", " ", str(text)).strip()
 
 def _tokens(s: str):
-    return _TOKEN.findall(s)
+    return [t for t in _TOKEN.findall(s) if t not in _STOPWORDS]
 
-_PREFIXES = ("وال", "بال", "كال", "فال", "لل", "ال")
-_SUFFIXES = sorted(("ته", "تها", "تهم", "ها", "هم", "ات", "ون", "ين", "ان", "ه", "ي", "ت"), key=len, reverse=True)
+_PREFIXES = ("وال", "بال", "كال", "فال", "لل", "ال", "يت", "تت", "سي", "ست")
+_SUFFIXES = sorted(("ته", "تها", "تهم", "ها", "هم", "ات", "ون", "ين", "ان", "يه", "ه", "ي", "ت"), key=len, reverse=True)
 
 def _stem(w: str) -> str:
-    """تجذيع خفيف: يحذف أشهر السوابق واللواحق."""
-    if re.fullmatch(r"[a-z0-9]+", w):
+    """تجذيع صرفي محسّن يعالج تاء التأنيث والضمائر المتصلة بدقة."""
+    if not w or re.fullmatch(r"[a-z0-9]+", w):
         return w
     for p in _PREFIXES:
         if w.startswith(p) and len(w) - len(p) >= 3:
@@ -83,27 +86,27 @@ def _stem(w: str) -> str:
     return w
 
 def is_valid_arabic_question(text):
-    if not text or len(text.strip()) < 5:
+    if not text or len(text.strip()) < 4:
         return False
-    return len(re.findall(r"[\u0600-\u06FF]", text)) >= 4
+    return len(re.findall(r"[\u0600-\u06FF]", text)) >= 3
 
 # ==============================================================================
-# 2) تصنيف نية السؤال (Intent)
+# 2) تصنيف نية السؤال (Intent Classification)
 # ==============================================================================
 INTENT_KEYWORDS = {
-    "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm"],
-    "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك"],
+    "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm", "موظف", "عملاء"],
+    "vision_mission": ["رسالة البنك", "رؤية البنك", "رسالتنا", "رؤيتنا", "الرؤية والرسالة", "قيم البنك", "أهداف البنك"],
     "history": [
-        "تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "ملكيه", "اول بنك", "مساهمين", "ملاك", "تخارج", "تصفية",
+        "تاسس", "تاسيس", "نشاه", "تاريخ", "مؤسس", "مؤسسه", "ملكيه", "ملكيته", "اول بنك", "مساهمين", "ملاك", "تخارج", "تصفية",
         "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التأسيس", "مالك البنك", "من يملك", "هيكل ملكيه",
-        "من اسس", "من انشا", "انشاء البنك", "استحواذ على البنك", "تملك"
+        "من اسس", "من انشا", "انشاء البنك", "استحواذ", "تملك", "نشأ", "انشئ", "أسس"
     ],
-    "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه"],
+    "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه", "حوكمة"],
     "gov_theory": ["النظريه المؤسسيه", "نظريه اصحاب المصلحه", "نظريه الموارد", "institutional theory",
                    "stakeholder", "الفرق بين حوكمه الشركات والحوكمه المؤسسيه"],
     "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
     "transparency": ["الشفافيه", "المساءله", "مكافحه الفساد", "غسل الاموال", "يفصح عن سياسات"],
-    "cbe_compliance": ["الالتزام التام", "القوانين", "اللوائح", "الصادره عن البنك المركزي", "يمتثل للرقابه", "خطوط الدفاع الثلاثة"],
+    "cbe_compliance": ["الالتزام التام", "القوانين", "اللوائح", "الصادره عن البنك المركزي", "يمتثل للرقابه", "خطوط الدفاع الثلاثة", "قانون 194"],
     "balance_sheet": ["المركز المالي", "اجمالي الاصول", "ميزانيه", "اجمالي الودائع", "ودائع العملاء",
                       "راس المال المدفوع", "الارصده النقديه"],
     "asset_quality": ["القروض المتعثره", "متعثره", "تعثر", "المخصصات", "تغطيه المخصصات", "جوده الاصول",
@@ -131,21 +134,35 @@ INTENT_KEYWORDS = {
 
 _NORM_KW = {i: [norm(k) for k in kws] for i, kws in INTENT_KEYWORDS.items()}
 
+def _stem_match(k_stem: str, q_stems: set) -> bool:
+    if k_stem in q_stems:
+        return True
+    # مطابقة احتوائية أو تقريبية للجذور التي تزيد عن 3 أحرف (مثل موسس / تاسيس / ملكي)
+    if len(k_stem) >= 4:
+        for qs in q_stems:
+            if len(qs) >= 4 and (k_stem in qs or qs in k_stem):
+                return True
+            if len(qs) >= 4 and difflib.SequenceMatcher(None, k_stem, qs).ratio() >= 0.85:
+                return True
+    return False
+
 def _kw_hit(nk: str, q: str, qstems: set) -> bool:
     if _ASCII_KW.match(nk):
         return re.search(rf"(?<![a-z0-9]){re.escape(nk)}(?![a-z0-9])", q) is not None
     if nk in q:
         return True
-    ks = {_stem(t) for t in _tokens(nk)}
-    return bool(ks) and ks <= qstems
+    ks = [_stem(t) for t in _tokens(nk)]
+    return bool(ks) and all(_stem_match(k, qstems) for k in ks)
 
-def classify_intents(question: str, max_n: int = 3, rel: float = 0.55):
+def classify_intents(question: str, max_n: int = 3, rel: float = 0.45):
     q = norm(question)
     qstems = {_stem(t) for t in _tokens(q)}
     scores = {}
     for intent, kws in _NORM_KW.items():
-        sc = sum(len(k.replace(" ", "")) for k in kws if _kw_hit(k, q, qstems))
-        if sc:
+        hits = [k for k in kws if _kw_hit(k, q, qstems)]
+        if hits:
+            # منح وزن أعلى لتعدد المطابقات وطول الكلمات المفتاحية
+            sc = sum(len(k.replace(" ", "")) for k in hits) + (len(hits) * 3)
             scores[intent] = sc
     if not scores:
         return []
@@ -579,9 +596,6 @@ FOOT_HTML = f'<p style="font-size:12px;color:#64748B;margin-top:10px;">{FOOT}</p
 def _t(p, bank, d):
     return d.get(p["type"], d["private"]).replace("{b}", bank)
 
-def _grp(p):
-    return p.get("group") or "المجموعة الأم"
-
 def profile_of(bank):
     p = dict(PROFILES.get(bank, {}))
     p["type"] = bank_type(bank)
@@ -637,9 +651,9 @@ def _history_focus(question):
     q = norm(question)
     st_set = {_stem(t) for t in _tokens(q)}
     def has(*ws):
-        return any(_stem(norm(w)) in st_set for w in ws)
+        return any(_stem_match(_stem(norm(w)), st_set) for w in ws)
     return {
-        "date": has("تاسس", "تاسيس", "متى", "تاريخ", "نشاه", "انشاء"),
+        "date": has("تاسس", "تاسيس", "متى", "تاريخ", "نشاه", "انشاء", "أسس"),
         "founder": has("مؤسس", "اسس", "انشا", "مين"),
         "ownership": has("ملكيه", "مالك", "يملك", "مساهمين", "ملاك", "تملك"),
         "transition": has("تخارج", "تصفيه", "استحواذ", "اندماج", "تحول"),
@@ -656,17 +670,17 @@ def comp_history(bank, p, question=""):
     if not (p.get("origin") or p.get("founded")):
         return None
     f = _history_focus(question)
-    narrow = f["founder"] or f["ownership"]
+    narrow = any(f.values())
     b = []
     if (not narrow or f["date"]) and p.get("founded"):
         b.append(("تاريخ التأسيس / التواجد", p["founded"]))
-    if not narrow or f["founder"]:
+    if (not narrow or f["founder"]):
         b.append(("المؤسس / الجهة المؤسسة", _founder_text(bank, p)))
     if (not narrow or f["ownership"]) and p.get("ownership"):
         b.append(("هيكل الملكية", p["ownership"]))
     if (not narrow or f["transition"] or f["date"]) and p.get("origin"):
         b.append(("النشأة وإطار التحولات / الاستحواذ", p["origin"]))
-    if not narrow and p.get("mandate"):
+    if (not narrow or f["transition"]) and p.get("mandate"):
         b.append(("الدور الميداني أو المسار الحالي", p["mandate"]))
     b.append(("قراءة حوكمية", _t(p, bank, {
         "state": "الملكية العامة تعني أن الدولة هي المساهم المرجعي، وتخضع الإدارة لمساءلة مزدوجة أمام البنك المركزي والجهات الرقابية العامة.",
@@ -816,6 +830,31 @@ def _compose(intent, bank, p, question):
         return None
     return comp(bank, p, question) if intent == "history" else comp(bank, p)
 
+def _profile_fallback_search(bank, p, question):
+    """بحث احتياطي دلالي داخل حقول ملف تعريف البنك إذا لم تطابق النوايا القياسية."""
+    q_stems = {_stem(t) for t in _tokens(norm(question))}
+    if not q_stems:
+        return None
+    field_labels = {
+        "founded": "تاريخ التأسيس / التواجد",
+        "origin": "النشأة وإطار التحولات / الاستحواذ",
+        "ownership": "هيكل الملكية",
+        "branches": "شبكة الفروع والتواجد الميداني",
+        "mandate": "الدور الميداني أو المسار الحالي",
+        "governance": "منظومة الحوكمة الموثقة"
+    }
+    matched = []
+    for k, lbl in field_labels.items():
+        val = p.get(k)
+        if not val:
+            continue
+        v_stems = {_stem(t) for t in _tokens(norm(val))}
+        if any(_stem_match(qs, v_stems) for qs in q_stems):
+            matched.append((lbl, val))
+    if matched:
+        return _pack(f"{bank}: بيانات موثقة من ملف التعريف", matched)
+    return None
+
 # ==============================================================================
 # 5) أرشيف المعرفة JSON (تحميل ديناميكي آلي + تنسيق قياسي موحد لجميع البنوك)
 # ==============================================================================
@@ -833,16 +872,11 @@ def _kb_signature():
     return tuple((f, os.path.getmtime(f)) for f in files if os.path.exists(f))
 
 def load_json_knowledge():
-    """
-    تحميل أرشيف المعرفة الموحد بالإضافة إلى أي ملفات JSON مستخرجة فردية للبنوك تلقائياً.
-    """
     sig = _kb_signature()
     if sig == _KB_CACHE["sig"]:
         return _KB_CACHE["data"]
-        
+
     combined_data = {}
-    
-    # 1. قراءة الملفات المجمعة السابقة إن وجدت
     for i in range(1, 7):
         part_filename = f"archive_part_{i}.json"
         if os.path.exists(part_filename):
@@ -853,7 +887,7 @@ def load_json_knowledge():
                         combined_data.update(part_data)
             except Exception:
                 pass
-                
+
     if not combined_data and os.path.exists(JSON_KNOWLEDGE_FILE):
         try:
             with open(JSON_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
@@ -861,7 +895,6 @@ def load_json_knowledge():
         except Exception:
             pass
 
-    # 2. قراءة واكتشاف كافة ملفات JSON الخاصة بالبنوك في المجلد تلقائياً (مثل nbe_governance.json)
     try:
         for file in os.listdir("."):
             if file.endswith(".json") and file != JSON_KNOWLEDGE_FILE and not file.startswith("archive_part_"):
@@ -880,34 +913,22 @@ def load_json_knowledge():
     return combined_data
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
-    """
-    تنظيف النصوص الخام المستخرجة من ملفات JSON غير المهيكلة:
-    - إزالة تكرار نص السؤال في بداية الإجابة.
-    - إزالة المراجع العشوائية مثل [nbe.com.eg] ودمج الأسطر المقطوعة.
-    """
     if not text:
         return ""
     lines = [ln.strip() for ln in str(text).splitlines() if ln.strip()]
     q_norm = norm(question)
     cleaned_lines = []
     for i, ln in enumerate(lines):
-        # حذف السطر الأول إذا كان تكراراً للسؤال المطروح
         if i == 0 and q_norm and (norm(ln) == q_norm or q_norm in norm(ln)):
             continue
-        # تنظيف الأقواس المرجعية المكررة داخل السطور
         ln = re.sub(r"\s*\[[a-zA-Z0-9.-]+\]\s*", " ", ln).strip()
         cleaned_lines.append(ln)
     return "\n".join(cleaned_lines)
 
 def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
-    """
-    تحويل أي مدخل في ملف JSON (سواء كان مهيكلاً بالقاموس القياسي أو نصاً خاماً)
-    إلى قالب عرض تنفيذي موحد (HTML) مطابق لتنسيق ملفات تعريف البنوك بالمنصة.
-    """
     if not entry:
         return ""
 
-    # الحالة الأولى: المدخل يتبع الهيكل القياسي المعتمد (dict with title/sections/table/governance_reading)
     if isinstance(entry, dict) and any(k in entry for k in ("sections", "table", "governance_reading", "title")):
         title = entry.get("title") or f"{bank}: التقرير التحليلي الموثق"
         parts = [f'<p style="margin-bottom:10px;"><b style="color:{CBE_NAVY};font-size:15px;">{html.escape(title)}</b></p>']
@@ -968,48 +989,41 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
         parts.append(FOOT_HTML)
         return chr(10).join(parts)
 
-    # الحالة الثانية: نص خام قديم داخل JSON (تنظيفه وتنسيقه تلقائياً)
     raw_text = entry.get("full_text") or entry.get("text") if isinstance(entry, dict) else str(entry)
     cleaned = clean_raw_archive_text(raw_text, question)
     return md_to_html(cleaned) + FOOT_HTML
 
 def archive_lookup(bank, question, intent, kb=None):
-    """
-    البحث الذكي والمرن داخل أرشيف الـ JSON:
-    1. يطابق أولاً بواسطة رمز النية (Intent code) مثل "history", "board", "independence".
-    2. يطابق بالمستندات العميقة والكلمات المفتاحية في حال كان الملف يحتوي أسماء عربية للمجالات.
-    """
     kb = kb if kb is not None else load_json_knowledge()
     d = kb.get(bank) if isinstance(kb, dict) else None
-    
+
     if not d:
         for b_name in kb.keys():
             if norm(bank) in norm(b_name) or norm(b_name) in norm(bank):
                 d = kb[b_name]
                 break
-                
+
     if not d or not isinstance(d, dict):
         return None
 
-    # أ) مطابقة مباشرة بواسطة النية (Intent)
     if intent and intent in d:
         return d[intent]
 
-    # ب) المطابقة بواسطة العناوين أو الأسئلة داخل الـ JSON (Fuzzy / Semantic Matching)
     q_norm = norm(question)
-    q_tokens = set(_tokens(q_norm))
-    
+    q_stems = {_stem(t) for t in _tokens(q_norm)}
+
     best_entry = None
-    max_overlap = 0
+    max_overlap = 0.0
 
     for k, val in d.items():
         k_norm = norm(k)
         if k_norm in q_norm or q_norm in k_norm:
             return val
-        
-        k_tokens = set(_tokens(k_norm))
-        if k_tokens:
-            overlap = len(k_tokens & q_tokens) / len(k_tokens)
+
+        k_stems = {_stem(t) for t in _tokens(k_norm)}
+        if k_stems:
+            matched_cnt = sum(1 for ks in k_stems if _stem_match(ks, q_stems))
+            overlap = matched_cnt / len(k_stems)
             if overlap > max_overlap:
                 max_overlap = overlap
                 best_entry = val
@@ -1083,14 +1097,16 @@ def md_to_html(text):
         line_str = html.escape(line.strip())
         line_str = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line_str)
         line_str = re.sub(r"(https?://[^\s<]+)", r'<a href="\1" target="_blank" style="color:#C5A059;text-decoration:underline;">\1</a>', line_str)
-        
+
         if line_str.startswith("- ") or line_str.startswith("• "):
             if not in_ul:
-                out.append("<ul style='margin-right:20px;margin-bottom:10px;'>"); in_ul = True
+                out.append("<ul style='margin-right:20px;margin-bottom:10px;'>")
+                in_ul = True
             out.append(f"<li>{line_str[2:]}</li>")
         else:
             if in_ul:
-                out.append("</ul>"); in_ul = False
+                out.append("</ul>")
+                in_ul = False
             if line_str:
                 if line_str.endswith("؟"):
                     out.append(f"<p style='font-weight:bold;color:{CBE_NAVY};margin-top:10px;margin-bottom:4px;'>{line_str}</p>")
@@ -1138,20 +1154,25 @@ def process_rag_gemini_query(bank_name, question):
     arch = archive_lookup(bank_name, question, primary)
     if arch:
         formatted_arch = format_structured_json_entry(arch, bank_name, question)
-        
         if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
             txt = call_llm(build_prompt(bank_name, question, p, archive_text=json.dumps(arch, ensure_ascii=False)))
             if txt:
                 return render_card(bank_name, question, md_to_html(txt), "llm")
-                
         return render_card(bank_name, question, formatted_arch, "archive")
 
-    # 🟡 2. إذا لم يتوفر في الـ JSON، نلجأ إلى القوالب المدمجة بالمحرك
+    # 🟡 2. القوالب المدمجة بالمحرك حسب النوايا المصنفة
     parts = []
     for it in intents:
         r = _compose(it, bank_name, p, question)
         if r:
             parts.append(r)
+
+    # 🟡 2.5 بحث احتياطي مباشر داخل حقول بروفايل البنك إذا لم تُصنّف نية صريحة
+    if not parts:
+        fb = _profile_fallback_search(bank_name, p, question)
+        if fb:
+            parts.append(fb)
+
     if parts:
         if len(parts) == 1:
             _, body, tier = parts[0]
@@ -1162,7 +1183,7 @@ def process_rag_gemini_query(bank_name, question):
             tier = "llm" if all(t == "llm" for _, _, t in parts) else "profile"
         return render_card(bank_name, question, body, tier)
 
-    # 🔵 3. استخدام النموذج التوليدي
+    # 🔵 3. استخدام النموذج التوليدي المقيد بالسياق
     if llm_available():
         txt = call_llm(build_prompt(bank_name, question, p))
         if txt:
@@ -1176,6 +1197,15 @@ def process_rag_gemini_query(bank_name, question):
 # ==============================================================================
 # 8) التبويب السابع: الاستبيان التكيفي الموجه للأدوار (Role-Based UX)
 # ==============================================================================
+def load_survey_log_from_file():
+    if os.path.exists(SURVEY_LOG_FILE):
+        try:
+            df = pd.read_csv(SURVEY_LOG_FILE, encoding="utf-8-sig")
+            return df.to_dict(orient="records")
+        except Exception:
+            return []
+    return []
+
 def render_tab_7_survey():
     LIKERT = {"غير موافق تماماً": 1, "غير موافق": 2, "محايد": 3, "موافق": 4, "موافق تماماً": 5}
     likert_options = list(LIKERT.keys())
@@ -1451,5 +1481,6 @@ def render_tab_7_survey():
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
 if __name__ == "__main__":
-    print("Classified Intent:", classify_intents("عرف الحوكمة في البنك الأهلي المصري وما هي منظومة الرقابة الداخلية؟"))
-    print("Query Output Preview:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي المصري NBE", "كيف يضمن البنك الالتزام التام بالقوانين واللوائح الصادرة عن البنك المركزي المصري؟"))[:800])
+    test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
+    print("Classified Intent:", classify_intents(test_q))
+    print("Output:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي اليوناني", test_q)))
