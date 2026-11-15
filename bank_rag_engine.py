@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.0 - Enhanced Morphological Stemming, Fuzzy RAG & Self-Contained Survey)
+bank_rag_engine.py  (v4.1 - Clean Indentation, Multi-Intent JSON RAG & Self-Contained Survey)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -1017,7 +1017,7 @@ def archive_lookup(bank, question, intent, kb=None):
 
     for k, val in d.items():
         k_norm = norm(k)
-        if k_norm in q_norm or q_norm in k_norm:
+        if len(k_norm) >= 4 and (k_norm in q_norm or q_norm in k_norm):
             return val
 
         k_stems = {_stem(t) for t in _tokens(k_norm)}
@@ -1148,17 +1148,30 @@ def process_rag_gemini_query(bank_name, question):
 
     p = profile_of(bank_name)
     intents = classify_intents(question)
-    primary = intents[0] if intents else None
 
-    # 🟢 1. البحث أولاً في أرشيف الـ JSON وتنسيقه بالقالب التنفيذي الموحد
-    arch = archive_lookup(bank_name, question, primary)
-    if arch:
-        formatted_arch = format_structured_json_entry(arch, bank_name, question)
+    # 🟢 1. البحث في أرشيف الـ JSON لجميع النوايا المكتشفة وتنسيقها بالقالب التنفيذي الموحد
+    arch_entries = []
+    seen_arch = set()
+    search_intents = intents if intents else [None]
+    for it in search_intents:
+        arch = archive_lookup(bank_name, question, it)
+        if arch:
+            arch_sig = json.dumps(arch, ensure_ascii=False, sort_keys=True) if isinstance(arch, dict) else str(arch)
+            if arch_sig not in seen_arch:
+                seen_arch.add(arch_sig)
+                arch_entries.append(arch)
+
+    if arch_entries:
         if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
-            txt = call_llm(build_prompt(bank_name, question, p, archive_text=json.dumps(arch, ensure_ascii=False)))
+            txt = call_llm(build_prompt(bank_name, question, p, archive_text=json.dumps(arch_entries, ensure_ascii=False)))
             if txt:
                 return render_card(bank_name, question, md_to_html(txt), "llm")
-        return render_card(bank_name, question, formatted_arch, "archive")
+        formatted_parts = [format_structured_json_entry(e, bank_name, question) for e in arch_entries]
+        if len(formatted_parts) == 1:
+            combined_arch = formatted_parts[0]
+        else:
+            combined_arch = _SEP.join(fp.replace(FOOT_HTML, "") for fp in formatted_parts) + FOOT_HTML
+        return render_card(bank_name, question, combined_arch, "archive")
 
     # 🟡 2. القوالب المدمجة بالمحرك حسب النوايا المصنفة
     parts = []
@@ -1344,7 +1357,9 @@ def render_tab_7_survey():
     total_req_count = len(required_stmts)
     progress_percentage = int(answered_count / total_req_count * 100) if total_req_count else 0
 
-    w_sip_cur = S.get("w_sip", 40); w_ig_cur = S.get("w_ig", 30); w_sr_cur = S.get("w_sr", 30)
+    w_sip_cur = S.get("w_sip", 40)
+    w_ig_cur = S.get("w_ig", 30)
+    w_sr_cur = S.get("w_sr", 30)
 
     def step_complete(k):
         if k == "profile":
@@ -1420,8 +1435,8 @@ def render_tab_7_survey():
             else:
                 st.success("✅ مجموع الأوزان النسبية صحيح (100%).")
             st.text_area("💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
-                        value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
-                        key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
+                         value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
+                         key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
 
     def _go(delta):
         st.session_state.survey_wizard_step += delta
