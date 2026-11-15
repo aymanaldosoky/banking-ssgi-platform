@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.1 - Clean Indentation, Multi-Intent JSON RAG & Self-Contained Survey)
+bank_rag_engine.py  (v4.2 - Production Ready, Clean Indentation, Multi-Intent JSON RAG & Audit)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -56,7 +56,6 @@ def norm(s: str) -> str:
     s = _DIAC.sub("", (s or "").lower())
     s = re.sub("[إأآ]", "ا", s).replace("ى", "ي").replace("ة", "ه")
     s = s.replace("ؤ", "و").replace("ئ", "ي")
-    # توحيد التاء المربوطة المتصلة بضمائر (مثل ملكيته -> ملكيه)
     s = re.sub(r"يت(ه|ها|هم|نا|ك)$", "ي", s)
     return re.sub(r"\s+", " ", s).strip()
 
@@ -137,7 +136,6 @@ _NORM_KW = {i: [norm(k) for k in kws] for i, kws in INTENT_KEYWORDS.items()}
 def _stem_match(k_stem: str, q_stems: set) -> bool:
     if k_stem in q_stems:
         return True
-    # مطابقة احتوائية أو تقريبية للجذور التي تزيد عن 3 أحرف (مثل موسس / تاسيس / ملكي)
     if len(k_stem) >= 4:
         for qs in q_stems:
             if len(qs) >= 4 and (k_stem in qs or qs in k_stem):
@@ -161,7 +159,6 @@ def classify_intents(question: str, max_n: int = 3, rel: float = 0.45):
     for intent, kws in _NORM_KW.items():
         hits = [k for k in kws if _kw_hit(k, q, qstems)]
         if hits:
-            # منح وزن أعلى لتعدد المطابقات وطول الكلمات المفتاحية
             sc = sum(len(k.replace(" ", "")) for k in hits) + (len(hits) * 3)
             scores[intent] = sc
     if not scores:
@@ -1049,7 +1046,7 @@ def call_llm(prompt):
         if os.getenv("ANTHROPIC_API_KEY"):
             out = _post_json(
                 "https://api.anthropic.com/v1/messages",
-                {"model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-sonnet-5-5"),
+                {"model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
                  "max_tokens": 1500, "messages": [{"role": "user", "content": prompt}]},
                 {"content-type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
                  "anthropic-version": "2023-06-01"})
@@ -1206,6 +1203,27 @@ def process_rag_gemini_query(bank_name, question):
     gap = (f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
            f"ولن تُقدَّم إجابة مبنية على التخمين.</p>")
     return render_card(bank_name, question, gap, "gap")
+
+def audit_differentiation(question: str = "متى تأسس البنك وما هي ملكيته؟", banks_to_test=None):
+    """فحص تمايز الإجابات بين البنوك للتأكد من عدم تكرار نفس الرد العام."""
+    if not banks_to_test:
+        banks_to_test = [
+            "البنك الأهلي المصري NBE",
+            "بنك مصر BM",
+            "البنك التجاري الدولي CIB",
+            "بنك فيصل الإسلامي",
+        ]
+    results = {}
+    for b in banks_to_test:
+        results[b] = process_rag_gemini_query(b, question)
+    unique_outputs = len(set(results.values()))
+    return {
+        "question": question,
+        "tested_banks": len(banks_to_test),
+        "unique_responses": unique_outputs,
+        "is_differentiated": unique_outputs == len(banks_to_test),
+        "details": results,
+    }
 
 # ==============================================================================
 # 8) التبويب السابع: الاستبيان التكيفي الموجه للأدوار (Role-Based UX)
@@ -1498,4 +1516,4 @@ def render_tab_7_survey():
 if __name__ == "__main__":
     test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
     print("Classified Intent:", classify_intents(test_q))
-    print("Output:", re.sub(r"<[^>]+>", " ", process_rag_gemini_query("البنك الأهلي اليوناني", test_q)))
+    print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
