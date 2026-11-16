@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.5 - Clean ASCII Indentation, Recursive JSON Unwrapper & Instant RAG)
+bank_rag_engine.py (v4.6 - Profile-First Routing for Core Identity, Clean Chunk Rendering & Strict ASCII Indentation)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -159,6 +159,9 @@ INTENT_KEYWORDS = {
     "ai": ["التحول الرقمي", "الذكاء الاصطناعي", "تطبيقات الذكاء الاصطناعي", "الأتمتة", "الذكاء الإصطناعي"],
 }
 
+# النوايا التعريفية الثابتة التي يجب إعطاؤها الأولوية من ملف التعريف الموثق PROFILES
+CORE_PROFILE_INTENTS = {"history", "branches"}
+
 _NORM_KW = {i: [norm(k) for k in kws] for i, kws in INTENT_KEYWORDS.items()}
 
 def _stem_match(k_stem: str, q_stems: set) -> bool:
@@ -285,19 +288,19 @@ PROFILES = {
     "البنك التجاري الدولي CIB": dict(
         founded="1975",
         origin="تأسس باسم «تشيس ناشيونال بنك (مصر)» كشراكة بين تشيس مانهاتن والبنك الأهلي المصري، ثم تحوّل عام 1987 إلى «البنك التجاري الدولي».",
-        ownership="شركة مساهمة مصرية مدرجة بالبورصة المصرية ولها شهادات إيداع دولية (GDRs) بالندرة الحرة في لندن (مؤسسات وأفراد)",
+        ownership="شركة مساهمة مصرية مدرجة بالبورصة المصرية ولها شهادات إيداع دولية (GDRs) بالتداول الحر في لندن (مؤسسات وأفراد)",
         branches="شبكة فروع واسعة تتجاوز 210 فرعاً ومكتباً مصرفياً موزعة عالمياً ومحلياً، وفرع إقليمي في كينيا (CIB Kenya)، وأكثر من 1,400 ماكينة صراف آلي.",
         mandate="أكبر بنك قطاع خاص في مصر، ورائد الخدمات المصرفية الرقمية والتمويل المستدام للشركات."
     ),
     "بنك قطر الوطني الأهلي QNB": dict(
         founded="1978 (تحول كـ QNB الأهلي عام 2013)",
         origin="نشأ باسم البنك الوطني المصري، ثم استحوذت عليه مجموعة QNB القطرية عام 2013 من بنك سوسيته جنرال الفرنسي (NSGB).",
-        ownership="تابع لمجموعة QNB القطرية (يمتلك حصة الحاكمة) ومدرج بالبورصة المصرية",
+        ownership="تابع لمجموعة QNB القطرية (تمتلك الحصة الحاكمة) ومدرج بالبورصة المصرية",
         branches="يمتلك شبكة تمتد إلى أكثر من 230 فرعاً تغطي مختلف أنحاء الجمهورية، وشبكة صراف آلي تزيد عن 900 ماكينة.",
         mandate="تقديم خدمات مصرفية متكاملة لشرائح كبار العملاء، الشركات الصغرى والكبرى والتمويل التجاري."
     ),
     "بنك كريدي أجريكول": dict(
-        founded="2006 (يعود جذوره إلى البنك المصري الأمريكي 1976)",
+        founded="2006 (تعود جذوره إلى البنك المصري الأمريكي 1976)",
         origin="تأسس إثر اندماج كريدي إندوسويز مصر مع البنك المصري الأمريكي عقب استحواذ مجموعة كريدي أجريكول الفرنسية.",
         ownership="تابع لمجموعة Crédit Agricole الفرنسية (أغلبية الأسهم) ومدرج بالبورصة المصرية",
         branches="شبكة تنتشر عبر نحو 80 فرعاً وفرعاً ذكياً في القاهرة والمدن الرئيسية، وشبكة صراف آلي تتجاوز 250 ماكينة.",
@@ -315,7 +318,7 @@ PROFILES = {
         origin="تأسس بقرار وزير التعمير والمجتمعات العمرانية كشركة مساهمة مصرية متخصصة في التمويل العقاري والتعمير.",
         ownership="شركة مساهمة تدعمها هيئة المجتمعات العمرانية الجديدة ومؤسسات حكومية، ومدرج بالبورصة المصرية",
         branches="يمتلك شبكة تتجاوز 100 فرع تنتشر بمختلف المدن الجديدة والمحافظات، مع شبكة صراف آلي تتجاوز 430 ماكينة.",
-        mandate="الريادة في مشروعات التمويل العقاري والتنمية العمرانية والتوسع في الخدمات التجاري الشامل."
+        mandate="الريادة في مشروعات التمويل العقاري والتنمية العمرانية والتوسع في الخدمات التجارية الشاملة."
     ),
     "بنك قناة السويس SCBANK": dict(
         founded="1978",
@@ -325,7 +328,7 @@ PROFILES = {
         mandate="تمويل العمليات البحرية والتجارية للمؤسسات والشركات، وتطوير الخدمات المصرفية الرقمية."
     ),
     "بنك أبوظبي الأول مصر FABMISR": dict(
-        founded="2021 (عقب الاندماج مع عودة تاريخ البنك لعام 1975)",
+        founded="2021 (عقب الاندماج مع بنك عودة الذي يعود تاريخه لعام 1975)",
         origin="نتج عن توقيع اتفاقية الاستحواذ على 100% من بنك عودة اللبناني في مصر في يناير 2021 والاندماج الكامل معه لمواجهة التحديات المصرفية في لبنان.",
         ownership="تابع لمجموعة بنك أبوظبي الأول (FAB) - الإمارات العربية المتحدة",
         branches="شبكة فروع واسعة تتجاوز 70 فرعاً موزعة استراتيجياً على مستوى الجمهورية، مع شبكة صراف آلي تتجاوز 200 ماكينة.",
@@ -335,7 +338,7 @@ PROFILES = {
         founded="1977 (تأسس بقانون خاص رقم 48 وبدأ العمل 1979)",
         origin="أول بنك تجاري إسلامي بالكامل في مصر بمبادرة من الأمير محمد الفيصل آل سعود ونخبة من الشخصيات المصرية.",
         ownership="شركة مساهمة مصرية تساهم فيها أوقاف ومؤسسات سعودية ومصرية ومدرج بالبورصة المصرية",
-        branches="يمتلك أكثر من 40 فرعاً رئيسياً تنتشر في المحافظات والمدن الكبرى، وشبكة صراف آلي تتجاوز 550 ماكينة آلي تعمل بالصيغة الشرعية.",
+        branches="يمتلك أكثر من 40 فرعاً رئيسياً تنتشر في المحافظات والمدن الكبرى، وشبكة صراف آلي تتجاوز 550 ماكينة تعمل بالصيغة الشرعية.",
         mandate="تقديم العمليات والمنتجات المصرفية والاستثمارية المتوافقة بالكامل مع أحكام الشريعة الإسلامية."
     ),
     "بنك البركة الإسلامي": dict(
@@ -357,7 +360,7 @@ PROFILES = {
         origin="تحول من «البنك الوطني للتنمية» إثر استحواذ التحالف الإماراتي لمصرف أبوظبي الإسلامي عليه وتحويله للصيغة الإسلامية.",
         ownership="تابع لمجموعة مصرف أبوظبي الإسلامي (الإمارات) ومدرج بالبورصة المصرية",
         branches="شبكة واسعة تضم أكثر من 70 فرعاً متوافقاً مع أحكام الشريعة في كافة المحافظات، مع أكثر من 120 ماكينة صراف آلي.",
-        mandate="تقديم التمويل الشامل والخدمات التجزئة والشركات وفق أحكام الشريعة بالاستعانة بالتكنولوجيا التنافسية."
+        mandate="تقديم التمويل الشامل وخدمات التجزئة والشركات وفق أحكام الشريعة بالاستعانة بالتكنولوجيا التنافسية."
     ),
     "بنك NEXT": dict(
         founded="2024 (تأسس أصلاً كبنك الاستثمار العربي aiBANK عام 1974)",
@@ -396,7 +399,7 @@ PROFILES = {
     ),
     "المصرف العربي الدولي AIB": dict(
         founded="1974",
-        origin="أُنشئ بإنشاء اتفاقية دولية خاصة بين حكومات مصر، ليبيا، الإمارات، قطر، وسلطنة عمان كبنك دولي متعدد الأطراف.",
+        origin="أُنشئ بموجب اتفاقية دولية خاصة بين حكومات مصر، ليبيا، الإمارات، قطر، وسلطنة عمان كبنك دولي متعدد الأطراف.",
         ownership="مؤسسة حكومية مشتركة (مصر، ليبيا، أجهزة استثمار إماراتية وقطرية وعمانية)",
         branches="يمتلك نحو 30 فرعاً تنتشر في أهم المناطق الاستثمارية والتجارية بمصر، إلى جانب مراكز للخدمات الرقمية.",
         mandate="تمويل التجارة الاستثمارية الخارجية، المعاملات بالعملات الأجنبية، والمشاريع الإقليمية الكبرى."
@@ -417,7 +420,7 @@ PROFILES = {
     ),
     "البنك العقاري المصري العربي EALB": dict(
         founded="1880",
-        origin="من أقدم البنوك في مصر والشرق الأوسط، تأسس باسم «الكريدي فونسييه المصري»، واندماج مع البنك العقاري العربي عام 1999.",
+        origin="من أقدم البنوك في مصر والشرق الأوسط، تأسس باسم «الكريدي فونسييه المصري»، واندمج مع البنك العقاري العربي عام 1999.",
         ownership="مملوك بالكامل للدولة المصرية (بنك متخصص حكومي)",
         branches="شبكة فروع تضم نحو 50 فرعاً في مصر، إضافة إلى فروع خارجية متخصصة في الأردن وفلسطين.",
         mandate="التمويل العقاري، التنمية العمرانية، الاستثمار العقاري، والخدمات المصرفية التجارية."
@@ -518,7 +521,7 @@ PROFILES = {
         origin="أُنشئ بالقانون رقم 66 لسنة 1971 كأول هيئة عامة ومؤسسة مالية ذات طابع اجتماعي تكافلي في مصر والشرق الأوسط (خارج رقابة المركزي ومباشرة تحت وزارة التضامن).",
         ownership="مملوك بالكامل للدولة المصرية (يتبع وزارة التضامن الاجتماعي)",
         branches="تمتلك شبكة تضم أكثر من 95 فرعاً تنتشر بمختلف المحافظات والمناطق التنموية، لدعم الأسر الأولى بالرعاية.",
-        mandate="تقديم الخدمات الاجتماعية، الإقراض الرديء بدون فائدة، التمويل التكافلي، صرف المعاشات، والزكاة."
+        mandate="تقديم الخدمات الاجتماعية، الإقراض بدون فائدة، التمويل التكافلي، صرف المعاشات، والزكاة."
     ),
     "بنك الاستثمار القومي": dict(
         founded="1980",
@@ -544,7 +547,7 @@ PROFILES = {
     "البنك الأهلي اليوناني": dict(
         founded="1930 (عمل لأكثر من 90 عاماً تحت رخصة فرع بنك أجنبي)",
         origin="من أقدم الفروع المصرفية الأجنبية بمصر، حصل على موافقة البنك المركزي المصري عام 2021 للتصفية ووقف النشاط عقب عدم إتمام صفقة استحواذ بنك عودة مصر على أصوله في 2020 للأوضاع اللبنانية. جاء التخارج تماشياً مع إعادة الهيكلة والتزامات المجموعة تجاه المفوضية الأوروبية وتلقيها مساعدات إعادة الرسملة.",
-        ownership="فرع بنك أجنبي (National Bank of Greece - NBG) - اليونان (في مرحلة التخارج النهائى من مصر)",
+        ownership="فرع بنك أجنبي (National Bank of Greece - NBG) - اليونان (في مرحلة التخارج النهائي من مصر)",
         branches="كان يمتلك 17 فرعاً ونحو 250 موظفاً وأصولاً بـ 110 ملايين يورو، وفي خطة إيقاف النشاط جرى الاتصال بالعملاء رسمياً، وبيع محفظة خطابات الضمان لبنك نكست (مايو 2023)، وتوقيع اتفاقية نقل أرصدة الحسابات لبنك القاهرة (سبتمبر 2023) وتفريغ الالتزامات وفق المادة الرقابية بقانون 194 لسنة 2020.",
         mandate="استكمال إجراءات التخارج والتصفية النهائية بالتنسيق مع البنك المركزي المصري والجهات الحكومية (الضرائب، هيئة الاستثمار، السجل التجاري)."
     ),
@@ -650,9 +653,9 @@ def comp_branches(bank, p):
         b = [
             ("شبكة الفروع والتواجد الميداني", branches_info),
             ("الانتشار الجغرافي والشمول المالي", _t(p, bank, {
-                "state": "تتميز شبكة فروع {b} بالانتشار الأفقِي والوصول إلى القرى والمراكز ضمن المبادرات الرئاسية وتوجهات الدولة لتوطين أهداف التنمية المستدامة بالمحافظات.",
+                "state": "تتميز شبكة فروع {b} بالانتشار الأفقي والوصول إلى القرى والمراكز ضمن المبادرات الرئاسية وتوجهات الدولة لتوطين أهداف التنمية المستدامة بالمحافظات.",
                 "islamic": "تتوزع فروع {b} استراتيجياً في المحافظات الكبرى لتلبية الطلب المرتفع على المعاملات والمنتجات المصرفية الإسلامية.",
-                "foreign": "تركز شبكة فروع {b} على المراكز الاقتصادية الرئيسية والمحافظات الكبرى مع الاعتماد الموازِي على المنصات الرقمية للمجموعة.",
+                "foreign": "تركز شبكة فروع {b} على المراكز الاقتصادية الرئيسية والمحافظات الكبرى مع الاعتماد الموازي على المنصات الرقمية للمجموعة.",
                 "private": "تعتمد شبكة {b} على الموازنة بين الفروع الذكية والتوسع في خدمات الصراف الآلي والإنستاباي لخدمة الأفراد والشركات."
             }))
         ]
@@ -973,16 +976,16 @@ def _ingest_any_json_structure(node, merged_data: dict, depth: int = 0):
     if isinstance(node, list):
         for item in node:
             if isinstance(item, dict):
-                b_raw = item.get("bank") or item.get("bank_name") or item.get("institution")
+                b_raw = item.get("bank") or item.get("bank_name") or item.get("institution") or item.get("classification")
                 if b_raw:
-                    canon = _match_canonical_bank_name(str(b_raw)) or str(b_raw)
+                    clean_b = re.sub(r"^تقرير بنك:\s*", "", str(b_raw)).strip()
+                    canon = _match_canonical_bank_name(clean_b) or clean_b
                     merged_data.setdefault(canon, []).append(item)
                 else:
                     merged_data.setdefault("_all_records", []).append(item)
         return
 
     if isinstance(node, dict):
-        # فحص هل مفاتيح هذا القاموس هي أسماء بنوك أم مفاتيح تغليف عامة
         bank_keys_found = {}
         wrapper_nodes = []
         for k, v in node.items():
@@ -997,14 +1000,19 @@ def _ingest_any_json_structure(node, merged_data: dict, depth: int = 0):
         for wn in wrapper_nodes:
             _ingest_any_json_structure(wn, merged_data, depth + 1)
 
+_METADATA_KEYS = {
+    "references", "source", "bank", "bank_name", "intent", "chunk_id",
+    "classification", "file_name", "reference_position", "page", "doc_id"
+}
+
 def _extract_entry_searchable_text(entry) -> str:
-    """استخراج سريع للنصوص القابلة للبحث من سجل JSON."""
+    """استخراج سريع للنصوص القابلة للبحث من سجل JSON دون البيانات الوصفية."""
     if isinstance(entry, str):
         return entry
     if isinstance(entry, dict):
         chunks = []
         for k, v in entry.items():
-            if k in ("references", "source", "bank", "bank_name", "intent"):
+            if k in _METADATA_KEYS:
                 continue
             if isinstance(v, str):
                 chunks.append(v)
@@ -1070,7 +1078,6 @@ def load_all_knowledge_archives():
     except Exception as e:
         print(f"Error reading dynamic bank JSON files: {e}")
 
-    # بناء فهرس مسبق للجذور الصرفية لكل سجل مرة واحدة فقط
     indexed_cache = {}
     total_records_count = 0
 
@@ -1081,9 +1088,11 @@ def load_all_knowledge_archives():
                 if isinstance(rec, dict):
                     raw_txt = _extract_entry_searchable_text(rec)
                     c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
+                    b_field = str(rec.get("bank") or rec.get("bank_name") or rec.get("classification") or "")
+                    b_field = re.sub(r"^تقرير بنك:\s*", "", b_field).strip()
                     indexed_list.append({
                         "rec": rec,
-                        "bank_norm": norm(str(rec.get("bank") or rec.get("bank_name") or "")),
+                        "bank_norm": norm(b_field),
                         "intent": rec.get("intent"),
                         "key_norm": norm(str(rec.get("question") or rec.get("title") or "")),
                         "c_stems": c_stems,
@@ -1146,22 +1155,38 @@ def load_all_knowledge_archives():
     }
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
+    """تنظيف النصوص المستخرجة من التقارير وحذف الترويسات الداخلية وعلامات الاستشهاد الخام."""
     if not text:
         return ""
-    lines = [ln.strip() for ln in str(text).splitlines() if ln.strip()]
+    s = str(text)
+    # إزالة ترويسات التوثيق الداخلي للوكيل الذكي مثل: [توثيق مرجعي للوكيل الذكي: ...]
+    s = re.sub(r"\[توثيق مرجعي للوكيل الذكي:[^\]]*\]", "", s)
+    # إزالة الأقواس المرجعية اللاتينية العشوائية
+    s = re.sub(r"\s*\[[a-zA-Z0-9.-]+\]\s*", " ", s)
+
+    lines = [ln.strip() for ln in s.splitlines() if ln.strip()]
     q_norm = norm(question)
     cleaned_lines = []
     for i, ln in enumerate(lines):
         if i == 0 and q_norm and (norm(ln) == q_norm or q_norm in norm(ln)):
             continue
-        ln = re.sub(r"\s*\[[a-zA-Z0-9.-]+\]\s*", " ", ln).strip()
-        cleaned_lines.append(ln)
-    return "\n".join(cleaned_lines)
+        cleaned_lines.append(re.sub(r"\s+", " ", ln).strip())
+
+    result = "\n".join(cleaned_lines).strip()
+    # إذا بدأ المقتطف بمنتصف جملة مبتورة (لا يبدأ بحرف كبير أو رقم أو عنوان)، نحاول قص البقايا غير المكتملة قبل أول نقطة واضحة
+    if result and len(result) > 120:
+        first_dot = result.find(". ")
+        if 0 < first_dot < 65:
+            prefix = result[:first_dot].strip()
+            # قص البداية إذا كانت مجرد تكملة لجملة سابقة (مثل: "عدد من الدول الإفريقية الأخرى.")
+            if len(prefix.split()) <= 8 and not prefix.endswith(":"):
+                result = result[first_dot + 2:].strip()
+    return result
 
 def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
     """
-    تحويل أي سجل JSON (مهما كانت أسماء مفاتيحه) إلى HTML غني ومنسق.
-    يعيد نصاً فارغاً "" إذا لم يحتوِ السجل على محتوى فعلي.
+    تحويل أي سجل JSON (بما في ذلك سجلات RAG Chunking) إلى HTML احترافي نظيف
+    مع فصل البيانات الوصفية للمصدر في تذييل أنيق.
     """
     if not entry:
         return ""
@@ -1218,8 +1243,8 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
             )
             has_body_content = True
 
-        # 3) مفاتيح النص البديلة الشائعة في ملفات الأرشيف
-        for text_key in ("full_text", "text", "answer", "content", "response", "summary", "details", "description"):
+        # 3) مفاتيح النص البديلة الشائعة في ملفات الأرشيف (بما في ذلك chunk_text)
+        for text_key in ("full_text", "chunk_text", "text", "answer", "content", "response", "summary", "details", "description"):
             val = entry.get(text_key)
             if isinstance(val, str) and val.strip():
                 cleaned = clean_raw_archive_text(val, question)
@@ -1228,9 +1253,9 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
                     has_body_content = True
                     break
 
-        # 4) حقول مخصصة أخرى داخل القاموس
+        # 4) حقول مخصصة أخرى داخل القاموس (مع استبعاد البيانات الوصفية التقنية)
         if not has_body_content:
-            ignored_keys = {"title", "sections", "table", "governance_reading", "references", "bank", "bank_name", "intent", "question"}
+            ignored_keys = _METADATA_KEYS | {"title", "sections", "table", "governance_reading", "question", "chunk_text", "full_text"}
             custom_lis = []
             for k, v in entry.items():
                 if k in ignored_keys or not v:
@@ -1256,6 +1281,20 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
         if not has_body_content:
             return ""
 
+        # صياغة تذييل المرجع المستندي بشكل أنيق بدلاً من عرض مفاتيح JSON الخام
+        doc_meta = []
+        if entry.get("file_name"):
+            doc_meta.append(f"المستند: {html.escape(str(entry['file_name']))}")
+        if entry.get("reference_position") is not None:
+            doc_meta.append(f"موضع/صفحة: {html.escape(str(entry['reference_position']))}")
+        if entry.get("chunk_id") is not None:
+            doc_meta.append(f"معرّف المقطع: #{html.escape(str(entry['chunk_id']))}")
+        if doc_meta:
+            parts.append(
+                f'<p style="font-size:12px;color:{CBE_NAVY};background:#EEF2F6;padding:6px 10px;border-radius:6px;margin-top:8px;">'
+                f'📄 <b>التوثيق المستندي:</b> {" | ".join(doc_meta)}</p>'
+            )
+
         refs = entry.get("references") or []
         if isinstance(refs, list) and refs:
             ref_items = " | ".join(
@@ -1267,7 +1306,7 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
                 for r in refs if str(r).strip()
             )
             if ref_items:
-                parts.append(f'<p style="font-size:12px;color:#475569;margin-top:10px;"><b>المراجع المعتمدة:</b> {ref_items}</p>')
+                parts.append(f'<p style="font-size:12px;color:#475569;margin-top:8px;"><b>المراجع المعتمدة:</b> {ref_items}</p>')
 
         parts.append(FOOT_HTML)
         return chr(10).join(parts)
@@ -1344,6 +1383,7 @@ def archive_lookup(bank, question, intent, kb=None):
         return best_entry
 
     # المستوى 3: بحث مباشر بالكلمات المفتاحية المميزة للسؤال داخل محتوى السجل المفهرس
+    # مع اشتراط عتبة تطابق صارمة لتجنب المطابقات العرضية
     if len(q_stems) >= 2:
         best_content_entry = None
         best_content_score = 0.0
@@ -1357,7 +1397,7 @@ def archive_lookup(bank, question, intent, kb=None):
                 best_content_score = ratio
                 best_content_entry = item["val"]
 
-        if best_content_score >= 0.55 and best_content_entry is not None:
+        if best_content_score >= 0.65 and best_content_entry is not None:
             return best_content_entry
 
     return None
@@ -1491,7 +1531,24 @@ def process_rag_gemini_query(bank_name, question):
     p = profile_of(bank_name)
     intents = classify_intents(question)
 
-    # 🟢 1. البحث في أرشيف الـ JSON المدمج (الأجزاء الستة) لجميع النوايا المكتشفة + البحث الاحتياطي النصي
+    # 🟡 0. أولوية البيانات التعريفية الثابتة للبنك (التأسيس، المؤسس، الملكية، شبكة الفروع)
+    # لمنع استبدالها بمقاطع نصية عابرة من تقارير سنوية قديمة
+    core_intents = [it for it in intents if it in CORE_PROFILE_INTENTS]
+    if core_intents:
+        core_parts = []
+        for it in core_intents:
+            r = _compose(it, bank_name, p, question)
+            if r:
+                core_parts.append(r)
+        if core_parts:
+            if len(core_parts) == 1:
+                _, body, tier = core_parts[0]
+            else:
+                body = _SEP.join(h.replace(FOOT_HTML, "") for _, h, _ in core_parts) + FOOT_HTML
+                tier = "profile"
+            return render_card(bank_name, question, body, tier)
+
+    # 🟢 1. البحث في أرشيف الـ JSON المدمج لبقية النوايا الاستراتيجية والتشغيلية
     arch_entries = []
     seen_arch = set()
     search_intents = intents if intents else [None]
