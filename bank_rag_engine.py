@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.3 - Multi-Part Deep-Merge JSON RAG, Enriched Keywords & Full-Text Fallback)
+bank_rag_engine.py  (v4.4 - Fast Cached Multi-Part JSON RAG, Schema-Agnostic Formatter & Adaptive Survey)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -929,7 +929,7 @@ def _profile_fallback_search(bank, p, question):
     return None
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON (دمج كافة الأجزاء الستة archive_part_1..6 + بحث عميق)
+# 5) أرشيف المعرفة JSON (سريع، مفهرس مسبقاً، ويستخرج المحتوى من أي هيكل مفاتيح)
 # ==============================================================================
 def _deep_merge_bank_records(target: dict, source: dict):
     """دمج عميق يضمن عدم استبدال بيانات بنك موجودة مسبقاً عند قراءة أجزاء متعددة."""
@@ -947,16 +947,36 @@ def _deep_merge_bank_records(target: dict, source: dict):
         else:
             target[bank_key] = records
 
-@st.cache_data(show_spinner=False, ttl=300)
+def _extract_entry_searchable_text(entry) -> str:
+    """استخراج سريع للنصوص القابلة للبحث من سجل JSON."""
+    if isinstance(entry, str):
+        return entry
+    if isinstance(entry, dict):
+        chunks = []
+        for k, v in entry.items():
+            if k in ("references", "source", "bank", "bank_name", "intent"):
+                continue
+            if isinstance(v, str):
+                chunks.append(v)
+            elif isinstance(v, list):
+                for item in v:
+                    chunks.append(_extract_entry_searchable_text(item))
+            elif isinstance(v, dict):
+                chunks.append(_extract_entry_searchable_text(v))
+        return " ".join(chunks)
+    if isinstance(entry, list):
+        return " ".join(_extract_entry_searchable_text(i) for i in entry)
+    return str(entry or "")
+
+@st.cache_data(show_spinner=False, ttl=600)
 def load_all_knowledge_archives():
     """
-    تحميل ودمج كافة أجزاء قاعدة المعرفة (archive_part_1.json إلى archive_part_6.json)
-    بالإضافة لأي ملفات JSON إضافية في المجلد، في هيكل بيانات موحد.
+    تحميل ودمج وفهرسة كافة أجزاء قاعدة المعرفة (archive_part_1.json إلى archive_part_6.json)
+    مرة واحدة في الذاكرة لتسريع البحث اللحظي ومنع التكرار الحسابي.
     """
     merged_data = {}
     part_files = sorted(glob.glob(ARCHIVE_PARTS_PATTERN))
 
-    # إذا لم توجد أجزاء مقسمة، نعود للملف الموحد الاحتياطي
     if not part_files and os.path.exists(FALLBACK_JSON_FILE):
         part_files = [FALLBACK_JSON_FILE]
 
@@ -971,7 +991,6 @@ def load_all_knowledge_archives():
         except Exception as e:
             print(f"خطأ في قراءة الملف {file_path}: {e}")
 
-    # قراءة أي ملفات JSON فردية أخرى لبنوك محددة إن وجدت
     try:
         for file in sorted(os.listdir(".")):
             if (
@@ -986,26 +1005,66 @@ def load_all_knowledge_archives():
     except Exception as e:
         print(f"Error reading dynamic bank JSON files: {e}")
 
-    return merged_data
+    # بناء فهرس مسبق للجذور الصرفية لكل سجل مرة واحدة فقط
+    indexed_cache = {}
+    for b_name, records in merged_data.items():
+        if b_name == "_all_records":
+            indexed_list = []
+            for idx, rec in enumerate(records):
+                if isinstance(rec, dict):
+                    raw_txt = _extract_entry_searchable_text(rec)
+                    c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
+                    indexed_list.append({
+                        "rec": rec,
+                        "bank_norm": norm(str(rec.get("bank") or rec.get("bank_name") or "")),
+                        "intent": rec.get("intent"),
+                        "key_norm": norm(str(rec.get("question") or rec.get("title") or "")),
+                        "c_stems": c_stems,
+                        "has_text": len(raw_txt.strip()) >= 15,
+                    })
+            indexed_cache["_all_records_idx"] = indexed_list
+            continue
 
-def _extract_entry_searchable_text(entry) -> str:
-    """استخراج كافة النصوص القابلة للبحث من سجل JSON (العنوان، الأقسام، الجداول، النص الخام)."""
-    if isinstance(entry, str):
-        return entry
-    if isinstance(entry, dict):
-        chunks = []
-        for k, v in entry.items():
-            if isinstance(v, str):
-                chunks.append(v)
-            elif isinstance(v, list):
-                for item in v:
-                    chunks.append(_extract_entry_searchable_text(item))
-            elif isinstance(v, dict):
-                chunks.append(_extract_entry_searchable_text(v))
-        return " ".join(chunks)
-    if isinstance(entry, list):
-        return " ".join(_extract_entry_searchable_text(i) for i in entry)
-    return str(entry or "")
+        b_norm = norm(b_name)
+        b_words = set(_tokens(b_norm)) | {"بنك", "مصرف", "مصر", "المصري", "المصرفي"}
+        entries_idx = []
+
+        items_iter = []
+        if isinstance(records, dict):
+            for k, v in records.items():
+                if k == "_records" and isinstance(v, list):
+                    for idx, sub_v in enumerate(v):
+                        items_iter.append((f"rec_{idx}", sub_v))
+                else:
+                    items_iter.append((k, v))
+        elif isinstance(records, list):
+            for idx, v in enumerate(records):
+                items_iter.append((f"rec_{idx}", v))
+
+        for k, val in items_iter:
+            if not val:
+                continue
+            k_str = str(k)
+            k_norm = norm(k_str)
+            k_stems = frozenset(_stem(t) for t in _tokens(k_norm) if t not in b_words)
+            raw_txt = _extract_entry_searchable_text(val)
+            c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
+            entries_idx.append({
+                "key": k_str,
+                "key_norm": k_norm,
+                "k_stems": k_stems,
+                "c_stems": c_stems,
+                "has_text": len(raw_txt.strip()) >= 15,
+                "val": val,
+            })
+
+        indexed_cache[b_name] = {
+            "b_norm": b_norm,
+            "b_words": b_words,
+            "entries": entries_idx,
+        }
+
+    return {"raw": merged_data, "index": indexed_cache}
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
     if not text:
@@ -1021,15 +1080,28 @@ def clean_raw_archive_text(text: str, question: str = "") -> str:
     return "\n".join(cleaned_lines)
 
 def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
+    """
+    تحويل أي سجل JSON (مهما كانت أسماء مفاتيحه) إلى HTML غني ومنسق.
+    يعيد نصاً فارغاً "" إذا لم يحتوِ السجل على محتوى فعلي.
+    """
     if not entry:
         return ""
 
-    if isinstance(entry, dict) and any(k in entry for k in ("sections", "table", "governance_reading", "title")):
-        title = entry.get("title") or f"{bank}: التقرير التحليلي الموثق"
-        parts = [f'<p style="margin-bottom:10px;"><b style="color:{CBE_NAVY};font-size:15px;">{html.escape(title)}</b></p>']
+    if isinstance(entry, str):
+        cleaned = clean_raw_archive_text(entry, question)
+        return (md_to_html(cleaned) + FOOT_HTML) if cleaned.strip() else ""
 
+    if isinstance(entry, dict):
+        parts = []
+        has_body_content = False
+
+        title = str(entry.get("title") or "").strip()
+        if title:
+            parts.append(f'<p style="margin-bottom:10px;"><b style="color:{CBE_NAVY};font-size:15px;">{html.escape(title)}</b></p>')
+
+        # 1) الأقسام المهيكلة (sections)
         sections = entry.get("sections") or []
-        if sections:
+        if isinstance(sections, list) and sections:
             lis = []
             for sec in sections:
                 if isinstance(sec, dict):
@@ -1039,9 +1111,13 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
                         lis.append(f'<li style="margin-bottom:6px;"><b>{h}:</b> {c}</li>')
                     elif c:
                         lis.append(f'<li style="margin-bottom:6px;">{c}</li>')
+                elif isinstance(sec, str) and sec.strip():
+                    lis.append(f'<li style="margin-bottom:6px;">{html.escape(sec.strip())}</li>')
             if lis:
                 parts.append(f'<ul style="margin-right:18px;margin-bottom:12px;">{"".join(lis)}</ul>')
+                has_body_content = True
 
+        # 2) الجداول (table)
         table_rows = entry.get("table") or []
         if isinstance(table_rows, list) and table_rows and isinstance(table_rows[0], dict):
             headers = list(table_rows[0].keys())
@@ -1061,127 +1137,150 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
                 f'<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;" dir="rtl">'
                 f"<thead><tr>{th_html}</tr></thead><tbody>{''.join(tr_html)}</tbody></table>"
             )
+            has_body_content = True
+
+        # 3) مفاتيح النص البديلة الشائعة في ملفات الأرشيف
+        for text_key in ("full_text", "text", "answer", "content", "response", "summary", "details", "description"):
+            val = entry.get(text_key)
+            if isinstance(val, str) and val.strip():
+                cleaned = clean_raw_archive_text(val, question)
+                if cleaned.strip():
+                    parts.append(md_to_html(cleaned))
+                    has_body_content = True
+                    break
+
+        # 4) إذا كان القاموس يحتوي على حقول مخصصة أخرى (مثل التأسيس، الملكية، النسبة...)
+        if not has_body_content:
+            ignored_keys = {"title", "sections", "table", "governance_reading", "references", "bank", "bank_name", "intent", "question"}
+            custom_lis = []
+            for k, v in entry.items():
+                if k in ignored_keys or not v:
+                    continue
+                if isinstance(v, (str, int, float)) and str(v).strip():
+                    custom_lis.append(f'<li style="margin-bottom:6px;"><b>{html.escape(str(k))}:</b> {html.escape(str(v).strip())}</li>')
+                elif isinstance(v, list):
+                    joined = " • ".join(str(x).strip() for x in v if str(x).strip())
+                    if joined:
+                        custom_lis.append(f'<li style="margin-bottom:6px;"><b>{html.escape(str(k))}:</b> {html.escape(joined)}</li>')
+            if custom_lis:
+                parts.append(f'<ul style="margin-right:18px;margin-bottom:12px;">{"".join(custom_lis)}</ul>')
+                has_body_content = True
 
         gov_read = entry.get("governance_reading")
-        if gov_read:
+        if isinstance(gov_read, str) and gov_read.strip():
             parts.append(
                 f'<div style="background:#FFFFFF;border-right:4px solid {CBE_NAVY};padding:10px 14px;border-radius:6px;margin-top:10px;">'
-                f'<b>قراءة حوكمية:</b> {html.escape(str(gov_read))}</div>'
+                f'<b>قراءة حوكمية:</b> {html.escape(gov_read.strip())}</div>'
             )
+            has_body_content = True
+
+        # إذا لم نجد أي محتوى فعلي داخل السجل، نعيد نصاً فارغاً لينتقل المحرك للمستوى التالي
+        if not has_body_content:
+            return ""
 
         refs = entry.get("references") or []
-        if refs:
+        if isinstance(refs, list) and refs:
             ref_items = " | ".join(
                 re.sub(
                     r"(https?://[^\s<]+)",
                     r'<a href="\1" target="_blank" style="color:#92400E;text-decoration:underline;">\1</a>',
                     html.escape(str(r))
                 )
-                for r in refs
+                for r in refs if str(r).strip()
             )
-            parts.append(f'<p style="font-size:12px;color:#475569;margin-top:10px;"><b>المراجع المعتمدة:</b> {ref_items}</p>')
+            if ref_items:
+                parts.append(f'<p style="font-size:12px;color:#475569;margin-top:10px;"><b>المراجع المعتمدة:</b> {ref_items}</p>')
 
         parts.append(FOOT_HTML)
         return chr(10).join(parts)
 
-    raw_text = entry.get("full_text") or entry.get("text") if isinstance(entry, dict) else str(entry)
-    cleaned = clean_raw_archive_text(raw_text, question)
-    return md_to_html(cleaned) + FOOT_HTML
+    return ""
 
 def archive_lookup(bank, question, intent, kb=None):
-    """
-    بحث متعدد المستويات في قاعدة المعرفة المدمجة:
-    1) مطابقة اسم البنك (دقيقة أو جزئية)
-    2) مطابقة النية (Intent) مباشرة
-    3) مطابقة مفاتيح الأسئلة المخزنة بالجذور الصرفية
-    4) بحث نصي احتياطي عميق (Fallback Full-Text Search) داخل محتوى جميع سجلات البنك
-    """
-    kb = kb if kb is not None else load_all_knowledge_archives()
-    if not isinstance(kb, dict) or not kb:
+    """بحث لحظي ودقيق في قاعدة المعرفة المفهرسة مسبقاً دون استهلاك وقت المعالج."""
+    archive_bundle = kb if isinstance(kb, dict) and "index" in kb else load_all_knowledge_archives()
+    idx_map = archive_bundle.get("index", {})
+    if not idx_map:
         return None
 
-    d = kb.get(bank)
-    if not d:
-        b_norm = norm(bank)
-        for b_name in kb.keys():
-            if b_name == "_all_records":
+    b_norm = norm(bank)
+    bank_bucket = idx_map.get(bank)
+    if not bank_bucket:
+        for b_name, bucket in idx_map.items():
+            if b_name == "_all_records_idx":
                 continue
-            bn_norm = norm(b_name)
+            bn_norm = bucket["b_norm"]
             if b_norm in bn_norm or bn_norm in b_norm:
-                d = kb[b_name]
+                bank_bucket = bucket
                 break
 
-    # تجميع السجلات المتاحة للبنك (سواء كانت Dict أو List أو ضمن _all_records)
-    bank_entries_map = {}
-    if isinstance(d, dict):
-        bank_entries_map.update(d)
-    elif isinstance(d, list):
-        for idx, item in enumerate(d):
-            bank_entries_map[f"record_{idx}"] = item
+    entries = list(bank_bucket["entries"]) if bank_bucket else []
+    bank_words = set(bank_bucket["b_words"]) if bank_bucket else (set(_tokens(b_norm)) | {"بنك", "مصرف", "مصر", "المصري", "المصرفي"})
 
-    if "_all_records" in kb and isinstance(kb["_all_records"], list):
-        b_norm = norm(bank)
-        for idx, rec in enumerate(kb["_all_records"]):
-            if isinstance(rec, dict):
-                rec_bank = norm(str(rec.get("bank") or rec.get("bank_name") or ""))
-                if rec_bank and (b_norm in rec_bank or rec_bank in b_norm):
-                    key_lbl = rec.get("intent") or rec.get("question") or f"list_rec_{idx}"
-                    bank_entries_map[key_lbl] = rec
+    # دمج السجلات المطابقة من القوائم المسطحة إن وجدت
+    for rec_item in idx_map.get("_all_records_idx", []):
+        rb = rec_item["bank_norm"]
+        if rb and (b_norm in rb or rb in b_norm):
+            k_lbl = rec_item["intent"] or rec_item["key_norm"]
+            entries.append({
+                "key": k_lbl,
+                "key_norm": rec_item["key_norm"],
+                "k_stems": frozenset(_stem(t) for t in _tokens(rec_item["key_norm"]) if t not in bank_words),
+                "c_stems": rec_item["c_stems"],
+                "has_text": rec_item["has_text"],
+                "val": rec_item["rec"],
+            })
 
-    if not bank_entries_map:
+    if not entries:
         return None
 
     # المستوى 1: مطابقة النية المباشرة
-    if intent and intent in bank_entries_map:
-        return bank_entries_map[intent]
+    if intent:
+        for item in entries:
+            if item["key"] == intent and item["has_text"]:
+                return item["val"]
 
     q_norm = norm(question)
-    q_stems = {_stem(t) for t in _tokens(q_norm)}
+    q_tokens = [t for t in _tokens(q_norm) if t not in bank_words]
+    q_stems = {_stem(t) for t in q_tokens}
 
     best_entry = None
     max_overlap = 0.0
 
-    # المستوى 2: مطابقة مفاتيح الأسئلة المخزنة
-    for k, val in bank_entries_map.items():
-        if k == "_records":
+    # المستوى 2: مطابقة مفاتيح الأسئلة المخزنة (سريع بالـ Set Intersection)
+    for item in entries:
+        if not item["has_text"]:
             continue
-        k_norm = norm(str(k))
+        k_norm = item["key_norm"]
         if len(k_norm) >= 4 and (k_norm in q_norm or q_norm in k_norm):
-            return val
+            return item["val"]
 
-        k_stems = {_stem(t) for t in _tokens(k_norm)}
+        k_stems = item["k_stems"]
         if k_stems and q_stems:
-            matched_cnt = sum(1 for ks in k_stems if _stem_match(ks, q_stems))
+            matched_cnt = len(k_stems & q_stems)
             overlap = matched_cnt / len(k_stems)
             if overlap > max_overlap:
                 max_overlap = overlap
-                best_entry = val
+                best_entry = item["val"]
 
-    if max_overlap >= 0.4 and best_entry is not None:
+    if max_overlap >= 0.5 and best_entry is not None:
         return best_entry
 
-    # المستوى 3 (الاحتياطي): بحث نصي مباشر بالجذور داخل محتوى كل سجلات البنك
-    if q_stems:
+    # المستوى 3 (الاحتياطي السريع): بحث مباشر بالكلمات المفتاحية المميزة للسؤال داخل محتوى السجل المفهرس
+    if len(q_stems) >= 2:
         best_content_entry = None
         best_content_score = 0.0
-        all_candidate_values = list(bank_entries_map.values())
-        if isinstance(bank_entries_map.get("_records"), list):
-            all_candidate_values.extend(bank_entries_map["_records"])
 
-        for val in all_candidate_values:
-            if isinstance(val, list) and val is bank_entries_map.get("_records"):
+        for item in entries:
+            if not item["has_text"]:
                 continue
-            raw_content = _extract_entry_searchable_text(val)
-            c_stems = {_stem(t) for t in _tokens(norm(raw_content))}
-            if not c_stems:
-                continue
-            hits = sum(1 for qs in q_stems if _stem_match(qs, c_stems))
+            hits = len(q_stems & item["c_stems"])
             ratio = hits / len(q_stems)
             if hits >= 2 and ratio > best_content_score:
                 best_content_score = ratio
-                best_content_entry = val
+                best_content_entry = item["val"]
 
-        if best_content_score >= 0.45 and best_content_entry is not None:
+        if best_content_score >= 0.6 and best_content_entry is not None:
             return best_content_entry
 
     return None
@@ -1334,16 +1433,20 @@ def process_rag_gemini_query(bank_name, question):
             arch_entries.append(arch_fb)
 
     if arch_entries:
-        if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
-            txt = call_llm(build_prompt(bank_name, question, p, archive_text=json.dumps(arch_entries, ensure_ascii=False)))
-            if txt:
-                return render_card(bank_name, question, md_to_html(txt), "llm")
-        formatted_parts = [format_structured_json_entry(e, bank_name, question) for e in arch_entries]
-        if len(formatted_parts) == 1:
-            combined_arch = formatted_parts[0]
-        else:
-            combined_arch = _SEP.join(fp.replace(FOOT_HTML, "") for fp in formatted_parts) + FOOT_HTML
-        return render_card(bank_name, question, combined_arch, "archive")
+        formatted_parts = [
+            fp for e in arch_entries
+            if (fp := format_structured_json_entry(e, bank_name, question)).strip()
+        ]
+        if formatted_parts:
+            if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
+                txt = call_llm(build_prompt(bank_name, question, p, archive_text=json.dumps(arch_entries, ensure_ascii=False)))
+                if txt:
+                    return render_card(bank_name, question, md_to_html(txt), "llm")
+            if len(formatted_parts) == 1:
+                combined_arch = formatted_parts[0]
+            else:
+                combined_arch = _SEP.join(fp.replace(FOOT_HTML, "") for fp in formatted_parts) + FOOT_HTML
+            return render_card(bank_name, question, combined_arch, "archive")
 
     # 🟡 2. القوالب المدمجة بالمحرك حسب النوايا المصنفة
     parts = []
