@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v4.6 - Profile-First Routing for Core Identity, Clean Chunk Rendering & Strict ASCII Indentation)
-محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
+bank_rag_engine.py (v4.7 - Profile-First Identity Routing, Deep Chunk Sanitization & Pure ASCII Indentation)
+محرك "اسأل المنصة" المطوّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
 import os
@@ -1155,7 +1155,7 @@ def load_all_knowledge_archives():
     }
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
-    """تنظيف النصوص المستخرجة من التقارير وحذف الترويسات الداخلية وعلامات الاستشهاد الخام."""
+    """تنظيف النصوص المستخرجة من التقارير وحذف الترويسات الداخلية والجمل المبتورة."""
     if not text:
         return ""
     s = str(text)
@@ -1173,14 +1173,21 @@ def clean_raw_archive_text(text: str, question: str = "") -> str:
         cleaned_lines.append(re.sub(r"\s+", " ", ln).strip())
 
     result = "\n".join(cleaned_lines).strip()
-    # إذا بدأ المقتطف بمنتصف جملة مبتورة (لا يبدأ بحرف كبير أو رقم أو عنوان)، نحاول قص البقايا غير المكتملة قبل أول نقطة واضحة
+
+    # قص الجملة المبتورة في بداية المقطع قبل أول نقطة واضحة
     if result and len(result) > 120:
         first_dot = result.find(". ")
-        if 0 < first_dot < 65:
+        if 0 < first_dot < 70:
             prefix = result[:first_dot].strip()
-            # قص البداية إذا كانت مجرد تكملة لجملة سابقة (مثل: "عدد من الدول الإفريقية الأخرى.")
-            if len(prefix.split()) <= 8 and not prefix.endswith(":"):
+            if len(prefix.split()) <= 9 and not prefix.endswith(":"):
                 result = result[first_dot + 2:].strip()
+
+    # إذا انتهى المقطع بمنتصف جملة مبتورة (بدون علامة ترقيم ختامية)، نحذف العبارة الناقصة في الذيل
+    if result and len(result) > 150 and result[-1] not in (".", "!", "؟", ":", "»", ")"):
+        last_dot = result.rfind(". ")
+        if last_dot > len(result) * 0.65:
+            result = result[:last_dot + 1].strip()
+
     return result
 
 def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
@@ -1383,7 +1390,6 @@ def archive_lookup(bank, question, intent, kb=None):
         return best_entry
 
     # المستوى 3: بحث مباشر بالكلمات المفتاحية المميزة للسؤال داخل محتوى السجل المفهرس
-    # مع اشتراط عتبة تطابق صارمة لتجنب المطابقات العرضية
     if len(q_stems) >= 2:
         best_content_entry = None
         best_content_score = 0.0
