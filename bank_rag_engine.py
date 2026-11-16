@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.4 - Fast Cached Multi-Part JSON RAG, Schema-Agnostic Formatter & Adaptive Survey)
+bank_rag_engine.py  (v4.5 - Clean ASCII Indentation, Recursive JSON Unwrapper & Instant RAG)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
@@ -95,7 +95,7 @@ def is_valid_arabic_question(text):
     return len(re.findall(r"[\u0600-\u06FF]", text)) >= 3
 
 # ==============================================================================
-# 2) تصنيف نية السؤال (Intent Classification - المطوّر والمثرى)
+# 2) تصنيف نية السؤال (Intent Classification)
 # ==============================================================================
 INTENT_KEYWORDS = {
     "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm", "موظف", "عملاء"],
@@ -929,23 +929,73 @@ def _profile_fallback_search(bank, p, question):
     return None
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON (سريع، مفهرس مسبقاً، ويستخرج المحتوى من أي هيكل مفاتيح)
+# 5) أرشيف المعرفة JSON (سريع، مفهرس مسبقاً، ويفك التغليف التلقائي لأي هيكل JSON)
 # ==============================================================================
+_KNOWN_BANKS_NORM = {norm(b): b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"}
+
+def _match_canonical_bank_name(raw_name: str):
+    """مطابقة أي صيغة لاسم البنك مع الاسم الرسمي المعتمد في BANKS_LIST_AR."""
+    rn = norm(raw_name)
+    if not rn:
+        return None
+    if rn in _KNOWN_BANKS_NORM:
+        return _KNOWN_BANKS_NORM[rn]
+    for kn, canon in _KNOWN_BANKS_NORM.items():
+        if rn in kn or kn in rn:
+            return canon
+    return None
+
 def _deep_merge_bank_records(target: dict, source: dict):
     """دمج عميق يضمن عدم استبدال بيانات بنك موجودة مسبقاً عند قراءة أجزاء متعددة."""
     for bank_key, records in source.items():
-        if bank_key not in target:
-            target[bank_key] = {} if isinstance(records, dict) else []
-        if isinstance(target[bank_key], dict) and isinstance(records, dict):
-            target[bank_key].update(records)
-        elif isinstance(target[bank_key], list) and isinstance(records, list):
-            target[bank_key].extend(records)
-        elif isinstance(target[bank_key], list):
-            target[bank_key].append(records)
-        elif isinstance(target[bank_key], dict) and isinstance(records, list):
-            target[bank_key].setdefault("_records", []).extend(records)
+        canon = _match_canonical_bank_name(bank_key) or bank_key
+        if canon not in target:
+            target[canon] = {} if isinstance(records, dict) else []
+        if isinstance(target[canon], dict) and isinstance(records, dict):
+            target[canon].update(records)
+        elif isinstance(target[canon], list) and isinstance(records, list):
+            target[canon].extend(records)
+        elif isinstance(target[canon], list):
+            target[canon].append(records)
+        elif isinstance(target[canon], dict) and isinstance(records, list):
+            target[canon].setdefault("_records", []).extend(records)
         else:
-            target[bank_key] = records
+            target[canon] = records
+
+def _ingest_any_json_structure(node, merged_data: dict, depth: int = 0):
+    """
+    مفكك هياكل JSON التلقائي: يستخرج السجلات سواء كانت في الجذر،
+    أو داخل مفاتيح مغلّفة مثل 'banks' / 'data' / 'archive'، أو كقائمة كائنات.
+    """
+    if depth > 4 or node is None:
+        return
+
+    if isinstance(node, list):
+        for item in node:
+            if isinstance(item, dict):
+                b_raw = item.get("bank") or item.get("bank_name") or item.get("institution")
+                if b_raw:
+                    canon = _match_canonical_bank_name(str(b_raw)) or str(b_raw)
+                    merged_data.setdefault(canon, []).append(item)
+                else:
+                    merged_data.setdefault("_all_records", []).append(item)
+        return
+
+    if isinstance(node, dict):
+        # فحص هل مفاتيح هذا القاموس هي أسماء بنوك أم مفاتيح تغليف عامة
+        bank_keys_found = {}
+        wrapper_nodes = []
+        for k, v in node.items():
+            canon = _match_canonical_bank_name(str(k))
+            if canon:
+                bank_keys_found[canon] = v
+            elif isinstance(v, (dict, list)):
+                wrapper_nodes.append(v)
+
+        if bank_keys_found:
+            _deep_merge_bank_records(merged_data, bank_keys_found)
+        for wn in wrapper_nodes:
+            _ingest_any_json_structure(wn, merged_data, depth + 1)
 
 def _extract_entry_searchable_text(entry) -> str:
     """استخراج سريع للنصوص القابلة للبحث من سجل JSON."""
@@ -968,26 +1018,41 @@ def _extract_entry_searchable_text(entry) -> str:
         return " ".join(_extract_entry_searchable_text(i) for i in entry)
     return str(entry or "")
 
+def _find_archive_files():
+    """البحث عن ملفات الأرشيف في المجلد الحالي والمجلدات الفرعية القريبة."""
+    search_dirs = [".", "data", "archive", "json", os.path.dirname(os.path.abspath(__file__))]
+    found = []
+    seen_real = set()
+    for d in search_dirs:
+        if not d or not os.path.isdir(d):
+            continue
+        for p in sorted(glob.glob(os.path.join(d, ARCHIVE_PARTS_PATTERN))):
+            rp = os.path.realpath(p)
+            if rp not in seen_real:
+                seen_real.add(rp)
+                found.append(p)
+        fb = os.path.join(d, FALLBACK_JSON_FILE)
+        if os.path.exists(fb) and os.path.realpath(fb) not in seen_real:
+            seen_real.add(os.path.realpath(fb))
+            found.append(fb)
+    return found
+
 @st.cache_data(show_spinner=False, ttl=600)
 def load_all_knowledge_archives():
     """
     تحميل ودمج وفهرسة كافة أجزاء قاعدة المعرفة (archive_part_1.json إلى archive_part_6.json)
-    مرة واحدة في الذاكرة لتسريع البحث اللحظي ومنع التكرار الحسابي.
+    مرة واحدة في الذاكرة لتسريع البحث اللحظي.
     """
     merged_data = {}
-    part_files = sorted(glob.glob(ARCHIVE_PARTS_PATTERN))
-
-    if not part_files and os.path.exists(FALLBACK_JSON_FILE):
-        part_files = [FALLBACK_JSON_FILE]
+    part_files = _find_archive_files()
+    loaded_files_log = []
 
     for file_path in part_files:
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 part_content = json.load(f)
-                if isinstance(part_content, dict):
-                    _deep_merge_bank_records(merged_data, part_content)
-                elif isinstance(part_content, list):
-                    merged_data.setdefault("_all_records", []).extend(part_content)
+                _ingest_any_json_structure(part_content, merged_data)
+                loaded_files_log.append(os.path.basename(file_path))
         except Exception as e:
             print(f"خطأ في قراءة الملف {file_path}: {e}")
 
@@ -998,19 +1063,21 @@ def load_all_knowledge_archives():
                 and file != FALLBACK_JSON_FILE
                 and not file.startswith("archive_part_")
             ):
-                with open(file, "r", encoding="utf-8") as f:
+                with open(file, "r", encoding="utf-8-sig") as f:
                     bank_file_data = json.load(f)
-                    if isinstance(bank_file_data, dict):
-                        _deep_merge_bank_records(merged_data, bank_file_data)
+                    _ingest_any_json_structure(bank_file_data, merged_data)
+                    loaded_files_log.append(file)
     except Exception as e:
         print(f"Error reading dynamic bank JSON files: {e}")
 
     # بناء فهرس مسبق للجذور الصرفية لكل سجل مرة واحدة فقط
     indexed_cache = {}
+    total_records_count = 0
+
     for b_name, records in merged_data.items():
         if b_name == "_all_records":
             indexed_list = []
-            for idx, rec in enumerate(records):
+            for rec in records:
                 if isinstance(rec, dict):
                     raw_txt = _extract_entry_searchable_text(rec)
                     c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
@@ -1020,8 +1087,9 @@ def load_all_knowledge_archives():
                         "intent": rec.get("intent"),
                         "key_norm": norm(str(rec.get("question") or rec.get("title") or "")),
                         "c_stems": c_stems,
-                        "has_text": len(raw_txt.strip()) >= 15,
+                        "has_text": len(raw_txt.strip()) >= 10,
                     })
+                    total_records_count += 1
             indexed_cache["_all_records_idx"] = indexed_list
             continue
 
@@ -1034,12 +1102,14 @@ def load_all_knowledge_archives():
             for k, v in records.items():
                 if k == "_records" and isinstance(v, list):
                     for idx, sub_v in enumerate(v):
-                        items_iter.append((f"rec_{idx}", sub_v))
+                        lbl = (sub_v.get("intent") or sub_v.get("question") or sub_v.get("title") or f"rec_{idx}") if isinstance(sub_v, dict) else f"rec_{idx}"
+                        items_iter.append((lbl, sub_v))
                 else:
                     items_iter.append((k, v))
         elif isinstance(records, list):
             for idx, v in enumerate(records):
-                items_iter.append((f"rec_{idx}", v))
+                lbl = (v.get("intent") or v.get("question") or v.get("title") or f"rec_{idx}") if isinstance(v, dict) else f"rec_{idx}"
+                items_iter.append((lbl, v))
 
         for k, val in items_iter:
             if not val:
@@ -1054,9 +1124,10 @@ def load_all_knowledge_archives():
                 "key_norm": k_norm,
                 "k_stems": k_stems,
                 "c_stems": c_stems,
-                "has_text": len(raw_txt.strip()) >= 15,
+                "has_text": len(raw_txt.strip()) >= 10,
                 "val": val,
             })
+            total_records_count += 1
 
         indexed_cache[b_name] = {
             "b_norm": b_norm,
@@ -1064,7 +1135,15 @@ def load_all_knowledge_archives():
             "entries": entries_idx,
         }
 
-    return {"raw": merged_data, "index": indexed_cache}
+    return {
+        "raw": merged_data,
+        "index": indexed_cache,
+        "meta": {
+            "files": loaded_files_log,
+            "banks_count": len([k for k in indexed_cache if k != "_all_records_idx"]),
+            "records_count": total_records_count,
+        },
+    }
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
     if not text:
@@ -1149,7 +1228,7 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
                     has_body_content = True
                     break
 
-        # 4) إذا كان القاموس يحتوي على حقول مخصصة أخرى (مثل التأسيس، الملكية، النسبة...)
+        # 4) حقول مخصصة أخرى داخل القاموس
         if not has_body_content:
             ignored_keys = {"title", "sections", "table", "governance_reading", "references", "bank", "bank_name", "intent", "question"}
             custom_lis = []
@@ -1174,7 +1253,6 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
             )
             has_body_content = True
 
-        # إذا لم نجد أي محتوى فعلي داخل السجل، نعيد نصاً فارغاً لينتقل المحرك للمستوى التالي
         if not has_body_content:
             return ""
 
@@ -1197,7 +1275,7 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
     return ""
 
 def archive_lookup(bank, question, intent, kb=None):
-    """بحث لحظي ودقيق في قاعدة المعرفة المفهرسة مسبقاً دون استهلاك وقت المعالج."""
+    """بحث لحظي ودقيق في قاعدة المعرفة المفهرسة مسبقاً."""
     archive_bundle = kb if isinstance(kb, dict) and "index" in kb else load_all_knowledge_archives()
     idx_map = archive_bundle.get("index", {})
     if not idx_map:
@@ -1217,7 +1295,6 @@ def archive_lookup(bank, question, intent, kb=None):
     entries = list(bank_bucket["entries"]) if bank_bucket else []
     bank_words = set(bank_bucket["b_words"]) if bank_bucket else (set(_tokens(b_norm)) | {"بنك", "مصرف", "مصر", "المصري", "المصرفي"})
 
-    # دمج السجلات المطابقة من القوائم المسطحة إن وجدت
     for rec_item in idx_map.get("_all_records_idx", []):
         rb = rec_item["bank_norm"]
         if rb and (b_norm in rb or rb in b_norm):
@@ -1247,7 +1324,7 @@ def archive_lookup(bank, question, intent, kb=None):
     best_entry = None
     max_overlap = 0.0
 
-    # المستوى 2: مطابقة مفاتيح الأسئلة المخزنة (سريع بالـ Set Intersection)
+    # المستوى 2: مطابقة مفاتيح الأسئلة المخزنة
     for item in entries:
         if not item["has_text"]:
             continue
@@ -1266,7 +1343,7 @@ def archive_lookup(bank, question, intent, kb=None):
     if max_overlap >= 0.5 and best_entry is not None:
         return best_entry
 
-    # المستوى 3 (الاحتياطي السريع): بحث مباشر بالكلمات المفتاحية المميزة للسؤال داخل محتوى السجل المفهرس
+    # المستوى 3: بحث مباشر بالكلمات المفتاحية المميزة للسؤال داخل محتوى السجل المفهرس
     if len(q_stems) >= 2:
         best_content_entry = None
         best_content_score = 0.0
@@ -1280,7 +1357,7 @@ def archive_lookup(bank, question, intent, kb=None):
                 best_content_score = ratio
                 best_content_entry = item["val"]
 
-        if best_content_score >= 0.6 and best_content_entry is not None:
+        if best_content_score >= 0.55 and best_content_entry is not None:
             return best_content_entry
 
     return None
@@ -1426,7 +1503,6 @@ def process_rag_gemini_query(bank_name, question):
                 seen_arch.add(arch_sig)
                 arch_entries.append(arch)
 
-    # محاولة بحث نصي احتياطي مباشر في الأرشيف بدون قيد النية إذا لم تُرجع النوايا المصنفة نتيجة
     if not arch_entries and intents:
         arch_fb = archive_lookup(bank_name, question, None, kb=kb)
         if arch_fb:
@@ -1483,6 +1559,11 @@ def process_rag_gemini_query(bank_name, question):
         f"يرجى مراجعة التقرير السنوي المرفق للبنك أو استكمال البيانات في قاعدة المعرفة لتوفير إجابة موثقة.</p>"
     )
     return render_card(bank_name, question, gap, "gap")
+
+def get_archive_diagnostics():
+    """دالة فحص حالة الأرشيف لمعرفة الملفات المحملة وعدد السجلات لكل بنك."""
+    kb = load_all_knowledge_archives()
+    return kb.get("meta", {})
 
 def audit_differentiation(question: str = "متى تأسس البنك وما هي ملكيته؟", banks_to_test=None):
     """فحص تمايز الإجابات بين البنوك للتأكد من عدم تكرار نفس الرد العام."""
@@ -1794,6 +1875,7 @@ def render_tab_7_survey():
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
 if __name__ == "__main__":
+    print("Archive Diagnostics:", get_archive_diagnostics())
     test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
     print("Classified Intent:", classify_intents(test_q))
     print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
