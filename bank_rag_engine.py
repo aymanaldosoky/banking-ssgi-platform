@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py  (v4.2 - Production Ready, Clean Indentation, Multi-Intent JSON RAG & Audit)
+bank_rag_engine.py  (v4.3 - Multi-Part Deep-Merge JSON RAG, Enriched Keywords & Full-Text Fallback)
 محرك "اسأل المنصة" المطوَّر والمنظومة المتكاملة للاستبيان التكيفي ومحاذاة المعرفة المصرفية.
 """
 
 import os
 import re
+import glob
 import json
 import html
 import uuid
@@ -22,8 +23,9 @@ CBE_NAVY = "#002B49"
 CBE_GOLD = "#C5A059"
 CBE_BG = "#F8F9FA"
 
-JSON_KNOWLEDGE_FILE = "national_banking_governance_archive.json"
-SURVEY_LOG_FILE = "survey_responses.csv"
+ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
+FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
+SURVEY_LOG_FILE = "survey_responses_log.csv"
 
 # قائمة البنوك المعتمدة
 BANKS_LIST_AR = [
@@ -50,7 +52,10 @@ BANKS_LIST_AR = [
 _DIAC = re.compile(r"[\u064B-\u0652\u0640]")
 _TOKEN = re.compile(r"[\u0621-\u064Aa-z0-9\u0660-\u0669]+")
 _ASCII_KW = re.compile(r"^[a-z0-9 ]+$")
-_STOPWORDS = {"من", "هو", "هي", "ما", "متى", "اين", "كيف", "كم", "هل", "في", "على", "عن", "الى", "و", "او", "تم", "التي", "الذي"}
+_STOPWORDS = {
+    "من", "هو", "هي", "ما", "متى", "اين", "كيف", "كم", "هل", "في", "على",
+    "عن", "الى", "و", "او", "تم", "التي", "الذي", "هذا", "هذه", "ذلك", "تلك"
+}
 
 def norm(s: str) -> str:
     s = _DIAC.sub("", (s or "").lower())
@@ -65,7 +70,7 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+", " ", str(text)).strip()
 
 def _tokens(s: str):
-    return [t for t in _TOKEN.findall(s) if t not in _STOPWORDS]
+    return [t for t in _TOKEN.findall(s) if t not in _STOPWORDS and len(t) >= 2]
 
 _PREFIXES = ("وال", "بال", "كال", "فال", "لل", "ال", "يت", "تت", "سي", "ست")
 _SUFFIXES = sorted(("ته", "تها", "تهم", "ها", "هم", "ات", "ون", "ين", "ان", "يه", "ه", "ي", "ت"), key=len, reverse=True)
@@ -90,7 +95,7 @@ def is_valid_arabic_question(text):
     return len(re.findall(r"[\u0600-\u06FF]", text)) >= 3
 
 # ==============================================================================
-# 2) تصنيف نية السؤال (Intent Classification)
+# 2) تصنيف نية السؤال (Intent Classification - المطوّر والمثرى)
 # ==============================================================================
 INTENT_KEYWORDS = {
     "branches": ["فروع", "عدد الفروع", "انتشار جغرافي", "شبكة الفروع", "مكاتب", "فروع البنك", "صراف آلي", "atm", "موظف", "عملاء"],
@@ -100,33 +105,56 @@ INTENT_KEYWORDS = {
         "متى تاسس", "من هو مؤسس", "ما هي ملكيته", "تاريخ التأسيس", "مالك البنك", "من يملك", "هيكل ملكيه",
         "من اسس", "من انشا", "انشاء البنك", "استحواذ", "تملك", "نشأ", "انشئ", "أسس"
     ],
-    "board": ["مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه", "حوكمة"],
-    "gov_theory": ["النظريه المؤسسيه", "نظريه اصحاب المصلحه", "نظريه الموارد", "institutional theory",
-                   "stakeholder", "الفرق بين حوكمه الشركات والحوكمه المؤسسيه"],
-    "independence": ["مستقلين", "تعارض المصالح", "نسبه الاعضاء", "غير تنفيذيين"],
-    "transparency": ["الشفافيه", "المساءله", "مكافحه الفساد", "غسل الاموال", "يفصح عن سياسات"],
+    "board": [
+        "مجلس الاداره", "تكوين", "عرف الحوكمه", "لجان", "اعضاء المجلس", "هيكل الحوكمه", "حوكمة",
+        "لجنة الحوكمة", "الترشيحات", "المكافآت", "تشكيل المجلس", "رئيس مجلس الاداره", "العضو المنتدب"
+    ],
+    "gov_theory": [
+        "النظريه المؤسسيه", "نظريه اصحاب المصلحه", "نظريه الموارد", "institutional theory",
+        "stakeholder", "الفرق بين حوكمه الشركات والحوكمه المؤسسيه"
+    ],
+    "independence": [
+        "مستقلين", "مستقل", "تعارض المصالح", "تضارب المصالح",
+        "نسبه الاعضاء", "غير تنفيذيين", "غير التنفيذيين",
+        "استقلاليه المجلس", "ميثاق الحوكمه", "اعضاء مستقلون", "الاستقلالية"
+    ],
+    "transparency": ["الشفافيه", "المساءله", "مكافحه الفساد", "غسل الاموال", "يفصح عن سياسات", "الابلاغ عن المخالفات"],
     "cbe_compliance": ["الالتزام التام", "القوانين", "اللوائح", "الصادره عن البنك المركزي", "يمتثل للرقابه", "خطوط الدفاع الثلاثة", "قانون 194"],
-    "balance_sheet": ["المركز المالي", "اجمالي الاصول", "ميزانيه", "اجمالي الودائع", "ودائع العملاء",
-                      "راس المال المدفوع", "الارصده النقديه"],
-    "asset_quality": ["القروض المتعثره", "متعثره", "تعثر", "المخصصات", "تغطيه المخصصات", "جوده الاصول",
-                      "npl", "الاحتياطيات"],
-    "sector_structure": ["عدد البنوك", "حجم القطاع", "القطاع المصرفي المصري", "الناتج المحلي", "العمود الفقري",
-                         "وزن القطاع", "اصول القطاع", "اصول النظام المالي"],
-    "financial_ratios": ["القروض للودائع", "القروض الى الودائع", "اقراض القطاع الخاص", "القطاع الخاص",
-                         "محفظة التسهيلات", "الودائع للأصول", "أذون الخزانة", "الأوراق المالية"],
-    "liquidity_capital": ["كفاية راس المال", "السيولة الفعلية", "الشريحة الاولى", "الرافعة المالية",
-                          "المراكز المفتوحة", "العملات الأجنبية", "tier 1", "cet1"],
+    "balance_sheet": [
+        "المركز المالي", "اجمالي الاصول", "ميزانيه", "اجمالي الودائع", "ودائع العملاء",
+        "راس المال المدفوع", "الارصده النقديه"
+    ],
+    "asset_quality": [
+        "القروض المتعثره", "متعثره", "تعثر", "المخصصات", "تغطيه المخصصات", "جوده الاصول",
+        "npl", "الاحتياطيات"
+    ],
+    "sector_structure": [
+        "عدد البنوك", "حجم القطاع", "القطاع المصرفي المصري", "الناتج المحلي", "العمود الفقري",
+        "وزن القطاع", "اصول القطاع", "اصول النظام المالي"
+    ],
+    "financial_ratios": [
+        "القروض للودائع", "القروض الى الودائع", "اقراض القطاع الخاص", "القطاع الخاص",
+        "محفظة التسهيلات", "الودائع للأصول", "أذون الخزانة", "الأوراق المالية"
+    ],
+    "liquidity_capital": [
+        "كفاية راس المال", "السيولة الفعلية", "الشريحة الاولى", "الرافعة المالية",
+        "المراكز المفتوحة", "العملات الأجنبية", "tier 1", "cet1"
+    ],
     "women": ["المراه", "تمكين", "الشمول المالي", "رائدات"],
     "climate": ["مخاطر المناخ", "المناخ", "التمويل الاخضر", "تغير المناخ", "الكربون"],
     "green_assets": ["الاصول الخضراء", "محفظه الائتمان", "نسبه الاصول", "المشروعات المستدامه", "gar"],
-    "reporting": ["gri", "issb", "المعايير الدوليه", "الافصاح المالي", "تقارير الاستدامه", "tcfd", "sasb",
-                  "المؤشر المصري للاستدامه", "سوق الكربون"],
+    "reporting": [
+        "gri", "issb", "المعايير الدوليه", "الافصاح المالي", "تقارير الاستدامه", "tcfd", "sasb",
+        "المؤشر المصري للاستدامه", "سوق الكربون"
+    ],
     "csr": ["المسوءوليه المجتمعيه", "المسؤوليه المجتمعيه", "الانفاق التنموي", "مبادرات البنك", "csr"],
     "data_gov": ["حوكمه البيانات", "الامتثال الرقابي", "تامينها", "اليات حوكمه"],
     "cyber": ["الحصانه السيبرانيه", "السيبراني", "تسريب", "هجمات", "اختراق"],
     "sip": ["البنيه التحتية", "جاهزيه", "منصات المعلومات", "sip"],
-    "regtech": ["regtech", "الرقابه التنظيميه", "استرجاع المعطيات", "تقنيات الرقابه",
-                "الذكاء الاصطناعي التوليدي", "ssgi"],
+    "regtech": [
+        "regtech", "الرقابه التنظيميه", "استرجاع المعطيات", "تقنيات الرقابه",
+        "الذكاء الاصطناعي التوليدي", "ssgi"
+    ],
     "pdpl": ["حمايه البيانات الشخصية", "السياده الرقميه", "قانون حماية", "التوافق مع قانون"],
     "ai": ["التحول الرقمي", "الذكاء الاصطناعي", "تطبيقات الذكاء الاصطناعي", "الأتمتة", "الذكاء الإصطناعي"],
 }
@@ -181,16 +209,22 @@ TYPE_LABEL = {
     "private": "بنك قطاع خاص",
 }
 
-_STATE = ["بنك مصر BM", "البنك الأهلي المصري NBE", "بنك القاهرة Banque du Caire", "البنك الزراعي المصري",
-          "بنك ناصر الاجتماعي", "بنك الاستثمار القومي", "بنك تنمية الصادرات EBANK",
-          "بنك التنمية الصناعية IDB", "البنك العقاري المصري العربي EALB"]
-_ISLAMIC = ["بنك فيصل الإسلامي", "بنك البركة الإسلامي", "مصرف أبو ظبي الإسلامي ADIB",
-            "بنك بيت التمويل الكويتي KFH", "بنك الأهلي المتحد KFH"]
-_FOREIGN = ["بنك قطر الوطني الأهلي QNB", "بنك كريدي أجريكول", "بنك الإسكندرية", "بنك أبوظبي الأول مصر FABMISR",
-            "بنك الإمارات دبي الوطني NDB", "بنك HSBC", "التجاري وفا بنك", "بنك المؤسسة العربية المصرفية ABC",
-            "المصرف العربي الدولي AIB", "ستاندرد تشارترد – مصر", "بنك الكويت الوطني NBK", "بنك المشرق",
-            "بنك الأهلي الكويتي مصر ABK", "البنك العربي", "البنك العربي الأفريقي", "بنك أبوظبي التجاري ADCB",
-            "بنوك بلوم BLOM", "البنك الأهلي اليوناني", "بنك سيتي بنك CITIBANK"]
+_STATE = [
+    "بنك مصر BM", "البنك الأهلي المصري NBE", "بنك القاهرة Banque du Caire", "البنك الزراعي المصري",
+    "بنك ناصر الاجتماعي", "بنك الاستثمار القومي", "بنك تنمية الصادرات EBANK",
+    "بنك التنمية الصناعية IDB", "البنك العقاري المصري العربي EALB"
+]
+_ISLAMIC = [
+    "بنك فيصل الإسلامي", "بنك البركة الإسلامي", "مصرف أبو ظبي الإسلامي ADIB",
+    "بنك بيت التمويل الكويتي KFH", "بنك الأهلي المتحد KFH"
+]
+_FOREIGN = [
+    "بنك قطر الوطني الأهلي QNB", "بنك كريدي أجريكول", "بنك الإسكندرية", "بنك أبوظبي الأول مصر FABMISR",
+    "بنك الإمارات دبي الوطني NDB", "بنك HSBC", "التجاري وفا بنك", "بنك المؤسسة العربية المصرفية ABC",
+    "المصرف العربي الدولي AIB", "ستاندرد تشارترد – مصر", "بنك الكويت الوطني NBK", "بنك المشرق",
+    "بنك الأهلي الكويتي مصر ABK", "البنك العربي", "البنك العربي الأفريقي", "بنك أبوظبي التجاري ADCB",
+    "بنوك بلوم BLOM", "البنك الأهلي اليوناني", "بنك سيتي بنك CITIBANK"
+]
 
 def bank_type(bank):
     if bank in _STATE:
@@ -532,8 +566,10 @@ FRA_GOV = "قرار الهيئة العامة للرقابة المالية رق
 FRA_ESG = "إلزام الهيئة العامة للرقابة المالية الشركات المدرجة بإفصاحات ESG وTCFD منذ 2022 مع العمل على تطوير إطار يتماشى مع المعيارين IFRS S1 وIFRS S2"
 GOV_DECISIONS = "قرارا رئيس مجلس الوزراء رقم 1146 لسنة 2018 ورقم 54 لسنة 2020 بشأن تقسيمات الحوكمة والمراجعة الداخلية"
 
-SECTOR_SRC = ("المصدر: البنك المركزي المصري – المركز المالي المجمع للبنوك العاملة بالسوق المحلي (بدون البنك المركزي)، "
-              "سبتمبر 2025، كما نُشر بتاريخ 3 يناير 2026. مقارنات «يونيو» تعني يونيو 2025.")
+SECTOR_SRC = (
+    "المصدر: البنك المركزي المصري – المركز المالي المجمع للبنوك العاملة بالسوق المحلي (بدون البنك المركزي)، "
+    "سبتمبر 2025، كما نُشر بتاريخ 3 يناير 2026. مقارنات «يونيو» تعني يونيو 2025."
+)
 
 SECTOR = {
     "balance": (
@@ -700,113 +736,153 @@ def comp_board(bank, p):
     return _pack(f"{bank}: تعريف الحوكمة وتكوين مجلس الإدارة", b)
 
 def comp_gov_theory(bank, p):
-    b = [("من حوكمة الشركات إلى الحوكمة المؤسسية", "يتجاوز المفهوم الأحدث نماذج حوكمة الشركات التقليدية إلى حوكمة مؤسسية تشمل كافة القطاعات لتحقيق التوازن بين الكفاءة والاستدامة والمسؤولية المجتمعية."),
-         ("النظرية المؤسسية (Institutional Theory)", "تؤكد دور القوى البيئية الخارجية (التشريعات، الرقابة، الأعراف) في تشكيل الهياكل والممارسات التنظيمية."),
-         ("نظرية الموارد (Resource-Based View)", "تركز على استخدام المؤسسة لمواردها الداخلية المتميزة لتحقيق ميزة تنافسية مستدامة."),
-         ("نظرية أصحاب المصلحة (Stakeholder Theory)", "تؤكد ضرورة موازنة مصالح جميع الأطراف المتأثرة بأنشطة المؤسسة.")]
+    b = [
+        ("من حوكمة الشركات إلى الحوكمة المؤسسية", "يتجاوز المفهوم الأحدث نماذج حوكمة الشركات التقليدية إلى حوكمة مؤسسية تشمل كافة القطاعات لتحقيق التوازن بين الكفاءة والاستدامة والمسؤولية المجتمعية."),
+        ("النظرية المؤسسية (Institutional Theory)", "تؤكد دور القوى البيئية الخارجية (التشريعات، الرقابة، الأعراف) في تشكيل الهياكل والممارسات التنظيمية."),
+        ("نظرية الموارد (Resource-Based View)", "تركز على استخدام المؤسسة لمواردها الداخلية المتميزة لتحقيق ميزة تنافسية مستدامة."),
+        ("نظرية أصحاب المصلحة (Stakeholder Theory)", "تؤكد ضرورة موازنة مصالح جميع الأطراف المتأثرة بأنشطة المؤسسة.")
+    ]
     return _pack(f"{bank}: الأسس النظرية للحوكمة المؤسسية", b)
 
 def comp_independence(bank, p):
-    b = [("المعيار", "نسبة الأعضاء المستقلين وغير التنفيذيين تُستخرج من قسم «مجلس الإدارة» في التقرير السنوي."),
-         ("آليات تجنب تعارض المصالح", "سياسة مكتوبة لتعارض المصالح، وإفصاح العضو عن مصالحه، وامتناعه عن التصويت في المعاملات ذات الصلة.")]
+    b = [
+        ("المعيار", "نسبة الأعضاء المستقلين وغير التنفيذيين تُستخرج من قسم «مجلس الإدارة» في التقرير السنوي وفق تعليمات البنك المركزي المصري."),
+        ("آليات تجنب تعارض المصالح", "سياسة مكتوبة لتعارض المصالح، وإفصاح العضو عن مصالحه، وامتناعه عن التصويت في المعاملات ذات الصلة.")
+    ]
     return _pack(f"{bank}: الاستقلالية وتعارض المصالح", b)
 
 def comp_transparency(bank, p):
-    b = [("مكافحة غسل الأموال", "الالتزام بقانون مكافحة غسل الأموال وتعليمات وحدة مكافحة غسل الأموال وتمويل الإرهاب (KYC)."),
-         ("الإفصاح", "نشر قوائم مالية سنوية ودورية وتطبيق إفصاحات ESG وTCFD."),
-         ("مكافحة الفساد", "سياسات الإبلاغ عن المخالفات (Whistleblowing) ومدونة السلوك.")]
+    b = [
+        ("مكافحة غسل الأموال", "الالتزام بقانون مكافحة غسل الأموال وتعليمات وحدة مكافحة غسل الأموال وتمويل الإرهاب (KYC)."),
+        ("الإفصاح", "نشر قوائم مالية سنوية ودورية وتطبيق إفصاحات ESG وTCFD."),
+        ("مكافحة الفساد", "سياسات الإبلاغ عن المخالفات (Whistleblowing) ومدونة السلوك.")
+    ]
     return _pack(f"{bank}: الشفافية والمساءلة ومكافحة الفساد", b)
 
 def comp_cbe(bank, p):
-    b = [("المرجعية", f"{LAW_CBE} وحزم الضوابط الرقابية والاحترازية الصادرة عن البنك المركزي المصري."),
-         ("أهمية القطاع الكلي", SECTOR_HEADLINE),
-         ("آلية الامتثال", "وحدة امتثال مستقلة، وخطوط دفاع ثلاثة (التشغيل – المخاطر والامتثال – التدقيق الداخلي).")]
+    b = [
+        ("المرجعية", f"{LAW_CBE} وحزم الضوابط الرقابية والاحترازية الصادرة عن البنك المركزي المصري."),
+        ("أهمية القطاع الكلي", SECTOR_HEADLINE),
+        ("آلية الامتثال", "وحدة امتثال مستقلة، وخطوط دفاع ثلاثة (التشغيل – المخاطر والامتثال – التدقيق الداخلي).")
+    ]
     return _pack(f"{bank}: الامتثال للتعليمات الرقابية والمؤشرات المالية الكلية", b)
 
 def comp_balance_sheet(bank, p):
-    b = [("المركز المالي المجمع للقطاع", SECTOR["balance"]),
-         ("ودائع العملاء", SECTOR["deposits"]),
-         ("المصدر", SECTOR_SRC)]
+    b = [
+        ("المركز المالي المجمع للقطاع", SECTOR["balance"]),
+        ("ودائع العملاء", SECTOR["deposits"]),
+        ("المصدر", SECTOR_SRC)
+    ]
     return _pack(f"{bank}: المركز المالي وودائع العملاء (مرجعية القطاع)", b)
 
 def comp_asset_quality(bank, p):
-    b = [("مؤشرات جودة الأصول بالقطاع", SECTOR["asset_quality"]),
-         ("قراءة المؤشرات", "انخفاض نسبة القروض غير المنتظمة إلى 2% مع تغطية مخصصات تقارب 89.4%."),
-         ("المصدر", SECTOR_SRC)]
+    b = [
+        ("مؤشرات جودة الأصول بالقطاع", SECTOR["asset_quality"]),
+        ("قراءة المؤشرات", "انخفاض نسبة القروض غير المنتظمة إلى 2% مع تغطية مخصصات تقارب 89.4%."),
+        ("المصدر", SECTOR_SRC)
+    ]
     return _pack(f"{bank}: جودة الأصول والمخصصات (مرجعية القطاع)", b)
 
 def comp_sector_structure(bank, p):
-    b = [("حجم القطاع", "يضم السوق المحلي 36 بنكاً، وتجاوز المركز المالي المجمع للبنوك 25.366 تريليون جنيه في سبتمبر 2025."),
-         ("الوزن في الاقتصاد", "تمثل ودائع الجهاز المصرفي قرابة 81% من الناتج المحلي الإجمالي، وأصوله تمثل 93.5% من أصول النظام المالي.")]
+    b = [
+        ("حجم القطاع", "يضم السوق المحلي 36 بنكاً، وتجاوز المركز المالي المجمع للبنوك 25.366 تريليون جنيه في سبتمبر 2025."),
+        ("الوزن في الاقتصاد", "تمثل ودائع الجهاز المصرفي قرابة 81% من الناتج المحلي الإجمالي، وأصوله تمثل 93.5% من أصول النظام المالي.")
+    ]
     return _pack(f"{bank}: هيكل القطاع المصرفي المصري ووزنه الاقتصادي", b)
 
 def comp_financial_ratios(bank, p):
-    b = [("نسبة القروض إلى الودائع والائتمان", SECTOR["lending"]),
-         ("استثمارات الأوراق المالية", SECTOR["securities"]),
-         ("المصدر", SECTOR_SRC)]
+    b = [
+        ("نسبة القروض إلى الودائع والائتمان", SECTOR["lending"]),
+        ("استثمارات الأوراق المالية", SECTOR["securities"]),
+        ("المصدر", SECTOR_SRC)
+    ]
     return _pack(f"{bank}: مؤشرات الائتمان والودائع واستثمارات الأوراق المالية", b)
 
 def comp_liquidity_capital(bank, p):
-    b = [("كفاية رأس المال وملاءة البنك", SECTOR["capital"]),
-         ("السيولة الفعلية والمراكز المفتوحة", SECTOR["liquidity"]),
-         ("المصدر", SECTOR_SRC)]
+    b = [
+        ("كفاية رأس المال وملاءة البنك", SECTOR["capital"]),
+        ("السيولة الفعلية والمراكز المفتوحة", SECTOR["liquidity"]),
+        ("المصدر", SECTOR_SRC)
+    ]
     return _pack(f"{bank}: مؤشرات كفاية رأس المال والسيولة والرافعة المالية", b)
 
 def comp_women(bank, p):
-    b = [("المرجعية الوطنية", "الاستراتيجية القومية للشمول المالي ومبادرات البنك المركزي بالتعاون مع المجلس القومي للمرأة."),
-         ("مؤشرات القياس", "نسبة النساء في الحسابات والمحافظ الرقمية والإقراض الموجه لرائدات الأعمال والمناصب القيادية.")]
+    b = [
+        ("المرجعية الوطنية", "الاستراتيجية القومية للشمول المالي ومبادرات البنك المركزي بالتعاون مع المجلس القومي للمرأة."),
+        ("مؤشرات القياس", "نسبة النساء في الحسابات والمحافظ الرقمية والإقراض الموجه لرائدات الأعمال والمناصب القيادية.")
+    ]
     return _pack(f"{bank}: تمكين المرأة والشمول المالي", b)
 
 def comp_climate(bank, p):
-    b = [("الإطار", f"إرشادات البنك المركزي للتمويل المستدام، و{FRA_ESG}، وتطوير سوق الكربون الطوعي بمصر."),
-         ("مخاطر المناخ", "مخاطر انتقالية ومادية تُدمج في تقييم الائتمان وسيناريوهات اختبار الضغط.")]
+    b = [
+        ("الإطار", f"إرشادات البنك المركزي للتمويل المستدام، و{FRA_ESG}، وتطوير سوق الكربون الطوعي بمصر."),
+        ("مخاطر المناخ", "مخاطر انتقالية ومادية تُدمج في تقييم الائتمان وسيناريوهات اختبار الضغط.")
+    ]
     return _pack(f"{bank}: مخاطر المناخ والتمويل الأخضر", b)
 
 def comp_green_assets(bank, p):
-    b = [("الإجابة الصادقة", f"لا يتوفر في أرشيف المنصة رقم معتمد لنسبة الأصول الخضراء المباشرة في {bank}، ولن تُقدّر المنصة رقماً غير موثق."),
-         ("طريقة الحساب", "GAR = القروض والاستثمارات المتوافقة مع تصنيف الأنشطة الخضراء ÷ إجمالي الأصول المشمولة."),
-         ("أين تجده", "تقرير الاستدامة السنوي للبنك أو تقارير الإفصاح وفق معايير GRI وSASB وTCFD وIFRS S1/S2.")]
+    b = [
+        ("الإجابة الصادقة", f"لا يتوفر في أرشيف المنصة رقم معتمد لنسبة الأصول الخضراء المباشرة في {bank}، ولن تُقدّر المنصة رقماً غير موثق."),
+        ("طريقة الحساب", "GAR = القروض والاستثمارات المتوافقة مع تصنيف الأنشطة الخضراء ÷ إجمالي الأصول المشمولة."),
+        ("أين تجده", "تقرير الاستدامة السنوي للبنك أو تقارير الإفصاح وفق معايير GRI وSASB وTCFD وIFRS S1/S2.")
+    ]
     return _pack(f"{bank}: نسبة الأصول الخضراء", b)
 
 def comp_reporting(bank, p):
-    b = [("GRI & SASB", "معايير المبادرة العالمية ومجلس معايير محاسبة الاستدامة للتركيز على الأثر الاقتصادي والبيئي والاجتماعي."),
-         ("ISSB & TCFD", f"المعياران IFRS S1 وIFRS S2 وإفصاحات TCFD: {FRA_ESG}."),
-         ("المبادرات المصرية", "المؤشر المصري للاستدامة، سوق الكربون الطوعي، ومنصة وزارة التخطيط للتنمية المستدامة بالمحافظات.")]
+    b = [
+        ("GRI & SASB", "معايير المبادرة العالمية ومجلس معايير محاسبة الاستدامة للتركيز على الأثر الاقتصادي والبيئي والاجتماعي."),
+        ("ISSB & TCFD", f"المعياران IFRS S1 وIFRS S2 وإفصاحات TCFD: {FRA_ESG}."),
+        ("المبادرات المصرية", "المؤشر المصري للاستدامة، سوق الكربون الطوعي، ومنصة وزارة التخطيط للتنمية المستدامة بالمحافظات.")
+    ]
     return _pack(f"{bank}: الامتثال لمعايير GRI وISSB والمعايير الدولية", b)
 
 def comp_csr(bank, p):
-    b = [("المبدأ", "ربط الإنفاق المجتمعي برؤية مصر 2030 وقانون ممارسة العمل الأهلي 149 لسنة 2019."),
-         ("القياس", "حجم الإنفاق السنوي ونسبته من صافي الربح، وعدد المستفيدين، وأثر المبادرات (SROI).")]
+    b = [
+        ("المبدأ", "ربط الإنفاق المجتمعي برؤية مصر 2030 وقانون ممارسة العمل الأهلي 149 لسنة 2019."),
+        ("القياس", "حجم الإنفاق السنوي ونسبته من صافي الربح، وعدد المستفيدين، وأثر المبادرات (SROI).")
+    ]
     return _pack(f"{bank}: المسؤولية المجتمعية والإنفاق التنموي", b)
 
 def comp_data_gov(bank, p):
-    b = [("المرجعية", f"{LAW_PDPL} ولائحته التنفيذية، وإطار الأمن السيبراني الصادر عن البنك المركزي المصري."),
-         ("عناصر الحوكمة", "تصنيف البيانات المصرفية، تعيين مسؤول حماية البيانات الشخصية، وتوطين البيانات.")]
+    b = [
+        ("المرجعية", f"{LAW_PDPL} ولائحته التنفيذية، وإطار الأمن السيبراني الصادر عن البنك المركزي المصري."),
+        ("عناصر الحوكمة", "تصنيف البيانات المصرفية، تعيين مسؤول حماية البيانات الشخصية، وتوطين البيانات.")
+    ]
     return _pack(f"{bank}: حوكمة البيانات والامتثال", b)
 
 def comp_cyber(bank, p):
-    b = [("الإطار", "إطار الأمن السيبراني للقطاع المالي الصادر عن المركزي المصري وقانون مكافحة جرائم تقنية المعلومات."),
-         ("الضوابط الأساسية", "مركز عمليات أمنية (SOC)، تشفير البيانات المصرفية، والمصادقة متعددة العوامل.")]
+    b = [
+        ("الإطار", "إطار الأمن السيبراني للقطاع المالي الصادر عن المركزي المصري وقانون مكافحة جرائم تقنية المعلومات."),
+        ("الضوابط الأساسية", "مركز عمليات أمنية (SOC)، تشفير البيانات المصرفية، والمصادقة متعددة العوامل.")
+    ]
     return _pack(f"{bank}: الحصانة السيبرانية", b)
 
 def comp_sip(bank, p):
-    b = [("المعنى والجاهزية", "جاهزية البنية التحتية للبيانات والنظم المصرفية الأساسية، والتكامل مع شبكات الدفع الوطنية (إنستاباي وميزة)."),
-         ("مؤشرات الجاهزية", "نسبة وقت التشغيل (Uptime)، زمن التعافي من الكوارث (DRP)، وحصة المعاملات الرقمية.")]
+    b = [
+        ("المعنى والجاهزية", "جاهزية البنية التحتية للبيانات والنظم المصرفية الأساسية، والتكامل مع شبكات الدفع الوطنية (إنستاباي وميزة)."),
+        ("مؤشرات الجاهزية", "نسبة وقت التشغيل (Uptime)، زمن التعافي من الكوارث (DRP)، وحصة المعاملات الرقمية.")
+    ]
     return _pack(f"{bank}: البنية التحتية الرقمية ومنصات المعلومات", b)
 
 def comp_regtech(bank, p):
-    b = [("التعريف والتطبيق", "تقنيات الرقابة التنظيمية (RegTech) والتدقيق الرقمي الهجين المعزز بنماذج اللغة الكبيرة الموطنة (LLMs)."),
-         ("المؤشر المركب SSGI", "تطبيق الذكاء الاصطناعي التوليدي لبناء مؤشر مركب للحوكمة الذكية المستدامة (SSGI) لتحويل الإفصاحات السردية إلى مؤشرات كمية.")]
+    b = [
+        ("التعريف والتطبيق", "تقنيات الرقابة التنظيمية (RegTech) والتدقيق الرقمي الهجين المعزز بنماذج اللغة الكبيرة الموطنة (LLMs)."),
+        ("المؤشر المركب SSGI", "تطبيق الذكاء الاصطناعي التوليدي لبناء مؤشر مركب للحوكمة الذكية المستدامة (SSGI) لتحويل الإفصاحات السردية إلى مؤشرات كمية.")
+    ]
     return _pack(f"{bank}: تقنيات الرقابة التنظيمية (RegTech) ومؤشر SSGI", b)
 
 def comp_pdpl(bank, p):
-    b = [("المرجعية", f"{LAW_PDPL}: يقيّد جمع البيانات ومعالجتها بموافقة صريحة ويمنح الأفراد حقوق الاطلاع والتصحيح."),
-         ("السيادة الرقمية والسرية المصرفية", "حظر نقل البيانات المصرفية خارج مصر إلا بضوابط وترخيص والالتزام ببدائل التوطين المعتمدة.")]
+    b = [
+        ("المرجعية", f"{LAW_PDPL}: يقيّد جمع البيانات ومعالجتها بموافقة صريحة ويمنح الأفراد حقوق الاطلاع والتصحيح."),
+        ("السيادة الرقمية والسرية المصرفية", "حظر نقل البيانات المصرفية خارج مصر إلا بضوابط وترخيص والالتزام ببدائل التوطين المعتمدة.")
+    ]
     return _pack(f"{bank}: قانون حماية البيانات والسيادة الرقمية", b)
 
 def comp_ai(bank, p):
-    b = [("التطبيق المصرفي", "تبني حلول التحول الرقمي، التحليلات التنبؤية، وأنظمة التعلم الآلي للكشف عن الاحتيال وفق تعليمات البنك المركزي."),
-         ("أطر الحوكمة الرقمية", "الالتزام بأمن المعلومات، وحوكمة البيانات لضمان الجاهزية للتوسع في خوارزميات الذكاء الاصطناعي.")]
+    b = [
+        ("التطبيق المصرفي", "تبني حلول التحول الرقمي، التحليلات التنبؤية، وأنظمة التعلم الآلي للكشف عن الاحتيال وفق تعليمات البنك المركزي."),
+        ("أطر الحوكمة الرقمية", "الالتزام بأمن المعلومات، وحوكمة البيانات لضمان الجاهزية للتوسع في خوارزميات الذكاء الاصطناعي.")
+    ]
     return _pack(f"{bank}: تطبيقات الذكاء الاصطناعي والتحول الرقمي", b)
 
 COMPOSERS = {
@@ -853,61 +929,83 @@ def _profile_fallback_search(bank, p, question):
     return None
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON (تحميل ديناميكي آلي + تنسيق قياسي موحد لجميع البنوك)
+# 5) أرشيف المعرفة JSON (دمج كافة الأجزاء الستة archive_part_1..6 + بحث عميق)
 # ==============================================================================
-_KB_CACHE = {"sig": None, "data": {}}
+def _deep_merge_bank_records(target: dict, source: dict):
+    """دمج عميق يضمن عدم استبدال بيانات بنك موجودة مسبقاً عند قراءة أجزاء متعددة."""
+    for bank_key, records in source.items():
+        if bank_key not in target:
+            target[bank_key] = {} if isinstance(records, dict) else []
+        if isinstance(target[bank_key], dict) and isinstance(records, dict):
+            target[bank_key].update(records)
+        elif isinstance(target[bank_key], list) and isinstance(records, list):
+            target[bank_key].extend(records)
+        elif isinstance(target[bank_key], list):
+            target[bank_key].append(records)
+        elif isinstance(target[bank_key], dict) and isinstance(records, list):
+            target[bank_key].setdefault("_records", []).extend(records)
+        else:
+            target[bank_key] = records
 
-def _kb_signature():
-    files = [f"archive_part_{i}.json" for i in range(1, 7)] + [JSON_KNOWLEDGE_FILE]
-    try:
-        json_files = [f for f in os.listdir(".") if f.endswith(".json")]
-        for jf in json_files:
-            if jf not in files:
-                files.append(jf)
-    except Exception:
-        pass
-    return tuple((f, os.path.getmtime(f)) for f in files if os.path.exists(f))
+@st.cache_data(show_spinner=False, ttl=300)
+def load_all_knowledge_archives():
+    """
+    تحميل ودمج كافة أجزاء قاعدة المعرفة (archive_part_1.json إلى archive_part_6.json)
+    بالإضافة لأي ملفات JSON إضافية في المجلد، في هيكل بيانات موحد.
+    """
+    merged_data = {}
+    part_files = sorted(glob.glob(ARCHIVE_PARTS_PATTERN))
 
-def load_json_knowledge():
-    sig = _kb_signature()
-    if sig == _KB_CACHE["sig"]:
-        return _KB_CACHE["data"]
+    # إذا لم توجد أجزاء مقسمة، نعود للملف الموحد الاحتياطي
+    if not part_files and os.path.exists(FALLBACK_JSON_FILE):
+        part_files = [FALLBACK_JSON_FILE]
 
-    combined_data = {}
-    for i in range(1, 7):
-        part_filename = f"archive_part_{i}.json"
-        if os.path.exists(part_filename):
-            try:
-                with open(part_filename, "r", encoding="utf-8") as f:
-                    part_data = json.load(f)
-                    if isinstance(part_data, dict):
-                        combined_data.update(part_data)
-            except Exception:
-                pass
-
-    if not combined_data and os.path.exists(JSON_KNOWLEDGE_FILE):
+    for file_path in part_files:
         try:
-            with open(JSON_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
-                combined_data = json.load(f)
-        except Exception:
-            pass
+            with open(file_path, "r", encoding="utf-8") as f:
+                part_content = json.load(f)
+                if isinstance(part_content, dict):
+                    _deep_merge_bank_records(merged_data, part_content)
+                elif isinstance(part_content, list):
+                    merged_data.setdefault("_all_records", []).extend(part_content)
+        except Exception as e:
+            print(f"خطأ في قراءة الملف {file_path}: {e}")
 
+    # قراءة أي ملفات JSON فردية أخرى لبنوك محددة إن وجدت
     try:
-        for file in os.listdir("."):
-            if file.endswith(".json") and file != JSON_KNOWLEDGE_FILE and not file.startswith("archive_part_"):
+        for file in sorted(os.listdir(".")):
+            if (
+                file.endswith(".json")
+                and file != FALLBACK_JSON_FILE
+                and not file.startswith("archive_part_")
+            ):
                 with open(file, "r", encoding="utf-8") as f:
                     bank_file_data = json.load(f)
                     if isinstance(bank_file_data, dict):
-                        for b_name, b_intents in bank_file_data.items():
-                            if b_name not in combined_data:
-                                combined_data[b_name] = {}
-                            if isinstance(b_intents, dict):
-                                combined_data[b_name].update(b_intents)
+                        _deep_merge_bank_records(merged_data, bank_file_data)
     except Exception as e:
         print(f"Error reading dynamic bank JSON files: {e}")
 
-    _KB_CACHE["sig"], _KB_CACHE["data"] = sig, combined_data
-    return combined_data
+    return merged_data
+
+def _extract_entry_searchable_text(entry) -> str:
+    """استخراج كافة النصوص القابلة للبحث من سجل JSON (العنوان، الأقسام، الجداول، النص الخام)."""
+    if isinstance(entry, str):
+        return entry
+    if isinstance(entry, dict):
+        chunks = []
+        for k, v in entry.items():
+            if isinstance(v, str):
+                chunks.append(v)
+            elif isinstance(v, list):
+                for item in v:
+                    chunks.append(_extract_entry_searchable_text(item))
+            elif isinstance(v, dict):
+                chunks.append(_extract_entry_searchable_text(v))
+        return " ".join(chunks)
+    if isinstance(entry, list):
+        return " ".join(_extract_entry_searchable_text(i) for i in entry)
+    return str(entry or "")
 
 def clean_raw_archive_text(text: str, question: str = "") -> str:
     if not text:
@@ -991,20 +1089,51 @@ def format_structured_json_entry(entry, bank: str, question: str = "") -> str:
     return md_to_html(cleaned) + FOOT_HTML
 
 def archive_lookup(bank, question, intent, kb=None):
-    kb = kb if kb is not None else load_json_knowledge()
-    d = kb.get(bank) if isinstance(kb, dict) else None
+    """
+    بحث متعدد المستويات في قاعدة المعرفة المدمجة:
+    1) مطابقة اسم البنك (دقيقة أو جزئية)
+    2) مطابقة النية (Intent) مباشرة
+    3) مطابقة مفاتيح الأسئلة المخزنة بالجذور الصرفية
+    4) بحث نصي احتياطي عميق (Fallback Full-Text Search) داخل محتوى جميع سجلات البنك
+    """
+    kb = kb if kb is not None else load_all_knowledge_archives()
+    if not isinstance(kb, dict) or not kb:
+        return None
 
+    d = kb.get(bank)
     if not d:
+        b_norm = norm(bank)
         for b_name in kb.keys():
-            if norm(bank) in norm(b_name) or norm(b_name) in norm(bank):
+            if b_name == "_all_records":
+                continue
+            bn_norm = norm(b_name)
+            if b_norm in bn_norm or bn_norm in b_norm:
                 d = kb[b_name]
                 break
 
-    if not d or not isinstance(d, dict):
+    # تجميع السجلات المتاحة للبنك (سواء كانت Dict أو List أو ضمن _all_records)
+    bank_entries_map = {}
+    if isinstance(d, dict):
+        bank_entries_map.update(d)
+    elif isinstance(d, list):
+        for idx, item in enumerate(d):
+            bank_entries_map[f"record_{idx}"] = item
+
+    if "_all_records" in kb and isinstance(kb["_all_records"], list):
+        b_norm = norm(bank)
+        for idx, rec in enumerate(kb["_all_records"]):
+            if isinstance(rec, dict):
+                rec_bank = norm(str(rec.get("bank") or rec.get("bank_name") or ""))
+                if rec_bank and (b_norm in rec_bank or rec_bank in b_norm):
+                    key_lbl = rec.get("intent") or rec.get("question") or f"list_rec_{idx}"
+                    bank_entries_map[key_lbl] = rec
+
+    if not bank_entries_map:
         return None
 
-    if intent and intent in d:
-        return d[intent]
+    # المستوى 1: مطابقة النية المباشرة
+    if intent and intent in bank_entries_map:
+        return bank_entries_map[intent]
 
     q_norm = norm(question)
     q_stems = {_stem(t) for t in _tokens(q_norm)}
@@ -1012,13 +1141,16 @@ def archive_lookup(bank, question, intent, kb=None):
     best_entry = None
     max_overlap = 0.0
 
-    for k, val in d.items():
-        k_norm = norm(k)
+    # المستوى 2: مطابقة مفاتيح الأسئلة المخزنة
+    for k, val in bank_entries_map.items():
+        if k == "_records":
+            continue
+        k_norm = norm(str(k))
         if len(k_norm) >= 4 and (k_norm in q_norm or q_norm in k_norm):
             return val
 
         k_stems = {_stem(t) for t in _tokens(k_norm)}
-        if k_stems:
+        if k_stems and q_stems:
             matched_cnt = sum(1 for ks in k_stems if _stem_match(ks, q_stems))
             overlap = matched_cnt / len(k_stems)
             if overlap > max_overlap:
@@ -1027,6 +1159,30 @@ def archive_lookup(bank, question, intent, kb=None):
 
     if max_overlap >= 0.4 and best_entry is not None:
         return best_entry
+
+    # المستوى 3 (الاحتياطي): بحث نصي مباشر بالجذور داخل محتوى كل سجلات البنك
+    if q_stems:
+        best_content_entry = None
+        best_content_score = 0.0
+        all_candidate_values = list(bank_entries_map.values())
+        if isinstance(bank_entries_map.get("_records"), list):
+            all_candidate_values.extend(bank_entries_map["_records"])
+
+        for val in all_candidate_values:
+            if isinstance(val, list) and val is bank_entries_map.get("_records"):
+                continue
+            raw_content = _extract_entry_searchable_text(val)
+            c_stems = {_stem(t) for t in _tokens(norm(raw_content))}
+            if not c_stems:
+                continue
+            hits = sum(1 for qs in q_stems if _stem_match(qs, c_stems))
+            ratio = hits / len(q_stems)
+            if hits >= 2 and ratio > best_content_score:
+                best_content_score = ratio
+                best_content_entry = val
+
+        if best_content_score >= 0.45 and best_content_entry is not None:
+            return best_content_entry
 
     return None
 
@@ -1046,17 +1202,25 @@ def call_llm(prompt):
         if os.getenv("ANTHROPIC_API_KEY"):
             out = _post_json(
                 "https://api.anthropic.com/v1/messages",
-                {"model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
-                 "max_tokens": 1500, "messages": [{"role": "user", "content": prompt}]},
-                {"content-type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
-                 "anthropic-version": "2023-06-01"})
+                {
+                    "model": os.getenv("BANK_RAG_ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
+                    "max_tokens": 1500,
+                    "messages": [{"role": "user", "content": prompt}]
+                },
+                {
+                    "content-type": "application/json",
+                    "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                    "anthropic-version": "2023-06-01"
+                }
+            )
             return "".join(b.get("text", "") for b in out.get("content", []))
         if os.getenv("GEMINI_API_KEY"):
             model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
             out = _post_json(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 {"contents": [{"parts": [{"text": prompt}]}]},
-                {"content-type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+                {"content-type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]}
+            )
             return out["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         print(f"LLM Call Error: {e}")
@@ -1093,7 +1257,11 @@ def md_to_html(text):
     for line in lines:
         line_str = html.escape(line.strip())
         line_str = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line_str)
-        line_str = re.sub(r"(https?://[^\s<]+)", r'<a href="\1" target="_blank" style="color:#C5A059;text-decoration:underline;">\1</a>', line_str)
+        line_str = re.sub(
+            r"(https?://[^\s<]+)",
+            r'<a href="\1" target="_blank" style="color:#C5A059;text-decoration:underline;">\1</a>',
+            line_str
+        )
 
         if line_str.startswith("- ") or line_str.startswith("• "):
             if not in_ul:
@@ -1143,20 +1311,27 @@ def process_rag_gemini_query(bank_name, question):
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
 
+    kb = load_all_knowledge_archives()
     p = profile_of(bank_name)
     intents = classify_intents(question)
 
-    # 🟢 1. البحث في أرشيف الـ JSON لجميع النوايا المكتشفة وتنسيقها بالقالب التنفيذي الموحد
+    # 🟢 1. البحث في أرشيف الـ JSON المدمج (الأجزاء الستة) لجميع النوايا المكتشفة + البحث الاحتياطي النصي
     arch_entries = []
     seen_arch = set()
     search_intents = intents if intents else [None]
     for it in search_intents:
-        arch = archive_lookup(bank_name, question, it)
+        arch = archive_lookup(bank_name, question, it, kb=kb)
         if arch:
             arch_sig = json.dumps(arch, ensure_ascii=False, sort_keys=True) if isinstance(arch, dict) else str(arch)
             if arch_sig not in seen_arch:
                 seen_arch.add(arch_sig)
                 arch_entries.append(arch)
+
+    # محاولة بحث نصي احتياطي مباشر في الأرشيف بدون قيد النية إذا لم تُرجع النوايا المصنفة نتيجة
+    if not arch_entries and intents:
+        arch_fb = archive_lookup(bank_name, question, None, kb=kb)
+        if arch_fb:
+            arch_entries.append(arch_fb)
 
     if arch_entries:
         if os.getenv("BANK_RAG_ENRICH") == "1" and llm_available():
@@ -1200,8 +1375,10 @@ def process_rag_gemini_query(bank_name, question):
             return render_card(bank_name, question, md_to_html(txt), "llm")
 
     # ⚪ 4. حالة عدم توفر البيانات
-    gap = (f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
-           f"ولن تُقدَّم إجابة مبنية على التخمين.</p>")
+    gap = (
+        f"<p>لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص <b>{html.escape(bank_name)}</b>، "
+        f"يرجى مراجعة التقرير السنوي المرفق للبنك أو استكمال البيانات في قاعدة المعرفة لتوفير إجابة موثقة.</p>"
+    )
     return render_card(bank_name, question, gap, "gap")
 
 def audit_differentiation(question: str = "متى تأسس البنك وما هي ملكيته؟", banks_to_test=None):
