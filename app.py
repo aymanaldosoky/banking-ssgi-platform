@@ -348,7 +348,7 @@ def clean_text(text) -> str:
         return str(text)
     t = re.sub(r"\[cite[^\]]*\]", "", text)
     t = re.sub(r"<[^>]+>", "", t)
-    t = t.replace("\xa0", " ").replace("\u200b", "")
+    t = t.replace(" ", " ").replace("\u200b", "")
     return re.sub(r"\s+", " ", t).strip()
 
 def hash_password(password: str) -> str:
