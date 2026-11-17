@@ -594,6 +594,14 @@ else:
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG v5.1)
 # ------------------------------------------------------------------------------
+# دالة مغلفة بالتخزين المؤقت لتسريع الإجابات المتكررة فوراً
+@st.cache_data(show_spinner=False, ttl=3600)
+def cached_rag_query(bank_name: str, question: str) -> str:
+    return process_rag_gemini_query(bank_name, question)
+
+if "last_rag_result" not in st.session_state:
+    st.session_state.last_rag_result = None
+
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
@@ -671,7 +679,6 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال للإجابة عليه.")
             else:
-                # 1. عرض Skeleton Loader أثناء الاتصال بالمحرك
                 skeleton_placeholder = st.empty()
                 skeleton_html = flat_html("""
                 <div class="skeleton-card">
@@ -679,43 +686,92 @@ with tab1:
                     <div class="skeleton-line skeleton-badge"></div>
                     <div class="skeleton-line skeleton-body-1"></div>
                     <div class="skeleton-line skeleton-body-2"></div>
-                    <div class="skeleton-line skeleton-body-3"></div>
                 </div>
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
 
-                # 2. الاستدعاء المباشر والشامل لمحرك Hybrid RAG & Gemini لجميع البنوك
-                full_response = process_rag_gemini_query(ask_bank_sel, active_q)
+                # استدعاء سريع مع التخزين المؤقت
+                full_response = cached_rag_query(ask_bank_sel, active_q)
                 skeleton_placeholder.empty()
 
-                # 3. البث التدريجي الآمن للـ HTML دون كسر الوسوم البرمجية
-                def stream_html_safe(html_str):
-                    tokens = re.split(r"(<[^>]+>|\s+)", html_str)
-                    buf = ""
-                    word_count = 0
-                    for tok in tokens:
-                        if not tok:
-                            continue
-                        buf += tok
-                        if not tok.startswith("<") and tok.strip():
-                            word_count += 1
-                            if word_count % 3 == 0:
-                                yield buf
-                                time.sleep(0.015)
-                    yield buf
-
-                response_box = st.empty()
-                for partial_html in stream_html_safe(flat_html(full_response)):
-                    response_box.markdown(partial_html, unsafe_allow_html=True)
-
-                # تسجيل الاستعلام في سجل مستقل بأسئلة "اسأل المنصة" (بدلاً من history_state الخاص بمؤشر SSGI)
-                if "rag_query_history" not in st.session_state:
-                    st.session_state.rag_query_history = []
-                st.session_state.rag_query_history.append({
+                now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                st.session_state.last_rag_result = {
                     "bank": ask_bank_sel,
                     "question": active_q,
-                    "timestamp": datetime.now().strftime("%H:%M:%S")
-                })
+                    "answer_html": flat_html(full_response),
+                    "timestamp": now_ts
+                }
+                st.session_state.rag_query_history.append(st.session_state.last_rag_result)
+
+        # عرض آخر نتيجة محفوظة + أزرار التحميل (تظل ثابتة ولا تختفي عند التحميل)
+        if st.session_state.last_rag_result:
+            res = st.session_state.last_rag_result
+            st.markdown(res["answer_html"], unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # تجهيز ملف Word للإجابة الحالية
+            single_qa_word = f"""
+            <html dir="rtl">
+            <head><meta charset="utf-8"><title>تحليل واستعلام ذكي - {res['bank']}</title></head>
+            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; line-height: 1.8;">
+                <h2 style="color: {CBE_NAVY}; text-align: center;">🎯 تقرير الاستخلاص والتحليل الذكي (Hybrid RAG)</h2>
+                <p style="text-align: center; color: #64748B; font-size: 13px;">تاريخ التوليد: {res['timestamp']}</p>
+                <hr style="border-top: 2px solid {CBE_GOLD};">
+                <p><b>🏛️ البنك المصرفي:</b> {res['bank']}</p>
+                <p><b>❓ السؤال / الاستفسار:</b> {res['question']}</p>
+                <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 12px;">
+                    {res['answer_html']}
+                </div>
+            </body>
+            </html>
+            """
+
+            # تجهيز ملف Word لكافة الأسئلة والإجابات في الجلسة
+            all_qa_blocks = ""
+            for idx_q, item_q in enumerate(st.session_state.rag_query_history, 1):
+                all_qa_blocks += f"""
+                <div style="border: 1.5px solid {CBE_GOLD}; padding: 15px; border-radius: 10px; margin-bottom: 18px;">
+                    <h4 style="color: {CBE_NAVY}; margin-top: 0;">({idx_q}) البنك: {item_q['bank']} | التوقيت: {item_q['timestamp']}</h4>
+                    <p><b>❓ السؤال:</b> {item_q['question']}</p>
+                    <div style="background: #F8FAFC; padding: 12px; border-right: 4px solid {CBE_GOLD};">{item_q['answer_html']}</div>
+                </div>
+                """
+
+            full_history_word = f"""
+            <html dir="rtl">
+            <head><meta charset="utf-8"><title>سجل الإجابات والردود الذكية</title></head>
+            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; line-height: 1.8;">
+                <h1 style="color: {CBE_NAVY}; text-align: center;">📚 سجل الاستفسارات والتحليلات الذكية المجمعة</h1>
+                <hr style="border-top: 2px solid {CBE_GOLD};">
+                {all_qa_blocks}
+            </body>
+            </html>
+            """
+
+            col_dl_q1, col_dl_q2, col_clr_q = st.columns([1.2, 1.2, 0.8])
+            with col_dl_q1:
+                st.download_button(
+                    label="📥 تحميل الإجابة الحالية (Word)",
+                    data=single_qa_word.encode("utf-8-sig"),
+                    file_name=f"تحليل_{res['bank']}.doc",
+                    mime="application/msword",
+                    use_container_width=True,
+                    key="dl_single_rag_btn"
+                )
+            with col_dl_q2:
+                st.download_button(
+                    label=f"📥 تحميل كافة الردود ({len(st.session_state.rag_query_history)}) (Word)",
+                    data=full_history_word.encode("utf-8-sig"),
+                    file_name="سجل_الإجابات_والردود_الذكية.doc",
+                    mime="application/msword",
+                    use_container_width=True,
+                    key="dl_all_rag_btn"
+                )
+            with col_clr_q:
+                if st.button("🗑️ مسح السجل", use_container_width=True, key="clear_rag_hist_btn"):
+                    st.session_state.rag_query_history = []
+                    st.session_state.last_rag_result = None
+                    st.rerun()
         else:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
