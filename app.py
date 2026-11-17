@@ -2134,7 +2134,7 @@ with tab6:
 
     st.markdown("---")
 
-    # ==========================================================================
+# ==========================================================================
     # الموديول الثاني: 🌿 2. توليد مسودة تقارير الاستدامة التوجيهية
     # ==========================================================================
     st.markdown("#### 📋 2. توليد مسودة تقارير الاستدامة التوجيهية التفصيلية للبنك المختار")
@@ -2243,7 +2243,7 @@ with tab6:
                         <ul>
                             <li><b>تحديث البنية التحتية الرقمية:</b> مواصلة الاستثمار في منصات المعلومات الذكية وربطها بالتقارير الرقابية الآلية (RegTech).</li>
                             <li><b>توسيع الأصول الخضراء:</b> رفع نسبة الائتمان الموجه للمشروعات المستدامة وصديقة البيئة لتعزيز تنافسية البنك في المؤشرات الإقليمية والدولية.</li>
-                            <li><b>تعزيز الشفافية والتوكيد الخارجي:</b> إخضاع تقارير الاستدامة لعمليات تدقيق وتوكيد خارجي مستقل لزيادة ثقة الموتمرين والمؤسسات المالية الدولية.</li>
+                            <li><b>تعزيز الشفافية والتوكيد الخارجي:</b> إخضاع تقارير الاستدامة لعمليات تدقيق وتوكيد خارجي مستقل لزيادة ثقة المستثمرين والمؤسسات المالية الدولية.</li>
                         </ul>
                     </div>
                     """), unsafe_allow_html=True)
@@ -2258,7 +2258,7 @@ with tab6:
                     <hr>
                     <h3>📌 البند التمهيدي: ملخص مؤشرات التشخيص المعتمدة:</h3>
                     <p>المؤشر المركب للحوكمة الذكية المستدامة (SSGI): <b>{b_score}%</b></p>
-                    <p>جهازية منصات المعلومات وبنية التقنية (SIP - وزن 40%): <b>{s_val}%</b> — {describe_sip(s_val)}</p>
+                    <p>جاهزية منصات المعلومات وبنية التقنية (SIP - وزن 40%): <b>{s_val}%</b> — {describe_sip(s_val)}</p>
                     <p>كفاءة الحوكمة المؤسسية والامتثال (IG - وزن 30%): <b>{i_val}%</b> — {describe_ig(i_val)}</p>
                     <p>أداء تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%): <b>{r_val}%</b> — {describe_sr(r_val)}</p>
                     <hr>
@@ -2276,7 +2276,7 @@ with tab6:
                     <ul>
                         <li><b>تحديث البنية التحتية الرقمية:</b> مواصلة الاستثمار في منصات المعلومات الذكية وربطها بالتقارير الرقابية الآلية (RegTech).</li>
                         <li><b>توسيع الأصول الخضراء:</b> رفع نسبة الائتمان الموجه للمشروعات المستدامة وصديقة البيئة لتعزيز تنافسية البنك في المؤشرات الإقليمية والدولية.</li>
-                        <li><b>تعزيز الشفافية والتوكيد الخارجي:</b> إخضاع تقارير الاستدامة لعمليات تدقيق وتوكيد خارجي مستقل لزيادة ثقة الموتمرين والمؤسسات المالية الدولية.</li>
+                        <li><b>تعزيز الشفافية والتوكيد الخارجي:</b> إخضاع تقارير الاستدامة لعمليات تدقيق وتوكيد خارجي مستقل لزيادة ثقة المستثمرين والمؤسسات المالية الدولية.</li>
                     </ul>
                     <hr>
                     <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
@@ -2415,137 +2415,26 @@ with tab6:
             mime="application/msword",
             use_container_width=True
         )
-import uuid
-import json
-import psycopg2
-import pandas as pd
-import streamlit as st
-from datetime import datetime
 
 # ==============================================================================
-# 1) دالتا الاتصال بـ Supabase وتهيئة جدول البيانات
+# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (موحّدة وآمنة)
 # ==============================================================================
-def get_db_connection():
-    """إنشاء اتصال مع قاعدة البيانات السحابية عبر secrets.toml"""
-    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
-        return psycopg2.connect(st.secrets["postgres"]["url"])
-    raise ValueError("لم يتم العثور على إعدادات [postgres] url في secrets.toml")
-
-def init_db():
-    """إنشاء جدول الاستجابات تلقائياً إن لم يكن موجوداً"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS survey_responses (
-                response_id TEXT PRIMARY KEY,
-                bank_name TEXT,
-                org_type TEXT,
-                degree TEXT,
-                specialty TEXT,
-                job_level TEXT,
-                exp_years TEXT,
-                is_listed TEXT,
-                survey_route TEXT,
-                w_sip INT,
-                w_ig INT,
-                w_sr INT,
-                avg_sip FLOAT,
-                avg_ig FLOAT,
-                avg_sr FLOAT,
-                answers JSONB,
-                comments TEXT,
-                submitted_at TEXT
-            );
-        """)
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        st.warning(f"تنبيه تهيئة قاعدة البيانات السحابية: {e}")
-
-# تهيئة جدول قاعدة البيانات السحابية
-init_db()
-
-# ==============================================================================
-# 2) دالة التخزين السحابي للاستجابة
-# ==============================================================================
-def save_survey_to_cloud(rec):
-    """حفظ الاستجابة الميدانية في Supabase"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # استخلاص تقييمات العبارات الـ 31 في كائن JSON
-    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
-    
-    cur.execute("""
-        INSERT INTO survey_responses (
-            response_id, bank_name, org_type, degree, specialty, job_level,
-            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
-            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """, (
-        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
-        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
-        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
-        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
-        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
-    ))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-# ==============================================================================
-# 3) دالة قراءة الاستجابات للوحة التحكم الإدارية
-# ==============================================================================
-def load_survey_log_from_cloud():
-    """استرجاع الاستجابات وتسطيح عمود JSON للعبارات إلى أعمدة تفصيلية"""
-    try:
-        conn = get_db_connection()
-        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
-        conn.close()
-        
-        if not df.empty and 'answers' in df.columns:
-            # تفكيك كائن الـ JSON الخاص بإجابات العبارات
-            answers_df = pd.json_normalize(df['answers'])
-            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
-        return df
-    except Exception as e:
-        st.error(f"خطأ أثناء قراءة الاستجابات من السحابة: {e}")
-        return pd.DataFrame()
-
-
-import io
-import os
-import json
-import re
-import hashlib
-import time
-from datetime import datetime
-import pandas as pd
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
 import uuid
 import psycopg2
+import streamlit.components.v1 as components
 
-# ==============================================================================
-# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (محسّنة وسريعة)
-# ==============================================================================
-
-@st.cache_resource
 def get_db_connection():
-    """الاتصال السريع السحابي بقاعدة بيانات Supabase باستخدام cacher الاتصال"""
+    """إنشاء اتصال آمن ومباشر مع قاعدة البيانات السحابية عبر st.secrets"""
     if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
         conn_str = st.secrets["postgres"]["url"]
         if "?" not in conn_str:
             conn_str += "?sslmode=require&connect_timeout=15"
         return psycopg2.connect(conn_str)
-    else:
-        raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
+    raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
 
 def init_db():
     """إنشاء جدول الاستبيان تلقائياً في Supabase إذا لم يكن موجوداً"""
+    conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -2576,37 +2465,40 @@ def init_db():
         return True, "تم الاتصال وتهيئة الجدول بنجاح!"
     except Exception as e:
         return False, str(e)
+    finally:
+        if conn:
+            conn.close()
 
 def save_survey_to_cloud(rec):
     """حفظ بيانات الاستجابة مباشرة وبسرعة عالية في السحابة"""
     conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # فصل العبارات الـ 31 المعتمدة في كائن JSON للحفاظ على مرونة هيكل الجدول
-    answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
-    
-    cur.execute("""
-        INSERT INTO survey_responses (
-            response_id, bank_name, org_type, degree, specialty, job_level,
-            exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
-            avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """, (
-        rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
-        rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
-        rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
-        rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
-        json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
-    ))
-    conn.commit()
-    cur.close()
+    try:
+        cur = conn.cursor()
+        answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
+        cur.execute("""
+            INSERT INTO survey_responses (
+                response_id, bank_name, org_type, degree, specialty, job_level,
+                exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
+                avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """, (
+            rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
+            rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
+            rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"], rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
+            rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"], rec["متوسط محور تقارير الاستدامة"],
+            json.dumps(answers, ensure_ascii=False), rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
+        ))
+        conn.commit()
+        cur.close()
+    finally:
+        conn.close()
 
 def load_survey_log_from_cloud():
     """استرجاع الاستجابات وتفكيك العبارات الـ 31 حتماً إلى أعمدة تفصيلية مستقلة"""
+    conn = None
     try:
         conn = get_db_connection()
         df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
-        
         if not df.empty and 'answers' in df.columns:
             def _parse_ans(val):
                 if isinstance(val, dict):
@@ -2628,10 +2520,11 @@ def load_survey_log_from_cloud():
 
             df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
         return df
-    except Exception as e:
+    except Exception:
         return pd.DataFrame()
-
-import streamlit.components.v1 as components
+    finally:
+        if conn:
+            conn.close()
 
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Dual-Channel: Platform + Kobo)
@@ -2770,7 +2663,7 @@ with tab7:
             10: "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.",
             11: "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.",
             12: "تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.",
-            13: "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.",
+            13: "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواحة لأصحاب المصلحة.",
             14: "يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.",
             15: "يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.",
             16: "تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.",
@@ -2896,7 +2789,9 @@ with tab7:
         total_req_count = len(required_stmts)
         progress_percentage = int(answered_count / total_req_count * 100) if total_req_count else 0
 
-        w_sip_cur = S.get("w_sip", 40); w_ig_cur = S.get("w_ig", 30); w_sr_cur = S.get("w_sr", 30)
+        w_sip_cur = S.get("w_sip", 40)
+        w_ig_cur = S.get("w_ig", 30)
+        w_sr_cur = S.get("w_sr", 30)
 
         def step_complete(k):
             if k == "profile":
@@ -3098,6 +2993,7 @@ with tab7:
         جميع الحقوق محفوظة للدراسة البحثية © 2026
     </div>
     """, unsafe_allow_html=True)
+
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
@@ -3180,11 +3076,18 @@ if tab9 is not None:
                 "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
             ]
             with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
-                flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
+                try:
+                    flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
+                except TypeError:
+                    flagged_pairs = audit_differentiation(threshold=threshold_slider)
                 if flagged_pairs:
                     st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
-                    for q_item, b1, b2, ratio_val in flagged_pairs:
-                        st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
+                    for item in flagged_pairs:
+                        if isinstance(item, (list, tuple)) and len(item) >= 4:
+                            q_item, b1, b2, ratio_val = item[0], item[1], item[2], item[3]
+                            st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
+                        else:
+                            st.markdown(f"- {item}")
                 else:
                     st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
 
