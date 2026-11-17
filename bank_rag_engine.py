@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v7.1 - Memory-Optimized, Quota-Safe Hybrid RAG & Role-Based Survey)
-محرك "اسأل المنصة" المعتمد على Gemini API مع إدارة الذاكرة المنخفضة ومعالجة أخطاء الحصة 429.
+bank_rag_engine.py (v7.2 - Gemini 3.8 Ready, Memory-Optimized & Quota-Safe Hybrid RAG)
+محرك "اسأل المنصة" المعتمد على Gemini API مع دعم الجيل الأحدث وإدارة الذاكرة المنخفضة.
 """
 
 import os
@@ -35,7 +35,7 @@ CBE_BG = "#F8F9FA"
 ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
 FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -851,7 +851,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     return results
 
 # ==============================================================================
-# 6) الاتصال المباشر بـ Gemini API (فائق السرعة مع حماية الحصة 429 والذاكرة)
+# 6) الاتصال المباشر بـ Gemini API (دعم Gemini 3.8 + حماية الحصة 429 والذاكرة)
 # ==============================================================================
 def _get_gemini_api_key() -> str:
     """قراءة مفتاح Gemini بأمان من أسرار Streamlit أو متغيرات البيئة."""
@@ -880,7 +880,9 @@ def _get_candidate_models() -> list:
     candidates = [
         active_cached,
         custom_model,
-        "gemini-2.5-flash-lite",
+        "gemini-3.8-flash",
+        "gemini-3.8-flash-lite",
+        "gemini-3.0-flash",
         "gemini-2.5-flash",
     ]
     return list(dict.fromkeys([m for m in candidates if m]))
