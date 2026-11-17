@@ -3,3 +3,4 @@ pandas
 plotly
 psycopg2-binary
 xlsxwriter
+google-genai>=1.0.0
