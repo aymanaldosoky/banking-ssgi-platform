@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v5.1 - Gemini-First Hybrid RAG Engine & Role-Based Survey)
-محرك "اسأل المنصة" المعتمد على Gemini API مباشرة مع الاسترجاع الهجين من الأرشيف والملفات المرجعية.
+bank_rag_engine.py (v5.2 - Gemini 3.8 Flash Hybrid RAG Engine & Role-Based Survey)
+محرك "اسأل المنصة" المعتمد على Gemini API مباشرة مع الاسترجاع الهجين والاكتشاف التلقائي للنماذج.
 """
 
 import os
@@ -35,7 +35,7 @@ CBE_BG = "#F8F9FA"
 ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
 FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -844,7 +844,6 @@ def _get_gemini_api_key() -> str:
     try:
         if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
             return str(st.secrets["GEMINI_API_KEY"]).strip()
-        # دعم احتياطي في حال وضع المفتاح أسفل قسم [postgres] في Secrets
         if "postgres" in st.secrets and "GEMINI_API_KEY" in st.secrets["postgres"]:
             return str(st.secrets["postgres"]["GEMINI_API_KEY"]).strip()
     except Exception:
@@ -854,6 +853,27 @@ def _get_gemini_api_key() -> str:
 def llm_available() -> bool:
     return bool(_get_gemini_api_key())
 
+@st.cache_data(show_spinner=False, ttl=3600)
+def _discover_available_flash_models(api_key: str) -> list:
+    """استعلام تلقائي عن أحدث نماذج Flash المتاحة للحساب لمنع أخطاء 404 مستقبلاً."""
+    try:
+        req = urllib.request.Request(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            headers={"x-goog-api-key": api_key},
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            found = []
+            for m in data.get("models", []):
+                methods = m.get("supportedGenerationMethods", [])
+                name = m.get("name", "").replace("models/", "")
+                if "generateContent" in methods and "flash" in name.lower():
+                    found.append(name)
+            found.sort(reverse=True)
+            return found[:4]
+    except Exception:
+        return []
+
 def call_gemini_direct(system_instruction: str, user_prompt: str):
     """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت)"""
     api_key = _get_gemini_api_key()
@@ -861,10 +881,16 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
         return "", "لم يتم العثور على GEMINI_API_KEY في Secrets"
 
     custom_model = (os.getenv("GEMINI_MODEL") or "").strip()
-    models_to_try = [custom_model] if custom_model else ["gemini-2.5-flash", "gemini-2.0-flash"]
+    candidates = [custom_model] if custom_model else [
+        "gemini-3.8-flash",
+        "gemini-3.8-flash-lite",
+        "gemini-2.5-flash",
+    ]
+    models_to_try = list(dict.fromkeys([m for m in candidates if m]))
     last_error = ""
 
-    for model_name in models_to_try:
+    def _try_single_model(model_name: str):
+        nonlocal last_error
         # 1) المحاولة عبر الحزمة الرسمية الحديثة google-genai
         if HAS_GENAI_SDK:
             try:
@@ -879,11 +905,11 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                     ),
                 )
                 if response and response.text:
-                    return response.text.strip(), ""
+                    return response.text.strip()
             except Exception as e:
                 last_error = f"SDK ({model_name}): {e}"
 
-        # 2) مسار REST القياسي الاحتياطي (يعمل بدون أي مكتبات إضافية)
+        # 2) مسار REST القياسي الاحتياطي
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             payload = {
@@ -904,17 +930,30 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
             )
             with urllib.request.urlopen(req, timeout=45) as r:
                 out = json.loads(r.read().decode("utf-8"))
-                candidates = out.get("candidates") or []
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
+                cands = out.get("candidates") or []
+                if cands:
+                    parts = cands[0].get("content", {}).get("parts", [])
                     txt = "".join(p.get("text", "") for p in parts).strip()
                     if txt:
-                        return txt, ""
+                        return txt
         except urllib.error.HTTPError as he:
             err_body = he.read().decode("utf-8", errors="ignore")[:180]
             last_error = f"HTTP {he.code} ({model_name}): {err_body}"
         except Exception as e:
             last_error = f"REST ({model_name}): {e}"
+        return ""
+
+    for m_name in models_to_try:
+        res = _try_single_model(m_name)
+        if res:
+            return res, ""
+
+    # 3) اكتشاف تلقائي لأحدث نموذج متاح إذا فشلت القائمة الافتراضية
+    for discovered_m in _discover_available_flash_models(api_key):
+        if discovered_m not in models_to_try:
+            res = _try_single_model(discovered_m)
+            if res:
+                return res, ""
 
     return "", last_error
 
@@ -934,6 +973,7 @@ def build_gemini_prompts(bank: str, question: str, p: dict, archive_chunks: list
         "type_label": "تصنيف البنك",
         "founded": "تاريخ التأسيس",
         "founder": "المؤسس / الجهة المؤسسة",
+        "origin": "النشأة والتطور التاريخي",
         "ownership": "هيكل الملكية",
         "branches": "شبكة الفروع والتواجد",
         "mandate": "الدور الاستراتيجي",
