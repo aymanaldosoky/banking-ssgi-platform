@@ -1466,13 +1466,13 @@ with tab2:
         st.plotly_chart(fig_pie_bank, use_container_width=True)
 
 # ==============================================================================
-# التبويب الثالث: محاكي السياسات (Policy Simulator) - مطور بالكامل
+# التبويب الثالث: محاكي السياسات (Policy Simulator) - مطور ومحدث بالكامل
 # ==============================================================================
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية المخصصة للبنوك.</p>
+        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية المخصصة للبنوك وتوليد التقارير التراكمية.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1483,56 +1483,66 @@ with tab3:
 
         with col_sim_in:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-            recorded_banks_sim = list(set([item["البنك"] for item in st.session_state.history_state]))
+            recorded_banks_sim = list(dict.fromkeys([item["البنك"] for item in st.session_state.history_state]))
             sim_bank_sel = st.selectbox("اختر البنك للمحاكاة", recorded_banks_sim, key="sim_bank")
-            base_ssgi_input = st.slider("قيمة المؤشر الافتراضي الحالي", 30.0, 100.0, 85.0, 0.5, key="sim_base")
-            
+
+            # جلب القيمة المسجلة للبنك المختار لاستخدامها كقيمة افتراضية ذكية للمؤشر
+            default_bank_ssgi = 85.0
+            for item in reversed(st.session_state.history_state):
+                if item["البنك"] == sim_bank_sel:
+                    default_bank_ssgi = float(item["مؤشر SSGI المركب"])
+                    break
+
+            base_ssgi_input = st.slider(
+                "قيمة المؤشر الأساسي الحالي (SSGI)",
+                30.0, 100.0, default_bank_ssgi, 0.5,
+                key=f"sim_base_{sim_bank_sel}"
+            )
+
             scenario_dropdown = st.selectbox("اختر السيناريو الاستراتيجي", [
                 "📉 السيناريو التشاؤمي (غياب التدخل وضعف الاستثمار التقني)",
                 "📊 السيناريو المعتدل / التفاؤلي (استثمارات تقليدية تدريجية)",
                 "🚀 السيناريو الطموح / الاستباقي (إصلاحات هيكلية شاملة وسيادة رقمية)"
             ], index=1, key="sim_scen")
-            
+
             var1_sip = st.slider("1️⃣ نسبة الزيادة في منصات المعلومات والبنية التقنية (%)", 0, 50, 20, key="sim_v1")
             var2_ig = st.slider("2️⃣ نسبة الزيادة في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2")
             var3_sr = st.slider("3️⃣ نسبة الزيادة في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3")
 
             run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو إضافي للبنك", use_container_width=True, type="primary")
-            
+
             if st.button("🗑️ مسح وإعادة تعيين كافة سيناريوهات المحاكي", use_container_width=True, type="secondary"):
                 st.session_state.simulated_results_dict = {}
-                st.success("✅ تم مسح جميع سيناريوهات المحاكي بنجاح.")
                 st.rerun()
 
             # ------------------------------------------------------------------
             # بناء الآلية التجميعية لتقرير محاكي السياسات بالكامل لملف Word HTML
             # ------------------------------------------------------------------
+            scenarios_count = len(st.session_state.simulated_results_dict)
             sim_word_html = f"""
             <html dir="rtl">
             <head>
                 <meta charset="utf-8">
                 <title>تقرير محاكي السياسات المصرفية</title>
                 <style>
-                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.6; }}
+                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.7; }}
                     h1 {{ color: {CBE_NAVY}; text-align: center; margin-bottom: 5px; }}
                     .sub-header {{ text-align: center; color: #64748B; font-size: 13px; margin-bottom: 20px; }}
                     .card {{ border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF; }}
-                    .card-title {{ color: {CBE_NAVY}; font-size: 16px; margin-top: 0; font-weight: bold; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; }}
-                    .box-inner {{ background-color: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px; }}
-                    .action-plan {{ color: {CBE_GOLD}; font-weight: bold; margin-top: 8px; }}
+                    .card-title {{ color: {CBE_NAVY}; font-size: 15px; margin-top: 0; font-weight: bold; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; margin-bottom: 12px; }}
                     .deep-sec {{ background-color: #F8FAFC; padding: 12px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 12px; }}
                     ul {{ margin: 0; padding-right: 20px; }}
-                    hr {{ border: none; border-top: 1px solid {CBE_GOLD}; margin: 25px 0; }}
+                    hr {{ border: none; border-top: 1.5px solid {CBE_GOLD}; margin: 22px 0; }}
                     .footer {{ text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px; }}
                 </style>
             </head>
             <body>
                 <h1>تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية</h1>
-                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة - تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة | تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                 <hr>
-                <h3>📋 عرض كافة السيناريوهات المحاكاة للقطاع المصرفي:</h3>
+                <h3>📋 عرض كافة السيناريوهات المحاكاة للقطاع المصرفي (إجمالي: {scenarios_count}):</h3>
             """
-            
+
             if st.session_state.simulated_results_dict:
                 for k, v in st.session_state.simulated_results_dict.items():
                     sim_word_html += f"""
@@ -1544,7 +1554,7 @@ with tab3:
                     """
             else:
                 sim_word_html += "<p style='color: #64748B;'>لا توجد سيناريوهات محاكاة مسجلة حالياً في الجلسة.</p>"
-                
+
             sim_word_html += f"""
                 <hr>
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
@@ -1555,27 +1565,28 @@ with tab3:
             </body>
             </html>
             """
-            
+
             st.download_button(
-                label="📥 تحميل تقرير محاكي السياسات الشامل (Word)",
+                label=f"📥 تحميل تقرير محاكي السياسات الشامل ({scenarios_count}) (Word)",
                 data=sim_word_html.encode("utf-8-sig"),
                 file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
-                use_container_width=True
+                use_container_width=True,
+                key="dl_sim_word_btn"
             )
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col_sim_out:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+
             if run_sim_btn:
                 if sim_bank_sel == "اختر البنك المصرفي":
                     st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح أولاً.")
                 else:
                     base_val = base_ssgi_input
-                    s_val, i_val, r_val = 85, 90, 82
-                    for item in st.session_state.history_state:
+                    s_val, i_val, r_val = 85.0, 90.0, 82.0
+                    for item in reversed(st.session_state.history_state):
                         if item["البنك"] == sim_bank_sel:
-                            base_val = item["مؤشر SSGI المركب"]
                             s_val = item["منصات المعلومات (40%)"]
                             i_val = item["الحوكمة المؤسسية (30%)"]
                             r_val = item["تقارير الاستدامة (30%)"]
@@ -1593,14 +1604,14 @@ with tab3:
                         action_plan = "مواصلة التحفيز التدريجي وتوسيع قاعدة الاستثمار في الأصول الخضراء ومحفظة التمويل المستدام."
                     else:
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
-                        analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
+                        analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) وسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
                         action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة الرقابة التنظيمية (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
 
                     simulated_val = round(simulated_val, 2)
                     delta = round(simulated_val - base_val, 2)
                     score_str_plain = get_colored_score_html(simulated_val)
 
-                    deep_analysis = f"""
+                    deep_analysis = flat_html(f"""
                     <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 10px;" dir="rtl">
                         <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; text-align: right;">📊 التشخيص القياسي المخصص لبنك ({sim_bank_sel}):</p>
                         <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.8; text-align: right;">
@@ -1609,23 +1620,23 @@ with tab3:
                             <li><b>3. تقارير الاستدامة (SR):</b> {describe_sr(r_val)}</li>
                         </ul>
                     </div>
-                    """
+                    """)
 
-                    box_html = f"""
+                    box_html = flat_html(f"""
                     <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
                       <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة بنك: {sim_bank_sel} | السيناريو: {scenario_dropdown}</h3>
-                      <p style="font-size: 15px; margin-bottom: 8px; color: #1E293B;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span>)</p>
+                      <p style="font-size: 15px; margin-bottom: 8px; color: #1E293B;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span> | القيمة الأساسية: {base_val:.2f})</p>
                       <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
                         <p style="margin-bottom: 6px; color: #1E293B;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
                         <p style="margin: 0 0 8px 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action_plan}</p>
                       </div>
                     </div>
-                    """
-                    
+                    """)
+
                     sim_key = f"{sim_bank_sel} - {scenario_dropdown} [{datetime.now().strftime('%H:%M:%S')}]"
                     st.session_state.simulated_results_dict[sim_key] = {
-                        "html": box_html, 
-                        "deep": deep_analysis, 
+                        "html": box_html,
+                        "deep": deep_analysis,
                         "bank": sim_bank_sel,
                         "simulated_val": simulated_val,
                         "delta": delta,
@@ -1633,28 +1644,28 @@ with tab3:
                         "analysis_text": analysis_text,
                         "action_plan": action_plan
                     }
+                    # تحديث الصفحة فوراً لتغذية زر تحميل Word بالبيانات الجديدة من أول مرة
+                    st.rerun()
 
             if st.session_state.simulated_results_dict:
                 st.markdown("---")
                 st.markdown("<h4>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h4>", unsafe_allow_html=True)
-                for s_key, item in st.session_state.simulated_results_dict.items():
+                for s_key, item in reversed(list(st.session_state.simulated_results_dict.items())):
                     st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
-                    st.markdown(flat_html(item["html"]), unsafe_allow_html=True)
-                    st.markdown(flat_html(item["deep"]), unsafe_allow_html=True)
+                    st.markdown(item["html"], unsafe_allow_html=True)
+                    st.markdown(item["deep"], unsafe_allow_html=True)
                     st.markdown("---")
             else:
                 st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
             st.markdown('</div>', unsafe_allow_html=True)
-
-
 # ==============================================================================
-# التبويب الرابع: لوحة دعم اتخاذ القرار (Decision Support Dashboard) - مطور بالكامل
+# التبويب الرابع: لوحة دعم اتخاذ القرار (Decision Support Dashboard) - مطور ومحدث بالكامل
 # ==============================================================================
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي</h3>
-        <p style="color: #475569; font-size: 14px;">استعراض وتثبيت التوصيات الاستراتيجية المخصصة والتحليلات العميقة لكل بنك في القطاع المصرفي المصري.</p>
+        <p style="color: #475569; font-size: 14px;">استعراض وتثبيت التوصيات الاستراتيجية المخصصة والتحليلات العميقة لكل بنك في القطاع المصرفي المصري وتصديرها في تقرير شامل.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1665,25 +1676,25 @@ with tab4:
 
         with col_dec_in:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-            recorded_banks_dec = list(set([item["البنك"] for item in st.session_state.history_state]))
+            recorded_banks_dec = list(dict.fromkeys([item["البنك"] for item in st.session_state.history_state]))
             decision_bank_sel = st.selectbox("اختر البنك لاستعراض التوصيات", recorded_banks_dec, key="dec_bank")
             generate_decision_btn = st.button("📋 إضافة وتثبيت توصيات البنك المختارة", use_container_width=True, type="primary")
-            
+
             if st.button("🗑️ مسح وإعادة تعيين لوحة القرار", use_container_width=True, type="secondary"):
                 st.session_state.decision_results_dict = {}
-                st.success("✅ تم مسح جميع توصيات لوحة القرار بنجاح.")
                 st.rerun()
 
             # ------------------------------------------------------------------
             # بناء الآلية التجميعية لتقرير لوحة دعم القرار بالكامل لملف Word HTML
             # ------------------------------------------------------------------
+            dec_count = len(st.session_state.decision_results_dict)
             dec_word_html = f"""
             <html dir="rtl">
             <head>
                 <meta charset="utf-8">
                 <title>تقرير لوحة دعم القرار المصرفي</title>
                 <style>
-                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.6; }}
+                    body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; background-color: #FFFFFF; line-height: 1.7; }}
                     h1 {{ color: {CBE_NAVY}; text-align: center; margin-bottom: 5px; }}
                     .sub-header {{ text-align: center; color: #64748B; font-size: 13px; margin-bottom: 20px; }}
                     .card {{ border: 1.5px solid {CBE_GOLD}; padding: 18px; margin-bottom: 20px; border-radius: 10px; background-color: #FFFFFF; }}
@@ -1691,17 +1702,17 @@ with tab4:
                     .box-inner {{ background-color: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px; }}
                     ul {{ margin: 0; padding-right: 20px; }}
                     li {{ margin-bottom: 6px; }}
-                    hr {{ border: none; border-top: 1px solid {CBE_GOLD}; margin: 25px 0; }}
+                    hr {{ border: none; border-top: 1.5px solid {CBE_GOLD}; margin: 22px 0; }}
                     .footer {{ text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px; }}
                 </style>
             </head>
             <body>
                 <h1>تقرير لوحة دعم اتخاذ القرار والسياسات المصرفية</h1>
-                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة - تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة | تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                 <hr>
-                <h3>🛡️ تقرير وتوصيات البنوك المسجلة بالكامل:</h3>
+                <h3>🛡️ تقرير وتوصيات البنوك المسجلة بالكامل (إجمالي: {dec_count}):</h3>
             """
-            
+
             if st.session_state.decision_results_dict:
                 for k, v in st.session_state.decision_results_dict.items():
                     dec_word_html += f"""
@@ -1721,33 +1732,37 @@ with tab4:
                     """
             else:
                 dec_word_html += "<p style='color: #64748B;'>لا توجد توصيات مسجلة حالياً في الجلسة.</p>"
-                
+
             dec_word_html += f"""
                 <hr>
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
                 <p>تعكس هذه التوصيات متطلبات الحوكمة المؤسسية والسيادة الرقمية وتوطين معايير الاستدامة وفق توجيهات البنك المركزي المعمول بها.</p>
                 <hr>
                 <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والرفع بها للجان الحوكمة والمراجعة</p>
+                <p style="text-align: center; font-size: 11px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
             </body>
             </html>
             """
-            
+
             st.download_button(
-                label="📥 تحميل تقرير لوحة دعم القرار الشامل (Word)",
+                label=f"📥 تحميل تقرير لوحة دعم القرار الشامل ({dec_count}) (Word)",
                 data=dec_word_html.encode("utf-8-sig"),
                 file_name="تقرير_لوحة_دعم_القرار_المصرفي_الشامل.doc",
                 mime="application/msword",
-                use_container_width=True
+                use_container_width=True,
+                key="dl_dec_word_btn"
             )
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col_dec_out:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
+
             if generate_decision_btn:
                 if not st.session_state.history_state or decision_bank_sel == "اختر البنك المصرفي":
                     st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني.")
                 else:
-                    bank_data = next((item for item in st.session_state.history_state if item["البنك"] == decision_bank_sel), None)
+                    # جلب أحدث سجل للبنك المختار
+                    bank_data = next((item for item in reversed(st.session_state.history_state) if item["البنك"] == decision_bank_sel), None)
                     if bank_data:
                         score = bank_data["مؤشر SSGI المركب"]
                         s_val = bank_data["منصات المعلومات (40%)"]
@@ -1791,11 +1806,13 @@ with tab4:
                             "recs": recs_list,
                             "deep": deep_analysis_text
                         }
+                        # تحديث الصفحة فوراً لتغذية زر تحميل Word بالبيانات الجديدة من أول مرة
+                        st.rerun()
 
             if st.session_state.decision_results_dict:
-                for item in st.session_state.decision_results_dict.values():
-                    card_html = f"""
-                    <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" dir="rtl">
+                for b_key, item in list(st.session_state.decision_results_dict.items()):
+                    card_html = flat_html(f"""
+                    <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" dir="rtl">
                         <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px; text-align: right;">🛡️ تقرير وتوصيات بنك: {item['bank']} (المؤشر المركب: {item['score_str']})</h3>
                         <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
                             <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">🎯 التوصيات الاستراتيجية الموجهة:</p>
@@ -1810,12 +1827,15 @@ with tab4:
                             </div>
                         </div>
                     </div>
-                    """
-                    st.markdown(flat_html(card_html), unsafe_allow_html=True)
+                    """)
+                    st.markdown(card_html, unsafe_allow_html=True)
+                    if st.button(f"❌ إزالة توصيات {b_key}", key=f"del_dec_{b_key}"):
+                        del st.session_state.decision_results_dict[b_key]
+                        st.rerun()
+                    st.markdown("<br>", unsafe_allow_html=True)
             else:
                 st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات والتحليلات المخصصة هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
