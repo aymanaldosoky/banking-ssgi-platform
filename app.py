@@ -10,11 +10,16 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import uuid
-import psycopg2  # <-- تمت إضافته هنا للاتصال بقاعدة بيانات Postgres / Supabase
-
+import psycopg2
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
-from bank_rag_engine import process_rag_gemini_query, audit_differentiation
+from bank_rag_engine import (
+    BANKS_LIST_AR,
+    process_rag_gemini_query,
+    audit_differentiation,
+    load_survey_log_from_file,
+    render_tab_7_survey,
+)
 
 # ==============================================================================
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL)
@@ -26,10 +31,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-CBE_NAVY = "#002B49"         # أزرق مصرفي عميق
-CBE_GOLD = "#C5A059"         # ذهبي ملكي
-CBE_GOLD_LIGHT = "#E2C07D"   # ذهبي فاتح
-CBE_BG = "#F8F9FA"           # خلفية ناعمة
+CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
+CBE_GOLD = "#C5A059"          # ذهبي ملكي
+CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
+CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
 CUSTOM_CSS = f"""
 <style>
@@ -349,38 +354,6 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ==============================================================================
-# قاعدة معطيات ومعلومات التأسيس والنشأة للبنوك المصرية
-# ==============================================================================
-BANK_PROFILE_DATA = {
-    "بنك مصر BM": {
-        "founded": "تأسس في 7 مايو 1920 بريادة الاقتصاددي الوطني محمد طلعت حرب باشا.",
-        "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية (مؤسسة مالية حكومية كبرى).",
-        "profile": "أول بنك مصري بالكامل يهدف إلى استثمار المدخرات الوطنية وتوجيهها لخدمة الاقتصاد القومي والتنمية المستدامة."
-    },
-    "البنك الأهلي المصري NBE": {
-        "founded": "تأسس في 25 يونيو 1898 بموجب أمر عالي.",
-        "ownership": "مملوك بالكامل لحكومة جمهورية مصر العربية.",
-        "profile": "يُعد أقدم وأكبر البنوك التجارية في مصر، ولعب تاريخياً دور البنك المركزي في إصدار النقد وتمويل التجارة."
-    },
-    "البنك التجاري الدولي CIB": {
-        "founded": "تأسس عام 1975 تحت اسم (بنك تشيس مانهاتن التجاري الدولي) ثم تحول إلى اسمه الحالي.",
-        "ownership": "شركة مساهمة مصرية مدرجة في البورصة المصرية (مملوك لمؤسسات ومستثمرين محليين وعالميين).",
-        "profile": "يُعد أكبر البنوك التجارية الخاصة في مصر وسبّاقاً في تطبيق معايير الحوكمة والتحول الرقمي والاستدامة."
-    },
-    "بنك قطر الوطني الأهلي QNB": {
-        "founded": "تأسس عام 1978 كشركة مساهمة مصرية.",
-        "ownership": "تابع لمجموعة QNB العالمية (قطر الوطني) بنسبة سيطرة أغلبية.",
-        "profile": "يُعد أحد أكبر البنوك الخاصة العاملة في السوق المصرفي المصري مع شبكة فروع واسعة وتمويلات مؤسسية ضخمة."
-    }
-}
-
-def get_bank_founding_profile(bank_name):
-    for key, data in BANK_PROFILE_DATA.items():
-        if key in bank_name:
-            return f"<b>تاريخ النشأة:</b> {data['founded']} | <b>هيكل الملكية:</b> {data['ownership']} | <b>نبذة تأسيسية:</b> {data['profile']}"
-    return f"<b>بيانات تنظيمية:</b> بنك مصرفي مسجل وخاضع لإشراف البنك المركزي المصري ويعمل وفق المعايير المصرفية والرقابية المعتمدة."
-
-# ==============================================================================
 # نظام تتبع الزوار والاستبيانات
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
@@ -413,15 +386,6 @@ def load_visitors_log_from_file():
     if os.path.exists(LOG_FILE):
         try:
             df = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
-            return df.to_dict(orient="records")
-        except Exception:
-            return []
-    return []
-
-def load_survey_log_from_file():
-    if os.path.exists(SURVEY_LOG_FILE):
-        try:
-            df = pd.read_csv(SURVEY_LOG_FILE, encoding='utf-8-sig')
             return df.to_dict(orient="records")
         except Exception:
             return []
@@ -514,53 +478,8 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ==============================================================================
-# قائمة البنوك المصرية الشاملة
+# دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
-BANKS_LIST_AR = [
-    "اختر البنك المصرفي",
-    "بنك مصر BM",
-    "البنك الأهلي المصري NBE",
-    "البنك التجاري الدولي CIB",
-    "بنك قطر الوطني الأهلي QNB",
-    "بنك كريدي أجريكول",
-    "بنك الإسكندرية",
-    "بنك التعمير والإسكان HDB",
-    "بنك قناة السويس SCBANK",
-    "بنك أبوظبي الأول مصر FABMISR",
-    "بنك فيصل الإسلامي",
-    "بنك البركة الإسلامي",
-    "بنك القاهرة Banque du Caire",
-    "مصرف أبو ظبي الإسلامي ADIB",
-    "بنك NEXT",
-    "بنك الإمارات دبي الوطني NDB",
-    "بنك HSBC",
-    "التجاري وفا بنك",
-    "بنك المؤسسة العربية المصرفية ABC",
-    "المصرف العربي الدولي AIB",
-    "البنك الزراعي المصري",
-    "ستاندرد تشارترد – مصر",
-    "البنك العقاري المصري العربي EALB",
-    "بنك الكويت الوطني NBK",
-    "بنك المصري الخليجي EG BANK",
-    "المصرف المتحد UN",
-    "ميد بنك MIDBANK",
-    "بنك التنمية الصناعية IDB",
-    "بنك المشرق",
-    "بنك بيت التمويل الكويتي KFH",
-    "بنك الأهلي الكويتي مصر ABK",
-    "بنك تنمية الصادرات EBANK",
-    "بنك سيب SAIB",
-    "البنك العربي",
-    "البنك العربي الأفريقي",
-    "بنك أبوظبي التجاري ADCB",
-    "بنك ناصر الاجتماعي",
-    "بنك الاستثمار القومي",
-    "بنك الأهلي المتحد KFH",
-    "بنوك بلوم BLOM",
-    "البنك الأهلي اليوناني",
-    "بنك سيتي بنك CITIBANK"
-]
-
 def get_colored_score_html(score):
     if score >= 80:
         return f"{score}% (أداء مرتفع ومنتظم 🟢)"
@@ -620,11 +539,11 @@ with col_h2:
         st.session_state.role = ""
         st.rerun()
 
-st.markdown(f"""
+st.markdown("""
 <div class="header-center">
 <h1>مقترح المنصة الوطنية الذكية لتعزيز الحوكمة وتقارير الاستدامة بالقطاع المصرفي المصري</h1>
 <h3>إطار تطبيقي مقترح ضمن متطلبات نيل درجة دكتوراة الفلسفة في العلوم البيئية - جامعة عين شمس</h3>
-<b>إعداد الباحث:  أيمن الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)</b>
+<b>إعداد الباحث: أيمن الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)</b>
 </div>
 """, unsafe_allow_html=True)
 
@@ -670,13 +589,13 @@ else:
     tab9 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (مُطور بالكامل - Zero-Click Trigger & Quick Chips UX)
+# التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG v5.1)
 # ------------------------------------------------------------------------------
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (RAG Engine)</h3>
-        <p style="color: #475569; font-size: 14px;">استعراض الإجابات المستندة إلى تقارير الاستدامة والحوكمة في القطاع المصرفي المصري لكل بنك على حدة.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (Hybrid RAG & Gemini Engine)</h3>
+        <p style="color: #475569; font-size: 14px;">استعراض الإجابات التحليلية الموثقة المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري لكل بنك على حدة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -695,7 +614,6 @@ with tab1:
 
         st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة (Zero-Click - اضغط للتنفيذ المباشر):</b>", unsafe_allow_html=True)
 
-        # دالة الاستجابة الفورية عند النقر على الأسئلة المقترحة
         def trigger_instant_query(question):
             st.session_state.query_text_box = question
             st.session_state.trigger_search = True
@@ -715,7 +633,7 @@ with tab1:
         with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
             sr_questions = [
                 "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-                "ما هي نسبة الأصول الخضراء والمشروعات المستدامه ضمن محفظة الائتمان؟",
+                "ما هي نسبة الأصول الخضراء والمشروعات المستدامة ضمن محفظة الائتمان؟",
                 "كيف يمتثل البنك للمعايير الدولية للإفصاح المالي (GRI و ISSB)؟",
                 "ما هي مبادرات البنك في المسؤولية المجتمعية والإنفاق التنموي المستدام؟"
             ]
@@ -739,11 +657,9 @@ with tab1:
     with col_q2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
 
-        # التحقق مما إذا تم ضغط زر التقديم أو تمت إثارة السؤال فورياً عبر Zero-Click Trigger
         should_execute = ask_submit_btn or st.session_state.get("trigger_search", False)
 
         if should_execute:
-            # إعادة تعيين التنبيه الفوري للجلسة بعد بدء التنفيذ
             st.session_state.trigger_search = False
             active_q = st.session_state.query_text_box
 
@@ -752,11 +668,9 @@ with tab1:
             elif not active_q.strip():
                 st.warning("⚠️ يرجى كتابة أو اختيار سؤال للإجابة عليه.")
             else:
-                # --------------------------------------------------------------
-                # 1. عرض Skeleton Loader أثناء التجهيز الأولي
-                # --------------------------------------------------------------
+                # 1. عرض Skeleton Loader أثناء الاتصال بالمحرك
                 skeleton_placeholder = st.empty()
-                skeleton_html = flat_html(f"""
+                skeleton_html = flat_html("""
                 <div class="skeleton-card">
                     <div class="skeleton-line skeleton-title"></div>
                     <div class="skeleton-line skeleton-badge"></div>
@@ -767,61 +681,43 @@ with tab1:
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
 
-                # --------------------------------------------------------------
-                # 2. معالجة الحالات الخاصة وتوليد الإجابة
-                # --------------------------------------------------------------
-                if ask_bank_sel == "البنك الأهلي اليوناني" and ("تأسس" in active_q or "مؤسسه" in active_q):
-                    skeleton_placeholder.empty()
-                    st.markdown(flat_html(f"""
-                    <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8;" dir="rtl">
-                        <h4 style="color: {CBE_NAVY}; margin-top: 0;">🎯 التقرير التحليلي المفصل ({ask_bank_sel})</h4>
-                        <p><b>السؤال / الاستفسار المطروح:</b> "{active_q}"</p>
-                        <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 4px solid #D97706; margin-top: 10px;">
-                            <p style="margin: 0 0 8px 0; font-weight: bold; color: #92400E;">⚪ لا توجد بيانات كافية</p>
-                            <p style="margin: 0; color: #1E293B; font-size: 13.5px;">
-                            لا تتوفر لدى المنصة بيانات موثقة تكفي للإجابة عن هذا السؤال بخصوص البنك الأهلي اليوناني، ولن تُقدَّم إجابة مبنية على التخمين.
-                            </p>
-                        </div>
-                    </div>
-                    """), unsafe_allow_html=True)
-                else:
-                    # جلب النص النهائي من محرك RAG
-                    full_response = process_rag_gemini_query(ask_bank_sel, active_q)
+                # 2. الاستدعاء المباشر والشامل لمحرك Hybrid RAG & Gemini لجميع البنوك
+                full_response = process_rag_gemini_query(ask_bank_sel, active_q)
+                skeleton_placeholder.empty()
 
-                    # تفريغ الـ Skeleton وإفراغ المساحة للـ Streaming
-                    skeleton_placeholder.empty()
+                # 3. البث التدريجي الآمن للـ HTML دون كسر الوسوم البرمجية
+                def stream_html_safe(html_str):
+                    tokens = re.split(r"(<[^>]+>|\s+)", html_str)
+                    buf = ""
+                    word_count = 0
+                    for tok in tokens:
+                        if not tok:
+                            continue
+                        buf += tok
+                        if not tok.startswith("<") and tok.strip():
+                            word_count += 1
+                            if word_count % 3 == 0:
+                                yield buf
+                                time.sleep(0.015)
+                    yield buf
 
-                    # ----------------------------------------------------------
-                    # 3. محاكاة التدفق المباشر (Streaming Generator)
-                    # ----------------------------------------------------------
-                    def stream_response_generator(text_html):
-                        # تقسيم المخرجات حسب الكلمات مع الحفاظ على وسم الـ HTML
-                        tokens = text_html.split(" ")
-                        for token in tokens:
-                            yield token + " "
-                            time.sleep(0.01) # سرعة البث لتقليل Latency الظاهري
+                response_box = st.empty()
+                for partial_html in stream_html_safe(flat_html(full_response)):
+                    response_box.markdown(partial_html, unsafe_allow_html=True)
 
-                    # تنفيذ العرض التفاعلي التدريجي
-                    response_box = st.empty()
-                    accumulated_text = ""
-                    for chunk in stream_response_generator(flat_html(full_response)):
-                        accumulated_text += chunk
-                        response_box.markdown(accumulated_text, unsafe_allow_html=True)
-
+                # تسجيل الاستعلام في سجل الجلسة
+                st.session_state.history_state.append({
+                    "bank": ask_bank_sel,
+                    "question": active_q,
+                    "timestamp": datetime.now().strftime("%H:%M:%S")
+                })
         else:
             st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
 
         st.markdown('</div>', unsafe_allow_html=True)
-import io
-import time
-from datetime import datetime
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import streamlit as st
 
 # ==============================================================================
-# ثوابت المحاور والأوزان النسبية المعتمدة (تضمن مجموع 100% تماماً)
+# ثوابت المحاور والأوزان النسبية المعتمدة لمؤشر SSGI (مجموع 100% تماماً)
 # ==============================================================================
 AXIS_WEIGHTS = {
     "أولاً: منصات المعلومات الذكية (SIP)": 0.40,
@@ -917,7 +813,7 @@ def get_ssgi_variables_df():
 def generate_ssgi_evaluation_excel():
     df = get_ssgi_variables_df().copy()
     n = len(df)
-    last = n + 1  # آخر صف بيانات في الإكسيل
+    last = n + 1
 
     def _note(v):
         if "مؤشر عكسي" in v:
@@ -936,8 +832,10 @@ def generate_ssgi_evaluation_excel():
         wb = writer.book
         ws = writer.sheets['SSGI_63_Variables']
 
-        header_format = wb.add_format({'bold': True, 'text_wrap': True, 'valign': 'top', 'fg_color': '#002B49',
-                                       'font_color': '#FFFFFF', 'border': 1, 'align': 'center'})
+        header_format = wb.add_format({
+            'bold': True, 'text_wrap': True, 'valign': 'top', 'fg_color': '#002B49',
+            'font_color': '#FFFFFF', 'border': 1, 'align': 'center'
+        })
         w_fmt = wb.add_format({'num_format': '0.000%', 'border': 1})
         in_fmt = wb.add_format({'num_format': '0.0', 'border': 1, 'bg_color': '#FFF9DB'})
         calc_fmt = wb.add_format({'num_format': '0.000', 'border': 1, 'bg_color': '#F1F5F9'})
@@ -946,13 +844,14 @@ def generate_ssgi_evaluation_excel():
             ws.write(0, col_num, value, header_format)
         for i, w in enumerate(df["الوزن النسبي (AHP)"]):
             r = i + 1
-            ws.write_number(r, 4, w, w_fmt)                 # E: الوزن
-            ws.write_blank(r, 5, None, in_fmt)              # F: خانة الإدخال
-            ws.write_formula(r, 6, f'=IF(F{r+1}="","",E{r+1}*F{r+1})', calc_fmt, "")  # G: حاصل الضرب
+            ws.write_number(r, 4, w, w_fmt)
+            ws.write_blank(r, 5, None, in_fmt)
+            ws.write_formula(r, 6, f'=IF(F{r+1}="","",E{r+1}*F{r+1})', calc_fmt, "")
         ws.data_validation(1, 5, n, 5, {
             'validate': 'decimal', 'criteria': 'between', 'minimum': 0, 'maximum': 100,
             'input_title': 'درجة الامتثال', 'input_message': 'أدخل رقماً من 0 إلى 100',
-            'error_title': 'قيمة غير صحيحة', 'error_message': 'يجب أن تكون القيمة بين 0 و100'})
+            'error_title': 'قيمة غير صحيحة', 'error_message': 'يجب أن تكون القيمة بين 0 و100'
+        })
         ws.set_column('A:A', 6)
         ws.set_column('B:B', 30)
         ws.set_column('C:C', 25)
@@ -969,8 +868,10 @@ def generate_ssgi_evaluation_excel():
         pct0 = wb.add_format({'num_format': '0%', 'border': 1, 'align': 'center'})
         num2 = wb.add_format({'num_format': '0.00', 'border': 1, 'align': 'center', 'bold': True})
         bold_gold = wb.add_format({'num_format': '0.00', 'border': 1, 'align': 'center', 'bold': True, 'bg_color': '#C5A059'})
-        for c, h in enumerate(["المحور الرئيسي", "وزن المحور", "عدد المتغيرات", "المتغيرات المُدخلة",
-                               "درجة المحور (0-100)", "القيمة المراد إدخالها في المنزلق"]):
+        for c, h in enumerate([
+            "المحور الرئيسي", "وزن المحور", "عدد المتغيرات", "المتغيرات المُدخلة",
+            "درجة المحور (0-100)", "القيمة المراد إدخالها في المنزلق"
+        ]):
             ss.write(0, c, h, header_format)
 
         B = f"SSGI_63_Variables!$B$2:$B${last}"
@@ -985,7 +886,6 @@ def generate_ssgi_evaluation_excel():
             ss.write_number(r, 1, w, pct0)
             ss.write_formula(r, 2, f'=COUNTIF({B},A{x})', pct0, cnt)
             ss.write_formula(r, 3, f'=COUNTIFS({B},A{x},{F},"<>")', pct0, 0)
-            # لا تظهر النتيجة إلا بعد استكمال كل متغيرات المحور
             ss.write_formula(r, 4, f'=IF(D{x}<C{x},"",SUMIF({B},A{x},{G})/SUMIF({B},A{x},{E}))', num2, "")
             ss.write_formula(r, 5, f'=IF(E{x}="","",ROUND(E{x},0))', bold_gold, "")
         ss.write(4, 0, "مؤشر SSGI المركب (للاطلاع فقط)", txt)
@@ -1003,7 +903,6 @@ def generate_ssgi_evaluation_excel():
         ss.set_column('E:F', 26)
 
     return output.getvalue()
-
 # ==============================================================================
 # التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
 # ==============================================================================
