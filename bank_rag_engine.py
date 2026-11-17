@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v7.0 - Memory-Optimized, Quota-Safe Hybrid RAG & Role-Based Survey)
+bank_rag_engine.py (v7.1 - Memory-Optimized, Quota-Safe Hybrid RAG & Role-Based Survey)
 محرك "اسأل المنصة" المعتمد على Gemini API مع إدارة الذاكرة المنخفضة ومعالجة أخطاء الحصة 429.
 """
 
@@ -750,7 +750,7 @@ def load_all_knowledge_archives():
             "entries": entries_idx,
         }
 
-    # تحرير الذاكرة الخام فوراً لمنع استهلاك RAM مزدوج
+    # تفريغ merged_data من الذاكرة بعد بناء الفهرس مباشرة لمنع تضاعف البيانات في RAM
     merged_data.clear()
     gc.collect()
 
@@ -1205,11 +1205,16 @@ def audit_differentiation(question: str = "متى تأسس البنك وما ه�
 # ==============================================================================
 # 8) التبويب السابع: الاستبيان التكيفي الموجه للأدوار (Role-Based UX)
 # ==============================================================================
+@st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
+def _read_survey_csv_cached(file_path: str, mtime: float):
+    """قراءة سجل الاستبيانات مع سقف كاش 50 مدخلاً وتحديث تلقائي عند تعديل الملف."""
+    df = pd.read_csv(file_path, encoding="utf-8-sig")
+    return df.to_dict(orient="records")
+
 def load_survey_log_from_file():
     if os.path.exists(SURVEY_LOG_FILE):
         try:
-            df = pd.read_csv(SURVEY_LOG_FILE, encoding="utf-8-sig")
-            return df.to_dict(orient="records")
+            return list(_read_survey_csv_cached(SURVEY_LOG_FILE, os.path.getmtime(SURVEY_LOG_FILE)))
         except Exception:
             return []
     return []
@@ -1485,6 +1490,7 @@ def render_tab_7_survey():
                         current_surveys = load_survey_log_from_file()
                         current_surveys.append(rec)
                         pd.DataFrame(current_surveys).to_csv(SURVEY_LOG_FILE, index=False, encoding="utf-8-sig")
+                        _read_survey_csv_cached.clear()
                         S["submitted_id"] = resp_id
                         st.rerun()
                     except Exception as e:
