@@ -4,12 +4,13 @@ import json
 import re
 import hashlib
 import time
+import uuid
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
-import uuid
 import psycopg2
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
@@ -907,6 +908,7 @@ def generate_ssgi_evaluation_excel():
         ss.set_column('E:F', 26)
 
     return output.getvalue()
+
 # ==============================================================================
 # التبويب الثاني: مؤشر الحوكمة المركب (SSGI)
 # ==============================================================================
@@ -966,7 +968,7 @@ with tab2:
                 st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
             else:
                 skeleton_placeholder = st.empty()
-                skeleton_html = flat_html(f"""
+                skeleton_html = flat_html("""
                 <div class="skeleton-card">
                     <div class="skeleton-line skeleton-title"></div>
                     <div class="skeleton-line skeleton-badge"></div>
@@ -1406,6 +1408,7 @@ with tab2:
             font=dict(family="Cairo", size=13)
         )
         st.plotly_chart(fig_pie_bank, use_container_width=True)
+
 # ==============================================================================
 # التبويب الثالث: محاكي السياسات (Policy Simulator) - مطور بالكامل
 # ==============================================================================
@@ -1531,7 +1534,7 @@ with tab3:
                     elif scenario_dropdown.startswith("📊"):
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0022)))
                         analysis_text = f"استقرار تطوري مستدام لـ ({sim_bank_sel}): نجاح تدريجي في ترشيد أداء منصات المعلومات ({s_val}%) ورفع كفاءة تقارير الاستدامة ({r_val}%)."
-                        action_plan = f"مواصلة التحفيز التدريجي وتوسيع قاعدة الاستثمار في الأصول الخضراء ومحفظة التمويل المستدام."
+                        action_plan = "مواصلة التحفيز التدريجي وتوسيع قاعدة الاستثمار في الأصول الخضراء ومحفظة التمويل المستدام."
                     else:
                         simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
                         analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) والسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
@@ -1756,6 +1759,7 @@ with tab4:
             else:
                 st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات والتحليلات المخصصة هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
+
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
 # ------------------------------------------------------------------------------
@@ -1787,10 +1791,12 @@ with tab5:
             top_bank = top_row["البنك"]
             top_score = top_row["مؤشر SSGI المركب"]
             top_score_str = get_colored_score_html(top_score)
-try:
-    top_bank_profile_info = process_rag_gemini_query(top_bank, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟")
-except Exception:
-    top_bank_profile_info = f"بنك مصرفي رائد عامل في القطاع المصرفي المصري ومسجل لدى البنك المركزي المصري."
+
+            try:
+                top_bank_profile_info = process_rag_gemini_query(top_bank, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟")
+            except Exception:
+                top_bank_profile_info = "بنك مصرفي رائد عامل في القطاع المصرفي المصري ومسجل لدى البنك المركزي المصري."
+
             cards_html_list = []
             word_blocks_html = ""
 
@@ -1805,10 +1811,10 @@ except Exception:
                 
                 if b_score >= 80:
                     specific_strategic_angle = f"يتمتع بنك ({b_name}) بأداء متقدم ومستدام ({b_score}%), مما يمنحه ميزة تنافسية عالية في قيادة التحول الرقمي المصرفي، التمويل الأخضر، والامتثال الرقابي المتقدم."
-                    specific_policy_action = f"تأسيس 'لجنة استراتيجية للسيادة الرقمية'، تعظيم محفظة الأصول الخضراء، وتوظيف الأنظمة الرقابية المتقدمة (RegTech)."
+                    specific_policy_action = "تأسيس 'لجنة استراتيجية للسيادة الرقمية'، تعظيم محفظة الأصول الخضراء، وتوظيف الأنظمة الرقابية المتقدمة (RegTech)."
                 elif b_score >= 51:
                     specific_strategic_angle = f"يسجل بنك ({b_name}) جاهزية متوسطة ({b_score}%) تواجه بعض الاختناقات الهيكلية في البنية التقنية أو لجان الالتزام؛ وهو ما يتطلب تدخلاً استباقياً لردم الفجوات."
-                    specific_policy_action = f"تنفيذ برامج تطوير منصات المعلومات (SIP)، تعزيز استقلالية لجان المراجعة، والتوسع في تدريب الكوادر."
+                    specific_policy_action = "تنفيذ برامج تطوير منصات المعلومات (SIP)، تعزيز استقلالية لجان المراجعة، والتوسع في تدريب الكوادر."
                 else:
                     specific_strategic_angle = f"تظهر قراءة بنك ({b_name}) فجوة هيكلية حرجة ({b_score}%) تستوجب خطط طوارئ عاجلة لترميم البنية التقنية وهيكلة الحوكمة الداخلية."
                     specific_policy_action = f"إعلان حالة طوارئ تقنية لرفع سقف البنية التحتية ({s_val}%) ومراجعة ضوابط الالتزام وتجنب تعارض المصالح."
@@ -1916,14 +1922,6 @@ except Exception:
                 mime="application/msword",
                 use_container_width=True
             )
-
-import io
-import time
-import re
-import hashlib
-from datetime import datetime
-import pandas as pd
-import streamlit as st
 
 # ==============================================================================
 # التبويب السادس: تقييم ومولد تقارير الاستدامة والدليل العملي الشامل (ESG Scorer & Generator)
@@ -2195,7 +2193,7 @@ with tab6:
                 try:
                     profile_info = process_rag_gemini_query(b_name, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟")
                 except Exception:
-                    profile_info = f"بنك مصرفي رائد عامل في القطاع المصرفي المصري مسجل لدى البنك المركزي المصري."
+                    profile_info = "بنك مصرفي رائد عامل في القطاع المصرفي المصري مسجل لدى البنك المركزي المصري."
 
                 st.markdown(flat_html(f"""
                 <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px;" dir="rtl">
