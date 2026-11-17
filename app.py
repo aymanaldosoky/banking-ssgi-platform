@@ -595,7 +595,7 @@ else:
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG v5.1)
 # ------------------------------------------------------------------------------
 # دالة مغلفة بالتخزين المؤقت لتسريع الإجابات المتكررة فوراً
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
 def cached_rag_query(bank_name: str, question: str) -> str:
     return process_rag_gemini_query(bank_name, question)
 
