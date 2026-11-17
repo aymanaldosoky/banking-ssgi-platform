@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v5.0 - Gemini-First Hybrid RAG Engine & Role-Based Survey)
+bank_rag_engine.py (v5.1 - Gemini-First Hybrid RAG Engine & Role-Based Survey)
 محرك "اسأل المنصة" المعتمد على Gemini API مباشرة مع الاسترجاع الهجين من الأرشيف والملفات المرجعية.
 """
 
@@ -12,6 +12,7 @@ import html
 import uuid
 import difflib
 import urllib.request
+import urllib.error
 from datetime import datetime
 import pandas as pd
 import streamlit as st
@@ -843,6 +844,9 @@ def _get_gemini_api_key() -> str:
     try:
         if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
             return str(st.secrets["GEMINI_API_KEY"]).strip()
+        # دعم احتياطي في حال وضع المفتاح أسفل قسم [postgres] في Secrets
+        if "postgres" in st.secrets and "GEMINI_API_KEY" in st.secrets["postgres"]:
+            return str(st.secrets["postgres"]["GEMINI_API_KEY"]).strip()
     except Exception:
         pass
     return (os.getenv("GEMINI_API_KEY") or "").strip()
@@ -850,59 +854,69 @@ def _get_gemini_api_key() -> str:
 def llm_available() -> bool:
     return bool(_get_gemini_api_key())
 
-def call_gemini_direct(system_instruction: str, user_prompt: str) -> str:
+def call_gemini_direct(system_instruction: str, user_prompt: str):
+    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت)"""
     api_key = _get_gemini_api_key()
     if not api_key:
-        return ""
-    model_name = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+        return "", "لم يتم العثور على GEMINI_API_KEY في Secrets"
 
-    # 1) المحاولة عبر الحزمة الرسمية الحديثة google-genai
-    if HAS_GENAI_SDK:
+    custom_model = (os.getenv("GEMINI_MODEL") or "").strip()
+    models_to_try = [custom_model] if custom_model else ["gemini-2.5-flash", "gemini-2.0-flash"]
+    last_error = ""
+
+    for model_name in models_to_try:
+        # 1) المحاولة عبر الحزمة الرسمية الحديثة google-genai
+        if HAS_GENAI_SDK:
+            try:
+                client = genai.Client(api_key=api_key)
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=user_prompt,
+                    config=genai_types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=0.2,
+                        max_output_tokens=2048,
+                    ),
+                )
+                if response and response.text:
+                    return response.text.strip(), ""
+            except Exception as e:
+                last_error = f"SDK ({model_name}): {e}"
+
+        # 2) مسار REST القياسي الاحتياطي (يعمل بدون أي مكتبات إضافية)
         try:
-            client = genai.Client(api_key=api_key)
-            response = client.models.generate_content(
-                model=model_name,
-                contents=user_prompt,
-                config=genai_types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=0.2,
-                    max_output_tokens=2048,
-                ),
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            payload = {
+                "systemInstruction": {"parts": [{"text": system_instruction}]},
+                "contents": [{"parts": [{"text": user_prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.2,
+                    "maxOutputTokens": 2048,
+                },
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "content-type": "application/json",
+                    "x-goog-api-key": api_key,
+                },
             )
-            if response and response.text:
-                return response.text.strip()
+            with urllib.request.urlopen(req, timeout=45) as r:
+                out = json.loads(r.read().decode("utf-8"))
+                candidates = out.get("candidates") or []
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    txt = "".join(p.get("text", "") for p in parts).strip()
+                    if txt:
+                        return txt, ""
+        except urllib.error.HTTPError as he:
+            err_body = he.read().decode("utf-8", errors="ignore")[:180]
+            last_error = f"HTTP {he.code} ({model_name}): {err_body}"
         except Exception as e:
-            print(f"google-genai SDK error, falling back to REST: {e}")
+            last_error = f"REST ({model_name}): {e}"
 
-    # 2) مسار REST القياسي الاحتياطي (يعمل بدون أي مكتبات إضافية)
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-        payload = {
-            "systemInstruction": {"parts": [{"text": system_instruction}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 2048,
-            },
-        }
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "content-type": "application/json",
-                "x-goog-api-key": api_key,
-            },
-        )
-        with urllib.request.urlopen(req, timeout=45) as r:
-            out = json.loads(r.read().decode("utf-8"))
-            candidates = out.get("candidates") or []
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                return "".join(p.get("text", "") for p in parts).strip()
-    except Exception as e:
-        print(f"Gemini REST API Error: {e}")
-
-    return ""
+    return "", last_error
 
 def build_gemini_prompts(bank: str, question: str, p: dict, archive_chunks: list):
     system_instruction = (
@@ -1016,9 +1030,12 @@ BADGES = {
     "profile_fallback": ("🟡 مصدر: ملف تعريف البنك الموثق (يرجى تفعيل مفتاح Gemini للتحليل الموسع)", "#92400E"),
 }
 
-def render_card(bank: str, question: str, inner_html: str, tier: str, has_archive: bool = False) -> str:
+def render_card(bank: str, question: str, inner_html: str, tier: str, has_archive: bool = False, err_detail: str = "") -> str:
     label, color = BADGES[tier]
-    if has_archive:
+    if tier == "profile_fallback":
+        reason = f" — السبب الفني: {html.escape(err_detail)}" if err_detail else ""
+        foot_note = f"تنبيه تقني: يتم عرض البيانات التعريفية الأساسية للبنك مؤقتاً لعدم اكتمال الاتصال بمحرك Gemini{reason}."
+    elif has_archive:
         foot_note = "ملاحظة منهجية: تم توليد هذه الإجابة عبر محرك Gemini الهجين بالاستناد إلى السجلات المسترجعة من أرشيف تقارير البنك والبيانات المرجعية المعتمدة."
     else:
         foot_note = "ملاحظة منهجية: تم توليد هذه الإجابة عبر محرك Gemini بالاستناد إلى ملف تعريف البنك والإطار الرقابي للقطاع المصرفي المصري؛ وللحصول على مؤشرات كمية تفصيلية يُرجى مراجعة التقرير السنوي وتقرير الاستدامة للبنك."
@@ -1050,20 +1067,23 @@ def process_rag_gemini_query(bank_name: str, question: str) -> str:
     archive_chunks = retrieve_top_archive_chunks(bank_name, question, intents, kb=kb, top_k=5)
 
     # 2. التوليد المباشر عبر Gemini API (المسار الأساسي)
+    err_detail = ""
     if llm_available():
         sys_inst, usr_prompt = build_gemini_prompts(bank_name, question, p, archive_chunks)
-        gemini_reply = call_gemini_direct(sys_inst, usr_prompt)
+        gemini_reply, err_detail = call_gemini_direct(sys_inst, usr_prompt)
         if gemini_reply:
             tier = "gemini_rag" if archive_chunks else "gemini_grounded"
             return render_card(bank_name, question, md_to_html(gemini_reply), tier, has_archive=bool(archive_chunks))
+    else:
+        err_detail = "مفتاح GEMINI_API_KEY غير مضاف في Secrets"
 
-    # 3. مسار احتياطي في حال عدم توفر مفتاح Gemini أو انقطاع الشبكة
+    # 3. مسار احتياطي في حال عدم توفر مفتاح Gemini أو تعذر الاتصال
     fallback_items = []
-    for k, lbl in [("founded", "تاريخ التأسيس"), ("ownership", "هيكل الملكية"), ("origin", "النشأة"), ("branches", "شبكة الفروع"), ("mandate", "الدور الاستراتيجي")]:
+    for k, lbl in [("founded", "تاريخ التأسيس"), ("founder", "المؤسس"), ("ownership", "هيكل الملكية"), ("origin", "النشأة"), ("branches", "شبكة الفروع"), ("mandate", "الدور الاستراتيجي")]:
         if p.get(k):
             fallback_items.append(f"<li style='margin-bottom:6px;'><b>{lbl}:</b> {html.escape(str(p[k]))}</li>")
     fallback_html = f"<ul style='padding-right:22px;'>{''.join(fallback_items)}</ul>"
-    return render_card(bank_name, question, fallback_html, "profile_fallback", has_archive=False)
+    return render_card(bank_name, question, fallback_html, "profile_fallback", has_archive=False, err_detail=err_detail)
 
 def get_archive_diagnostics():
     kb = load_all_knowledge_archives()
