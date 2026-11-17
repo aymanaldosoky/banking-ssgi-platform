@@ -514,6 +514,8 @@ def describe_sr(val):
 
 if "history_state" not in st.session_state:
     st.session_state.history_state = []
+if "rag_query_history" not in st.session_state:
+    st.session_state.rag_query_history = []
 if "simulated_results_dict" not in st.session_state:
     st.session_state.simulated_results_dict = {}
 if "decision_results_dict" not in st.session_state:
@@ -705,8 +707,10 @@ with tab1:
                 for partial_html in stream_html_safe(flat_html(full_response)):
                     response_box.markdown(partial_html, unsafe_allow_html=True)
 
-                # تسجيل الاستعلام في سجل الجلسة
-                st.session_state.history_state.append({
+                # تسجيل الاستعلام في سجل مستقل بأسئلة "اسأل المنصة" (بدلاً من history_state الخاص بمؤشر SSGI)
+                if "rag_query_history" not in st.session_state:
+                    st.session_state.rag_query_history = []
+                st.session_state.rag_query_history.append({
                     "bank": ask_bank_sel,
                     "question": active_q,
                     "timestamp": datetime.now().strftime("%H:%M:%S")
@@ -1112,7 +1116,10 @@ with tab2:
                     "التقييم التشخيصي": clean_text(diagnosis)
                 }
 
-                st.session_state.history_state = [item for item in st.session_state.history_state if item["البنك"] != clean_text(bank_ssgi_sel)]
+                st.session_state.history_state = [
+                    item for item in st.session_state.history_state
+                    if isinstance(item, dict) and "مؤشر SSGI المركب" in item and item.get("البنك") != clean_text(bank_ssgi_sel)
+                ]
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
@@ -1179,8 +1186,9 @@ with tab2:
     # --------------------------------------------------------------------------
     st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
 
-    if st.session_state.history_state:
-        df_history = pd.DataFrame(st.session_state.history_state).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
+    ssgi_records = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
+    if ssgi_records:
+        df_history = pd.DataFrame(ssgi_records).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
 
         history_table_html = """
         <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
@@ -1239,13 +1247,13 @@ with tab2:
             )
 
         with col_del:
-            recorded_ids = [item.get("معرف السجل", item["البنك"]) for item in st.session_state.history_state]
+            recorded_ids = [item.get("معرف السجل", item.get("البنك", "")) for item in ssgi_records]
             col_sel, col_btn = st.columns([2, 1])
             with col_sel:
                 id_to_delete = st.selectbox("اختر سجلاً لحذفه", recorded_ids, key="del_rec_box", label_visibility="collapsed")
             with col_btn:
                 if st.button("🗑️ حذف السجل", use_container_width=True, type="secondary"):
-                    st.session_state.history_state = [item for item in st.session_state.history_state if item.get("معرف السجل", item["البنك"]) != id_to_delete]
+                    st.session_state.history_state = [item for item in ssgi_records if item.get("معرف السجل", item.get("البنك", "")) != id_to_delete]
                     st.success("✅ تم حذف السجل بنجاح.")
                     st.rerun()
     else:
