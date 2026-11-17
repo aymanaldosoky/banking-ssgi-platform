@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v6.0 - High-Speed Hybrid RAG Engine & Role-Based Survey)
-محرك "اسأل المنصة" المعتمد على Gemini API مع التخزين المؤقت الذكي والبث المباشر.
+bank_rag_engine.py (v7.0 - Memory-Optimized, Quota-Safe Hybrid RAG & Role-Based Survey)
+محرك "اسأل المنصة" المعتمد على Gemini API مع إدارة الذاكرة المنخفضة ومعالجة أخطاء الحصة 429.
 """
 
 import os
 import re
+import gc
 import glob
 import json
 import html
@@ -34,7 +35,7 @@ CBE_BG = "#F8F9FA"
 ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
 FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite"
 
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -546,7 +547,7 @@ def profile_of(bank):
     return p
 
 # ==============================================================================
-# 5) أرشيف المعرفة JSON (فهرسة واسترجاع أفضل المقاطع ذات الصلة)
+# 5) أرشيف المعرفة JSON (فهرسة منخفضة الذاكرة واسترجاع سريع)
 # ==============================================================================
 _KNOWN_BANKS_NORM = {norm(b): b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"}
 
@@ -627,6 +628,14 @@ def _extract_entry_searchable_text(entry) -> str:
         return " ".join(_extract_entry_searchable_text(i) for i in entry)
     return str(entry or "")
 
+def _extract_compact_meta(entry) -> dict:
+    if isinstance(entry, dict):
+        fn = entry.get("file_name") or entry.get("source")
+        pos = entry.get("reference_position") or entry.get("page")
+        if fn or pos:
+            return {"file_name": fn, "reference_position": pos}
+    return {}
+
 def _find_archive_files():
     search_dirs = [".", "data", "archive", "json", os.path.dirname(os.path.abspath(__file__))]
     found = []
@@ -647,7 +656,7 @@ def _find_archive_files():
 
 @st.cache_resource(show_spinner=False)
 def load_all_knowledge_archives():
-    """تحميل وفهرسة أرشيف JSON مرة واحدة في ذاكرة الخادم لتسريع البحث اللحظي."""
+    """تحميل وفهرسة أرشيف JSON بأقل بصمة ذاكرة (RAM) وتفريغ البيانات الخام بعد الفهرسة."""
     merged_data = {}
     part_files = _find_archive_files()
     loaded_files_log = []
@@ -658,6 +667,7 @@ def load_all_knowledge_archives():
                 part_content = json.load(f)
                 _ingest_any_json_structure(part_content, merged_data)
                 loaded_files_log.append(os.path.basename(file_path))
+                del part_content
         except Exception as e:
             print(f"خطأ في قراءة الملف {file_path}: {e}")
 
@@ -668,6 +678,7 @@ def load_all_knowledge_archives():
                     bank_file_data = json.load(f)
                     _ingest_any_json_structure(bank_file_data, merged_data)
                     loaded_files_log.append(file)
+                    del bank_file_data
     except Exception as e:
         print(f"Error reading dynamic bank JSON files: {e}")
 
@@ -679,12 +690,12 @@ def load_all_knowledge_archives():
             indexed_list = []
             for rec in records:
                 if isinstance(rec, dict):
-                    raw_txt = _extract_entry_searchable_text(rec)
+                    raw_txt = _extract_entry_searchable_text(rec)[:1500]
                     c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
                     b_field = str(rec.get("bank") or rec.get("bank_name") or rec.get("classification") or "")
                     b_field = re.sub(r"^تقرير بنك:\s*", "", b_field).strip()
                     indexed_list.append({
-                        "rec": rec,
+                        "meta": _extract_compact_meta(rec),
                         "bank_norm": norm(b_field),
                         "intent": rec.get("intent"),
                         "key_norm": norm(str(rec.get("question") or rec.get("title") or "")),
@@ -720,7 +731,7 @@ def load_all_knowledge_archives():
             k_str = str(k)
             k_norm = norm(k_str)
             k_stems = frozenset(_stem(t) for t in _tokens(k_norm) if t not in b_words)
-            raw_txt = _extract_entry_searchable_text(val)
+            raw_txt = _extract_entry_searchable_text(val)[:1500]
             c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
             entries_idx.append({
                 "key": k_str,
@@ -729,7 +740,7 @@ def load_all_knowledge_archives():
                 "c_stems": c_stems,
                 "raw_text": raw_txt,
                 "has_text": len(raw_txt.strip()) >= 10,
-                "val": val,
+                "meta": _extract_compact_meta(val),
             })
             total_records_count += 1
 
@@ -739,8 +750,11 @@ def load_all_knowledge_archives():
             "entries": entries_idx,
         }
 
+    # تحرير الذاكرة الخام فوراً لمنع استهلاك RAM مزدوج
+    merged_data.clear()
+    gc.collect()
+
     return {
-        "raw": merged_data,
         "index": indexed_cache,
         "meta": {
             "files": loaded_files_log,
@@ -789,7 +803,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
                 "c_stems": rec_item["c_stems"],
                 "raw_text": rec_item["raw_text"],
                 "has_text": rec_item["has_text"],
-                "val": rec_item["rec"],
+                "meta": rec_item.get("meta", {}),
             })
 
     if not entries:
@@ -814,20 +828,20 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
             score += (hits / max(len(q_stems), 1)) * 5.0 + (hits * 0.4)
 
         if score > 1.2:
-            scored.append((score, item["val"], item["raw_text"]))
+            scored.append((score, item.get("meta", {}), item["raw_text"]))
 
     scored.sort(key=lambda x: -x[0])
     results = []
     seen = set()
-    for _, val, raw_txt in scored:
+    for _, meta, raw_txt in scored:
         cleaned = clean_raw_archive_text(raw_txt)[:1200]
         sig = cleaned[:120]
         if sig and sig not in seen:
             seen.add(sig)
             meta_info = ""
-            if isinstance(val, dict):
-                fn = val.get("file_name") or val.get("source")
-                pos = val.get("reference_position") or val.get("page")
+            if isinstance(meta, dict):
+                fn = meta.get("file_name")
+                pos = meta.get("reference_position")
                 if fn:
                     meta_info = f" [المصدر: {fn}" + (f" - موضع/صفحة: {pos}]" if pos else "]")
             results.append(f"{cleaned}{meta_info}")
@@ -837,7 +851,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     return results
 
 # ==============================================================================
-# 6) الاتصال المباشر بـ Gemini API (فائق السرعة مع Caching و Streaming)
+# 6) الاتصال المباشر بـ Gemini API (فائق السرعة مع حماية الحصة 429 والذاكرة)
 # ==============================================================================
 def _get_gemini_api_key() -> str:
     """قراءة مفتاح Gemini بأمان من أسرار Streamlit أو متغيرات البيئة."""
@@ -860,51 +874,28 @@ def _get_genai_client(api_key: str):
         return genai.Client(api_key=api_key)
     return None
 
-@st.cache_data(show_spinner=False, ttl=3600)
-def _discover_available_flash_models(api_key: str) -> list:
-    """استعلام تلقائي عن أحدث نماذج Flash المتاحة للحساب."""
-    try:
-        req = urllib.request.Request(
-            "https://generativelanguage.googleapis.com/v1beta/models",
-            headers={"x-goog-api-key": api_key},
-        )
-        with urllib.request.urlopen(req, timeout=8) as r:
-            data = json.loads(r.read().decode("utf-8"))
-            found = []
-            for m in data.get("models", []):
-                methods = m.get("supportedGenerationMethods", [])
-                name = m.get("name", "").replace("models/", "")
-                if "generateContent" in methods and "flash" in name.lower():
-                    found.append(name)
-            found.sort(reverse=True)
-            return found[:3]
-    except Exception:
-        return []
-
-def _get_candidate_models(api_key: str) -> list:
+def _get_candidate_models() -> list:
     custom_model = (os.getenv("GEMINI_MODEL") or "").strip()
     active_cached = st.session_state.get("_active_gemini_model") if hasattr(st, "session_state") else None
     candidates = [
         active_cached,
         custom_model,
-        "gemini-2.5-flash",
         "gemini-2.5-flash-lite",
-        "gemini-2.0-flash",
+        "gemini-2.5-flash",
     ]
     return list(dict.fromkeys([m for m in candidates if m]))
 
 def call_gemini_direct(system_instruction: str, user_prompt: str):
-    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت) بأعلى سرعة ممكنة."""
+    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت) مع إيقاف المحاولات فوراً عند استنفاد الحصة 429."""
     api_key = _get_gemini_api_key()
     if not api_key:
         return "", "لم يتم العثور على GEMINI_API_KEY في Secrets"
 
-    models_to_try = _get_candidate_models(api_key)
+    models_to_try = _get_candidate_models()
     client = _get_genai_client(api_key)
     last_error = ""
 
-    def _try_single_model(model_name: str):
-        nonlocal last_error
+    for model_name in models_to_try:
         if client is not None:
             try:
                 response = client.models.generate_content(
@@ -919,29 +910,26 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                 if response and response.text:
                     if hasattr(st, "session_state"):
                         st.session_state["_active_gemini_model"] = model_name
-                    return response.text.strip()
+                    return response.text.strip(), ""
             except Exception as e:
                 last_error = f"SDK ({model_name}): {e}"
+                if "429" in last_error or "RESOURCE_EXHAUSTED" in last_error:
+                    return "", "تم استنفاد حصة مفتاح Gemini الحالية (429 Quota Exceeded) — يرجى تحديث المفتاح في Secrets."
+                continue
 
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             payload = {
                 "systemInstruction": {"parts": [{"text": system_instruction}]},
                 "contents": [{"parts": [{"text": user_prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.2,
-                    "maxOutputTokens": 1600,
-                },
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1600},
             }
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={
-                    "content-type": "application/json",
-                    "x-goog-api-key": api_key,
-                },
+                headers={"content-type": "application/json", "x-goog-api-key": api_key},
             )
-            with urllib.request.urlopen(req, timeout=20) as r:
+            with urllib.request.urlopen(req, timeout=10) as r:
                 out = json.loads(r.read().decode("utf-8"))
                 cands = out.get("candidates") or []
                 if cands:
@@ -950,24 +938,13 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                     if txt:
                         if hasattr(st, "session_state"):
                             st.session_state["_active_gemini_model"] = model_name
-                        return txt
+                        return txt, ""
         except urllib.error.HTTPError as he:
-            err_body = he.read().decode("utf-8", errors="ignore")[:180]
-            last_error = f"HTTP {he.code} ({model_name}): {err_body}"
+            if he.code == 429:
+                return "", "تم استنفاد حصة مفتاح Gemini الحالية (HTTP 429) — يرجى تحديث المفتاح في Secrets."
+            last_error = f"HTTP {he.code} ({model_name})"
         except Exception as e:
             last_error = f"REST ({model_name}): {e}"
-        return ""
-
-    for m_name in models_to_try:
-        res = _try_single_model(m_name)
-        if res:
-            return res, ""
-
-    for discovered_m in _discover_available_flash_models(api_key):
-        if discovered_m not in models_to_try:
-            res = _try_single_model(discovered_m)
-            if res:
-                return res, ""
 
     return "", last_error
 
@@ -1113,9 +1090,9 @@ def _build_fallback_card(bank_name: str, question: str, p: dict, err_detail: str
     fallback_html = f"<ul style='padding-right:22px;'>{''.join(fallback_items)}</ul>"
     return render_card(bank_name, question, fallback_html, "profile_fallback", has_archive=False, err_detail=err_detail)
 
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
 def _cached_rag_execution(bank_name: str, clean_q: str) -> str:
-    """تنفيذ الاستعلام وتخزين نتيجته في الكاش لمنع تكرار استهلاك API وتأخير الواجهة."""
+    """تنفيذ الاستعلام وتخزين نتيجته في الكاش بسقف 50 مدخلاً لحماية الذاكرة العشوائية."""
     kb = load_all_knowledge_archives()
     p = profile_of(bank_name)
     intents = classify_intents(clean_q)
@@ -1141,7 +1118,7 @@ def process_rag_gemini_query(bank_name: str, question: str) -> str:
     return _cached_rag_execution(bank_name, clean_text(question))
 
 def stream_rag_gemini_query(bank_name: str, question: str):
-    """مولّد بث مباشر حقيقي (Real-Time Streaming) من Gemini API لعرض البطاقة فوراً أثناء الكتابة."""
+    """مولّد بث مباشر حقيقي (Real-Time Streaming) من Gemini API مع إيقاف فوري عند خطأ 429."""
     if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
         yield "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
         return
@@ -1163,7 +1140,7 @@ def stream_rag_gemini_query(bank_name: str, question: str):
         return
 
     sys_inst, usr_prompt = build_gemini_prompts(bank_name, clean_q, p, archive_chunks)
-    models_to_try = _get_candidate_models(api_key)
+    models_to_try = _get_candidate_models()
 
     for m_name in models_to_try:
         try:
@@ -1185,7 +1162,16 @@ def stream_rag_gemini_query(bank_name: str, question: str):
                 if hasattr(st, "session_state"):
                     st.session_state["_active_gemini_model"] = m_name
                 return
-        except Exception:
+        except Exception as e:
+            err_msg = str(e)
+            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                yield _build_fallback_card(
+                    bank_name,
+                    clean_q,
+                    p,
+                    "تم استنفاد حصة مفتاح Gemini الحالية (429 Quota Exceeded) — يرجى تحديث المفتاح في Secrets.",
+                )
+                return
             continue
 
     yield _cached_rag_execution(bank_name, clean_q)
