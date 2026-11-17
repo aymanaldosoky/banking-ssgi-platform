@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v5.2 - Gemini 3.8 Flash Hybrid RAG Engine & Role-Based Survey)
-محرك "اسأل المنصة" المعتمد على Gemini API مباشرة مع الاسترجاع الهجين والاكتشاف التلقائي للنماذج.
+bank_rag_engine.py (v6.0 - High-Speed Hybrid RAG Engine & Role-Based Survey)
+محرك "اسأل المنصة" المعتمد على Gemini API مع التخزين المؤقت الذكي والبث المباشر.
 """
 
 import os
@@ -17,7 +17,6 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-# محاولة استيراد حزمة google-genai الحديثة مع وجود بديل REST قياسي لضمان العمل في كافة البيئات
 try:
     from google import genai
     from google.genai import types as genai_types
@@ -35,7 +34,7 @@ CBE_BG = "#F8F9FA"
 ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
 FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
-DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -646,8 +645,9 @@ def _find_archive_files():
             found.append(fb)
     return found
 
-@st.cache_data(show_spinner=False, ttl=600)
+@st.cache_resource(show_spinner=False)
 def load_all_knowledge_archives():
+    """تحميل وفهرسة أرشيف JSON مرة واحدة في ذاكرة الخادم لتسريع البحث اللحظي."""
     merged_data = {}
     part_files = _find_archive_files()
     loaded_files_log = []
@@ -757,7 +757,7 @@ def clean_raw_archive_text(text: str) -> str:
     s = re.sub(r"\s*\[[a-zA-Z0-9.-]+\]\s*", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
-def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None, top_k: int = 5):
+def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None, top_k: int = 4):
     """استرجاع أعلى المقاطع صلة بالسؤال من أرشيف JSON لتغذية نموذج Gemini بها."""
     archive_bundle = kb if isinstance(kb, dict) and "index" in kb else load_all_knowledge_archives()
     idx_map = archive_bundle.get("index", {})
@@ -820,7 +820,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     results = []
     seen = set()
     for _, val, raw_txt in scored:
-        cleaned = clean_raw_archive_text(raw_txt)
+        cleaned = clean_raw_archive_text(raw_txt)[:1200]
         sig = cleaned[:120]
         if sig and sig not in seen:
             seen.add(sig)
@@ -837,7 +837,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     return results
 
 # ==============================================================================
-# 6) الاتصال المباشر بـ Gemini API وصياغة الإجابة الاحترافية
+# 6) الاتصال المباشر بـ Gemini API (فائق السرعة مع Caching و Streaming)
 # ==============================================================================
 def _get_gemini_api_key() -> str:
     """قراءة مفتاح Gemini بأمان من أسرار Streamlit أو متغيرات البيئة."""
@@ -853,15 +853,22 @@ def _get_gemini_api_key() -> str:
 def llm_available() -> bool:
     return bool(_get_gemini_api_key())
 
+@st.cache_resource(show_spinner=False)
+def _get_genai_client(api_key: str):
+    """إعادة استخدام عميل Gemini SDK عبر جلسات الخادم لتقليل زمن تأسيس الاتصال."""
+    if HAS_GENAI_SDK and api_key:
+        return genai.Client(api_key=api_key)
+    return None
+
 @st.cache_data(show_spinner=False, ttl=3600)
 def _discover_available_flash_models(api_key: str) -> list:
-    """استعلام تلقائي عن أحدث نماذج Flash المتاحة للحساب لمنع أخطاء 404 مستقبلاً."""
+    """استعلام تلقائي عن أحدث نماذج Flash المتاحة للحساب."""
     try:
         req = urllib.request.Request(
             "https://generativelanguage.googleapis.com/v1beta/models",
             headers={"x-goog-api-key": api_key},
         )
-        with urllib.request.urlopen(req, timeout=15) as r:
+        with urllib.request.urlopen(req, timeout=8) as r:
             data = json.loads(r.read().decode("utf-8"))
             found = []
             for m in data.get("models", []):
@@ -870,46 +877,52 @@ def _discover_available_flash_models(api_key: str) -> list:
                 if "generateContent" in methods and "flash" in name.lower():
                     found.append(name)
             found.sort(reverse=True)
-            return found[:4]
+            return found[:3]
     except Exception:
         return []
 
+def _get_candidate_models(api_key: str) -> list:
+    custom_model = (os.getenv("GEMINI_MODEL") or "").strip()
+    active_cached = st.session_state.get("_active_gemini_model") if hasattr(st, "session_state") else None
+    candidates = [
+        active_cached,
+        custom_model,
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash",
+    ]
+    return list(dict.fromkeys([m for m in candidates if m]))
+
 def call_gemini_direct(system_instruction: str, user_prompt: str):
-    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت)"""
+    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت) بأعلى سرعة ممكنة."""
     api_key = _get_gemini_api_key()
     if not api_key:
         return "", "لم يتم العثور على GEMINI_API_KEY في Secrets"
 
-    custom_model = (os.getenv("GEMINI_MODEL") or "").strip()
-    candidates = [custom_model] if custom_model else [
-        "gemini-3.8-flash",
-        "gemini-3.8-flash-lite",
-        "gemini-2.5-flash",
-    ]
-    models_to_try = list(dict.fromkeys([m for m in candidates if m]))
+    models_to_try = _get_candidate_models(api_key)
+    client = _get_genai_client(api_key)
     last_error = ""
 
     def _try_single_model(model_name: str):
         nonlocal last_error
-        # 1) المحاولة عبر الحزمة الرسمية الحديثة google-genai
-        if HAS_GENAI_SDK:
+        if client is not None:
             try:
-                client = genai.Client(api_key=api_key)
                 response = client.models.generate_content(
                     model=model_name,
                     contents=user_prompt,
                     config=genai_types.GenerateContentConfig(
                         system_instruction=system_instruction,
                         temperature=0.2,
-                        max_output_tokens=2048,
+                        max_output_tokens=1600,
                     ),
                 )
                 if response and response.text:
+                    if hasattr(st, "session_state"):
+                        st.session_state["_active_gemini_model"] = model_name
                     return response.text.strip()
             except Exception as e:
                 last_error = f"SDK ({model_name}): {e}"
 
-        # 2) مسار REST القياسي الاحتياطي
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             payload = {
@@ -917,7 +930,7 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                 "contents": [{"parts": [{"text": user_prompt}]}],
                 "generationConfig": {
                     "temperature": 0.2,
-                    "maxOutputTokens": 2048,
+                    "maxOutputTokens": 1600,
                 },
             }
             req = urllib.request.Request(
@@ -928,13 +941,15 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                     "x-goog-api-key": api_key,
                 },
             )
-            with urllib.request.urlopen(req, timeout=45) as r:
+            with urllib.request.urlopen(req, timeout=20) as r:
                 out = json.loads(r.read().decode("utf-8"))
                 cands = out.get("candidates") or []
                 if cands:
                     parts = cands[0].get("content", {}).get("parts", [])
                     txt = "".join(p.get("text", "") for p in parts).strip()
                     if txt:
+                        if hasattr(st, "session_state"):
+                            st.session_state["_active_gemini_model"] = model_name
                         return txt
         except urllib.error.HTTPError as he:
             err_body = he.read().decode("utf-8", errors="ignore")[:180]
@@ -948,7 +963,6 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
         if res:
             return res, ""
 
-    # 3) اكتشاف تلقائي لأحدث نموذج متاح إذا فشلت القائمة الافتراضية
     for discovered_m in _discover_available_flash_models(api_key):
         if discovered_m not in models_to_try:
             res = _try_single_model(discovered_m)
@@ -1023,7 +1037,6 @@ def md_to_html(text: str) -> str:
                 in_ul = False
             continue
 
-        # معالجة العناوين (### أو ##)
         if s.startswith("### ") or s.startswith("## "):
             if in_ul:
                 out.append("</ul>")
@@ -1044,7 +1057,6 @@ def md_to_html(text: str) -> str:
             escaped
         )
 
-        # معالجة القوائم النقطية والرقمية مع مسافة بادئة صحيحة RTL
         is_bullet = escaped.startswith("- ") or escaped.startswith("* ") or escaped.startswith("• ")
         is_numbered = bool(re.match(r"^\d+[\.\-\)]\s+", escaped))
 
@@ -1093,37 +1105,90 @@ def render_card(bank: str, question: str, inner_html: str, tier: str, has_archiv
       </div>
     </div>"""
 
-def process_rag_gemini_query(bank_name: str, question: str) -> str:
-    if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
-        return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
-    if not is_valid_arabic_question(question):
-        return "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
-
-    kb = load_all_knowledge_archives()
-    p = profile_of(bank_name)
-    intents = classify_intents(question)
-
-    # 1. استرجاع المقاطع ذات الصلة من أرشيف JSON
-    archive_chunks = retrieve_top_archive_chunks(bank_name, question, intents, kb=kb, top_k=5)
-
-    # 2. التوليد المباشر عبر Gemini API (المسار الأساسي)
-    err_detail = ""
-    if llm_available():
-        sys_inst, usr_prompt = build_gemini_prompts(bank_name, question, p, archive_chunks)
-        gemini_reply, err_detail = call_gemini_direct(sys_inst, usr_prompt)
-        if gemini_reply:
-            tier = "gemini_rag" if archive_chunks else "gemini_grounded"
-            return render_card(bank_name, question, md_to_html(gemini_reply), tier, has_archive=bool(archive_chunks))
-    else:
-        err_detail = "مفتاح GEMINI_API_KEY غير مضاف في Secrets"
-
-    # 3. مسار احتياطي في حال عدم توفر مفتاح Gemini أو تعذر الاتصال
+def _build_fallback_card(bank_name: str, question: str, p: dict, err_detail: str) -> str:
     fallback_items = []
     for k, lbl in [("founded", "تاريخ التأسيس"), ("founder", "المؤسس"), ("ownership", "هيكل الملكية"), ("origin", "النشأة"), ("branches", "شبكة الفروع"), ("mandate", "الدور الاستراتيجي")]:
         if p.get(k):
             fallback_items.append(f"<li style='margin-bottom:6px;'><b>{lbl}:</b> {html.escape(str(p[k]))}</li>")
     fallback_html = f"<ul style='padding-right:22px;'>{''.join(fallback_items)}</ul>"
     return render_card(bank_name, question, fallback_html, "profile_fallback", has_archive=False, err_detail=err_detail)
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def _cached_rag_execution(bank_name: str, clean_q: str) -> str:
+    """تنفيذ الاستعلام وتخزين نتيجته في الكاش لمنع تكرار استهلاك API وتأخير الواجهة."""
+    kb = load_all_knowledge_archives()
+    p = profile_of(bank_name)
+    intents = classify_intents(clean_q)
+    archive_chunks = retrieve_top_archive_chunks(bank_name, clean_q, intents, kb=kb, top_k=4)
+
+    err_detail = ""
+    if llm_available():
+        sys_inst, usr_prompt = build_gemini_prompts(bank_name, clean_q, p, archive_chunks)
+        gemini_reply, err_detail = call_gemini_direct(sys_inst, usr_prompt)
+        if gemini_reply:
+            tier = "gemini_rag" if archive_chunks else "gemini_grounded"
+            return render_card(bank_name, clean_q, md_to_html(gemini_reply), tier, has_archive=bool(archive_chunks))
+    else:
+        err_detail = "مفتاح GEMINI_API_KEY غير مضاف في Secrets"
+
+    return _build_fallback_card(bank_name, clean_q, p, err_detail)
+
+def process_rag_gemini_query(bank_name: str, question: str) -> str:
+    if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
+        return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
+    if not is_valid_arabic_question(question):
+        return "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
+    return _cached_rag_execution(bank_name, clean_text(question))
+
+def stream_rag_gemini_query(bank_name: str, question: str):
+    """مولّد بث مباشر حقيقي (Real-Time Streaming) من Gemini API لعرض البطاقة فوراً أثناء الكتابة."""
+    if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
+        yield "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
+        return
+    if not is_valid_arabic_question(question):
+        yield "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
+        return
+
+    clean_q = clean_text(question)
+    kb = load_all_knowledge_archives()
+    p = profile_of(bank_name)
+    intents = classify_intents(clean_q)
+    archive_chunks = retrieve_top_archive_chunks(bank_name, clean_q, intents, kb=kb, top_k=4)
+    tier = "gemini_rag" if archive_chunks else "gemini_grounded"
+
+    api_key = _get_gemini_api_key()
+    client = _get_genai_client(api_key)
+    if client is None:
+        yield _cached_rag_execution(bank_name, clean_q)
+        return
+
+    sys_inst, usr_prompt = build_gemini_prompts(bank_name, clean_q, p, archive_chunks)
+    models_to_try = _get_candidate_models(api_key)
+
+    for m_name in models_to_try:
+        try:
+            acc = []
+            stream = client.models.generate_content_stream(
+                model=m_name,
+                contents=usr_prompt,
+                config=genai_types.GenerateContentConfig(
+                    system_instruction=sys_inst,
+                    temperature=0.2,
+                    max_output_tokens=1600,
+                ),
+            )
+            for chunk in stream:
+                if chunk and chunk.text:
+                    acc.append(chunk.text)
+                    yield render_card(bank_name, clean_q, md_to_html("".join(acc)), tier, has_archive=bool(archive_chunks))
+            if acc:
+                if hasattr(st, "session_state"):
+                    st.session_state["_active_gemini_model"] = m_name
+                return
+        except Exception:
+            continue
+
+    yield _cached_rag_execution(bank_name, clean_q)
 
 def get_archive_diagnostics():
     kb = load_all_knowledge_archives()
