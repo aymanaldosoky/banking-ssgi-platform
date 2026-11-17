@@ -1787,8 +1787,10 @@ with tab5:
             top_bank = top_row["البنك"]
             top_score = top_row["مؤشر SSGI المركب"]
             top_score_str = get_colored_score_html(top_score)
-            top_bank_profile_info = get_bank_founding_profile(top_bank)
-
+try:
+    top_bank_profile_info = process_rag_gemini_query(top_bank, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟")
+except Exception:
+    top_bank_profile_info = f"بنك مصرفي رائد عامل في القطاع المصرفي المصري ومسجل لدى البنك المركزي المصري."
             cards_html_list = []
             word_blocks_html = ""
 
