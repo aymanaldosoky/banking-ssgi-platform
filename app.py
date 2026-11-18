@@ -1061,7 +1061,7 @@ with tab2:
         st.markdown("""
         <div dir="rtl" style="background-color: #F8FAFC; border-right: 4px solid #C5A059; padding: 10px 14px; border-radius: 6px; margin-bottom: 15px;">
             <p style="color: #002B49; font-size: 13px; font-weight: 700; margin: 0; line-height: 1.5;">
-                💡 <b>طريقة الاستخدام:</b> افتح الملف، وأدخل درجة (0–100) لكل متغير في الخانات الصفراء، ثم خذ نتيجة كل محور من ورقة «ملخص_المحاور».
+                💡 <b>طريقة الاستخدام:</b> افتح الملف، وأدخل درجة (0–100) لكل متغير في الخانات الصفراء، واحتساب النتيجة من «ملخص_المحاور».
             </p>
         </div>
         """, unsafe_allow_html=True)
