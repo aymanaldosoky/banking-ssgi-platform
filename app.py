@@ -1299,7 +1299,7 @@ with tab2:
                     st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False})
 
         else:
-            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض البطاقات الرقمية والتحليل القياسي المباشر.")
+            st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على مفتاح احسب وسجل مؤشر البنك.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
