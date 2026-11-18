@@ -3184,7 +3184,7 @@ with tab7:
     # --------------------------------------------------------------------------
     # القوائم الموسعة للخطاب الموجه والتعريفات الإجرائية
     # --------------------------------------------------------------------------
-    with st.expander("🏛️ عرض ترويسة جهة الدراسة والبحث العلمي والخطاب الموجه (اضغط للتمديد أو التقليص)", expanded=False):
+    with st.expander("🏛️ تمهيد جهة الدراسة والخطاب الموجه ", expanded=False):
         st.markdown(f"""
         <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 10px; line-height: 1.9;" dir="rtl">
             <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 12px; margin-bottom: 15px;">
@@ -3209,7 +3209,7 @@ with tab7:
         </div>
         """, unsafe_allow_html=True)
 
-    with st.expander("📚 أولاً: مصطلحات تعريفية (اضغط للاطلاع على التعريفات الإجرائية)", expanded=False):
+    with st.expander("📚  مصطلحات تعريفية ", expanded=False):
         st.markdown(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.9;">
             <p>لضمان وحدة المفهوم ودقة الاستجابة، يرجى التكرم بالاطلاع على التعريفات الإجرائية التالية للمصطلحات المستخدمة في هذا الاستبيان:</p>
@@ -3483,9 +3483,13 @@ with tab7:
                 st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)", ["نعم", "لا"],
                          index=["نعم", "لا"].index(cur) if cur in ["نعم", "لا"] else None, horizontal=True,
                          key="w_listed", on_change=_sync, args=("w_listed", "listed"))
-                st.text_input("الاسم (اختياري)", value=S.get("name", ""),
-                              placeholder="يمكنكم ترك هذا الحقل فارغاً",
-                              key="w_name", on_change=_sync, args=("w_name", "name"))
+                # ربط مباشر مع المخزن S لضمان التقاط الاسم حتى بدون الضغط على Enter
+                S["name"] = st.text_input(
+                    "الاسم (اختياري)",
+                    value=S.get("name", ""),
+                    placeholder="يمكنكم ترك هذا الحقل فارغاً",
+                    key="w_name"
+                )
                 st.markdown(f"""
                 <div dir="rtl" style="background:#F8FAFC;border:1.5px solid {CBE_GOLD};border-radius:10px;padding:10px 14px;margin-top:8px;text-align:right;">
                     <span style="font-weight:700;color:{CBE_NAVY};font-size:13.5px;">🔒 تنويه: جميع المعلومات الواردة في هذا الاستبيان تخضع للسرية الكاملة، ولا تُستخدم إلا لأغراض البحث العلمي فقط.</span>
@@ -3530,14 +3534,21 @@ with tab7:
                     args=("wi_weights_confirmed", "weights_confirmed")
                 )
 
-                st.text_area("💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
-                             value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
-                             key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
+                S["comments"] = st.text_area(
+                    "💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
+                    value=S.get("comments", ""),
+                    placeholder="اكتب الملاحظات أو المقترحات هنا...",
+                    key="wi_comments",
+                    height=120
+                )
 
         # ----------------------------------------------------------------------
         # 5) أزرار التنقل والإرسال بـ Callback آمن
         # ----------------------------------------------------------------------
         def _go(delta):
+            # تثبيت قيمة الاسم قبل الانتقال بين المراحل
+            if "w_name" in st.session_state:
+                S["name"] = st.session_state.get("w_name", "")
             st.session_state.survey_wizard_step += delta
 
         if not already_submitted:
@@ -3568,10 +3579,12 @@ with tab7:
                             sc = axis_scores[ax]
                             return round(sum(sc) / len(sc), 2) if ax in axes_required and sc else None
 
+                        raw_name = st.session_state.get("w_name") or S.get("name", "")
+                        raw_comments = st.session_state.get("wi_comments") or S.get("comments", "")
                         resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                         rec = {
                             "معرف الاستجابة": resp_id,
-                            "الاسم (اختياري)": clean_text(S.get("name", "")),
+                            "الاسم (اختياري)": clean_text(raw_name),
                             "اسم البنك": clean_text(S.get("bank", "")),
                             "طبيعة المؤسسة": clean_text(S.get("org", "")),
                             "المؤهل العلمي": clean_text(S.get("sci", "")),
@@ -3585,7 +3598,7 @@ with tab7:
                             "وزن تقارير الاستدامة (%)": int(S.get("w_sr", 30)),
                             **{SURVEY_AXES[ax]["avg_col"]: _avg(ax) for ax in SURVEY_AXES},
                             **answers,
-                            "ملاحظات ومقترحات إضافية": clean_text(S.get("comments", "")),
+                            "ملاحظات ومقترحات إضافية": clean_text(raw_comments),
                             "وقت الإرسال": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         }
                         try:
@@ -3609,7 +3622,8 @@ with tab7:
             if st.button("🔄 اختبار الاتصال وتهيئة Supabase", key="admin_test_db", use_container_width=True):
                 is_success, msg = init_db()
                 if is_success:
-                    st.success("✅ جدول `survey_responses` متصل وجاهز!")
+                    st.session_state.pop("cached_surveys_df", None)
+                    st.success("✅ جدول `survey_responses` متصل وجاهز وتم تحديث هيكله!")
                 else:
                     st.error(f"❌ خطأ الاتصال: {msg}")
         with col_adm2:
