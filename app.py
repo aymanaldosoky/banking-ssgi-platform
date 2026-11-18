@@ -1536,8 +1536,8 @@ with tab2:
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات المصرفية</h3>
-        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية المخصصة للبنوك وتوليد التقارير التراكمية.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات </h3>
+        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية .</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1574,9 +1574,9 @@ with tab3:
             var2_ig = st.slider("2️⃣ نسبة الزيادة في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2")
             var3_sr = st.slider("3️⃣ نسبة الزيادة في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3")
 
-            run_sim_btn = st.button("📋 إضافة وتثبيت سيناريو إضافي للبنك", use_container_width=True, type="primary")
+            run_sim_btn = st.button("📋 إضافة السيناريو الاستراتيجي", use_container_width=True, type="primary")
 
-            if st.button("🗑️ مسح وإعادة تعيين كافة سيناريوهات المحاكي", use_container_width=True, type="secondary"):
+            if st.button("🗑️ مسح وإعادة تعيين ", use_container_width=True, type="secondary"):
                 st.session_state.simulated_results_dict = {}
                 st.rerun()
 
@@ -1632,7 +1632,7 @@ with tab3:
             """
 
             st.download_button(
-                label=f"📥 تحميل تقرير محاكي السياسات الشامل ({scenarios_count}) (Word)",
+                label=f"📥 تحميل تقرير محاكي السياسات ",
                 data=sim_word_html.encode("utf-8-sig"),
                 file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
@@ -1721,7 +1721,7 @@ with tab3:
                     st.markdown(item["deep"], unsafe_allow_html=True)
                     st.markdown("---")
             else:
-                st.info("📈 قم بضبط البنك والسيناريو ومتغيرات التحفيز واضغط على زر الإضافة لتثبيت ومتابعة عدة سيناريوهات هنا بغرض المقارنة.")
+                st.info("📈 قم باختيار البنك والسيناريو ومتغيرات التحفيز واضغط على مفتاح الإضافة لتثبيت ومتابعة السيناريوهات.")
             st.markdown('</div>', unsafe_allow_html=True)
 # ==============================================================================
 # التبويب الرابع: لوحة دعم اتخاذ القرار (Decision Support Dashboard) - مطور ومحدث بالكامل
