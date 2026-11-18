@@ -522,7 +522,7 @@ if not st.session_state.authenticated:
         </div>
         """, unsafe_allow_html=True)
         
-username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
+        username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
         password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
 
         if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
@@ -543,7 +543,7 @@ username_input = st.text_input("اسم المستخدم (Username)", placeholder
                 st.rerun()
             else:
                 st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
-
+    st.stop()
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
