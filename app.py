@@ -2373,7 +2373,7 @@ with tab5:
             top_block_html = f"""
             <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الأداء العام والريادة المصرفية:</h4>
-                <p style="margin-bottom: 8px;">يتصدر البنك  <span style="font-weight: bold; color: {CBE_GOLD};" قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب:>{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
+                <p style="margin-bottom: 8px;">يتصدر البنك <span style="font-weight: bold; color: {CBE_GOLD};" :>{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب.</p>
                 <div style="background: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #CBD5E1; margin-top: 10px; margin-bottom: 10px;">
                     <p style="margin: 0 0 6px 0; color: {CBE_NAVY}; font-weight: bold;">🏛️ الملامح التأسيسية والمعطيات التاريخية للبنك المتصدر ({top_bank}):</p>
                     <p style="margin: 0; color: #334155; font-size: 13.5px; line-height: 1.7;">{top_bank_profile_info}</p>
