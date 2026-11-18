@@ -2166,18 +2166,31 @@ with tab5:
                             }}
                             """
 
-                            # إرسال الملف مباشرة (PDF أو TXT) إلى Gemini 2.5 Flash
+# إرسال الملف مباشرة (PDF أو TXT) إلى أحدث نموذج متاح في Gemini
                             doc_part = types.Part.from_bytes(data=file_bytes, mime_type=file_mime)
 
-                            response = client.models.generate_content(
-                                model="gemini-2.5-flash",
-                                contents=[doc_part, audit_prompt],
-                                config=types.GenerateContentConfig(
-                                    temperature=0.1,
-                                    response_mime_type="application/json",
-                                ),
-                            )
+                            response = None
+                            last_model_err = None
+                            for _m_name in ["gemini-3.8-flash", "gemini-3-flash", "gemini-2.5-pro", "gemini-2.0-flash"]:
+                                try:
+                                    response = client.models.generate_content(
+                                        model=_m_name,
+                                        contents=[doc_part, audit_prompt],
+                                        config=types.GenerateContentConfig(
+                                            temperature=0.1,
+                                            response_mime_type="application/json",
+                                        ),
+                                    )
+                                    if response and response.text:
+                                        break
+                                except Exception as _e:
+                                    last_model_err = _e
+                                    if "404" in str(_e) or "NOT_FOUND" in str(_e):
+                                        continue
+                                    raise _e
 
+                            if not response or not response.text:
+                                raise RuntimeError(f"تعذر الوصول للنماذج: {last_model_err}")
                             if response and response.text:
                                 ai_eval_data = json.loads(response.text)
                                 used_ai_engine = True
