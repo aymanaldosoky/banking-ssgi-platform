@@ -1536,8 +1536,8 @@ with tab2:
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات </h3>
-        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات والسياسات المستقبلية واختبار السيناريوهات الاستراتيجية .</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات (Policy & Scenario Simulator)</h3>
+        <p style="color: #475569; font-size: 14px;">نمذجة كمية لاستشراف أثر التدخلات المستقبلية واختبار حساسية محاور الحوكمة الذكية لكل بنك بناءً على فجواته الفعلية ومتغيرات التحفيز.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1551,15 +1551,19 @@ with tab3:
             recorded_banks_sim = list(dict.fromkeys([item["البنك"] for item in st.session_state.history_state]))
             sim_bank_sel = st.selectbox("اختر البنك للمحاكاة", recorded_banks_sim, key="sim_bank")
 
-            # جلب القيمة المسجلة للبنك المختار لاستخدامها كقيمة افتراضية ذكية للمؤشر
+            # جلب أحدث سجل فعلي للبنك المختار لاستخدامه كأساس للمحاكاة
             default_bank_ssgi = 85.0
+            curr_s_val, curr_i_val, curr_r_val = 85.0, 85.0, 85.0
             for item in reversed(st.session_state.history_state):
                 if item["البنك"] == sim_bank_sel:
                     default_bank_ssgi = float(item["مؤشر SSGI المركب"])
+                    curr_s_val = float(item["منصات المعلومات (40%)"])
+                    curr_i_val = float(item["الحوكمة المؤسسية (30%)"])
+                    curr_r_val = float(item["تقارير الاستدامة (30%)"])
                     break
 
             base_ssgi_input = st.slider(
-                "قيمة المؤشر المركب  (SSGI)",
+                "قيمة المؤشر الأساسي الحالي (SSGI)",
                 30.0, 100.0, default_bank_ssgi, 0.5,
                 key=f"sim_base_{sim_bank_sel}"
             )
@@ -1570,13 +1574,17 @@ with tab3:
                 "🚀 السيناريو الطموح / الاستباقي (إصلاحات هيكلية شاملة وسيادة رقمية)"
             ], index=1, key="sim_scen")
 
-            var1_sip = st.slider("1️⃣ نسبة الزيادة في منصات المعلومات والبنية التقنية (%)", 0, 50, 20, key="sim_v1")
-            var2_ig = st.slider("2️⃣ نسبة الزيادة في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2")
-            var3_sr = st.slider("3️⃣ نسبة الزيادة في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3")
+            is_pessimistic = scenario_dropdown.startswith("📉")
+            if is_pessimistic:
+                st.caption("ℹ️ في السيناريو التشاؤمي يتم احتساب أثر التراجع التلقائي نتيجة تجميد الاستثمارات.")
 
-            run_sim_btn = st.button("📋 إضافة السيناريو الاستراتيجي", use_container_width=True, type="primary")
+            var1_sip = st.slider("1️⃣ نسبة التحفيز في منصات المعلومات والبنية التقنية (%)", 0, 50, 20, key="sim_v1", disabled=is_pessimistic)
+            var2_ig = st.slider("2️⃣ نسبة التحفيز في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2", disabled=is_pessimistic)
+            var3_sr = st.slider("3️⃣ نسبة التحفيز في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3", disabled=is_pessimistic)
 
-            if st.button("🗑️ مسح وإعادة تعيين ", use_container_width=True, type="secondary"):
+            run_sim_btn = st.button("📋 إضافة وتثبيت السيناريو الاستراتيجي", use_container_width=True, type="primary")
+
+            if st.button("🗑️ مسح كافة السيناريوهات", use_container_width=True, type="secondary"):
                 st.session_state.simulated_results_dict = {}
                 st.rerun()
 
@@ -1632,7 +1640,7 @@ with tab3:
             """
 
             st.download_button(
-                label=f"📥 تحميل تقرير محاكي السياسات ",
+                label=f"📥 تحميل تقرير محاكي السياسات ({scenarios_count}) (Word)",
                 data=sim_word_html.encode("utf-8-sig"),
                 file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
@@ -1649,51 +1657,129 @@ with tab3:
                     st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح أولاً.")
                 else:
                     base_val = base_ssgi_input
-                    s_val, i_val, r_val = 85.0, 90.0, 82.0
-                    for item in reversed(st.session_state.history_state):
-                        if item["البنك"] == sim_bank_sel:
-                            s_val = item["منصات المعلومات (40%)"]
-                            i_val = item["الحوكمة المؤسسية (30%)"]
-                            r_val = item["تقارير الاستدامة (30%)"]
-                            break
+                    s_val, i_val, r_val = curr_s_val, curr_i_val, curr_r_val
 
-                    combined_boost = (var1_sip * 0.40) + (var2_ig * 0.30) + (var3_sr * 0.30)
+                    # تحديد أضعف محور فعلي وأقوى محور فعلي لدى البنك المختار لمنع تكرار النصوص
+                    pillars_map = {
+                        "منصات المعلومات والبنية التقنية (SIP)": s_val,
+                        "الحوكمة المؤسسية ولجان الالتزام (IG)": i_val,
+                        "تقارير الاستدامة والتمويل الأخضر (SR)": r_val
+                    }
+                    weakest_pillar = min(pillars_map, key=pillars_map.get)
+                    weakest_score = pillars_map[weakest_pillar]
+                    strongest_pillar = max(pillars_map, key=pillars_map.get)
+                    strongest_score = pillars_map[strongest_pillar]
+
+                    # تحديد المحور الأكثر استهدافاً في أشرطة التمرير
+                    boost_map = {
+                        "منصات المعلومات (SIP)": var1_sip,
+                        "الحوكمة المؤسسية (IG)": var2_ig,
+                        "تقارير الاستدامة (SR)": var3_sr
+                    }
+                    top_boosted_pillar = max(boost_map, key=boost_map.get)
+                    top_boost_pct = boost_map[top_boosted_pillar]
 
                     if scenario_dropdown.startswith("📉"):
-                        simulated_val = max(0.0, base_val * 0.90)
-                        analysis_text = f"تحذير استباقي لـ ({sim_bank_sel}): غياب الاستثمار في تطوير منصات المعلومات ({s_val}%) والالتزام الرقابي سيؤدي إلى تراجع المؤشر بنسبة 10% واهتزاز الامتثال."
-                        action_plan = f"تعزيز موازنات التحول الرقمي والحفاظ على الحد الأدنى لمتطلبات لجان المراجعة وإدارة المخاطر ({i_val}%)."
-                    elif scenario_dropdown.startswith("📊"):
-                        simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0022)))
-                        analysis_text = f"استقرار تطوري مستدام لـ ({sim_bank_sel}): نجاح تدريجي في ترشيد أداء منصات المعلومات ({s_val}%) ورفع كفاءة تقارير الاستدامة ({r_val}%)."
-                        action_plan = "مواصلة التحفيز التدريجي وتوسيع قاعدة الاستثمار في الأصول الخضراء ومحفظة التمويل المستدام."
-                    else:
-                        simulated_val = min(100.0, base_val * (1 + (combined_boost * 0.0042)))
-                        analysis_text = f"قفزة استراتيجية كبرى لـ ({sim_bank_sel}): استثمار البنية التقنية المتقدمة ({s_val}%) وسياسة الحوكمة الراسخة ({i_val}%) لتحقيق الريادة المصرفية المستدامة."
-                        action_plan = "قيادة التحول الرقمي المصرفي الكامل، وتطبيق أحدث أنظمة الرقابة التنظيمية (RegTech)، وتصدر التصنيفات الإقليمية في التمويل الأخضر."
+                        sim_s = round(max(0.0, s_val * 0.90), 1)
+                        sim_i = round(max(0.0, i_val * 0.91), 1)
+                        sim_r = round(max(0.0, r_val * 0.89), 1)
+                        simulated_val = round(max(0.0, base_val * 0.90), 2)
 
-                    simulated_val = round(simulated_val, 2)
+                        analysis_text = (
+                            f"إنذار مبكر لـ ({sim_bank_sel}): تجميد الاستثمارات سيؤدي إلى هبوط المؤشر المركب بمقدار ({simulated_val - base_val:+.2f}) نقطة، "
+                            f"مع تفاقم الفجوة الحرجة في <b>{weakest_pillar}</b> من ({weakest_score}%) إلى ({min(sim_s, sim_i, sim_r)}%)، مما يعرض البنك لمخاطر عدم الامتثال الرقابي."
+                        )
+                        action_plan = (
+                            f"تدخل وقائي عاجل لـ ({sim_bank_sel}): إقرار خطة إنقاذ فورية لرفع كفاءة <b>{weakest_pillar} ({weakest_score}%)</b> كأولوية قصوى، "
+                            f"وتحصين المكتسبات المحققة في <b>{strongest_pillar} ({strongest_score}%)</b> ضد التآكل التشغيلي."
+                        )
+                    elif scenario_dropdown.startswith("📊"):
+                        factor = 0.0022
+                        sim_s = round(min(100.0, s_val * (1 + var1_sip * factor)), 1)
+                        sim_i = round(min(100.0, i_val * (1 + var2_ig * factor)), 1)
+                        sim_r = round(min(100.0, r_val * (1 + var3_sr * factor)), 1)
+                        combined_boost = (var1_sip * 0.40) + (var2_ig * 0.30) + (var3_sr * 0.30)
+                        simulated_val = round(min(100.0, base_val * (1 + (combined_boost * factor))), 2)
+
+                        if base_val >= 80:
+                            analysis_text = (
+                                f"نمو متوازن وتعزيز للريادة في ({sim_bank_sel}): بفضل القاعدة الصلبة في <b>{strongest_pillar} ({strongest_score}%)</b> "
+                                f"وتوجيه أعلى تحفيز نحو <b>{top_boosted_pillar} (+{top_boost_pct}%)</b>، يرتفع المؤشر إلى ({simulated_val}%) مع الحفاظ على الاستقرار المؤسسي."
+                            )
+                            action_plan = (
+                                f"خارطة طريق ({sim_bank_sel}): تركيز الاستثمارات التدريجية لمعالجة الفجوة النسبية في <b>{weakest_pillar} ({weakest_score}% ⬅️ {min(sim_s, sim_i, sim_r)}%)</b>، "
+                                f"وربط مؤشرات الأداء بمستهدفات التمويل المستدام المعتمدة من البنك المركزي."
+                            )
+                        else:
+                            analysis_text = (
+                                f"تحسن تدريجي مشروط في ({sim_bank_sel}): يساهم التحفيز الموجه لـ <b>{top_boosted_pillar} (+{top_boost_pct}%)</b> في رفع المؤشر إلى ({simulated_val}%)، "
+                                f"إلا أن استمرار انخفاض <b>{weakest_pillar} ({weakest_score}%)</b> يظل قيداً هيكلياً يبطئ القفزة النوعية."
+                            )
+                            action_plan = (
+                                f"خارطة طريق ({sim_bank_sel}): إعادة توجيه المخصصات التدريجية لمعالجة الاختناق في <b>{weakest_pillar} ({weakest_score}%)</b>، "
+                                f"بالتوازي مع تفعيل التحفيز المبرمج في <b>{top_boosted_pillar} (+{top_boost_pct}%)</b> لردم الفجوة الرقابية."
+                            )
+                    else:
+                        factor = 0.0042
+                        sim_s = round(min(100.0, s_val * (1 + var1_sip * factor)), 1)
+                        sim_i = round(min(100.0, i_val * (1 + var2_ig * factor)), 1)
+                        sim_r = round(min(100.0, r_val * (1 + var3_sr * factor)), 1)
+                        combined_boost = (var1_sip * 0.40) + (var2_ig * 0.30) + (var3_sr * 0.30)
+                        simulated_val = round(min(100.0, base_val * (1 + (combined_boost * factor))), 2)
+
+                        analysis_text = (
+                            f"تحول استراتيجي شامل في ({sim_bank_sel}): يؤدي ضخ استثمارات مكثفة في <b>{top_boosted_pillar} (+{top_boost_pct}%)</b> "
+                            f"مع إصلاح <b>{weakest_pillar} (من {weakest_score}% إلى {min(sim_s, sim_i, sim_r)}%)</b> إلى قفزة نوعية ترفع المؤشر إلى ({simulated_val}%)."
+                        )
+                        action_plan = (
+                            f"خطة التحول القيادي لـ ({sim_bank_sel}): إطلاق برنامج إعادة هندسة شاملة لـ <b>{weakest_pillar}</b>، "
+                            f"وتعظيم العائد من <b>{strongest_pillar} ({strongest_score}%)</b> لتطبيق تقنيات الرقابة الآلية (RegTech) وتصدر مؤشرات الاستدامة."
+                        )
+
                     delta = round(simulated_val - base_val, 2)
                     score_str_plain = get_colored_score_html(simulated_val)
 
                     deep_analysis = flat_html(f"""
                     <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #CBD5E1; margin-top: 10px;" dir="rtl">
-                        <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; text-align: right;">📊 التشخيص القياسي المخصص لبنك ({sim_bank_sel}):</p>
-                        <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.8; text-align: right;">
-                            <li><b>1. منصات المعلومات (SIP):</b> {describe_sip(s_val)}</li>
-                            <li><b>2. الحوكمة المؤسسية (IG):</b> {describe_ig(i_val)}</li>
-                            <li><b>3. تقارير الاستدامة (SR):</b> {describe_sr(r_val)}</li>
+                        <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; text-align: right;">📊 التحليل التفصيلي لمسار المحاور الثلاثة لبنك ({sim_bank_sel}):</p>
+                        <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.85; text-align: right;">
+                            <li><b>1. منصات المعلومات (SIP) [{s_val}% ⬅️ {sim_s}%]:</b> {describe_sip(s_val)}</li>
+                            <li><b>2. الحوكمة المؤسسية (IG) [{i_val}% ⬅️ {sim_i}%]:</b> {describe_ig(i_val)}</li>
+                            <li><b>3. تقارير الاستدامة (SR) [{r_val}% ⬅️ {sim_r}%]:</b> {describe_sr(r_val)}</li>
                         </ul>
                     </div>
                     """)
 
                     box_html = flat_html(f"""
-                    <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                      <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px;">📈 محاكاة بنك: {sim_bank_sel} | السيناريو: {scenario_dropdown}</h3>
-                      <p style="font-size: 15px; margin-bottom: 8px; color: #1E293B;"><b>القيمة المتوقعة للمؤشر:</b> {score_str_plain} (صافي التغير: <span style="font-weight: bold;">{delta:+.2f}</span> | القيمة الأساسية: {base_val:.2f})</p>
-                      <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
-                        <p style="margin-bottom: 6px; color: #1E293B;"><b>🔬 التحليل القياسي:</b> {analysis_text}</p>
-                        <p style="margin: 0 0 8px 0; color: {CBE_GOLD}; font-weight: bold;">🛠️ خطة التحرك: {action_plan}</p>
+                    <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; margin-bottom: 12px;">
+                          <h4 style="color: {CBE_NAVY}; font-weight: bold; margin: 0; font-size: 16px;">📈 محاكاة: <span style="color: {CBE_GOLD};">{sim_bank_sel}</span></h4>
+                          <span style="background: #F1F5F9; color: {CBE_NAVY}; padding: 3px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;">{scenario_dropdown}</span>
+                      </div>
+                      <p style="font-size: 14.5px; margin-bottom: 12px; color: #1E293B;">
+                          <b>القيمة المتوقعة للمؤشر المركب:</b> {score_str_plain} 
+                          <span style="background: {'#DCFCE7' if delta >= 0 else '#FEE2E2'}; color: {'#166534' if delta >= 0 else '#991B1B'}; padding: 2px 8px; border-radius: 6px; font-weight: bold; margin-right: 6px;">
+                              صافي التغير: {delta:+.2f}
+                          </span>
+                          <span style="color: #64748B; font-size: 13px;"> (القيمة الأساسية: {base_val:.2f}%)</span>
+                      </p>
+                      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; text-align: center;">
+                          <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                              <div style="font-size: 11px; color: #64748B; font-weight: bold;">منصات المعلومات (SIP)</div>
+                              <div style="font-size: 14px; font-weight: 800; color: {CBE_NAVY};">{s_val}% ⬅️ {sim_s}%</div>
+                          </div>
+                          <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                              <div style="font-size: 11px; color: #64748B; font-weight: bold;">الحوكمة المؤسسية (IG)</div>
+                              <div style="font-size: 14px; font-weight: 800; color: {CBE_NAVY};">{i_val}% ⬅️ {sim_i}%</div>
+                          </div>
+                          <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                              <div style="font-size: 11px; color: #64748B; font-weight: bold;">تقارير الاستدامة (SR)</div>
+                              <div style="font-size: 14px; font-weight: 800; color: {CBE_NAVY};">{r_val}% ⬅️ {sim_r}%</div>
+                          </div>
+                      </div>
+                      <div style="background: {CBE_BG}; padding: 14px; border-radius: 8px; border-right: 4px solid {CBE_GOLD};">
+                        <p style="margin-bottom: 8px; color: #1E293B; font-size: 13.5px; line-height: 1.7;"><b>🔬 التحليل القياسي المخصص:</b> {analysis_text}</p>
+                        <p style="margin: 0; color: #0F172A; font-size: 13.5px; line-height: 1.7;"><b>🛠️ خطة التحرك الاستراتيجية:</b> {action_plan}</p>
                       </div>
                     </div>
                     """)
@@ -1703,20 +1789,47 @@ with tab3:
                         "html": box_html,
                         "deep": deep_analysis,
                         "bank": sim_bank_sel,
+                        "base_val": base_val,
                         "simulated_val": simulated_val,
                         "delta": delta,
                         "scenario": scenario_dropdown,
                         "analysis_text": analysis_text,
-                        "action_plan": action_plan
+                        "action_plan": action_plan,
+                        "pillars_before": [s_val, i_val, r_val],
+                        "pillars_after": [sim_s, sim_i, sim_r]
                     }
-                    # تحديث الصفحة فوراً لتغذية زر تحميل Word بالبيانات الجديدة من أول مرة
                     st.rerun()
 
             if st.session_state.simulated_results_dict:
-                st.markdown("---")
-                st.markdown("<h4>📋  السيناريوهات المختارة للبنوك:</h4>", unsafe_allow_html=True)
+                # رسم بياني للمقارنة السريعة بين الوضع الراهن والوضع المتوقع لأحدث سيناريو مضاف
+                latest_key = list(st.session_state.simulated_results_dict.keys())[-1]
+                latest_item = st.session_state.simulated_results_dict[latest_key]
+                if "pillars_before" in latest_item and "pillars_after" in latest_item:
+                    fig_sim = go.Figure(data=[
+                        go.Bar(name='الوضع الحالي (%)', x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)', 'المؤشر المركب (SSGI)'],
+                               y=latest_item["pillars_before"] + [latest_item["base_val"]], marker_color='#94A3B8'),
+                        go.Bar(name='المتوقع بعد السيناريو (%)', x=['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)', 'المؤشر المركب (SSGI)'],
+                               y=latest_item["pillars_after"] + [latest_item["simulated_val"]], marker_color='#C59B27')
+                    ])
+                    fig_sim.update_layout(
+                        barmode='group',
+                        title=f"📊 مقارنة الأداء الحالي مقابل المتوقع: {latest_item['bank']}",
+                        yaxis=dict(range=[0, 105]),
+                        height=300,
+                        margin=dict(t=45, b=20, l=20, r=20),
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    )
+                    st.plotly_chart(fig_sim, use_container_width=True)
+
+                st.markdown("<h4>📋 سجل السيناريوهات الاستشرافية المثبتة:</h4>", unsafe_allow_html=True)
                 for s_key, item in reversed(list(st.session_state.simulated_results_dict.items())):
-                    st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
+                    col_k1, col_k2 = st.columns([5, 1])
+                    with col_k1:
+                        st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
+                    with col_k2:
+                        if st.button("🗑️ حذف", key=f"del_sim_{s_key}", use_container_width=True):
+                            del st.session_state.simulated_results_dict[s_key]
+                            st.rerun()
                     st.markdown(item["html"], unsafe_allow_html=True)
                     st.markdown(item["deep"], unsafe_allow_html=True)
                     st.markdown("---")
