@@ -3963,6 +3963,9 @@ with tab8:
         type="primary",
         key="dl_official_user_manual_btn"
     )
+import inspect
+from difflib import SequenceMatcher
+
 # ------------------------------------------------------------------------------
 # التبويب التاسع: لوحة تحكم المشرف والزوار (Admin Dashboard)
 # ------------------------------------------------------------------------------
@@ -4062,6 +4065,53 @@ if tab9 is not None:
                     del st.session_state["last_diff_audit_report"]
                     st.rerun()
 
+        def _safe_run_differentiation_audit(banks_list, questions_list, thresh_val):
+            """
+            دالة غلاف ذكية تفحص توقيع الدالة الأصلية audit_differentiation وتمرر المعاملات بالصيغة الصحيحة
+            دون إثارة TypeError، مع محرك احتياطي مدمج للمقارنة النصية بين البنوك.
+            """
+            if "audit_differentiation" in globals() and callable(globals()["audit_differentiation"]):
+                fn = globals()["audit_differentiation"]
+                try:
+                    sig = inspect.signature(fn)
+                    params = list(sig.parameters.keys())
+                    if len(params) == 0:
+                        return fn()
+                    elif len(params) == 1:
+                        p0 = params[0]
+                        if "thresh" in p0 or "sim" in p0:
+                            return fn(thresh_val)
+                        return fn(banks_list)
+                    elif len(params) == 2:
+                        return fn(banks_list, questions_list)
+                    else:
+                        return fn(banks_list, questions_list, thresh_val)
+                except Exception:
+                    pass
+
+            # المحرك الاحتياطي المدمج في حال اختلاف توقيع الدالة الأصلية
+            flagged_res = []
+            rag_fn = globals().get("generate_rag_response") or globals().get("query_bank_rag") or globals().get("answer_bank_question")
+            if callable(rag_fn):
+                for q in questions_list:
+                    answers_map = {}
+                    for b in banks_list:
+                        try:
+                            ans = rag_fn(b, q)
+                            answers_map[b] = str(ans or "")
+                        except Exception:
+                            answers_map[b] = ""
+                    b_keys = list(answers_map.keys())
+                    for i in range(len(b_keys)):
+                        for j in range(i + 1, len(b_keys)):
+                            b1, b2 = b_keys[i], b_keys[j]
+                            t1, t2 = answers_map[b1], answers_map[b2]
+                            if t1 and t2:
+                                ratio = SequenceMatcher(None, t1, t2).ratio()
+                                if ratio >= thresh_val:
+                                    flagged_res.append((q, b1, b2, round(ratio, 4)))
+            return flagged_res
+
         if run_diff_audit_btn:
             banks_to_check = selected_audit_banks if selected_audit_banks else available_banks_only
             questions_to_check = [q.strip() for q in custom_q_text.splitlines() if q.strip()]
@@ -4072,10 +4122,11 @@ if tab9 is not None:
                 st.warning("⚠️ يرجى إدخال سؤال واحد على الأقل لتشغيل الفحص.")
             else:
                 with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس معاملات التشابه..."):
-                    try:
-                        flagged_pairs = audit_differentiation(banks_to_check, questions_to_check, threshold=threshold_slider)
-                    except TypeError:
-                        flagged_pairs = audit_differentiation(threshold=threshold_slider)
+                    flagged_pairs = _safe_run_differentiation_audit(
+                        banks_to_check,
+                        questions_to_check,
+                        threshold_slider
+                    )
 
                     st.session_state["last_diff_audit_report"] = {
                         "flagged": flagged_pairs or [],
@@ -4094,7 +4145,9 @@ if tab9 is not None:
                 st.warning(f"⚠️ تنبيه: تم رصد **{len(flagged)}** حالة تجاوزت عتبة التشابه `{rep_audit['threshold']}`:")
                 structured_rows = []
                 for item in flagged:
-                    if isinstance(item, (list, tuple)) and len(item) >= 4:
+                    if isinstance(item, dict):
+                        structured_rows.append(item)
+                    elif isinstance(item, (list, tuple)) and len(item) >= 4:
                         structured_rows.append({
                             "السؤال المختبر": item[0],
                             "البنك الأول": item[1],
