@@ -1049,7 +1049,7 @@ with tab2:
     with col_dl_excel:
         excel_data = generate_ssgi_evaluation_excel()
         st.download_button(
-            label="📥 تحميل نموذج التقييم التفصيلي للمتغيرات الـ 63 ",
+            label="📥 تحميل نموذج التقييم التفصيلي  ",
             data=excel_data,
             file_name="نموذج_التقييم_التفصيلي_للمتغيرات_63_SSGI.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
