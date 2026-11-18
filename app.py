@@ -1973,8 +1973,8 @@ with tab3:
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي (Executive DSS)</h3>
-        <p style="color: #475569; font-size: 14px;">تحويل مخرجات التشخيص القياسي الفعلي إلى حزمة قرارات تنفيذية إلزامية، تحديد الأولويات الرقابية، وتوزيع المسؤوليات على لجان الحوكمة ومجلس الإدارة.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي الاستراتيجي </h3>
+        <p style="color: #475569; font-size: 14px;">تحويل مخرجات التشخيص القياسي الفعلي إلى حزمة قرارات تنفيذية إلزامية، تحديد الأولويات الرقابية، وتوزيع المسؤوليات على للجان الحوكمة ومجلس الإدارة واللجان المختصة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -2096,7 +2096,7 @@ with tab4:
             generate_decision_btn = st.button("📋 اعتماد وتثبيت توصيات البنك المختار", use_container_width=True, type="primary")
 
             generate_all_decisions_btn = st.button(
-                f"⚡ اعتماد توصيات كافة البنوك المسجلة ({len(recorded_banks_dec)})",
+                f"⚡ اعتماد توصيات كافة البنوك المسجلة ",
                 use_container_width=True,
                 type="secondary"
             )
@@ -2169,7 +2169,7 @@ with tab4:
             """
 
             st.download_button(
-                label=f"📥 تحميل تقرير لوحة دعم القرار الشامل ({dec_count}) (Word)",
+                label=f"📥 تحميل تقرير لوحة دعم القرار الشامل ",
                 data=dec_word_html.encode("utf-8-sig"),
                 file_name="تقرير_لوحة_دعم_القرار_المصرفي_الشامل.doc",
                 mime="application/msword",
@@ -2269,8 +2269,8 @@ with tab4:
 with tab5:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h3>📑 أداة توليد التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>
-        <p>قم بالضغط على زر التوليد الفوري أدناه لتجميع ومراجعة التقرير التنفيذي الموحد والنتائج التحليلية المحدثة ديناميكياً.</p>
+        <h3>📑 أداة استخراج التقرير التنفيذي الموحد لحوكمة القطاع المصرفي</h3>
+        <p>قم بالضغط على مفتاح التوليد الفوري أدناه لتجميع ومراجعة التقرير التنفيذي الموحد والنتائج التحليلية المحدثة ديناميكياً.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -2373,7 +2373,7 @@ with tab5:
             top_block_html = f"""
             <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; margin-bottom: 25px;" dir="rtl">
                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏆 مؤشرات الأداء العام والريادة المصرفية:</h4>
-                <p style="margin-bottom: 8px;">يتصدّر البنك التالي قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب: <span style="font-weight: bold; color: {CBE_GOLD};">{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
+                <p style="margin-bottom: 8px;">يتصدر البنك  <span style="font-weight: bold; color: {CBE_GOLD};" قائمة الحوكمة الذكية المستدامة وفق الترتيب التنازلي للمؤشر المركب:>{top_bank}</span> بقيمة مركبة تبلغ {top_score_str}.</p>
                 <div style="background: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #CBD5E1; margin-top: 10px; margin-bottom: 10px;">
                     <p style="margin: 0 0 6px 0; color: {CBE_NAVY}; font-weight: bold;">🏛️ الملامح التأسيسية والمعطيات التاريخية للبنك المتصدر ({top_bank}):</p>
                     <p style="margin: 0; color: #334155; font-size: 13.5px; line-height: 1.7;">{top_bank_profile_info}</p>
