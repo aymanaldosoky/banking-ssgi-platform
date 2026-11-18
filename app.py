@@ -3161,6 +3161,150 @@ def load_survey_log_from_cloud():
     finally:
         if conn:
             conn.close()
+# ==============================================================================
+# دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (موحّدة وآمنة)
+# ==============================================================================
+import uuid
+import psycopg2
+import streamlit.components.v1 as components
+
+
+def get_db_connection():
+    """إنشاء اتصال آمن ومباشر مع قاعدة البيانات السحابية عبر st.secrets"""
+    if "postgres" in st.secrets and "url" in st.secrets["postgres"]:
+        conn_str = st.secrets["postgres"]["url"]
+        if "?" not in conn_str:
+            conn_str += "?sslmode=require&connect_timeout=15"
+        return psycopg2.connect(conn_str)
+    raise ValueError("رابط الاتصال غير معرف في st.secrets['postgres']['url']")
+
+
+def init_db():
+    """إنشاء وتحديث جدول الاستبيان تلقائياً في Supabase"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS survey_responses (
+                response_id TEXT PRIMARY KEY,
+                respondent_name TEXT,
+                bank_name TEXT,
+                org_type TEXT,
+                degree TEXT,
+                specialty TEXT,
+                job_level TEXT,
+                exp_years TEXT,
+                is_listed TEXT,
+                survey_route TEXT,
+                w_sip INT,
+                w_ig INT,
+                w_sr INT,
+                avg_sip FLOAT,
+                avg_ig FLOAT,
+                avg_sr FLOAT,
+                answers JSONB,
+                comments TEXT,
+                submitted_at TEXT
+            );
+        """)
+        # إجبار إضافة العمود في حال كان الجدول منشأً مسبقاً قبل التحديث
+        cur.execute("ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS respondent_name TEXT;")
+        conn.commit()
+        cur.close()
+        return True, "تم الاتصال وتحديث هيكل الجدول بنجاح!"
+    except Exception as e:
+        return False, str(e)
+    finally:
+        if conn:
+            conn.close()
+
+
+def save_survey_to_cloud(rec):
+    """حفظ بيانات الاستجابة مباشرة وبسرعة عالية في السحابة"""
+    ok, err_msg = init_db()
+    if not ok:
+        raise RuntimeError(f"فشل تهيئة قاعدة البيانات: {err_msg}")
+
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        answers = {k: v for k, v in rec.items() if k.startswith("العبارة_")}
+        respondent_val = str(rec.get("الاسم (اختياري)", "") or "").strip()
+
+        cur.execute("""
+            INSERT INTO survey_responses (
+                response_id, respondent_name, bank_name, org_type, degree, specialty, job_level,
+                exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
+                avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+            ON CONFLICT (response_id) DO NOTHING;
+        """, (
+            rec["معرف الاستجابة"], respondent_val, rec["اسم البنك"], rec["طبيعة المؤسسة"],
+            rec["المؤهل العلمي"], rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"],
+            rec["مقيدة بالبورصة"], rec["مسار الاستبيان"], rec["وزن منصات المعلومات (%)"],
+            rec["وزن الحوكمة المؤسسية (%)"], rec["وزن تقارير الاستدامة (%)"],
+            rec["متوسط محور منصات المعلومات"], rec["متوسط محور الحوكمة المؤسسية"],
+            rec["متوسط محور تقارير الاستدامة"], json.dumps(answers, ensure_ascii=False),
+            rec["ملاحظات ومقترحات إضافية"], rec["وقت الإرسال"]
+        ))
+        conn.commit()
+        cur.close()
+    finally:
+        conn.close()
+
+
+def load_survey_log_from_cloud():
+    """استرجاع الاستجابات وترتيب عمود الاسم في المقدمة وتفكيك العبارات الـ 31"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM survey_responses ORDER BY submitted_at DESC;")
+        rows = cur.fetchall()
+        col_names = [desc[0] for desc in cur.description] if cur.description else []
+        cur.close()
+
+        if not rows or not col_names:
+            return pd.DataFrame()
+
+        df = pd.DataFrame(rows, columns=col_names)
+
+        # وضع respondent_name بعد response_id مباشرة ليسهل رؤيته في الجدول وملف الإكسيل
+        if "respondent_name" in df.columns and "response_id" in df.columns:
+            cols = list(df.columns)
+            cols.remove("respondent_name")
+            idx = cols.index("response_id") + 1
+            cols.insert(idx, "respondent_name")
+            df = df[cols]
+
+        if 'answers' in df.columns:
+            def _parse_ans(val):
+                if isinstance(val, dict):
+                    return val
+                if isinstance(val, str):
+                    try:
+                        return json.loads(val)
+                    except Exception:
+                        return {}
+                return {}
+
+            parsed_series = df['answers'].apply(_parse_ans)
+            answers_df = pd.json_normalize(parsed_series)
+
+            stmt_cols = [f"العبارة_{i}" for i in range(1, 32) if f"العبارة_{i}" in answers_df.columns]
+            other_stmt_cols = [c for c in answers_df.columns if c not in stmt_cols]
+            answers_df = answers_df[stmt_cols + other_stmt_cols]
+
+            df = pd.concat([df.drop(columns=['answers']), answers_df], axis=1)
+        return df
+    except Exception:
+        return pd.DataFrame()
+    finally:
+        if conn:
+            conn.close()
+
+
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Dual-Channel: Platform + Kobo)
 # ------------------------------------------------------------------------------
@@ -3483,13 +3627,10 @@ with tab7:
                 st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)", ["نعم", "لا"],
                          index=["نعم", "لا"].index(cur) if cur in ["نعم", "لا"] else None, horizontal=True,
                          key="w_listed", on_change=_sync, args=("w_listed", "listed"))
-                # ربط مباشر مع المخزن S لضمان التقاط الاسم حتى بدون الضغط على Enter
-                S["name"] = st.text_input(
-                    "الاسم (اختياري)",
-                    value=S.get("name", ""),
-                    placeholder="يمكنكم ترك هذا الحقل فارغاً",
-                    key="w_name"
-                )
+                # قراءة الاسم مباشرة وتخزينه في S["name"] لضمان التقاطه حتى دون ضغط Enter
+                S["name"] = st.text_input("الاسم (اختياري)", value=S.get("name", ""),
+                                          placeholder="يمكنكم ترك هذا الحقل فارغاً",
+                                          key="w_name", on_change=_sync, args=("w_name", "name"))
                 st.markdown(f"""
                 <div dir="rtl" style="background:#F8FAFC;border:1.5px solid {CBE_GOLD};border-radius:10px;padding:10px 14px;margin-top:8px;text-align:right;">
                     <span style="font-weight:700;color:{CBE_NAVY};font-size:13.5px;">🔒 تنويه: جميع المعلومات الواردة في هذا الاستبيان تخضع للسرية الكاملة، ولا تُستخدم إلا لأغراض البحث العلمي فقط.</span>
@@ -3534,21 +3675,19 @@ with tab7:
                     args=("wi_weights_confirmed", "weights_confirmed")
                 )
 
-                S["comments"] = st.text_area(
-                    "💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
-                    value=S.get("comments", ""),
-                    placeholder="اكتب الملاحظات أو المقترحات هنا...",
-                    key="wi_comments",
-                    height=120
-                )
+                S["comments"] = st.text_area("💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
+                                             value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
+                                             key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
 
         # ----------------------------------------------------------------------
         # 5) أزرار التنقل والإرسال بـ Callback آمن
         # ----------------------------------------------------------------------
         def _go(delta):
-            # تثبيت قيمة الاسم قبل الانتقال بين المراحل
-            if "w_name" in st.session_state:
-                S["name"] = st.session_state.get("w_name", "")
+            # حفظ قيمة الاسم والملاحظات احتياطياً قبل التنقل بين الخطوات
+            if "w_name" in st.session_state and st.session_state["w_name"] is not None:
+                S["name"] = st.session_state["w_name"]
+            if "wi_comments" in st.session_state and st.session_state["wi_comments"] is not None:
+                S["comments"] = st.session_state["wi_comments"]
             st.session_state.survey_wizard_step += delta
 
         if not already_submitted:
@@ -3579,9 +3718,9 @@ with tab7:
                             sc = axis_scores[ax]
                             return round(sum(sc) / len(sc), 2) if ax in axes_required and sc else None
 
+                        resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                         raw_name = st.session_state.get("w_name") or S.get("name", "")
                         raw_comments = st.session_state.get("wi_comments") or S.get("comments", "")
-                        resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                         rec = {
                             "معرف الاستجابة": resp_id,
                             "الاسم (اختياري)": clean_text(raw_name),
