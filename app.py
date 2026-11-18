@@ -2442,7 +2442,7 @@ with tab6:
     st.markdown("---")
 
     # ==========================================================================
-    # الموديول الأول: 📄 1. التحليل الذكي وتقييم تقارير الاستدامة عبر Gemini API
+    # الموديول الأول: 🔍 1. التحليل الذكي وتقييم تقارير الاستدامة عبر Gemini API
     # ==========================================================================
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
@@ -2457,11 +2457,11 @@ with tab6:
 
     with col_scorer_in:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-        all_registered_banks_eval = (
-            list(set([item["البنك"] for item in st.session_state.get("history_state", [])]))
-            if st.session_state.get("history_state")
-            else BANKS_LIST_AR
-        )
+        registered_names_only = list(dict.fromkeys([
+            item["البنك"] for item in st.session_state.get("history_state", [])
+            if isinstance(item, dict) and "البنك" in item
+        ]))
+        all_registered_banks_eval = registered_names_only if registered_names_only else BANKS_LIST_AR
 
         eval_bank_selected = st.selectbox(
             "اختر البنك المصرفي المراد تقييم تقريره",
@@ -2487,6 +2487,10 @@ with tab6:
         )
 
         run_doc_eval_btn = st.button("🚀 بدء التدقيق الذكي وحساب نسبة الامتثال", use_container_width=True, type="primary")
+        if st.session_state.get("last_esg_audit_result"):
+            if st.button("🗑️ مسح نتيجة التدقيق الحالية", use_container_width=True, type="secondary", key="clear_esg_audit_btn"):
+                del st.session_state["last_esg_audit_result"]
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_scorer_out:
@@ -2544,7 +2548,7 @@ with tab6:
 
                             response = None
                             last_model_err = None
-                            for _m_name in ["gemini-3.8-flash", "gemini-3-flash", "gemini-2.5-pro", "gemini-2.0-flash"]:
+                            for _m_name in ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]:
                                 try:
                                     response = client.models.generate_content(
                                         model=_m_name,
@@ -2565,9 +2569,10 @@ with tab6:
 
                             if not response or not response.text:
                                 raise RuntimeError(f"تعذر الوصول للنماذج: {last_model_err}")
-                            if response and response.text:
-                                ai_eval_data = json.loads(response.text)
-                                used_ai_engine = True
+
+                            raw_json_txt = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.text.strip())
+                            ai_eval_data = json.loads(raw_json_txt)
+                            used_ai_engine = True
 
                         except Exception as e:
                             st.warning(f"⚠️ تعذر الاتصال المباشر بمحرك Gemini ({e})، سيتم التبديل للتحليل النصي الاحتياطي.")
@@ -2603,76 +2608,143 @@ with tab6:
                             "recommendation": f"يُوصى باستكمال إفصاحات ({rubric_standard.split('(')[0]}) وإخضاع التقرير لتوكيد خارجي مستقل."
                         }
 
-                    is_matched = bool(ai_eval_data.get("bank_matched", True))
-                    detected_entity = ai_eval_data.get("detected_entity", eval_bank_selected)
-                    env_score = round(float(ai_eval_data.get("env_score", 70.0)), 1)
-                    soc_score = round(float(ai_eval_data.get("soc_score", 70.0)), 1)
-                    gov_score = round(float(ai_eval_data.get("gov_score", 70.0)), 1)
-
+                    env_score = min(100.0, max(0.0, round(float(ai_eval_data.get("env_score", 70.0)), 1)))
+                    soc_score = min(100.0, max(0.0, round(float(ai_eval_data.get("soc_score", 70.0)), 1)))
+                    gov_score = min(100.0, max(0.0, round(float(ai_eval_data.get("gov_score", 70.0)), 1)))
                     weighted_overall_score = round((env_score * 0.35) + (soc_score * 0.30) + (gov_score * 0.35), 2)
-                    score_badge = get_colored_score_html(weighted_overall_score)
-                    strengths_list = ai_eval_data.get("strengths", [])
-                    gaps_list = ai_eval_data.get("gaps", [])
-                    recommendation_txt = ai_eval_data.get("recommendation", "")
 
-                    if not is_matched:
-                        st.markdown(flat_html(f"""
-                        <div style="background: #FEF2F2; border: 1.5px solid #EF4444; border-radius: 10px; padding: 15px; margin-bottom: 15px;" dir="rtl">
-                            <h4 style="color: #991B1B; margin: 0 0 6px 0; font-weight: bold;">⚠️ تنبيه عدم مطابقة التقرير مع البنك المختار:</h4>
-                            <p style="color: #7F1D1D; margin: 0; font-size: 13.5px; line-height: 1.6;">
-                            الملف المرفوع (<b>{uploaded_esg_file.name}</b>) يخص (<b>{detected_entity}</b>) ولا يطابق البنك المختار (<b>{eval_bank_selected}</b>). تم عرض نتائج التدقيق الفني مع تسجيل فجوة الإسناد.
-                            </p>
-                        </div>
-                        """), unsafe_allow_html=True)
+                    st.session_state["last_esg_audit_result"] = {
+                        "bank": eval_bank_selected,
+                        "file_name": uploaded_esg_file.name,
+                        "rubric": rubric_standard,
+                        "used_ai_engine": used_ai_engine,
+                        "active_model_used": active_model_used,
+                        "is_matched": bool(ai_eval_data.get("bank_matched", True)),
+                        "detected_entity": ai_eval_data.get("detected_entity", eval_bank_selected),
+                        "env_score": env_score,
+                        "soc_score": soc_score,
+                        "gov_score": gov_score,
+                        "weighted_overall_score": weighted_overall_score,
+                        "strengths": ai_eval_data.get("strengths", []),
+                        "gaps": ai_eval_data.get("gaps", []),
+                        "recommendation": ai_eval_data.get("recommendation", "")
+                    }
 
-                    engine_label = f"🤖 تدقيق ذكي عميق عبر {active_model_used}" if used_ai_engine else "⚙️ تحليل نصي احتياطي"
-                    st.success(f"✅ تم تدقيق التقرير بنجاح لـ ({eval_bank_selected}) وفق معيار ({rubric_standard})")
+        audit_res = st.session_state.get("last_esg_audit_result")
+        if audit_res:
+            a_bank = audit_res["bank"]
+            a_file = audit_res["file_name"]
+            a_rubric = audit_res["rubric"]
+            is_matched = audit_res["is_matched"]
+            detected_entity = audit_res["detected_entity"]
+            env_score = audit_res["env_score"]
+            soc_score = audit_res["soc_score"]
+            gov_score = audit_res["gov_score"]
+            weighted_overall_score = audit_res["weighted_overall_score"]
+            score_badge = get_colored_score_html(weighted_overall_score)
+            strengths_list = audit_res["strengths"]
+            gaps_list = audit_res["gaps"]
+            recommendation_txt = audit_res["recommendation"]
+            engine_label = f"🤖 تدقيق ذكي عميق عبر {audit_res['active_model_used']}" if audit_res["used_ai_engine"] else "⚙️ تحليل نصي احتياطي"
 
-                    eval_result_card = f"""
-                    <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
-                            <h4 style="color: {CBE_NAVY}; font-weight: bold; margin: 0; font-size: 16px;">
-                                📊 التقييم القياسي للتقرير - <span style="color: {CBE_GOLD};">{eval_bank_selected}</span>
-                            </h4>
-                            <span style="font-size: 12px; font-weight: bold; color: #64748B;">
-                                المعيار: {rubric_standard.split('(')[0]} | {engine_label}
-                            </span>
-                        </div>
+            if not is_matched:
+                st.markdown(flat_html(f"""
+                <div style="background: #FEF2F2; border: 1.5px solid #EF4444; border-radius: 10px; padding: 15px; margin-bottom: 15px;" dir="rtl">
+                    <h4 style="color: #991B1B; margin: 0 0 6px 0; font-weight: bold;">⚠️ تنبيه عدم مطابقة التقرير مع البنك المختار:</h4>
+                    <p style="color: #7F1D1D; margin: 0; font-size: 13.5px; line-height: 1.6;">
+                    الملف المرفوع (<b>{a_file}</b>) يخص (<b>{detected_entity}</b>) ولا يطابق البنك المختار (<b>{a_bank}</b>). تم عرض نتائج التدقيق الفني مع تسجيل فجوة الإسناد.
+                    </p>
+                </div>
+                """), unsafe_allow_html=True)
 
-                        <p style="color: #475569; font-size: 13px; margin-bottom: 15px;">
-                            التصنيف العام: <b>{score_badge}</b> | اسم الملف: <b>{uploaded_esg_file.name}</b>
-                        </p>
+            st.success(f"✅ تم تدقيق التقرير بنجاح لـ ({a_bank}) وفق معيار ({a_rubric})")
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
-                            <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; text-align: center;">
-                                <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">الدرجة الكلية الموزونة</span>
-                                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{weighted_overall_score}%</div>
-                            </div>
-                            <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid #10B981; text-align: center;">
-                                <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">المحور البيئي (35%)</span>
-                                <div style="font-size: 22px; font-weight: 900; color: #10B981; margin-top: 4px;">{env_score}%</div>
-                            </div>
-                            <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid #3B82F6; text-align: center;">
-                                <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">المحور الاجتماعي (30%)</span>
-                                <div style="font-size: 22px; font-weight: 900; color: #3B82F6; margin-top: 4px;">{soc_score}%</div>
-                            </div>
-                            <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid {CBE_NAVY}; text-align: center;">
-                                <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">محور الحوكمة (35%)</span>
-                                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{gov_score}%</div>
-                            </div>
-                        </div>
+            eval_result_card = f"""
+            <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+                    <h4 style="color: {CBE_NAVY}; font-weight: bold; margin: 0; font-size: 16px;">
+                        📊 التقييم القياسي للتقرير - <span style="color: {CBE_GOLD};">{a_bank}</span>
+                    </h4>
+                    <span style="font-size: 12px; font-weight: bold; color: #64748B;">
+                        المعيار: {a_rubric.split('(')[0]} | {engine_label}
+                    </span>
+                </div>
 
-                        <div style="background: {CBE_BG}; padding: 16px; border-radius: 10px; border-right: 5px solid {CBE_NAVY};">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; font-size: 14px;">🔍 نتائج التدقيق الميداني لنقاط القوة والفجوات الهيكلية:</p>
-                            <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
-                                {"".join([f"<li>🟢 <b>نقطة قوة:</b> {s}</li>" for s in strengths_list])}
-                                {"".join([f"<li>🟡 <b>فجوة امتثال (Gap):</b> {g}</li>" for g in gaps_list])}
-                                <li>💡 <b>التوصية التنفيذية:</b> {recommendation_txt}</li>
-                            </ul>
-                        </div>
+                <p style="color: #475569; font-size: 13px; margin-bottom: 15px;">
+                    التصنيف العام: <b>{score_badge}</b> | اسم الملف: <b>{a_file}</b>
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
+                    <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; text-align: center;">
+                        <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">الدرجة الكلية الموزونة</span>
+                        <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{weighted_overall_score}%</div>
                     </div>
-                    """
-                    st.markdown(flat_html(eval_result_card), unsafe_allow_html=True)
+                    <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid #10B981; text-align: center;">
+                        <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">المحور البيئي (35%)</span>
+                        <div style="font-size: 22px; font-weight: 900; color: #10B981; margin-top: 4px;">{env_score}%</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid #3B82F6; text-align: center;">
+                        <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">المحور الاجتماعي (30%)</span>
+                        <div style="font-size: 22px; font-weight: 900; color: #3B82F6; margin-top: 4px;">{soc_score}%</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid {CBE_NAVY}; text-align: center;">
+                        <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">محور الحوكمة (35%)</span>
+                        <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{gov_score}%</div>
+                    </div>
+                </div>
+
+                <div style="background: {CBE_BG}; padding: 16px; border-radius: 10px; border-right: 5px solid {CBE_NAVY};">
+                    <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; font-size: 14px;">🔍 نتائج التدقيق الميداني لنقاط القوة والفجوات الهيكلية:</p>
+                    <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
+                        {"".join([f"<li>🟢 <b>نقطة قوة:</b> {s}</li>" for s in strengths_list])}
+                        {"".join([f"<li>🟡 <b>فجوة امتثال (Gap):</b> {g}</li>" for g in gaps_list])}
+                        <li>💡 <b>التوصية التنفيذية:</b> {recommendation_txt}</li>
+                    </ul>
+                </div>
+            </div>
+            """
+            st.markdown(flat_html(eval_result_card), unsafe_allow_html=True)
+
+            # أزرار إضافية: تصدير تقرير التدقيق + مزامنة النتيجة مع سجل البنك في المنصة
+            col_aud_act1, col_aud_act2 = st.columns(2)
+            with col_aud_act1:
+                audit_word_doc = f"""
+                <html dir="rtl">
+                <head><meta charset="utf-8"><title>تقرير تدقيق الاستدامة - {a_bank}</title></head>
+                <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl;">
+                    <h1 style="color: {CBE_NAVY}; text-align: center;">تقرير التدقيق الآلي لتقارير الاستدامة (AI ESG Audit)</h1>
+                    <h3 style="color: {CBE_GOLD}; text-align: center;">البنك: {a_bank} | المعيار: {a_rubric}</h3>
+                    <hr>
+                    <p><b>الدرجة الكلية الموزونة:</b> {weighted_overall_score}% (البيئي: {env_score}% | الاجتماعي: {soc_score}% | الحوكمة: {gov_score}%)</p>
+                    <h4>نقاط القوة:</h4><ul>{"".join(f"<li>{s}</li>" for s in strengths_list)}</ul>
+                    <h4>فجوات الامتثال:</h4><ul>{"".join(f"<li>{g}</li>" for g in gaps_list)}</ul>
+                    <p><b>التوصية التنفيذية:</b> {recommendation_txt}</p>
+                </body>
+                </html>
+                """
+                st.download_button(
+                    label="📥 تحميل تقرير التدقيق الآلي (Word)",
+                    data=audit_word_doc.encode("utf-8-sig"),
+                    file_name=f"تقرير_تدقيق_الاستدامة_{a_bank}.doc",
+                    mime="application/msword",
+                    use_container_width=True,
+                    key="dl_ai_audit_word"
+                )
+
+            with col_aud_act2:
+                existing_bank_rec = next(
+                    (item for item in st.session_state.get("history_state", []) if isinstance(item, dict) and item.get("البنك") == a_bank),
+                    None
+                )
+                if existing_bank_rec and is_matched:
+                    if st.button(f"🔄 تحديث محور الاستدامة (SR) للبنك إلى {weighted_overall_score}%", use_container_width=True, key="sync_sr_to_ssgi"):
+                        s_old = float(existing_bank_rec["منصات المعلومات (40%)"])
+                        i_old = float(existing_bank_rec["الحوكمة المؤسسية (30%)"])
+                        r_new = round(weighted_overall_score, 2)
+                        new_ssgi = round((s_old * 0.40) + (i_old * 0.30) + (r_new * 0.30), 2)
+                        existing_bank_rec["تقارير الاستدامة (30%)"] = r_new
+                        existing_bank_rec["مؤشر SSGI المركب"] = new_ssgi
+                        st.success(f"✅ تم تحديث درجة محور الاستدامة (SR) إلى {r_new}% وإعادة احتساب مؤشر SSGI المركب ليصبح {new_ssgi}%.")
         else:
             st.info("👈 قم باختيار البنك ورفع ملف التقرير (PDF/TXT) ثم اضغط على زر بدء التدقيق الذكي لعرض نسبة الامتثال ونقاط القوة والفجوات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -2685,7 +2757,10 @@ with tab6:
     st.markdown("#### 📋 2. توليد مسودة تقارير الاستدامة التوجيهية التفصيلية للبنك المختار")
 
     all_registered_banks = (
-        list(set([item["البنك"] for item in st.session_state.get("history_state", [])]))
+        list(dict.fromkeys([
+            item["البنك"] for item in st.session_state.get("history_state", [])
+            if isinstance(item, dict) and "البنك" in item
+        ]))
         if st.session_state.get("history_state")
         else []
     )
@@ -2724,7 +2799,7 @@ with tab6:
                 (
                     item
                     for item in st.session_state.history_state
-                    if item["البنك"] == st.session_state.draft_bank_name
+                    if isinstance(item, dict) and item.get("البنك") == st.session_state.draft_bank_name
                 ),
                 None,
             )
@@ -2734,11 +2809,20 @@ with tab6:
                 s_val = bank_record["منصات المعلومات (40%)"]
                 i_val = bank_record["الحوكمة المؤسسية (30%)"]
                 r_val = bank_record["تقارير الاستدامة (30%)"]
-                
-                try:
-                    profile_info = process_rag_gemini_query(b_name, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟")
-                except Exception:
-                    profile_info = "بنك مصرفي رائد عامل في القطاع المصرفي المصري مسجل لدى البنك المركزي المصري."
+
+                # تخزين النبذة التعريفية للبنك في session_state لتفادي إعادة الاستعلام في كل تفاعل
+                if "bank_profiles_cache" not in st.session_state:
+                    st.session_state["bank_profiles_cache"] = {}
+                if b_name not in st.session_state["bank_profiles_cache"]:
+                    try:
+                        st.session_state["bank_profiles_cache"][b_name] = process_rag_gemini_query(
+                            b_name, "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
+                        )
+                    except Exception:
+                        st.session_state["bank_profiles_cache"][b_name] = (
+                            "بنك مصرفي رائد عامل في القطاع المصرفي المصري مسجل لدى البنك المركزي المصري."
+                        )
+                profile_info = st.session_state["bank_profiles_cache"][b_name]
 
                 st.markdown(flat_html(f"""
                 <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px;" dir="rtl">
@@ -2752,10 +2836,10 @@ with tab6:
                     <div style="background: {CBE_BG}; padding: 18px; border-radius: 10px; border-right: 5px solid {CBE_GOLD};" dir="rtl">
                         <p style="margin: 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">📌 ملخص مؤشرات التشخيص المعتمدة في المنصة لبنك ({b_name}):</p>
                         <p style="margin: 8px 0 0 0; color: #1E293B; line-height: 1.8; font-size: 14px;">
-                        - المؤشر المركب للحوكمة الذكية المستدامة (SSGI): <b>{b_score}%</b><br>
-                        - جاهزية منصات المعلومات وبنية التقنية (SIP - وزن 40%): <b>{s_val}%</b> — {describe_sip(s_val)}<br>
-                        - كفاءة الحوكمة المؤسسية والامتثال (IG - وزن 30%): <b>{i_val}%</b> — {describe_ig(i_val)}<br>
-                        - أداء تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%): <b>{r_val}%</b> — {describe_sr(r_val)}
+- المؤشر المركب للحوكمة الذكية المستدامة (SSGI): <b>{b_score}%</b><br>
+- جاهزية منصات المعلومات وبنية التقنية (SIP - وزن 40%): <b>{s_val}%</b> — {describe_sip(s_val)}<br>
+- كفاءة الحوكمة المؤسسية والامتثال (IG - وزن 30%): <b>{i_val}%</b> — {describe_ig(i_val)}<br>
+- أداء تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%): <b>{r_val}%</b> — {describe_sr(r_val)}
                         </p>
                     </div>
                     """), unsafe_allow_html=True)
@@ -2764,21 +2848,21 @@ with tab6:
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
                         <p><b>الملامح التأسيسية وهيكل الملكية:</b> {profile_info}</p>
-                        <p><b>السياسات والالتزام المؤسسي:</b> يلتزم بنك ({b_name}) بالإفصاح الشفاف عن هيكل الإشراف المؤسسي ودور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه وإدارة الأنشطة والتمويل المستدام. وسجل البنك مؤشر حوكمة مؤسسية بواقع ({i_val}%), مما يعكس متانة أطر التدقيق الداخلي، سياسات تجنب تعارض المصالح، واستقلالية الأعضاء المستقلين في هيكل اللجان، بما يتماشى مع تعليمات وضوابط البنك المركزي المصري.</p>
+                        <p><b>السياسات والالتزام المؤسسي:</b> يلتزم بنك ({b_name}) بالإفصاح الشفاف عن هيكل الإشراف المؤسسي ودور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه وإدارة الأنشطة والتمويل المستدام. وسجل البنك مؤشر حوكمة مؤسسية بواقع ({i_val}%)، مما يعكس متانة أطر التدقيق الداخلي، سياسات تجنب تعارض المصالح، واستقلالية الأعضاء المستقلين في هيكل اللجان، بما يتماشى مع تعليمات وضوابط البنك المركزي المصري.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
                 with st.expander("البند الثاني: الإفصاحات البيئية وتمويل المناخ وإدارة البصمة الكربونية (GRI 302/305 & ISSB S2)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
-                        <p><b>الأداء البيئي والتمويل المستدام:</b> استناداً إلى مستوى أداء الاستدامة ومخاطر المناخ المسجل بواقع ({r_val}%), يعمل بنك ({b_name}) على التوسع المدروس في محفظة الأصول الخضراء، تمويل مشروعات الطاقة المتجددة، وكفاءة استخدام الموارد. كما يلتزم البنك بقياس البصمة الكربونية التشغيلية (Scopes 1, 2, 3) لفروع البنك ومراكز البيانات، وإدماج اختبارات التحمل المناخي (Climate Stress Testing) ضمن تقييم الجدارة الائتمانية للمحفظة المؤسسية للعملاء الكبار.</p>
+                        <p><b>الأداء البيئي والتمويل المستدام:</b> استناداً إلى مستوى أداء الاستدامة ومخاطر المناخ المسجل بواقع ({r_val}%)، يعمل بنك ({b_name}) على التوسع المدروس في محفظة الأصول الخضراء، تمويل مشروعات الطاقة المتجددة، وكفاءة استخدام الموارد. كما يلتزم البنك بقياس البصمة الكربونية التشغيلية (Scopes 1, 2, 3) لفروع البنك ومراكز البيانات، وإدماج اختبارات التحمل المناخي (Climate Stress Testing) ضمن تقييم الجدارة الائتمانية للمحفظة المؤسسية للعملاء الكبار.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
                 with st.expander("البند الثالث: الإفصاحات المجتمعية والشمول المالي وتطوير رأس المال البشري (GRI 401/405/413)", expanded=False):
                     st.markdown(flat_html(f"""
                     <div dir="rtl" style="text-align: right; line-height: 1.9;">
-                        <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs), تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
+                        <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%)، يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
                     </div>
                     """), unsafe_allow_html=True)
 
@@ -2809,13 +2893,13 @@ with tab6:
                     <hr>
                     <h3>1️⃣ البند الأول: الإفصاح عن الحوكمة المؤسسية وهيكل اتخاذ القرار واستراتيجية الاستدامة (GRI 2 & ISSB S1)</h3>
                     <p><b>الملامح التأسيسية وهيكل الملكية:</b> {profile_info}</p>
-                    <p><b>السياسات والالتزام المؤسسي:</b> يلتزم بنك ({b_name}) بالإفصاح الشفاف عن هيكل الإشراف المؤسسي ودور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه وإدارة الأنشطة والتمويل المستدام. وسجل البنك مؤشر حوكمة مؤسسية بواقع ({i_val}%), مما يعكس متانة أطر التدقيق الداخلي، سياسات تجنب تعارض المصالح، واستقلالية الأعضاء المستقلين في هيكل اللجان، بما يتماشى مع تعليمات وضوابط البنك المركزي المصري.</p>
+                    <p><b>السياسات والالتزام المؤسسي:</b> يلتزم بنك ({b_name}) بالإفصاح الشفاف عن هيكل الإشراف المؤسسي ودور مجلس الإدارة واللجان المنبثقة عنه (لجنة الاستدامة، لجنة المخاطر، ولجنة المراجعة) في توجيه وإدارة الأنشطة والتمويل المستدام. وسجل البنك مؤشر حوكمة مؤسسية بواقع ({i_val}%)، مما يعكس متانة أطر التدقيق الداخلي، سياسات تجنب تعارض المصالح، واستقلالية الأعضاء المستقلين في هيكل اللجان، بما يتماشى مع تعليمات وضوابط البنك المركزي المصري.</p>
                     <hr>
                     <h3>2️⃣ البند الثاني: الإفصاحات البيئية وتمويل المناخ وإدارة البصمة الكربونية (GRI 302/305 & ISSB S2)</h3>
-                    <p><b>الأداء البيئي والتمويل المستدام:</b> استناداً إلى مستوى أداء الاستدامة ومخاطر المناخ المسجل بواقع ({r_val}%), يعمل بنك ({b_name}) على التوسع المدروس في محفظة الأصول الخضراء، تمويل مشروعات الطاقة المتجددة، وكفاءة استخدام الموارد. كما يلتزم البنك بقياس البصمة الكربونية التشغيلية (Scopes 1, 2, 3) لفروع البنك ومراكز البيانات، وإدماج اختبارات التحمل المناخي (Climate Stress Testing) ضمن تقييم الجدارة الائتمانية للمحفظة المؤسسية للعملاء الكبار.</p>
+                    <p><b>الأداء البيئي والتمويل المستدام:</b> استناداً إلى مستوى أداء الاستدامة ومخاطر المناخ المسجل بواقع ({r_val}%)، يعمل بنك ({b_name}) على التوسع المدروس في محفظة الأصول الخضراء، تمويل مشروعات الطاقة المتجددة، وكفاءة استخدام الموارد. كما يلتزم البنك بقياس البصمة الكربونية التشغيلية (Scopes 1, 2, 3) لفروع البنك ومراكز البيانات، وإدماج اختبارات التحمل المناخي (Climate Stress Testing) ضمن تقييم الجدارة الائتمانية للمحفظة المؤسسية للعملاء الكبار.</p>
                     <hr>
                     <h3>3️⃣ البند الثالث: الإفصاحات المجتمعية والشمول المالي وتطوير رأس المال البشري (GRI 401/405/413)</h3>
-                    <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%), يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs), تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
+                    <p><b>المسؤولية الاجتماعية والتحول الرقمي:</b> استناداً إلى جاهزية البنية التحتية الرقمية ومنصات المعلومات المسجلة بواقع ({s_val}%)، يوجه بنك ({b_name}) استراتيجياته نحو تعزيز الشمول المالي، دعم المشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة في المناصب القيادية وفق مبادئ (WEPs)، وتوسيع نطاق الخدمات المصرفية الرقمية الآمنة، مع الالتزام التام بمعايير حماية سرية بيانات العملاء والامتثال للقواعد العامة لحماية البيانات (GDPR) والسيادة الرقمية.</p>
                     <hr>
                     <h3>4️⃣ البند الرابع: خطة التحرك الاستراتيجي والتوصيات التنفيذية المقترحة للبنك</h3>
                     <ul>
@@ -2876,7 +2960,7 @@ with tab6:
 
             <h3 style="color: {CBE_NAVY}; margin-top: 25px;">4️⃣ المحور الرابع: الإفصاحات المجتمعية والشمول المالي ورأس المال البشري (GRI 401/403/405/413)</h3>
             <ul>
-                <li><b>الشمول المالي والتحول الرقمي المستدام:</b> حجم ونطاق التمويلات الموجهة للمشروعات الصغيرة والمتوسطة (SMEs), تمكين المرأة والشباب، وتوسيع نطاق الخدمات المصرفية الرقمية في كافة المحافظات.</li>
+                <li><b>الشمول المالي والتحول الرقمي المستدام:</b> حجم ونطاق التمويلات الموجهة للمشروعات الصغيرة والمتوسطة (SMEs)، تمكين المرأة والشباب، وتوسيع نطاق الخدمات المصرفية الرقمية في كافة المحافظات.</li>
                 <li><b>رأس المال البشري وتكافؤ الفرص:</b> سياسات التوظيف العادل، برامج التدريب والتطوير المستمر للعاملين بالقطاع المصرفي، نسب تمثيل المرأة في الإدارة العليا، ومؤشرات الصحة والسلامة المهنية.</li>
                 <li><b>المسؤولية المجتمعية والاستثمار التنموي:</b> حجم الإنفاق المجتمعي الموجه لدعم المبادرات القومية (مثل قطاعات الصحة، التعليم، ودعم الأسر الأولى بالرعاية).</li>
                 <li><b>حماية حقوق العملاء وأمن البيانات:</b> معايير حماية سرية بيانات العملاء، سياسات الشفافية في تسعير الخدمات المصرفية، والامتثال لقواعد حماية البيانات الشخصية والسيادة الرقمية (GDPR).</li>
@@ -2943,9 +3027,6 @@ with tab6:
         <html dir="rtl">
         <head><meta charset="utf-8"><title>الدليل العملي الشامل لإعداد تقارير الاستدامة</title></head>
         <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
-            <h1 style="color: {CBE_NAVY}; text-align: center;">الدليل العملي الشامل والموسع لإعداد تقارير الاستدامة في القطاع المصرفي المصري</h1>
-            <p style="text-align: center; color: #64748B;">مرجع منهجي وتطبيقي متكامل (GRI Standards / ISSB S1 & S2 / SDG Impact Standards)</p>
-            <hr>
             {comprehensive_guide_html}
             <hr>
             <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
@@ -2960,6 +3041,7 @@ with tab6:
             mime="application/msword",
             use_container_width=True
         )
+
 # ==============================================================================
 # دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (موحّدة وآمنة)
 # ==============================================================================
@@ -3015,6 +3097,7 @@ def init_db():
 
 def save_survey_to_cloud(rec):
     """حفظ بيانات الاستجابة مباشرة وبسرعة عالية في السحابة"""
+    init_db()
     conn = get_db_connection()
     try:
         cur = conn.cursor()
@@ -3024,7 +3107,8 @@ def save_survey_to_cloud(rec):
                 response_id, bank_name, org_type, degree, specialty, job_level,
                 exp_years, is_listed, survey_route, w_sip, w_ig, w_sr,
                 avg_sip, avg_ig, avg_sr, answers, comments, submitted_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+            ON CONFLICT (response_id) DO NOTHING;
         """, (
             rec["معرف الاستجابة"], rec["اسم البنك"], rec["طبيعة المؤسسة"], rec["المؤهل العلمي"],
             rec["مجال التخصص الوظيفي"], rec["المستوى الوظيفي"], rec["سنوات الخبرة"], rec["مقيدة بالبورصة"],
@@ -3038,12 +3122,21 @@ def save_survey_to_cloud(rec):
         conn.close()
 
 def load_survey_log_from_cloud():
-    """استرجاع الاستجابات وتفكيك العبارات الـ 31 حتماً إلى أعمدة تفصيلية مستقلة"""
+    """استرجاع الاستجابات وتفكيك العبارات الـ 31 حتماً إلى أعمدة تفصيلية مستقلة بدون تحذيرات Pandas"""
     conn = None
     try:
         conn = get_db_connection()
-        df = pd.read_sql("SELECT * FROM survey_responses ORDER BY submitted_at DESC;", conn)
-        if not df.empty and 'answers' in df.columns:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM survey_responses ORDER BY submitted_at DESC;")
+        rows = cur.fetchall()
+        col_names = [desc[0] for desc in cur.description] if cur.description else []
+        cur.close()
+
+        if not rows or not col_names:
+            return pd.DataFrame()
+
+        df = pd.DataFrame(rows, columns=col_names)
+        if 'answers' in df.columns:
             def _parse_ans(val):
                 if isinstance(val, dict):
                     return val
@@ -3056,8 +3149,7 @@ def load_survey_log_from_cloud():
 
             parsed_series = df['answers'].apply(_parse_ans)
             answers_df = pd.json_normalize(parsed_series)
-            
-            # ترتيب أعمدة العبارات من 1 إلى 31
+
             stmt_cols = [f"العبارة_{i}" for i in range(1, 32) if f"العبارة_{i}" in answers_df.columns]
             other_stmt_cols = [c for c in answers_df.columns if c not in stmt_cols]
             answers_df = answers_df[stmt_cols + other_stmt_cols]
@@ -3069,7 +3161,6 @@ def load_survey_log_from_cloud():
     finally:
         if conn:
             conn.close()
-
 # ------------------------------------------------------------------------------
 # التبويب السابع: الاستبيان الموجه إلى فرق العمل (Dual-Channel: Platform + Kobo)
 # ------------------------------------------------------------------------------
