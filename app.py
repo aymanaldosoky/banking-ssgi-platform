@@ -3969,54 +3969,226 @@ with tab8:
 if tab9 is not None:
     with tab9:
         st.markdown("""
-        <div dir="rtl" style="text-align: right;">
-            <h3>🔒 لوحة تحكم المشرف وسجلات الزوار (Admin Dashboard & IP Logging)</h3>
-            <p>متابعة وتصدير سجلات دخول الزوار وعناوين الـ IP، بالإضافة إلى اختبار أداة تمايز الإجابات للمحرك.</p>
+        <div dir="rtl" style="text-align: right; margin-bottom: 18px;">
+            <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجلات الزوار وتدقيق الجودة (Admin Dashboard)</h3>
+            <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">مراقبة مؤشرات المنصة، تدقيق تمايز مخرجات محرك الذكاء الاصطناعي بين البنوك، وإدارة وتصدير سجلات دخول الزوار وعناوين IP.</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
+        # ----------------------------------------------------------------------
+        # 1) بطاقات المؤشرات السريعة لحالة المنظومة (System Overview KPIs)
+        # ----------------------------------------------------------------------
+        visitors_data_list = load_visitors_log_from_file()
+        df_v_raw = pd.DataFrame(visitors_data_list) if visitors_data_list else pd.DataFrame()
+        unique_ips_count = df_v_raw["عنوان IP"].nunique() if (not df_v_raw.empty and "عنوان IP" in df_v_raw.columns) else 0
+        diagnosed_banks_cnt = len([r for r in st.session_state.get("history_state", []) if isinstance(r, dict) and "مؤشر SSGI المركب" in r])
+        rag_queries_cnt = len(st.session_state.get("rag_query_history", []))
+        has_gemini_key = bool(st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY"))
+        has_supabase_url = bool("postgres" in st.secrets and "url" in st.secrets["postgres"])
+
+        st.markdown(flat_html(f"""
+        <div dir="rtl" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">إجمالي جلسات الدخول</span>
+                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{len(df_v_raw)}</div>
+                <span style="font-size: 11px; color: #475569;">عناوين IP فريدة: <b>{unique_ips_count}</b></span>
+            </div>
+            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">البنوك المُشخَّصة (الجلسة)</span>
+                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{diagnosed_banks_cnt}</div>
+                <span style="font-size: 11px; color: #475569;">استعلامات RAG: <b>{rag_queries_cnt}</b></span>
+            </div>
+            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {'#10B981' if has_gemini_key else '#EF4444'}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">حالة محرك Gemini AI</span>
+                <div style="font-size: 16px; font-weight: 800; color: {'#10B981' if has_gemini_key else '#EF4444'}; margin-top: 8px;">{'🟢 متصل ومفعّل' if has_gemini_key else '🔴 غير مفعّل'}</div>
+            </div>
+            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {'#10B981' if has_supabase_url else '#F59E0B'}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">سحابة الاستبيانات (Supabase)</span>
+                <div style="font-size: 16px; font-weight: 800; color: {'#10B981' if has_supabase_url else '#F59E0B'}; margin-top: 8px;">{'🟢 مهيأة للاتصال' if has_supabase_url else '🟡 وضع محلي'}</div>
+            </div>
+        </div>
+        """), unsafe_allow_html=True)
+
         st.markdown("---")
-        st.markdown("#### 🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (`audit_differentiation`)")
-        threshold_slider = st.slider("عتبة التشابه (Threshold)", 0.5, 0.99, 0.90, 0.01)
-        
-        if st.button("🚀 تشغيل فحص تمايز الإجابات", type="primary"):
-            sample_questions = [
+
+        # ----------------------------------------------------------------------
+        # 2) أداة فحص تدقيق التشابه والتمايز بين البنوك (audit_differentiation)
+        # ----------------------------------------------------------------------
+        st.markdown("""
+        <div dir="rtl" style="text-align: right; margin-bottom: 10px;">
+            <h4 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (<code>audit_differentiation</code>)</h4>
+            <p style="color: #64748B; font-size: 13px;">اختبار جودة واستقلالية إجابات المحرك الذكي عبر البنوك للتأكد من عدم تكرار النصوص القالبية وتجاوز عتبة التشابه الدلالي.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_aud_cfg1, col_aud_cfg2 = st.columns([1, 2], gap="medium")
+        with col_aud_cfg1:
+            threshold_slider = st.slider(
+                "عتبة التشابه المسموحة (Threshold)",
+                min_value=0.50,
+                max_value=0.99,
+                value=0.90,
+                step=0.01,
+                key="admin_diff_threshold",
+                help="أي زوج من الإجابات تتجاوز نسبة التشابه بينهما هذه القيمة سيتم رصده كتنبيه."
+            )
+            available_banks_only = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
+            selected_audit_banks = st.multiselect(
+                "نطاق البنوك للفحص (اتركه فارغاً لفحص كافة البنوك)",
+                options=available_banks_only,
+                default=[],
+                key="admin_audit_banks_sel"
+            )
+
+        with col_aud_cfg2:
+            default_audit_questions = [
                 "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
                 "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
                 "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
             ]
-            with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس نسبة التشابه..."):
-                try:
-                    flagged_pairs = audit_differentiation(BANKS_LIST_AR, sample_questions, threshold=threshold_slider)
-                except TypeError:
-                    flagged_pairs = audit_differentiation(threshold=threshold_slider)
-                if flagged_pairs:
-                    st.warning(f"⚠️ تنبيه: تم رصد {len(flagged_pairs)} حالة تجاوزت عتبة التشابه {threshold_slider}:")
-                    for item in flagged_pairs:
-                        if isinstance(item, (list, tuple)) and len(item) >= 4:
-                            q_item, b1, b2, ratio_val = item[0], item[1], item[2], item[3]
-                            st.markdown(f"- السـؤال: *{q_item}* بين **{b1}** و **{b2}** (نسبة التشابه: `{ratio_val}`)")
-                        else:
-                            st.markdown(f"- {item}")
-                else:
-                    st.success("✅ ممتاز! لا توجد حالات تجاوزت عتبة التشابه، الإجابات متميزة تماماً.")
+            custom_q_text = st.text_area(
+                "الأسئلة المعيارية للاختبار (سؤال واحد في كل سطر):",
+                value="\n".join(default_audit_questions),
+                height=115,
+                key="admin_audit_questions_box"
+            )
+
+        col_aud_btn1, col_aud_btn2 = st.columns([2, 1])
+        with col_aud_btn1:
+            run_diff_audit_btn = st.button("🚀 تشغيل فحص تمايز الإجابات الآن", type="primary", use_container_width=True, key="run_diff_audit_btn")
+        with col_aud_btn2:
+            if st.session_state.get("last_diff_audit_report"):
+                if st.button("🗑️ مسح نتيجة الفحص", type="secondary", use_container_width=True, key="clear_diff_audit_btn"):
+                    del st.session_state["last_diff_audit_report"]
+                    st.rerun()
+
+        if run_diff_audit_btn:
+            banks_to_check = selected_audit_banks if selected_audit_banks else available_banks_only
+            questions_to_check = [q.strip() for q in custom_q_text.splitlines() if q.strip()]
+
+            if len(banks_to_check) < 2:
+                st.warning("⚠️ يرجى اختيار بنكين على الأقل لإجراء المقارنة والتدقيق.")
+            elif not questions_to_check:
+                st.warning("⚠️ يرجى إدخال سؤال واحد على الأقل لتشغيل الفحص.")
+            else:
+                with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس معاملات التشابه..."):
+                    try:
+                        flagged_pairs = audit_differentiation(banks_to_check, questions_to_check, threshold=threshold_slider)
+                    except TypeError:
+                        flagged_pairs = audit_differentiation(threshold=threshold_slider)
+
+                    st.session_state["last_diff_audit_report"] = {
+                        "flagged": flagged_pairs or [],
+                        "threshold": threshold_slider,
+                        "banks_count": len(banks_to_check),
+                        "questions_count": len(questions_to_check),
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+
+        if "last_diff_audit_report" in st.session_state:
+            rep_audit = st.session_state["last_diff_audit_report"]
+            flagged = rep_audit["flagged"]
+            st.caption(f"🕒 آخر فحص: {rep_audit['timestamp']} | شمل {rep_audit['banks_count']} بنكاً و {rep_audit['questions_count']} أسئلة عند عتبة ({rep_audit['threshold']}).")
+
+            if flagged:
+                st.warning(f"⚠️ تنبيه: تم رصد **{len(flagged)}** حالة تجاوزت عتبة التشابه `{rep_audit['threshold']}`:")
+                structured_rows = []
+                for item in flagged:
+                    if isinstance(item, (list, tuple)) and len(item) >= 4:
+                        structured_rows.append({
+                            "السؤال المختبر": item[0],
+                            "البنك الأول": item[1],
+                            "البنك الثاني": item[2],
+                            "نسبة التشابه": round(float(item[3]), 4) if isinstance(item[3], (int, float)) else item[3]
+                        })
+                    else:
+                        structured_rows.append({"تفاصيل الحالة المرصودة": str(item)})
+
+                df_flagged = pd.DataFrame(structured_rows)
+                st.dataframe(df_flagged, use_container_width=True)
+
+                csv_flagged = df_flagged.to_csv(index=False).encode("utf-8-sig")
+                st.download_button(
+                    label="📥 تحميل تقرير حالات التشابه المرصودة (CSV)",
+                    data=csv_flagged,
+                    file_name="تقرير_تدقيق_تمايز_إجابات_البنوك.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="dl_flagged_diff_csv"
+                )
+            else:
+                st.success(f"✅ ممتاز! جميع الإجابات متمايزة ومستقلة تماماً ولم تتجاوز أي حالة عتبة التشابه ({rep_audit['threshold']}).")
 
         st.markdown("---")
-        st.markdown("#### 📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)")
-        visitors_data_list = load_visitors_log_from_file()
-        if visitors_data_list:
-            df_v = pd.DataFrame(visitors_data_list)
-            st.dataframe(df_v, use_container_width=True)
-            
-            csv_visitors = df_v.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل سجل الزوار والأفراد وعناوين IP (CSV)",
-                data=csv_visitors,
-                file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        else:
-            st.info("📂 لا توجد سجلات زيارات حتى الآن.")
 
-st.markdown(f'<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
+        # ----------------------------------------------------------------------
+        # 3) إدارة وتصدير سجلات الزوار وعناوين IP
+        # ----------------------------------------------------------------------
+        st.markdown("""
+        <div dir="rtl" style="text-align: right; margin-bottom: 10px;">
+            <h4 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)</h4>
+            <p style="color: #64748B; font-size: 13px;">متابعة حركة الدخول للمنصة وتصفية السجلات حسب الدور أو عنوان IP وتصديرها بصيغة Excel أو CSV.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if not df_v_raw.empty:
+            col_f1, col_f2 = st.columns([2, 1], gap="medium")
+            with col_f1:
+                search_ip_user = st.text_input(
+                    "🔎 بحث سريع (بالاسم أو عنوان IP أو وقت الدخول):",
+                    placeholder="اكتب للبحث الفوري في السجلات...",
+                    key="admin_visitor_search"
+                )
+            with col_f2:
+                roles_avail = ["الكل"] + (list(df_v_raw["الدور"].dropna().unique()) if "الدور" in df_v_raw.columns else [])
+                role_filter = st.selectbox("تصفية حسب الدور:", roles_avail, key="admin_visitor_role_filter")
+
+            df_v_filtered = df_v_raw.copy()
+            if role_filter != "الكل" and "الدور" in df_v_filtered.columns:
+                df_v_filtered = df_v_filtered[df_v_filtered["الدور"] == role_filter]
+            if search_ip_user.strip():
+                mask = df_v_filtered.astype(str).apply(
+                    lambda col: col.str.contains(search_ip_user.strip(), case=False, na=False)
+                ).any(axis=1)
+                df_v_filtered = df_v_filtered[mask]
+
+            # عرض الأحدث أولاً
+            df_v_display = df_v_filtered.iloc[::-1].reset_index(drop=True)
+            st.dataframe(df_v_display, use_container_width=True)
+
+            col_v_dl1, col_v_dl2, col_v_clr = st.columns([1.2, 1.2, 0.8], gap="medium")
+            with col_v_dl1:
+                csv_visitors = df_v_display.to_csv(index=False).encode("utf-8-sig")
+                st.download_button(
+                    label="📥 تحميل سجل الزوار (CSV)",
+                    data=csv_visitors,
+                    file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="dl_visitors_csv_btn"
+                )
+            with col_v_dl2:
+                vis_excel_buf = io.BytesIO()
+                with pd.ExcelWriter(vis_excel_buf, engine="openpyxl") as writer:
+                    df_v_display.to_excel(writer, index=False, sheet_name="سجل_الزوار")
+                st.download_button(
+                    label="📥 تحميل سجل الزوار (Excel .xlsx)",
+                    data=vis_excel_buf.getvalue(),
+                    file_name="سجل_الزوار_وعناوين_IP_للبنوك.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                    key="dl_visitors_xlsx_btn"
+                )
+            with col_v_clr:
+                if st.button("🗑️ تصفير السجل", use_container_width=True, type="secondary", key="clear_visitors_log_btn"):
+                    try:
+                        df_empty = pd.DataFrame(columns=["عنوان IP", "اسم المستخدم", "الدور", "وقت الدخول"])
+                        df_empty.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
+                        st.success("✅ تم مسح سجل الزوار بنجاح.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ تعذر مسح السجل: {e}")
+        else:
+            st.info("📂 لا توجد سجلات زيارات مسجلة حتى الآن.")
+
+st.markdown('<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
