@@ -521,18 +521,20 @@ if not st.session_state.authenticated:
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-        username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
+username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
         password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
 
         if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
-            if username_input == ADMIN_USER and hash_password(password_input) == ADMIN_PASS_HASH:
+            clean_user = username_input.strip().lower()
+            clean_pass = password_input.strip()
+
+            if clean_user == ADMIN_USER.strip().lower() and hash_password(clean_pass) == ADMIN_PASS_HASH:
                 st.session_state.authenticated = True
                 st.session_state.username = "مشرف النظام (Admin)"
                 st.session_state.role = "admin"
                 log_visitor_action("admin", "مشرف (Admin)")
                 st.rerun()
-            elif username_input == "user" and password_input == "123":
+            elif clean_user == "user" and clean_pass == "123":
                 st.session_state.authenticated = True
                 st.session_state.username = "باحث / مستخدم (User)"
                 st.session_state.role = "user"
