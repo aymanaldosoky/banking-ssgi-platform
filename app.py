@@ -2068,7 +2068,22 @@ with tab5:
                 use_container_width=True
             )
 
-# ==========================================================================
+# ------------------------------------------------------------------------------
+# التبويب السادس: تقييم ومولد تقارير الاستدامة والدليل العملي الشامل
+# ------------------------------------------------------------------------------
+with tab6:
+    st.markdown("""
+    <div dir="rtl" style="text-align: right;">
+        <h2 style="color: #002B49; font-weight: 800; margin-bottom: 6px;">📄 تقييم ومولد تقارير الاستدامة والدليل العملي الشامل (ESG Scorer & Generator)</h2>
+        <p style="color: #475569; font-size: 14.5px; line-height: 1.7;">
+        منظومة متكاملة تدمج بين <b>التحليل والتدقيق الذكي المباشر لتقارير الاستدامة المرفوعة عبر محرك Gemini</b>، وبين <b>توليد مسودات الإفصاح المخصصة والدليل العملي الشامل</b> المعتمد على أحدث الأطر الدولية (GRI Standards, ISSB S1/S2, CBE Rules, UNDP SDG Impact Standards).
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ==========================================================================
     # الموديول الأول: 📄 1. التحليل الذكي وتقييم تقارير الاستدامة عبر Gemini API
     # ==========================================================================
     st.markdown("""
@@ -2129,6 +2144,7 @@ with tab5:
                     file_mime = uploaded_esg_file.type or "application/pdf"
                     ai_eval_data = None
                     used_ai_engine = False
+                    active_model_used = "Gemini AI"
 
                     api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
@@ -2166,7 +2182,6 @@ with tab5:
                             }}
                             """
 
-# إرسال الملف مباشرة (PDF أو TXT) إلى أحدث نموذج متاح في Gemini
                             doc_part = types.Part.from_bytes(data=file_bytes, mime_type=file_mime)
 
                             response = None
@@ -2182,6 +2197,7 @@ with tab5:
                                         ),
                                     )
                                     if response and response.text:
+                                        active_model_used = _m_name
                                         break
                                 except Exception as _e:
                                     last_model_err = _e
@@ -2198,7 +2214,6 @@ with tab5:
                         except Exception as e:
                             st.warning(f"⚠️ تعذر الاتصال المباشر بمحرك Gemini ({e})، سيتم التبديل للتحليل النصي الاحتياطي.")
 
-                    # مسار احتياطي في حال عدم وجود مفتاح أو فشل الاتصال
                     if not ai_eval_data:
                         extracted_text = ""
                         try:
@@ -2230,7 +2245,6 @@ with tab5:
                             "recommendation": f"يُوصى باستكمال إفصاحات ({rubric_standard.split('(')[0]}) وإخضاع التقرير لتوكيد خارجي مستقل."
                         }
 
-                    # استخراج القيم وحساب المؤشر الموزون
                     is_matched = bool(ai_eval_data.get("bank_matched", True))
                     detected_entity = ai_eval_data.get("detected_entity", eval_bank_selected)
                     env_score = round(float(ai_eval_data.get("env_score", 70.0)), 1)
@@ -2253,7 +2267,7 @@ with tab5:
                         </div>
                         """), unsafe_allow_html=True)
 
-                    engine_label = "🤖 تدقيق ذكي عميق عبر Gemini 2.5 Flash" if used_ai_engine else "⚙️ تحليل نصي احتياطي"
+                    engine_label = f"🤖 تدقيق ذكي عميق عبر {active_model_used}" if used_ai_engine else "⚙️ تحليل نصي احتياطي"
                     st.success(f"✅ تم تدقيق التقرير بنجاح لـ ({eval_bank_selected}) وفق معيار ({rubric_standard})")
 
                     eval_result_card = f"""
@@ -2304,7 +2318,10 @@ with tab5:
         else:
             st.info("👈 قم باختيار البنك ورفع ملف التقرير (PDF/TXT) ثم اضغط على زر بدء التدقيق الذكي لعرض نسبة الامتثال ونقاط القوة والفجوات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
-# ==========================================================================
+
+    st.markdown("---")
+
+    # ==========================================================================
     # الموديول الثاني: 🌿 2. توليد مسودة تقارير الاستدامة التوجيهية
     # ==========================================================================
     st.markdown("#### 📋 2. توليد مسودة تقارير الاستدامة التوجيهية التفصيلية للبنك المختار")
@@ -2585,7 +2602,6 @@ with tab5:
             mime="application/msword",
             use_container_width=True
         )
-
 # ==============================================================================
 # دوال التعامل مع قاعدة البيانات السحابية Supabase / Postgres (موحّدة وآمنة)
 # ==============================================================================
