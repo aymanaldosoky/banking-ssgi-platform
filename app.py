@@ -819,7 +819,7 @@ with tab1:
             col_dl_q1, col_dl_q2, col_clr_q = st.columns([1.2, 1.2, 0.8])
             with col_dl_q1:
                 st.download_button(
-                    label="📥 تحميل الإجابة الحالية (Word)",
+                    label="📥 تحميل الرد الحالي ",
                     data=single_qa_word.encode("utf-8-sig"),
                     file_name=f"تحليل_{res['bank']}.doc",
                     mime="application/msword",
@@ -828,7 +828,7 @@ with tab1:
                 )
             with col_dl_q2:
                 st.download_button(
-                    label=f"📥 تحميل كافة الردود ({len(st.session_state.rag_query_history)}) (Word)",
+                    label=f"📥 تحميل كافة الردود",
                     data=full_history_word.encode("utf-8-sig"),
                     file_name="سجل_الإجابات_والردود_الذكية.doc",
                     mime="application/msword",
