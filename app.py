@@ -23,7 +23,7 @@ from bank_rag_engine import (
 )
 
 # ==============================================================================
-# إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL)
+# إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL + Responsive)
 # ==============================================================================
 st.set_page_config(
     page_title="مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة",
@@ -64,6 +64,7 @@ html, body, [class*="css"] {{
     direction: rtl !important;
     text-align: right !important;
     border: none !important;
+    overflow-x: hidden !important;
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -76,7 +77,7 @@ html, body, [class*="css"] {{
     background: #ffffff;
     border-radius: 12px;
     border: 1.5px solid #E2E8F0;
-    padding: 24px;
+    padding: clamp(14px, 3vw, 24px);
     margin-top: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }}
@@ -114,9 +115,9 @@ div[data-testid="stHorizontalBlock"], section {{
     border-color: transparent !important;
 }}
 
-div[data-baseweb="select"] *, 
-div[data-baseweb="popover"] *, 
-ul[data-baseweb="menu"] *, 
+div[data-baseweb="select"] *,
+div[data-baseweb="popover"] *,
+ul[data-baseweb="menu"] *,
 div[role="listbox"] *,
 div[role="option"] {{
     direction: rtl !important;
@@ -266,7 +267,7 @@ div.stTabs {{
     background-size: cover !important;
     background-position: center !important;
     color: #FFFFFF !important;
-    padding: 35px 20px !important;
+    padding: clamp(20px, 4vw, 35px) clamp(12px, 3vw, 20px) !important;
     border-radius: 16px !important;
     border-bottom: 5px solid {CBE_GOLD} !important;
     box-shadow: 0 12px 35px rgba(0,0,0,0.2) !important;
@@ -276,15 +277,16 @@ div.stTabs {{
 
 .header-center h1 {{
     color: {CBE_GOLD} !important;
-    font-size: 24px !important;
+    font-size: clamp(18px, 4.5vw, 24px) !important;
     font-weight: 800 !important;
+    line-height: 1.45 !important;
     margin-bottom: 10px !important;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
 }}
 
 .header-center h3 {{
     color: #F1F5F9 !important;
-    font-size: 14.5px !important;
+    font-size: clamp(13px, 3.2vw, 14.5px) !important;
     font-weight: 500 !important;
     line-height: 1.6 !important;
     margin-bottom: 6px !important;
@@ -333,6 +335,71 @@ div.stTabs {{
     font-weight: bold;
     direction: rtl !important;
 }}
+
+/* ==============================================================================
+   تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
+   ============================================================================== */
+@media (max-width: 768px) {{
+    /* تقليل الهوامش الجانبية المهدرة في Streamlit */
+    .block-container {{
+        padding-top: 1rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }}
+
+    /* تحويل التبويبات إلى شريط قابل للتمرير الأفقي السلس بدلاً من تكدسها */
+    .stTabs [data-baseweb="tab-list"] {{
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        padding: 8px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+    }}
+
+    .stTabs [data-baseweb="tab"] {{
+        flex: 0 0 auto !important;
+        width: auto !important;
+        white-space: nowrap !important;
+        font-size: 12.5px !important;
+        padding: 8px 14px !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+    }}
+
+    /* جعل الأزرار وحقول الإدخال مريحة للمس (Touch-Friendly) وبعرض كامل */
+    div.stButton > button, div.stDownloadButton > button {{
+        width: 100% !important;
+        min-height: 44px !important;
+        font-size: 13.5px !important;
+        padding: 8px 14px !important;
+        white-space: normal !important;
+        line-height: 1.4 !important;
+    }}
+
+    input, textarea, select {{
+        font-size: 16px !important; /* يمنع تكبير الشاشة التلقائي المزعج في آيفون */
+    }}
+
+    /* جعل الجداول والرسوم البيانية قابلة للتمرير الأفقي دون كسر التصميم */
+    [data-testid="stDataFrame"], .js-plotly-plot {{
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }}
+
+    .custom-rtl-table {{
+        min-width: 560px !important;
+    }}
+
+    .ticker-item {{
+        font-size: 12.5px !important;
+        padding: 6px 18px !important;
+    }}
+}}
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -348,7 +415,7 @@ def clean_text(text) -> str:
         return str(text)
     t = re.sub(r"\[cite[^\]]*\]", "", text)
     t = re.sub(r"<[^>]+>", "", t)
-    t = t.replace(" ", " ").replace("\u200b", "")
+    t = t.replace("\xa0", " ").replace("\u200b", "")
     return re.sub(r"\s+", " ", t).strip()
 
 def hash_password(password: str) -> str:
@@ -364,7 +431,7 @@ def init_visitor_log_file():
     if not os.path.exists(LOG_FILE):
         try:
             df_init = pd.DataFrame(columns=["عنوان IP", "اسم المستخدم", "الدور", "وقت الدخول"])
-            df_init.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
+            df_init.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
         except Exception:
             pass
 
@@ -376,7 +443,7 @@ def init_survey_log_file():
                 "محور منصات المعلومات", "محور الحوكمة المؤسسية", "محور تقارير الاستدامة",
                 "ملاحظات وتوصيات إضافية", "وقت الإرسال"
             ])
-            df_init.to_csv(SURVEY_LOG_FILE, index=False, encoding='utf-8-sig')
+            df_init.to_csv(SURVEY_LOG_FILE, index=False, encoding="utf-8-sig")
         except Exception:
             pass
 
@@ -386,7 +453,7 @@ init_survey_log_file()
 def load_visitors_log_from_file():
     if os.path.exists(LOG_FILE):
         try:
-            df = pd.read_csv(LOG_FILE, encoding='utf-8-sig')
+            df = pd.read_csv(LOG_FILE, encoding="utf-8-sig")
             return df.to_dict(orient="records")
         except Exception:
             return []
@@ -424,7 +491,7 @@ def log_visitor_action(username, role):
         if not exists:
             existing_logs.append(new_record)
             df_out = pd.DataFrame(existing_logs)
-            df_out.to_csv(LOG_FILE, index=False, encoding='utf-8-sig')
+            df_out.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
     except Exception:
         pass
 
@@ -446,36 +513,33 @@ ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", h
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        login_container = st.container()
-        with login_container:
-            st.markdown(f"""
-            <div style="background: #FFFFFF; padding: 30px; border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right;" dir="rtl">
-                <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
-                <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                    إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background: #FFFFFF; padding: clamp(18px, 4vw, 30px); border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right; margin-top: 20px;" dir="rtl">
+            <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; font-size: clamp(18px, 4vw, 22px); margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
+            <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+                إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-            username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
-            password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
+        username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
+        password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
 
-            if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
-                if username_input == ADMIN_USER and hash_password(password_input) == ADMIN_PASS_HASH:
-                    st.session_state.authenticated = True
-                    st.session_state.username = "مشرف النظام (Admin)"
-                    st.session_state.role = "admin"
-                    log_visitor_action("admin", "مشرف (Admin)")
-                    st.rerun()
-                elif username_input == "user" and password_input == "123":
-                    st.session_state.authenticated = True
-                    st.session_state.username = "باحث / مستخدم (User)"
-                    st.session_state.role = "user"
-                    log_visitor_action("user", "مستخدم عادي (User)")
-                    st.rerun()
-                else:
-                    st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
+        if st.button("🔐 تسجيل الدخول للمنصة", use_container_width=True):
+            if username_input == ADMIN_USER and hash_password(password_input) == ADMIN_PASS_HASH:
+                st.session_state.authenticated = True
+                st.session_state.username = "مشرف النظام (Admin)"
+                st.session_state.role = "admin"
+                log_visitor_action("admin", "مشرف (Admin)")
+                st.rerun()
+            elif username_input == "user" and password_input == "123":
+                st.session_state.authenticated = True
+                st.session_state.username = "باحث / مستخدم (User)"
+                st.session_state.role = "user"
+                log_visitor_action("user", "مستخدم عادي (User)")
+                st.rerun()
+            else:
+                st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
 
 # ==============================================================================
@@ -535,7 +599,7 @@ if "draft_bank_name" not in st.session_state:
 # ==============================================================================
 col_h1, col_h2 = st.columns([4, 1])
 with col_h2:
-    st.markdown(f"<div style='text-align: left; font-size: 13px; color: #475569; padding-top: 10px;'>👤 مسجل باسم: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: right; font-size: 13px; color: #475569; padding-top: 6px; margin-bottom: 4px;'>👤 مسجل باسم: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
     if st.button("🚪 تسجيل الخروج", use_container_width=True):
         st.session_state.authenticated = False
         st.session_state.username = ""
@@ -556,9 +620,9 @@ st.markdown("""
     <span class="ticker-item">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة وتقارير الاستدامة بالقطاع المصرفي المصري</span>
     <span class="ticker-item">| 📊 مؤشر الحوكمة الذكية المستدامة (SSGI) والأبعاد الثلاثة الرئيسة</span>
     <span class="ticker-item">| 📈 محاكي السياسات الاستشرافي لاختبار السيناريوهات الاستراتيجية (Multiple Regression)</span>
-    <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار </span>
-    <span class="ticker-item">| 📋 الاستبيان الموجه لفرق العمل في البنوك وعينة الدراسة الميدانية </span>
-    <span class="ticker-item">| 📖 دليل المستخدم الرسمي والتوثيق المنهجي PDF </span>
+    <span class="ticker-item">| 🛡️ لوحة دعم اتخاذ القرار</span>
+    <span class="ticker-item">| 📋 الاستبيان الموجه لفرق العمل في البنوك وعينة الدراسة الميدانية</span>
+    <span class="ticker-item">| 📖 دليل المستخدم الرسمي والتوثيق المنهجي PDF</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -568,33 +632,32 @@ st.markdown("""
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "🎯اسأل المنصة",
-        "📊مؤشر الحوكمة المركب (SSGI)", 
-        "📈محاكي السياسات (Policy Simulator)", 
-        "🛡️لوحة دعم اتخاذ القرار", 
-        "📑التقرير التنفيذي الموحد",
-        "🌿مولد تقارير الاستدامة (GRI/ISSB)",
-        "📋استبيان فرق العمل المصرفي",
-        "📖دليل المستخدم الرسمي PDF",
+        "🎯 اسأل المنصة",
+        "📊 مؤشر الحوكمة المركب (SSGI)",
+        "📈 محاكي السياسات (Policy Simulator)",
+        "🛡️ لوحة دعم اتخاذ القرار",
+        "📑 التقرير التنفيذي الموحد",
+        "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي PDF",
         "🔒 لوحة تحكم المشرف والزوار (Admin)"
     ])
 else:
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-        "🎯اسأل المنصة",
-        "📊مؤشر الحوكمة المركب (SSGI)", 
-        "📈محاكي السياسات (Policy Simulator)", 
-        "🛡️لوحة دعم اتخاذ القرار", 
-        "📑التقرير التنفيذي الموحد",
-        "🌿مولد تقارير الاستدامة (GRI/ISSB)",
-        "📋استبيان فرق العمل المصرفي",
-        "📖دليل المستخدم الرسمي PDF"
+        "🎯 اسأل المنصة",
+        "📊 مؤشر الحوكمة المركب (SSGI)",
+        "📈 محاكي السياسات (Policy Simulator)",
+        "🛡️ لوحة دعم اتخاذ القرار",
+        "📑 التقرير التنفيذي الموحد",
+        "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي PDF"
     ])
     tab9 = None
 
 # ------------------------------------------------------------------------------
-# التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG v5.1)
+# التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
-# دالة مغلفة بالتخزين المؤقت لتسريع الإجابات المتكررة فوراً
 @st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
 def cached_rag_query(bank_name: str, question: str) -> str:
     return process_rag_gemini_query(bank_name, question)
@@ -605,8 +668,8 @@ if "last_rag_result" not in st.session_state:
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (Hybrid RAG & Gemini Engine)</h3>
-        <p style="color: #475569; font-size: 14px;">استعراض الإجابات التحليلية الموثقة المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري لكل بنك على حدة.</p>
+        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (Hybrid RAG & Gemini Engine)</h3>
+        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">استعراض الإجابات التحليلية الموثقة المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري لكل بنك على حدة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -971,8 +1034,8 @@ def generate_ssgi_evaluation_excel():
 with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p style="color: #475569; font-size: 14px;">إمكانية تشخيص قياس أداء البنوك المصرية عبر المحاور الثلاثة الرئيسة بالأوزان النسبية المعتمدة المستندة على الـ 63 متغيراً فرعياً.</p>
+        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
+        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">إمكانية تشخيص قياس أداء البنوك المصرية عبر المحاور الثلاثة الرئيسة بالأوزان النسبية المعتمدة المستندة على الـ 63 متغيراً فرعياً.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1073,11 +1136,11 @@ with tab2:
                     badge_status = "أداء مرتفع 🟢"
                     status_border_color = "#10B981"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14px;">
+                    <div style="line-height: 1.8; font-size: clamp(13px, 3.3vw, 14px);">
                         <p>🟢 <b>جاهزية متقدمة ومستدامة (أداء ممتاز):</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                        <ul style="margin: 0; padding-right: 20px;">
+                        <ul style="margin: 0; padding-right: 18px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
                             <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
@@ -1089,11 +1152,11 @@ with tab2:
                     badge_status = "أداء متوسط 🟡"
                     status_border_color = "#F59E0B"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14px;">
+                    <div style="line-height: 1.8; font-size: clamp(13px, 3.3vw, 14px);">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                        <ul style="margin: 0; padding-right: 20px;">
+                        <ul style="margin: 0; padding-right: 18px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
                             <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
@@ -1105,11 +1168,11 @@ with tab2:
                     badge_status = "فجوة حرجة 🔴"
                     status_border_color = "#EF4444"
                     detailed_diag = f"""
-                    <div style="line-height: 1.8; font-size: 14px;">
+                    <div style="line-height: 1.8; font-size: clamp(13px, 3.3vw, 14px);">
                         <p>🔴 <b>فجوة هيكلية حرجة تستوجب التدخل الفوري:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
                         <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
-                        <ul style="margin: 0; padding-right: 20px;">
+                        <ul style="margin: 0; padding-right: 18px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
                             <li><b>تقارير الاستدامة والتمويل الأخضر (SR - وزن 30%):</b> {get_sr_comment(sr_val)}</li>
@@ -1122,12 +1185,12 @@ with tab2:
                     background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
                     border: 1.5px solid {CBE_GOLD};
                     border-radius: 16px;
-                    padding: 20px;
+                    padding: clamp(14px, 3vw, 20px);
                     box-shadow: 0 10px 25px -5px rgba(0, 43, 73, 0.08);
                     margin-bottom: 20px;
                 ">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
-                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;">
+                        <h4 style="color: {CBE_NAVY}; font-weight: 800; margin: 0; font-size: clamp(14px, 3.5vw, 16px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px;">
                             🏛️ ملخص مؤشرات القياس والأداء - <span style="color: {CBE_GOLD};">{clean_text(bank_ssgi_sel)}</span>
                         </h4>
                         <span style="background: #FFFFFF; color: {CBE_NAVY}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid #CBD5E1;">
@@ -1135,28 +1198,28 @@ with tab2:
                         </span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px;">
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 12px; border-right: 5px solid {status_border_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">مؤشر SSGI المركب</span>
+                            <div style="font-size: clamp(18px, 4.5vw, 22px); font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{final_score}%</div>
                             <span style="font-size: 10.5px; color: {status_border_color}; font-weight: 800; margin-top: 4px; display: inline-block;">النتيجة العامة</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 12px; border-right: 5px solid {CBE_NAVY}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">منصات المعلومات (SIP)</span>
+                            <div style="font-size: clamp(18px, 4.5vw, 22px); font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sip_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 40%</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 12px; border-right: 5px solid {CBE_GOLD}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">الحوكمة المؤسسية (IG)</span>
+                            <div style="font-size: clamp(18px, 4.5vw, 22px); font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{ig_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
 
-                        <div style="background: #FFFFFF; border-radius: 12px; padding: 14px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                            <span style="font-size: 11.5px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
-                            <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 12px; border-right: 5px solid #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                            <span style="font-size: 11px; color: #64748B; font-weight: 700; display: block; margin-bottom: 4px;">تقارير الاستدامة (SR)</span>
+                            <div style="font-size: clamp(18px, 4.5vw, 22px); font-weight: 900; color: {CBE_NAVY}; line-height: 1.2;">{sr_val}%</div>
                             <span style="font-size: 10.5px; color: #475569; font-weight: 700; margin-top: 4px; display: inline-block;">الوزن: 30%</span>
                         </div>
                     </div>
@@ -1181,9 +1244,9 @@ with tab2:
                 st.session_state.history_state.append(entry)
 
                 st.markdown(flat_html(f"""
-                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
-                  <div style="background: {CBE_BG}; padding: 15px; border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: 15px;">التشخيص القياسي المفصل:</p>
+                <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: clamp(14px, 3vw, 22px); border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
+                  <div style="background: {CBE_BG}; padding: clamp(12px, 2.5vw, 15px); border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: clamp(14px, 3.5vw, 15px);">التشخيص القياسي المفصل:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
                   </div>
                 </div>
@@ -1208,10 +1271,10 @@ with tab2:
                         showlegend=False,
                         title=dict(text="التحليل الرداري لمحاور SSGI", x=0.5, xanchor='center'),
                         font=dict(family="Cairo", size=11),
-                        margin=dict(l=20, r=20, t=40, b=20),
-                        height=320
+                        margin=dict(l=25, r=25, t=40, b=20),
+                        height=300
                     )
-                    st.plotly_chart(fig_radar, use_container_width=True)
+                    st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
 
                 with ch_col2:
                     fig_bar = px.bar(
@@ -1229,9 +1292,9 @@ with tab2:
                         paper_bgcolor="rgba(0,0,0,0)",
                         plot_bgcolor="rgba(0,0,0,0)",
                         margin=dict(l=20, r=20, t=40, b=20),
-                        height=320
+                        height=300
                     )
-                    st.plotly_chart(fig_bar, use_container_width=True)
+                    st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False})
 
         else:
             st.info("📊 يرجى اختيار البنك وضبط درجات المحاور الثلاثة ثم الضغط على زر الحساب لعرض البطاقات الرقمية والتحليل القياسي المباشر.")
@@ -1242,14 +1305,14 @@ with tab2:
     # --------------------------------------------------------------------------
     # الجدول الأول: ترتيب وسجلات البنوك المُشخَّصة
     # --------------------------------------------------------------------------
-    st.markdown("<h3 style='color: #002B49; font-weight: 800;'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px);'>📋 ترتيب وسجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
 
     ssgi_records = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
     if ssgi_records:
         df_history = pd.DataFrame(ssgi_records).sort_values(by="مؤشر SSGI المركب", ascending=False).reset_index(drop=True)
 
         history_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px;">
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 350px; -webkit-overflow-scrolling: touch;">
         <table class="custom-rtl-table">
         <thead>
         <tr>
@@ -1334,7 +1397,7 @@ with tab2:
         """, unsafe_allow_html=True)
 
         hierarchy_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 450px;">
+        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 450px; -webkit-overflow-scrolling: touch;">
         <table class="custom-rtl-table">
         <thead>
         <tr>
@@ -1437,7 +1500,7 @@ with tab2:
             </tr>"""
         st.markdown("<p dir='rtl' style='text-align:right;font-weight:800;color:#002B49;margin-top:14px;'>⚖️ الأوزان المعتمدة للمتغيرات الـ 63</p>", unsafe_allow_html=True)
         st.markdown(flat_html(f"""
-        <div dir="rtl" style="width: 100%; overflow-x: auto;">
+        <div dir="rtl" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
         <table class="custom-rtl-table">
         <thead><tr><th>المحور الرئيسي</th><th>البعد</th><th style="text-align:center;">عدد المتغيرات</th>
         <th style="text-align:center;">وزن كل متغير</th><th style="text-align:center;">وزن البعد من المؤشر</th></tr></thead>
@@ -1461,10 +1524,11 @@ with tab2:
         fig_pie_bank.update_layout(
             title=dict(text="توزيع الأوزان النسبية لمؤشر الحوكمة الذكية المستدامة (SSGI)", x=0.5, xanchor='center'),
             paper_bgcolor="#FFFFFF",
-            font=dict(family="Cairo", size=13)
+            font=dict(family="Cairo", size=12),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5),
+            margin=dict(l=15, r=15, t=45, b=60)
         )
-        st.plotly_chart(fig_pie_bank, use_container_width=True)
-
+        st.plotly_chart(fig_pie_bank, use_container_width=True, config={"displayModeBar": False})
 # ==============================================================================
 # التبويب الثالث: محاكي السياسات (Policy Simulator) - مطور ومحدث بالكامل
 # ==============================================================================
