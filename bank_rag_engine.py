@@ -1056,7 +1056,7 @@ def md_to_html(text: str) -> str:
     return "\n".join(out)
 
 BADGES = {
-    "gemini_rag": ("🟢 مصدر: تحليل Gemini المباشر + أرشيف المعرفة الموثق (Hybrid RAG)", "#166534"),
+    "gemini_rag": ("🟢 مصدر: تحليل أرشيف المعرفة الموثق (Hybrid RAG)", "#166534"),
     "gemini_grounded": ("🔵 مصدر: تحليل Gemini المباشر + ملف البنك والإطار الرقابي (CBE)", "#1E40AF"),
     "profile_fallback": ("🟡 مصدر: ملف تعريف البنك الموثق (يرجى تفعيل مفتاح Gemini للتحليل الموسع)", "#92400E"),
 }
