@@ -1771,7 +1771,7 @@ with tab3:
             """
 
             st.download_button(
-                label=f"📥 تحميل تقرير محاكي السياسات ({scenarios_count}) (Word)",
+                label=f"📥 تحميل تقرير محاكي السياسات",
                 data=sim_word_html.encode("utf-8-sig"),
                 file_name="تقرير_محاكي_السياسات_المصرفية_الشامل.doc",
                 mime="application/msword",
@@ -1952,7 +1952,7 @@ with tab3:
                     )
                     st.plotly_chart(fig_sim, use_container_width=True)
 
-                st.markdown("<h4>📋 سجل السيناريوهات الاستشرافية المثبتة:</h4>", unsafe_allow_html=True)
+                st.markdown("<h4>📋 سجل السيناريوهات الاستشرافية :</h4>", unsafe_allow_html=True)
                 for s_key, item in reversed(list(st.session_state.simulated_results_dict.items())):
                     col_k1, col_k2 = st.columns([5, 1])
                     with col_k1:
@@ -2301,7 +2301,7 @@ with tab5:
             </html>
             """
             st.download_button(
-                label="📥 تحميل التقرير التنفيذي في ملف مستند (Word)",
+                label="📥 تحميل التقرير التنفيذي",
                 data=word_content.encode("utf-8-sig"),
                 file_name="التقرير_التنفيذي_للقطاع_المصرفي.doc",
                 mime="application/msword",
