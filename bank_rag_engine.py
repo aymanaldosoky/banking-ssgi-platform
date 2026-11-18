@@ -1521,3 +1521,68 @@ if __name__ == "__main__":
     print("Archive Diagnostics:", get_archive_diagnostics())
     test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
     print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
+def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name: str, bank_name: str, standard_name: str) -> dict:
+    """
+    قراءة وتدقيق تقرير الاستدامة (PDF / TXT) مباشرة باستخدام Gemini 2.5 Flash
+    وفق معايير GRI أو ISSB S1/S2 أو ضوابط البنك المركزي المصري (CBE).
+    """
+    import json
+    import os
+    import re
+    import streamlit as st
+    from google import genai
+    from google.genai import types
+
+    api_key = ""
+    if "GEMINI_API_KEY" in st.secrets:
+        api_key = str(st.secrets["GEMINI_API_KEY"]).strip()
+    elif "gemini" in st.secrets and "api_key" in st.secrets["gemini"]:
+        api_key = str(st.secrets["gemini"]["api_key"]).strip()
+    else:
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+
+    if not api_key:
+        raise RuntimeError("مفتاح GEMINI_API_KEY غير معرف في إعدادات Secrets.")
+
+    client = genai.Client(api_key=api_key)
+
+    audit_prompt = (
+        f"أنت مدقق استدامة مصرفي ومستشار حوكمة معتمد لدى البنك المركزي المصري.\n"
+        f"المطلوب: فحص وتدقيق ملف تقرير الاستدامة المرفق (اسم الملف: {file_name}) المنسوب إلى: '{bank_name}'، "
+        f"وتقييم مدى امتثاله وفق المعيار المحدد: '{standard_name}'.\n\n"
+        f"تعليمات التدقيق الصارمة:\n"
+        f"1. تحقق أولاً من هوية البنك المذكورة فعلياً داخل صفحات التقرير المرفق، وقارنها بالبنك المختار ('{bank_name}').\n"
+        f"2. قيّم التقرير بموضوعية ودقة بناءً على الإفصاحات الكمية والنوعية الفعلية الواردة فيه وفق متطلبات '{standard_name}':\n"
+        f"   - المحور البيئي (environmental_score من 0 إلى 100): البصمة الكربونية (Scopes 1, 2, 3)، التمويل الأخضر، اختبارات التحمل المناخي.\n"
+        f"   - المحور الاجتماعي (social_score من 0 إلى 100): الشمول المالي، تمويل المشروعات الصغيرة، تمكين المرأة، رأس المال البشري، المسؤولية المجتمعية.\n"
+        f"   - محور الحوكمة (governance_score من 0 إلى 100): هيكل مجلس الإدارة ولجان الاستدامة والمخاطر والمراجعة، حوكمة البيانات، مكافحة الفساد، التوكيد الخارجي المستقل.\n"
+        f"3. استخرج 3 نقاط قوة حقيقية مدعومة بأدلة من التقرير، و3 فجوات تنظيمية محددة، و3 توصيات تنفيذية عملية.\n\n"
+        f"أعد النتيجة حصرياً بصيغة JSON مطابقة تماماً للمفاتيح التالية دون أي نص إضافي:\n"
+        f'{{"is_bank_matched": true, "detected_bank_name": "اسم البنك الفعلي", "mismatch_reason": "", '
+        f'"environmental_score": 78.5, "social_score": 82.0, "governance_score": 80.0, '
+        f'"executive_summary": "ملخص تنفيذي من سطرين", '
+        f'"strengths": ["قوة 1", "قوة 2", "قوة 3"], '
+        f'"gaps": ["فجوة 1", "فجوة 2", "فجوة 3"], '
+        f'"recommendations": ["توصية 1", "توصية 2", "توصية 3"]}}'
+    )
+
+    contents_payload = [audit_prompt]
+    if mime_type == "application/pdf":
+        contents_payload.append(types.Part.from_bytes(data=file_bytes, mime_type="application/pdf"))
+    else:
+        text_content = file_bytes.decode("utf-8", errors="ignore")[:120000]
+        contents_payload.append(f"نص التقرير:\n{text_content}")
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=contents_payload,
+        config=types.GenerateContentConfig(
+            temperature=0.15,
+            response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        ),
+    )
+
+    raw_json = (response.text or "").strip()
+    raw_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_json, flags=re.IGNORECASE).strip()
+    return json.loads(raw_json)
