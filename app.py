@@ -2068,29 +2068,14 @@ with tab5:
                 use_container_width=True
             )
 
-# ==============================================================================
-# التبويب السادس: تقييم ومولد تقارير الاستدامة والدليل العملي الشامل (ESG Scorer & Generator)
-# ==============================================================================
-with tab6:
-    st.markdown("""
-    <div dir="rtl" style="text-align: right;">
-        <h2 style="color: #002B49; font-weight: 800; margin-bottom: 6px;">📄 تقييم ومولد تقارير الاستدامة والدليل العملي الشامل (ESG Scorer & Generator)</h2>
-        <p style="color: #475569; font-size: 14.5px; line-height: 1.7;">
-        منظومة متكاملة تدمج بين <b>التحليل والتقييم الآلي الديناميكي لتقارير الاستدامة المرفوعة (ESG Report Scorer)</b> مع فحص المطابقة المباشرة، وبين <b>توليد مسودات الإفصاح المخصصة والدليل العملي الشامل</b> المعتمد على أحدث الأطر الدولية (GRI Standards, ISSB S1/S2, UNDP SDG Impact Standards).
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # ==========================================================================
-    # الموديول الأول: 📄 1. التحليل الديناميكي وتقييم تقارير الاستدامة المرفوعة (ESG Report Scorer)
+# ==========================================================================
+    # الموديول الأول: 📄 1. التحليل الذكي وتقييم تقارير الاستدامة عبر Gemini API
     # ==========================================================================
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 1. التحليل الآلي وتقييم تقارير الاستدامة المرفوعة (ESG Scorer)</h3>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 1. التحليل الآلي وتقييم تقارير الاستدامة المرفوعة (AI ESG Auditor)</h3>
         <p style="color: #475569; font-size: 13.5px;">
-        رفع وثائق وتقارير الاستدامة المصرفية (PDF / TXT) لقراءتها واستخلاص نصوصها وتقييم مدى امتثالها آلياً وديناميكياً وفق الأوزان المعتمدة (البيئي 35%، المجتمعي 30%، الحوكمة 35%).
+        قراءة وتحليل وثائق وتقارير الاستدامة المصرفية (PDF / TXT) مباشرة باستخدام محرك Gemini لتقييم مدى امتثالها الفعلي وفق المعايير المعتمدة (البيئي 35%، المجتمعي 30%، الحوكمة 35%).
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -2104,18 +2089,18 @@ with tab6:
             if st.session_state.get("history_state")
             else BANKS_LIST_AR
         )
-        
+
         eval_bank_selected = st.selectbox(
             "اختر البنك المصرفي المراد تقييم تقريره",
             all_registered_banks_eval,
             key="eval_bank_scorer_sel"
         )
-        
+
         uploaded_esg_file = st.file_uploader(
             "📁 قم برفع ملف تقرير الاستدامة (PDF / TXT)",
             type=["pdf", "txt"],
             key="esg_file_uploader",
-            help="الملفات المقبولة: PDF أو TXT بحد أقصى 50 ميجابايت."
+            help="الملفات المقبولة: PDF (نصي أو مصور) أو TXT بحد أقصى 50 ميجابايت."
         )
 
         rubric_standard = st.selectbox(
@@ -2128,7 +2113,7 @@ with tab6:
             key="rubric_std_sel"
         )
 
-        run_doc_eval_btn = st.button("🚀 بدء التحليل التقني وحساب النسبة المئوية", use_container_width=True, type="primary")
+        run_doc_eval_btn = st.button("🚀 بدء التدقيق الذكي وحساب نسبة الامتثال", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_scorer_out:
@@ -2139,110 +2124,140 @@ with tab6:
             elif uploaded_esg_file is None:
                 st.warning("⚠️ يرجى رفع ملف تقرير الاستدامة (PDF أو TXT) الخاص بالبنك.")
             else:
-                with st.spinner("⏳ جاري استخلاص النصوص وفحص مطابقة التقرير مع البنك وحساب الدرجات الديناميكية..."):
-                    # 1. استخلاص النص المباشر من الملف المرفوع
-                    extracted_text = ""
-                    try:
-                        if uploaded_esg_file.type == "text/plain":
-                            extracted_text = uploaded_esg_file.read().decode("utf-8", errors="ignore")
-                        elif uploaded_esg_file.type == "application/pdf":
-                            try:
-                                import pypdf
-                                reader = pypdf.PdfReader(uploaded_esg_file)
-                                for page in reader.pages:
-                                    extracted_text += (page.extract_text() or "") + " "
-                            except Exception:
-                                extracted_text = uploaded_esg_file.read().decode("latin-1", errors="ignore")
-                    except Exception:
+                with st.spinner("⏳ جاري قراءة التقرير بالكامل ومطابقته مع معايير الإفصاح عبر محرك Gemini..."):
+                    file_bytes = uploaded_esg_file.getvalue()
+                    file_mime = uploaded_esg_file.type or "application/pdf"
+                    ai_eval_data = None
+                    used_ai_engine = False
+
+                    api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+
+                    if api_key:
+                        try:
+                            from google import genai
+                            from google.genai import types
+
+                            client = genai.Client(api_key=api_key)
+
+                            audit_prompt = f"""
+                            أنت مدقق استدامة وحوكمة مصرفية معتمد. قم بقراءة وتحليل الملف المرفق بدقة وتقييمه لصالح: ({eval_bank_selected})
+                            وفقاً لمعيار التقييم المعتمد: ({rubric_standard}).
+
+                            المطلوب منك بدقة:
+                            1. التحقق مما إذا كان التقرير المرفق يخص بالفعل ({eval_bank_selected}) أم بنكاً أو جهة أخرى.
+                            2. تقييم درجة الامتثال الفعلية (من 0 إلى 100) لكل محور بناءً على الأدلة والأرقام والسياسات الواردة في المستند:
+                               - المحور البيئي (env_score): إدارة البصمة الكربونية Scopes 1/2/3، التمويل الأخضر، اختبارات التحمل المناخي.
+                               - المحور الاجتماعي (soc_score): الشمول المالي، تمكين المرأة، رأس المال البشري، حماية العملاء.
+                               - محور الحوكمة (gov_score): هيكل مجلس الإدارة واللجان المستقلة، إدارة مخاطر ESG، السيادة الرقمية وأمن البيانات، التوكيد الخارجي.
+                            3. استخراج 3 نقاط قوة محددة مدعومة بما ورد في التقرير.
+                            4. استخراج 3 فجوات امتثال (Gaps) محددة مقارنة بمتطلبات ({rubric_standard}).
+                            5. صياغة توصية تنفيذية مركزة للبنك.
+
+                            أرجع النتيجة حصراً بصيغة JSON صالحة مطابقة تماماً للمفاتيح التالية دون أي نص إضافي:
+                            {{
+                                "bank_matched": true,
+                                "detected_entity": "اسم الجهة المذكورة في التقرير",
+                                "env_score": 0.0,
+                                "soc_score": 0.0,
+                                "gov_score": 0.0,
+                                "strengths": ["نقطة قوة 1", "نقطة قوة 2", "نقطة قوة 3"],
+                                "gaps": ["فجوة 1", "فجوة 2", "فجوة 3"],
+                                "recommendation": "التوصية التنفيذية"
+                            }}
+                            """
+
+                            # إرسال الملف مباشرة (PDF أو TXT) إلى Gemini 2.5 Flash
+                            doc_part = types.Part.from_bytes(data=file_bytes, mime_type=file_mime)
+
+                            response = client.models.generate_content(
+                                model="gemini-2.5-flash",
+                                contents=[doc_part, audit_prompt],
+                                config=types.GenerateContentConfig(
+                                    temperature=0.1,
+                                    response_mime_type="application/json",
+                                ),
+                            )
+
+                            if response and response.text:
+                                ai_eval_data = json.loads(response.text)
+                                used_ai_engine = True
+
+                        except Exception as e:
+                            st.warning(f"⚠️ تعذر الاتصال المباشر بمحرك Gemini ({e})، سيتم التبديل للتحليل النصي الاحتياطي.")
+
+                    # مسار احتياطي في حال عدم وجود مفتاح أو فشل الاتصال
+                    if not ai_eval_data:
                         extracted_text = ""
+                        try:
+                            if file_mime == "text/plain":
+                                extracted_text = file_bytes.decode("utf-8", errors="ignore")
+                            else:
+                                import pypdf
+                                reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+                                extracted_text = " ".join((p.extract_text() or "") for p in reader.pages)
+                        except Exception:
+                            extracted_text = ""
 
-                    if not extracted_text.strip():
-                        extracted_text = f"محتوى تقرير الاستدامة الخاص بـ {eval_bank_selected} يتناول التمويل المستدام والحوكمة والمسؤولية المجتمعية والحصانة السيبرانية."
+                        clean_bank = eval_bank_selected.replace("بنك", "").replace("البنك", "").strip()
+                        words_bank = [w for w in re.split(r'\s+', clean_bank) if len(w) > 2]
+                        matched_fallback = any(w in extracted_text for w in words_bank)
 
-                    time.sleep(1.0)
+                        env_hits = sum(1 for k in ["كربون", "مناخ", "طاقة", "انبعاثات", "أخضر", "carbon", "green", "climate"] if k in extracted_text.lower())
+                        soc_hits = sum(1 for k in ["مجتمعي", "شمول", "مرأة", "عاملين", "تدريب", "social", "inclusion"] if k in extracted_text.lower())
+                        gov_hits = sum(1 for k in ["حوكمة", "مجلس", "مراجعة", "مخاطر", "امتثال", "governance", "audit"] if k in extracted_text.lower())
 
-                    # 2. فحص مطابقة التقرير المرفوع مع البنك المختار (Verification Mechanism)
-                    clean_text_upper = extracted_text.upper()
-                    clean_bank_name = eval_bank_selected.replace("بنك", "").replace("البنك", "").strip()
-                    words_in_bank = [w for w in re.split(r'\s+', clean_bank_name) if len(w) > 2]
-                    
-                    is_matched = any(w.upper() in clean_text_upper or w in extracted_text for w in words_in_bank)
+                        ai_eval_data = {
+                            "bank_matched": matched_fallback,
+                            "detected_entity": eval_bank_selected if matched_fallback else "جهة غير مطابقة",
+                            "env_score": round(min(95.0, 55.0 + env_hits * 4.5), 1),
+                            "soc_score": round(min(95.0, 55.0 + soc_hits * 4.5), 1),
+                            "gov_score": round(min(95.0, 55.0 + gov_hits * 4.5), 1),
+                            "strengths": ["تغطية الأطر الأساسية للإفصاح المستدام ضمن هيكل التقرير المرفوع."],
+                            "gaps": ["يتطلب التحقق التفصيلي لمؤشرات Scope 3 واختبارات التحمل المناخي تفعيل محرك Gemini."],
+                            "recommendation": f"يُوصى باستكمال إفصاحات ({rubric_standard.split('(')[0]}) وإخضاع التقرير لتوكيد خارجي مستقل."
+                        }
 
-                    if not is_matched and len(extracted_text) > 200:
+                    # استخراج القيم وحساب المؤشر الموزون
+                    is_matched = bool(ai_eval_data.get("bank_matched", True))
+                    detected_entity = ai_eval_data.get("detected_entity", eval_bank_selected)
+                    env_score = round(float(ai_eval_data.get("env_score", 70.0)), 1)
+                    soc_score = round(float(ai_eval_data.get("soc_score", 70.0)), 1)
+                    gov_score = round(float(ai_eval_data.get("gov_score", 70.0)), 1)
+
+                    weighted_overall_score = round((env_score * 0.35) + (soc_score * 0.30) + (gov_score * 0.35), 2)
+                    score_badge = get_colored_score_html(weighted_overall_score)
+                    strengths_list = ai_eval_data.get("strengths", [])
+                    gaps_list = ai_eval_data.get("gaps", [])
+                    recommendation_txt = ai_eval_data.get("recommendation", "")
+
+                    if not is_matched:
                         st.markdown(flat_html(f"""
                         <div style="background: #FEF2F2; border: 1.5px solid #EF4444; border-radius: 10px; padding: 15px; margin-bottom: 15px;" dir="rtl">
                             <h4 style="color: #991B1B; margin: 0 0 6px 0; font-weight: bold;">⚠️ تنبيه عدم مطابقة التقرير مع البنك المختار:</h4>
                             <p style="color: #7F1D1D; margin: 0; font-size: 13.5px; line-height: 1.6;">
-                            يبدو أن الملف المرفوع (<b>{uploaded_esg_file.name}</b>) لا يحتوي صراحة على الإشارات النصية المعتادة للبنك المختار (<b>{eval_bank_selected}</b>). سيتم إجراء التحليل الفني بناءً على النص المستخرج وتنويه النظام بوجود فجوة إسناد.
+                            الملف المرفوع (<b>{uploaded_esg_file.name}</b>) يخص (<b>{detected_entity}</b>) ولا يطابق البنك المختار (<b>{eval_bank_selected}</b>). تم عرض نتائج التدقيق الفني مع تسجيل فجوة الإسناد.
                             </p>
                         </div>
                         """), unsafe_allow_html=True)
 
-                    # 3. محرك الحساب الديناميكي للدرجات بناءً على محتوى النص الفعلي (Dynamic Hash & Keyword Scorer)
-                    file_hash_bytes = hashlib.sha256((extracted_text + eval_bank_selected + rubric_standard).encode("utf-8")).digest()
-                    
-                    # تحليل وجود الكلمات المفتاحية
-                    env_keywords = ["كربون", "مناخ", "طاقة", "انبعاثات", "أخضر", "بيئة", "استدامة", "scope", "carbon", "green", "climate"]
-                    soc_keywords = ["مجتمعي", "شمول", "مرأة", "عاملين", "تدريب", "صحة", "مشاريع", "social", "inclusion", "gender"]
-                    gov_keywords = ["حوكمة", "مجلس", "مراجعة", "مخاطر", "شفافية", "بيانات", "امتثال", "governance", "audit", "compliance"]
-
-                    env_hits = sum(1 for k in env_keywords if k in extracted_text.lower())
-                    soc_hits = sum(1 for k in soc_keywords if k in extracted_text.lower())
-                    gov_hits = sum(1 for k in gov_keywords if k in extracted_text.lower())
-
-                    # حساب درجات حقيقية ديناميكية تتأثر بالنص المرفوع والبنك والمعيار
-                    base_e = 60 + min(25, env_hits * 3) + (file_hash_bytes[0] % 12)
-                    base_s = 60 + min(25, soc_hits * 3) + (file_hash_bytes[1] % 12)
-                    base_g = 60 + min(25, gov_hits * 3) + (file_hash_bytes[2] % 12)
-
-                    env_score = round(min(98.0, float(base_e)), 1)
-                    soc_score = round(min(98.0, float(base_s)), 1)
-                    gov_score = round(min(98.0, float(base_g)), 1)
-
-                    weighted_overall_score = round((env_score * 0.35) + (soc_score * 0.30) + (gov_score * 0.35), 2)
-                    score_badge = get_colored_score_html(weighted_overall_score)
-
-                    # 4. بناء التقرير التحليلي الديناميكي المخصص
-                    strengths_list = []
-                    gaps_list = []
-
-                    if env_score >= 80:
-                        strengths_list.append("إفصاح عالي الجودة عن المبادرات البيئية وحساب البصمة الكربونية والتمويل الأخضر.")
-                    else:
-                        gaps_list.append("نقص في إفصاحات انبعاثات الكربون غير المباشرة (Scope 3) واختبارات التحمل المناخي.")
-
-                    if soc_score >= 80:
-                        strengths_list.append("تغطية متميزة لمؤشرات الشمول المالي وتكافؤ الفرص ورأس المال البشري.")
-                    else:
-                        gaps_list.append("ضعف التفاصيل الخاصة بمؤشرات الفجوة في الأجور وبرامج تمكين المرأة والمسؤولية المجتمعية.")
-
-                    if gov_score >= 80:
-                        strengths_list.append("التزام حوكمي راسخ وهيكل شفاف لمجلس الإدارة ولجان المراجعة وإدارة المخاطر.")
-                    else:
-                        gaps_list.append("قصور في تفاصيل حوكمة البيانات والسيادة الرقمية وسياسات منع تعارض المصالح.")
-
-                    if not strengths_list:
-                        strengths_list.append("يتضمن التقرير الأطر الأساسية للإفصاح وفق المتطلبات الرقابية الدنيا.")
-                    if not gaps_list:
-                        gaps_list.append("يتطلب التقرير تحسين التوكيد الخارجي المستقل (Third-Party External Assurance).")
-
-                    st.success(f"✅ تم تحليل التقرير بنجاح لـ ({eval_bank_selected}) وفق معيار ({rubric_standard})")
+                    engine_label = "🤖 تدقيق ذكي عميق عبر Gemini 2.5 Flash" if used_ai_engine else "⚙️ تحليل نصي احتياطي"
+                    st.success(f"✅ تم تدقيق التقرير بنجاح لـ ({eval_bank_selected}) وفق معيار ({rubric_standard})")
 
                     eval_result_card = f"""
                     <div dir="rtl" style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
                             <h4 style="color: {CBE_NAVY}; font-weight: bold; margin: 0; font-size: 16px;">
-                                📊 التقييم القياسي الشامل للتقرير - <span style="color: {CBE_GOLD};">{eval_bank_selected}</span>
+                                📊 التقييم القياسي للتقرير - <span style="color: {CBE_GOLD};">{eval_bank_selected}</span>
                             </h4>
                             <span style="font-size: 12px; font-weight: bold; color: #64748B;">
-                                المعيار: {rubric_standard.split('(')[0]}
+                                المعيار: {rubric_standard.split('(')[0]} | {engine_label}
                             </span>
                         </div>
-                        
-                        <p style="color: #64748B; font-size: 12.5px; margin-bottom: 15px;">
-                            حجم النص المعالج: <b>{len(extracted_text):,} حرفاً</b> | اسم الملف: <b>{uploaded_esg_file.name}</b>
+
+                        <p style="color: #475569; font-size: 13px; margin-bottom: 15px;">
+                            التصنيف العام: <b>{score_badge}</b> | اسم الملف: <b>{uploaded_esg_file.name}</b>
                         </p>
-                        
+
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
                             <div style="background: #F8FAFC; padding: 14px; border-radius: 10px; border-right: 5px solid {CBE_GOLD}; text-align: center;">
                                 <span style="font-size: 11.5px; color: #64748B; font-weight: bold;">الدرجة الكلية الموزونة</span>
@@ -2263,22 +2278,19 @@ with tab6:
                         </div>
 
                         <div style="background: {CBE_BG}; padding: 16px; border-radius: 10px; border-right: 5px solid {CBE_NAVY};">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; font-size: 14px;">🔍 التقرير التحليلي الديناميكي لنقاط القوة والفجوات الهيكلية:</p>
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 8px; font-size: 14px;">🔍 نتائج التدقيق الميداني لنقاط القوة والفجوات الهيكلية:</p>
                             <ul style="margin: 0; padding-right: 20px; color: #1E293B; font-size: 13.5px; line-height: 1.8;">
-                                {"".join([f"<li>🟢 <b>نقاط القوة:</b> {s}</li>" for s in strengths_list])}
-                                {"".join([f"<li>🟡 <b>الفجوات المكتشفة (Gaps):</b> {g}</li>" for g in gaps_list])}
-                                <li>💡 <b>التوصية التطويرية:</b> يُوصى بتضمين إفصاحات إضافية متوافقة مع معايير ({rubric_standard.split('(')[0]}) وإخضاع التقرير لتدقيق خارجي مستقل.</li>
+                                {"".join([f"<li>🟢 <b>نقطة قوة:</b> {s}</li>" for s in strengths_list])}
+                                {"".join([f"<li>🟡 <b>فجوة امتثال (Gap):</b> {g}</li>" for g in gaps_list])}
+                                <li>💡 <b>التوصية التنفيذية:</b> {recommendation_txt}</li>
                             </ul>
                         </div>
                     </div>
                     """
                     st.markdown(flat_html(eval_result_card), unsafe_allow_html=True)
         else:
-            st.info("👈 قم باختيار البنك ورفع ملف التقرير (PDF/TXT) ثم اضغط على زر بدء التحليل لعرض الدرجة المئوية الديناميكية ونقاط التقييم هنا.")
+            st.info("👈 قم باختيار البنك ورفع ملف التقرير (PDF/TXT) ثم اضغط على زر بدء التدقيق الذكي لعرض نسبة الامتثال ونقاط القوة والفجوات هنا.")
         st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-
 # ==========================================================================
     # الموديول الثاني: 🌿 2. توليد مسودة تقارير الاستدامة التوجيهية
     # ==========================================================================
