@@ -2432,9 +2432,9 @@ with tab5:
 with tab6:
     st.markdown("""
     <div dir="rtl" style="text-align: right;">
-        <h2 style="color: #002B49; font-weight: 800; margin-bottom: 6px;">📄 تقييم ومولد تقارير الاستدامة والدليل العملي الشامل (ESG Scorer & Generator)</h2>
+        <h2 style="color: #002B49; font-weight: 800; margin-bottom: 6px;">📄 تقييم وتوليد تقارير الاستدامة والدليل العملي الشامل </h2>
         <p style="color: #475569; font-size: 14.5px; line-height: 1.7;">
-        منظومة متكاملة تدمج بين <b>التحليل والتدقيق الذكي المباشر لتقارير الاستدامة المرفوعة عبر محرك Gemini</b>، وبين <b>توليد مسودات الإفصاح المخصصة والدليل العملي الشامل</b> المعتمد على أحدث الأطر الدولية (GRI Standards, ISSB S1/S2, CBE Rules, UNDP SDG Impact Standards).
+        منظومة متكاملة تدمج بين <b>التحليل والتدقيق الذكي المباشر لتقارير الاستدامة </b>، وبين <b>توليد مسودات الإفصاح المخصصة والدليل العملي الشامل</b> المعتمد على أحدث الأطر الدولية (GRI Standards, ISSB S1/S2, CBE Rules).
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -2448,7 +2448,7 @@ with tab6:
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 1. التحليل الآلي وتقييم تقارير الاستدامة المرفوعة (AI ESG Auditor)</h3>
         <p style="color: #475569; font-size: 13.5px;">
-        قراءة وتحليل وثائق وتقارير الاستدامة المصرفية (PDF / TXT) مباشرة باستخدام محرك Gemini لتقييم مدى امتثالها الفعلي وفق المعايير المعتمدة (البيئي 35%، المجتمعي 30%، الحوكمة 35%).
+        قراءة وتحليل وثائق وتقارير الاستدامة المصرفية مباشرة لتقييم مدى امتثالها الفعلي وفق المعايير المعتمدة (البيئي 35%، المجتمعي 30%، الحوكمة 35%).
         </p>
     </div>
     """, unsafe_allow_html=True)
