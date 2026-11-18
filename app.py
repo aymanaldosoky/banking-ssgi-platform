@@ -1559,7 +1559,7 @@ with tab3:
                     break
 
             base_ssgi_input = st.slider(
-                "قيمة المؤشر الأساسي الحالي (SSGI)",
+                "قيمة المؤشر المركب  (SSGI)",
                 30.0, 100.0, default_bank_ssgi, 0.5,
                 key=f"sim_base_{sim_bank_sel}"
             )
