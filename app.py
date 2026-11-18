@@ -1667,8 +1667,8 @@ with tab2:
 with tab3:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات (Policy & Scenario Simulator)</h3>
-        <p style="color: #475569; font-size: 14px;">نمذجة كمية لاستشراف أثر التدخلات المستقبلية واختبار حساسية محاور الحوكمة الذكية لكل بنك بناءً على فجواته الفعلية ومتغيرات التحفيز.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔬 محاكي السياسات الاستشرافي للسيناريوهات</h3>
+        <p style="color: #475569; font-size: 14px;">استشراف أثر التدخلات المستقبلية حسب محاور الحوكمة الذكية لكل بنك بناءً على قيمه الفعلية ومتغيرات التحفيز.</p>
     </div>
     """, unsafe_allow_html=True)
 
