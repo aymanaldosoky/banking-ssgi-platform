@@ -1040,7 +1040,7 @@ with tab2:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 18px;">
         <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🗳️ التشخيص القياسي واحتساب مؤشر الحوكمة الذكية المستدامة (SSGI)</h3>
-        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">تشخيص كمي متعدد الأبعاد لأداء البنوك المصرية عبر المحاور الثلاثة الرئيسة بالأوزان النسبية المعتمدة (AHP) المستندة إلى الـ 63 متغيراً فرعياً.</p>
+        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">تشخيص كمي متعدد الأبعاد لأداء البنوك المصرية عبر المحاور الثلاثة الرئيسة.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1052,7 +1052,7 @@ with tab2:
     with col_dl_excel:
         excel_data = generate_ssgi_evaluation_excel()
         st.download_button(
-            label="📥 تحميل نموذج التقييم التفصيلي (63 متغيراً - Excel)",
+            label="📥 تحميل نموذج التشخيص التفصيلي",
             data=excel_data,
             file_name="نموذج_التقييم_التفصيلي_للمتغيرات_63_SSGI.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1064,7 +1064,7 @@ with tab2:
         st.markdown("""
         <div dir="rtl" style="background-color: #F8FAFC; border-right: 4px solid #C5A059; padding: 10px 14px; border-radius: 8px; border: 1px solid #E2E8F0;">
             <p style="color: #002B49; font-size: 12.5px; font-weight: 700; margin: 0; line-height: 1.6;">
-                💡 <b>طريقة الاستخدام:</b> حمّل نموذج Excel لتقييم المتغيرات الفرعية الـ 63 واستخلاص الدرجة الإجمالية لكل محور من ورقة «ملخص_المحاور»، ثم أدخل المحصلة في أشرطة القياس أدناه لتسجيل التشخيص.
+                💡 <b>طريقة الاستخدام:</b> قم بتحميل نموذج Excel لتشخيص المتغيرات الفرعية الـ 63 واستخلاص الدرجة الإجمالية لكل محور من ورقة «ملخص_المحاور»، ثم أدخل القيم في أشرطة القياس أدناه لتسجيل التشخيص.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1242,7 +1242,7 @@ with tab2:
 
             priority_note = (
                 f"<p style='margin-top: 10px; background: #FFFBEB; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: 6px; color: #92400E; font-size: 13px;'>"
-                f"🎯 <b>أولوية التحسين الموزونة:</b> يُمثل محور <b>{priority_axis}</b> أكبر مصدر لاستنزاف النقاط حالياً (بفقدان موزون قدره <b>{priority_loss}</b> نقطة من أصل 100) | التوازن الهيكلي بين المحاور: <b>{balance_status}</b> (فارق {pillars_spread}%).</p>"
+                f"🎯 <b>أولوية التحسين الموزونة:</b> يُمثل محور <b>{priority_axis}</b> أدنى المحاور حالياً (بفقدان موزون قدره <b>{priority_loss}</b> نقطة من أصل 100) | التوازن الهيكلي بين المحاور: <b>{balance_status}</b> (فارق {pillars_spread}%).</p>"
                 if priority_loss > 0 else
                 "<p style='margin-top: 10px; color: #065F46; font-weight: bold;'>🏆 حقق البنك العلامة الكاملة (100%) عبر كافة المحاور الثلاثة بتوازن تام.</p>"
             )
@@ -1251,7 +1251,7 @@ with tab2:
             <div style="line-height: 1.8; font-size: clamp(13px, 3.3vw, 14px);">
                 <p>{lead_summary}</p>
                 <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                <p><b>🔍 تشخيص المحاور المفصل:</b></p>
                 <ul style="margin: 0; padding-right: 18px;">
                     <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(d_sip)}</li>
                     <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(d_ig)}</li>
@@ -1490,7 +1490,7 @@ with tab2:
         with col_dl:
             csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="📥 تحميل قائمة البنوك المشخصة (CSV)",
+                label="📥 تحميل قائمة البنوك المشخصة",
                 data=csv_data,
                 file_name="ترتيب_البنوك_المصرية_SSGI.csv",
                 mime="text/csv",
