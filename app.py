@@ -1045,15 +1045,14 @@ with tab2:
     """, unsafe_allow_html=True)
 
     # --------------------------------------------------------------------------
-    # شريط أدوات نموذج التقييم التفصيلي (تحميل + استيراد تلقائي من Excel)
+    # شريط أدوات نموذج التقييم التفصيلي (تحميل النموذج + إرشادات القياس)
     # --------------------------------------------------------------------------
-    col_dl_excel, col_ul_excel, col_info_box = st.columns([1.1, 1.2, 1.4], gap="medium")
+    col_dl_excel, col_info_box = st.columns([1, 2], gap="medium")
 
     with col_dl_excel:
-        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
         excel_data = generate_ssgi_evaluation_excel()
         st.download_button(
-            label="📥 1. تحميل نموذج الـ 63 متغيراً (Excel)",
+            label="📥 تحميل نموذج التقييم التفصيلي (63 متغيراً - Excel)",
             data=excel_data,
             file_name="نموذج_التقييم_التفصيلي_للمتغيرات_63_SSGI.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1061,77 +1060,14 @@ with tab2:
             type="primary"
         )
 
-    with col_ul_excel:
-        uploaded_ssgi_excel = st.file_uploader(
-            "📤 2. استيراد درجات المحاور من ملف Excel المُعبأ (اختياري)",
-            type=["xlsx"],
-            key="ssgi_excel_importer",
-            help="ارفع ملف التقييم بعد تعبئة الدرجات لاستخلاص نسب SIP و IG و SR تلقائياً."
-        )
-
     with col_info_box:
         st.markdown("""
         <div dir="rtl" style="background-color: #F8FAFC; border-right: 4px solid #C5A059; padding: 10px 14px; border-radius: 8px; border: 1px solid #E2E8F0;">
             <p style="color: #002B49; font-size: 12.5px; font-weight: 700; margin: 0; line-height: 1.6;">
-                💡 <b>آلية العمل المزدوجة:</b> يمكنك تعبئة نموذج Excel ورفعه لاستيراد المحاور تلقائياً، أو إدخال حصيلة كل محور مباشرة عبر أشرطة التمرير أدناه.
+                💡 <b>طريقة الاستخدام:</b> حمّل نموذج Excel لتقييم المتغيرات الفرعية الـ 63 واستخلاص الدرجة الإجمالية لكل محور من ورقة «ملخص_المحاور»، ثم أدخل المحصلة في أشرطة القياس أدناه لتسجيل التشخيص.
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-    # معالجة ملف Excel المرفوع لاستخلاص القيم وتحديث أشرطة التمرير تلقائياً
-    if uploaded_ssgi_excel is not None:
-        file_sig = f"{uploaded_ssgi_excel.name}_{uploaded_ssgi_excel.size}"
-        if st.session_state.get("last_imported_excel_sig") != file_sig:
-            try:
-                xl_sheets = pd.read_excel(uploaded_ssgi_excel, sheet_name=None)
-                extracted_scores = {}
-
-                # محاولة القراءة من ورقة ملخص_المحاور أولاً إن وجدت
-                for s_name, df_s in xl_sheets.items():
-                    df_str = df_s.astype(str)
-                    for idx_r, r_vals in df_str.iterrows():
-                        row_joined = " ".join(r_vals.values)
-                        nums = [float(x) for x in re.findall(r"\b\d+(?:\.\d+)?\b", row_joined) if 0 <= float(x) <= 100 and float(x) not in (40.0, 30.0, 16.0, 25.0, 22.0, 63.0)]
-                        if ("منصات المعلومات" in row_joined or "SIP" in row_joined) and nums:
-                            extracted_scores["sip"] = int(round(nums[-1]))
-                        elif ("الحوكمة المؤسسية" in row_joined or "IG" in row_joined) and nums:
-                            extracted_scores["ig"] = int(round(nums[-1]))
-                        elif ("تقارير الاستدامة" in row_joined or "SR" in row_joined) and nums:
-                            extracted_scores["sr"] = int(round(nums[-1]))
-
-                # خطة بديلة: حساب المتوسط من ورقة المتغيرات الـ 63 مباشرة إذا لم تُحتسب الصيغ بعد
-                if len(extracted_scores) < 3:
-                    for s_name, df_s in xl_sheets.items():
-                        cols_lower = [str(c) for c in df_s.columns]
-                        axis_col = next((c for c in df_s.columns if "المحور" in str(c)), None)
-                        score_col = next((c for c in df_s.columns if "الدرجة" in str(c) or "التقييم" in str(c)), None)
-                        if axis_col and score_col:
-                            df_clean = df_s[[axis_col, score_col]].dropna()
-                            df_clean[score_col] = pd.to_numeric(df_clean[score_col], errors="coerce")
-                            df_clean = df_clean.dropna()
-                            if not df_clean.empty:
-                                for ax_val, grp in df_clean.groupby(axis_col):
-                                    avg_v = int(round(grp[score_col].mean()))
-                                    if "منصات" in str(ax_val) or "SIP" in str(ax_val):
-                                        extracted_scores["sip"] = avg_v
-                                    elif "الحوكمة" in str(ax_val) or "IG" in str(ax_val):
-                                        extracted_scores["ig"] = avg_v
-                                    elif "الاستدامة" in str(ax_val) or "SR" in str(ax_val):
-                                        extracted_scores["sr"] = avg_v
-
-                if extracted_scores:
-                    if "sip" in extracted_scores:
-                        st.session_state["t1_sip"] = min(100, max(0, extracted_scores["sip"]))
-                    if "ig" in extracted_scores:
-                        st.session_state["t1_ig"] = min(100, max(0, extracted_scores["ig"]))
-                    if "sr" in extracted_scores:
-                        st.session_state["t1_sr"] = min(100, max(0, extracted_scores["sr"]))
-                    st.session_state["last_imported_excel_sig"] = file_sig
-                    st.success(f"✅ تم استيراد درجات المحاور بنجاح من ملف ({uploaded_ssgi_excel.name}) وتحديث أشرطة القياس!")
-                else:
-                    st.warning("⚠️ لم يتم العثور على درجات رقمية مُدخلة داخل الملف. تأكد من إدخال القيم وحفظ الملف قبل رفعه.")
-            except Exception as ex_err:
-                st.warning(f"⚠️ تعذرت قراءة ملف Excel ({ex_err}). يمكنك إدخال القيم يدوياً عبر أشرطة التمرير.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1141,27 +1077,32 @@ with tab2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         bank_ssgi_sel = st.selectbox("اختر البنك المصرفي", BANKS_LIST_AR, key="t1_bank")
 
-        # تهيئة القيم الافتراضية في session_state لدعم الاستيراد من Excel بسلاسة
-        if "t1_sip" not in st.session_state:
-            st.session_state["t1_sip"] = 88
-        if "t1_ig" not in st.session_state:
-            st.session_state["t1_ig"] = 90
-        if "t1_sr" not in st.session_state:
-            st.session_state["t1_sr"] = 82
+        # تحميل القيم المسجلة للبنك تلقائياً في حال سبق تشخيصه لتسهيل التحديث
+        default_sip, default_ig, default_sr = 88, 90, 82
+        if bank_ssgi_sel != "اختر البنك المصرفي":
+            for item in reversed(st.session_state.history_state):
+                if isinstance(item, dict) and item.get("البنك") == clean_text(bank_ssgi_sel):
+                    default_sip = int(round(float(item.get("منصات المعلومات (40%)", 88))))
+                    default_ig = int(round(float(item.get("الحوكمة المؤسسية (30%)", 90))))
+                    default_sr = int(round(float(item.get("تقارير الاستدامة (30%)", 82))))
+                    break
 
         sip_val = st.slider(
             "1. محور منصات المعلومات (SIP - وزن 40%)",
-            0, 100, key="t1_sip",
+            0, 100, default_sip,
+            key=f"t1_sip_{bank_ssgi_sel}",
             help="يعكس حصيلة تقييم الـ 16 متغيراً الفرعياً المكونة لمحور منصات المعلومات الذكية"
         )
         ig_val = st.slider(
             "2. محور الحوكمة المؤسسية (IG - وزن 30%)",
-            0, 100, key="t1_ig",
+            0, 100, default_ig,
+            key=f"t1_ig_{bank_ssgi_sel}",
             help="يعكس حصيلة تقييم الـ 25 متغيراً الفرعياً المكونة لمحور الحوكمة المؤسسية"
         )
         sr_val = st.slider(
             "3. محور تقارير الاستدامة (SR - وزن 30%)",
-            0, 100, key="t1_sr",
+            0, 100, default_sr,
+            key=f"t1_sr_{bank_ssgi_sel}",
             help="يعكس حصيلة تقييم الـ 22 متغيراً الفرعياً المكونة لمحور تقارير الاستدامة"
         )
 
@@ -1279,6 +1220,13 @@ with tab2:
             priority_axis = max(weighted_gaps, key=weighted_gaps.get)
             priority_loss = weighted_gaps[priority_axis]
 
+            # حساب مؤشر التوازن الهيكلي بين المحاور الثلاثة
+            pillars_spread = max(d_sip, d_ig, d_sr) - min(d_sip, d_ig, d_sr)
+            balance_status = (
+                "متوازن هيكلياً 🟢" if pillars_spread <= 10
+                else ("تفاوت متوسط 🟡" if pillars_spread <= 20 else "اختلال هيكلي ملحوظ 🔴")
+            )
+
             if d_final >= 80:
                 badge_status = "أداء مرتفع 🟢"
                 status_border_color = "#10B981"
@@ -1294,9 +1242,9 @@ with tab2:
 
             priority_note = (
                 f"<p style='margin-top: 10px; background: #FFFBEB; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: 6px; color: #92400E; font-size: 13px;'>"
-                f"🎯 <b>أولوية التحسين الموزونة:</b> يُمثل محور <b>{priority_axis}</b> أكبر مصدر لاستنزاف النقاط حالياً (بفقدان موزون قدره <b>{priority_loss}</b> نقطة من أصل 100).</p>"
+                f"🎯 <b>أولوية التحسين الموزونة:</b> يُمثل محور <b>{priority_axis}</b> أكبر مصدر لاستنزاف النقاط حالياً (بفقدان موزون قدره <b>{priority_loss}</b> نقطة من أصل 100) | التوازن الهيكلي بين المحاور: <b>{balance_status}</b> (فارق {pillars_spread}%).</p>"
                 if priority_loss > 0 else
-                "<p style='margin-top: 10px; color: #065F46; font-weight: bold;'>🏆 حقق البنك العلامة الكاملة (100%) عبر كافة المحاور الثلاثة.</p>"
+                "<p style='margin-top: 10px; color: #065F46; font-weight: bold;'>🏆 حقق البنك العلامة الكاملة (100%) عبر كافة المحاور الثلاثة بتوازن تام.</p>"
             )
 
             detailed_diag = f"""
@@ -1368,6 +1316,37 @@ with tab2:
               </div>
             </div>
             """), unsafe_allow_html=True)
+
+            # زر تحميل بطاقة التشخيص القياسي للبنك في ملف Word
+            single_diag_word = f"""
+            <html dir="rtl">
+            <head><meta charset="utf-8"><title>بطاقة التشخيص القياسي - {d_bank}</title></head>
+            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; line-height: 1.8;">
+                <h1 style="color: {CBE_NAVY}; text-align: center;">بطاقة التشخيص القياسي لمؤشر الحوكمة الذكية المستدامة (SSGI)</h1>
+                <h3 style="color: {CBE_GOLD}; text-align: center;">البنك المصرفي: {d_bank} | التصنيف: {badge_status}</h3>
+                <hr>
+                <ul>
+                    <li><b>مؤشر SSGI المركب:</b> {d_final}%</li>
+                    <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {d_sip}% (الإسهام الفعلي: {round(d_sip * 0.40, 1)} / 40)</li>
+                    <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> {d_ig}% (الإسهام الفعلي: {round(d_ig * 0.30, 1)} / 30)</li>
+                    <li><b>تقارير الاستدامة (SR - وزن 30%):</b> {d_sr}% (الإسهام الفعلي: {round(d_sr * 0.30, 1)} / 30)</li>
+                </ul>
+                <hr>
+                {detailed_diag}
+                <hr>
+                <p style="text-align: center; font-size: 12px; color: #64748B;">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة © 2026</p>
+            </body>
+            </html>
+            """
+            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+            st.download_button(
+                label=f"📄 تحميل بطاقة التشخيص القياسي لبنك ({d_bank}) (Word)",
+                data=single_diag_word.encode("utf-8-sig"),
+                file_name=f"التشخيص_القياسي_SSGI_{d_bank}.doc",
+                mime="application/msword",
+                use_container_width=True,
+                key="dl_single_ssgi_word"
+            )
 
             st.markdown("<br>", unsafe_allow_html=True)
             ch_col1, ch_col2 = st.columns(2)
