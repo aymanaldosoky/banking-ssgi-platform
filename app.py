@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="auto"
 )
 
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
