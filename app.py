@@ -17,6 +17,7 @@ import psycopg2
 from bank_rag_engine import (
     BANKS_LIST_AR,
     process_rag_gemini_query,
+    stream_rag_gemini_query,
     audit_differentiation,
     load_survey_log_from_file,
     render_tab_7_survey,
@@ -143,7 +144,7 @@ div[role="option"] {{
 }}
 
 .custom-rtl-table th {{
-    background: linear-gradient(135deg, {CBE_NAVY} 100%, #001A33 100%) !important;
+    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     color: #F8FAFC !important;
     padding: 10px 10px !important;
     font-weight: 700 !important;
@@ -521,31 +522,31 @@ if not st.session_state.authenticated:
             </p>
         </div>
         """, unsafe_allow_html=True)
-        
-with st.form("login_form", clear_on_submit=False):
+
+        with st.form("login_form", clear_on_submit=False):
             username_input = st.text_input("اسم المستخدم (Username)", placeholder="أدخل اسم المستخدم...")
             password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
             if submitted:
-            # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
-            clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
-            clean_pass = str(password_input).strip()
+                # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
+                clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
+                clean_pass = str(password_input).strip()
 
-            if clean_user == ADMIN_USER.strip().lower() and hash_password(clean_pass) == ADMIN_PASS_HASH:
-                st.session_state.authenticated = True
-                st.session_state.username = "مشرف النظام (Admin)"
-                st.session_state.role = "admin"
-                log_visitor_action("admin", "مشرف (Admin)")
-                st.rerun()
-            elif clean_user in ("user", "users") and clean_pass == "123":
-                st.session_state.authenticated = True
-                st.session_state.username = "باحث / مستخدم (User)"
-                st.session_state.role = "user"
-                log_visitor_action("user", "مستخدم عادي (User)")
-                st.rerun()
-            else:
-                st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
+                if clean_user == ADMIN_USER.strip().lower() and hash_password(clean_pass) == ADMIN_PASS_HASH:
+                    st.session_state.authenticated = True
+                    st.session_state.username = "مشرف النظام (Admin)"
+                    st.session_state.role = "admin"
+                    log_visitor_action("admin", "مشرف (Admin)")
+                    st.rerun()
+                elif clean_user in ("user", "users") and clean_pass == "123":
+                    st.session_state.authenticated = True
+                    st.session_state.username = "باحث / مستخدم (User)"
+                    st.session_state.role = "user"
+                    log_visitor_action("user", "مستخدم عادي (User)")
+                    st.rerun()
+                else:
+                    st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
@@ -659,7 +660,6 @@ else:
         "📖 دليل المستخدم الرسمي PDF"
     ])
     tab9 = None
-
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
