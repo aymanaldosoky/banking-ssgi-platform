@@ -2448,7 +2448,7 @@ with tab6:
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 1. التحليل الآلي وتقييم تقارير الاستدامة المرفوعة (AI ESG Auditor)</h3>
         <p style="color: #475569; font-size: 13.5px;">
-        قراءة وتحليل وثائق وتقارير الاستدامة المصرفية مباشرة لتقييم مدى امتثالها الفعلي وفق المعايير المعتمدة (البيئي 35%، المجتمعي 30%، الحوكمة 35%).
+        قراءة وتحليل وثائق وتقارير الاستدامة المصرفية مباشرة لتقييم مدى امتثالها الفعلي وفق المعايير المعتمدة.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -2486,7 +2486,7 @@ with tab6:
             key="rubric_std_sel"
         )
 
-        run_doc_eval_btn = st.button("🚀 بدء التدقيق الذكي وحساب نسبة الامتثال", use_container_width=True, type="primary")
+        run_doc_eval_btn = st.button("🚀 بدء التدقيق الذكي ", use_container_width=True, type="primary")
         if st.session_state.get("last_esg_audit_result"):
             if st.button("🗑️ مسح نتيجة التدقيق الحالية", use_container_width=True, type="secondary", key="clear_esg_audit_btn"):
                 del st.session_state["last_esg_audit_result"]
