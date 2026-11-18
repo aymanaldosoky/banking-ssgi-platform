@@ -113,7 +113,6 @@ div[data-testid="stHorizontalBlock"], section {{
 *:focus, *:active, *:focus-visible {{
     outline: none !important;
     box-shadow: none !important;
-    border-color: transparent !important;
 }}
 
 div[data-baseweb="select"] *,
@@ -176,8 +175,12 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل بدون إطارات تركيز رمادية */
-div.stButton > button, div.stDownloadButton > button {{
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول عند العرض والتمرير والضغط */
+div.stButton > button,
+div.stDownloadButton > button,
+div[data-testid="stFormSubmitButton"] > button,
+button[kind="primaryFormSubmit"],
+button[kind="secondaryFormSubmit"] {{
     width: 100% !important;
     border-radius: 50px !important;
     font-family: 'Cairo', sans-serif !important;
@@ -185,16 +188,50 @@ div.stButton > button, div.stDownloadButton > button {{
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
-    transition: all 0.3s ease !important;
+    transition: all 0.25s ease !important;
     box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15) !important;
     outline: none !important;
+    cursor: pointer !important;
 }}
 
-div.stButton > button:hover, div.stDownloadButton > button:hover {{
+div.stButton > button *,
+div.stDownloadButton > button *,
+div[data-testid="stFormSubmitButton"] > button * {{
+    color: inherit !important;
+}}
+
+/* حالة التمرير (Hover) */
+div.stButton > button:hover,
+div.stDownloadButton > button:hover,
+div[data-testid="stFormSubmitButton"] > button:hover,
+button[kind="primaryFormSubmit"]:hover,
+button[kind="secondaryFormSubmit"]:hover {{
     background-color: #001A33 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: #FFFFFF !important;
-    box-shadow: 0 6px 16px rgba(0, 43, 73, 0.3) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(0, 43, 73, 0.32) !important;
+}}
+
+/* حالة الضغط الفعلي (Active / Click) */
+div.stButton > button:active,
+div.stDownloadButton > button:active,
+div[data-testid="stFormSubmitButton"] > button:active,
+button[kind="primaryFormSubmit"]:active,
+button[kind="secondaryFormSubmit"]:active {{
+    background-color: {CBE_GOLD} !important;
+    color: {CBE_NAVY} !important;
+    border-color: {CBE_NAVY} !important;
+    transform: scale(0.98) !important;
+    box-shadow: 0 2px 8px rgba(0, 43, 73, 0.25) !important;
+}}
+
+/* حالة التركيز بعد النقر (Focus) دون إخفاء الإطار الذهبي */
+div.stButton > button:focus,
+div.stDownloadButton > button:focus,
+div[data-testid="stFormSubmitButton"] > button:focus {{
+    border-color: {CBE_GOLD} !important;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35) !important;
 }}
 
 div.stTabs {{
@@ -371,8 +408,10 @@ div.stTabs {{
         text-overflow: unset !important;
     }}
 
-    /* جعل الأزرار وحقول الإدخال مريحة للمس (Touch-Friendly) وبعرض كامل */
-    div.stButton > button, div.stDownloadButton > button {{
+    /* جعل الأزرار وحقول الإدخال ومفتاح تسجيل الدخول مريحة للمس (Touch-Friendly) */
+    div.stButton > button,
+    div.stDownloadButton > button,
+    div[data-testid="stFormSubmitButton"] > button {{
         width: 100% !important;
         min-height: 44px !important;
         font-size: 13.5px !important;
