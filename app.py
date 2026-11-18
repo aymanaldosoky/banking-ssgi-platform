@@ -1973,25 +1973,139 @@ with tab3:
 with tab4:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي</h3>
-        <p style="color: #475569; font-size: 14px;">استعراض وتثبيت التوصيات الاستراتيجية المخصصة والتحليلات العميقة لكل بنك في القطاع المصرفي المصري وتصديرها في تقرير شامل.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🛡️ لوحة دعم اتخاذ القرار المصرفي والتحليل الاستراتيجي (Executive DSS)</h3>
+        <p style="color: #475569; font-size: 14px;">تحويل مخرجات التشخيص القياسي الفعلي إلى حزمة قرارات تنفيذية إلزامية، تحديد الأولويات الرقابية، وتوزيع المسؤوليات على لجان الحوكمة ومجلس الإدارة.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if not st.session_state.history_state:
+    ssgi_records_dec = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
+
+    if not ssgi_records_dec:
         st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني للتمكن من توليد لوحة القرار والتوصيات.")
     else:
+        # دالة مساعدة لتوليد حزمة القرار التنفيذي المخصصة لكل بنك بناءً على أرقامه الفعلية
+        def build_bank_decision_package(bank_row):
+            b_name = bank_row["البنك"]
+            score = float(bank_row["مؤشر SSGI المركب"])
+            s_val = float(bank_row["منصات المعلومات (40%)"])
+            i_val = float(bank_row["الحوكمة المؤسسية (30%)"])
+            r_val = float(bank_row["تقارير الاستدامة (30%)"])
+            score_str_plain = get_colored_score_html(score)
+
+            # حساب الفجوات الموزونة لتحديد أولوية التدخل التنفيذي بدقة
+            gaps_weighted = {
+                "منصات المعلومات الذكية (SIP)": round((100 - s_val) * 0.40, 2),
+                "الحوكمة المؤسسية ولجان الالتزام (IG)": round((100 - i_val) * 0.30, 2),
+                "تقارير الاستدامة والتمويل الأخضر (SR)": round((100 - r_val) * 0.30, 2),
+            }
+            top_gap_axis = max(gaps_weighted, key=gaps_weighted.get)
+            top_gap_loss = gaps_weighted[top_gap_axis]
+
+            pillars_raw = {
+                "منصات المعلومات الذكية (SIP)": s_val,
+                "الحوكمة المؤسسية (IG)": i_val,
+                "تقارير الاستدامة (SR)": r_val
+            }
+            weakest_pillar = min(pillars_raw, key=pillars_raw.get)
+            weakest_val = pillars_raw[weakest_pillar]
+
+            # تحديد مستوى الأولوية التنفيذية
+            if score >= 80:
+                urgency_badge = "أولوية استدامة الريادة والابتكار 🟢"
+                urgency_color = "#10B981"
+                recs_list = [
+                    f"<b>تفعيل الريادة الإقليمية والرقابة الذكية لـ ({b_name}):</b> توظيف جاهزية منصات المعلومات ({s_val}%) لتطبيق أنظمة الامتثال الرقابي الآلي المباشر (RegTech) وتصدير الخدمات المالية الرقمية.",
+                    f"<b>تعظيم الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد الحوكمة ({i_val}%) في تأسيس لجنة متخصصة لحوكمة الذكاء الاصطناعي والسيادة الرقمية على مستوى مجلس الإدارة."
+                ]
+            elif score >= 50:
+                urgency_badge = "أولوية تدخل تصحيحي متوسط المدى 🟡"
+                urgency_color = "#F59E0B"
+                recs_list = [
+                    f"<b>سد الفجوة ذات الوزن الأعلى في ({b_name}):</b> توجيه مخصصات التطوير الفورية لمعالجة <b>{top_gap_axis}</b> (الذي يستنزف {top_gap_loss} نقطة من المؤشر المركب) ورفع كفاءة <b>{weakest_pillar} ({weakest_val}%)</b>.",
+                    f"<b>تعزيز فاعلية لجان المراجعة والمخاطر:</b> ربط مؤشرات الأداء التنفيذية للإدارة العليا برفع درجة الحوكمة المؤسسية من ({i_val}%) إلى مستهدف رقابي لا يقل عن (80%)."
+                ]
+            else:
+                urgency_badge = "أولوية تدخل رقابي طارئ وعاجل 🔴"
+                urgency_color = "#EF4444"
+                recs_list = [
+                    f"<b>خطة طوارئ هيكلية عاجلة لـ ({b_name}):</b> إيقاف التوسع غير الممنهج وإعادة بناء البنية التحتية لمنصات المعلومات ({s_val}%) لضمان أمن البيانات واستمرارية الأعمال.",
+                    f"<b>إعادة هيكلة منظومة الحوكمة والامتثال:</b> تفعيل رقابة صارمة من لجنة المراجعة ومجلس الإدارة لمعالجة القصور الحاد في الحوكمة ({i_val}%) والامتثال الفوري لتعليمات البنك المركزي."
+                ]
+
+            # توصيات تفصيلية حسب أداء كل محور من المحاور الثلاثة
+            if s_val >= 80:
+                sip_exec = f"<b>قطاع تكنولوجيا المعلومات والأمن السيبراني ({s_val}%):</b> اعتماد الربط اللحظي (Real-time APIs) مع منظومات التقارير الرقابية وتطبيق اختبارات الاختراق الدورية."
+            elif s_val >= 50:
+                sip_exec = f"<b>قطاع تكنولوجيا المعلومات والأمن السيبراني ({s_val}%):</b> تحديث قواعد البيانات المهيكلة وتقليص زمن اكتشاف الأخطاء التشغيلية (MTTD) وفق ضوابط ISO 27001."
+            else:
+                sip_exec = f"<b>قطاع تكنولوجيا المعلومات والأمن السيبراني ({s_val}%):</b> إحلال الأنظمة القديمة، حظر استضافة البيانات الحساسة خارج النطاق السيادي، وتعيين مسؤول لأمن المعلومات."
+
+            if i_val >= 80:
+                ig_exec = f"<b>مجلس الإدارة ولجنة المراجعة والحوكمة ({i_val}%):</b> الحفاظ على استقلالية اللجان السيادية ونشر تقارير الإفصاح الدوري عن المخاطر غير المالية."
+            elif i_val >= 50:
+                ig_exec = f"<b>مجلس الإدارة ولجنة المراجعة والحوكمة ({i_val}%):</b> تفعيل مصفوفة الصلاحيات والمسؤوليات (RACI)، وتحديث سجل منع تعارض المصالح، وزيادة نسبة الأعضاء المستقلين."
+            else:
+                ig_exec = f"<b>مجلس الإدارة ولجنة المراجعة والحوكمة ({i_val}%):</b> إعادة تشكيل لجان المخاطر والمراجعة برئاسة أعضاء مستقلين وإلزام الإدارات بتنفيذ توصيات التدقيق الداخلي."
+
+            if r_val >= 80:
+                sr_exec = f"<b>لجنة الاستدامة والتمويل المستدام ({r_val}%):</b> التوسع في إصدار السندات الخضراء (Green Bonds) وإخضاع تقرير الاستدامة لتوكيد خارجي مستقل وفق ISSB S1/S2."
+            elif r_val >= 50:
+                sr_exec = f"<b>لجنة الاستدامة والتمويل المستدام ({r_val}%):</b> رفع حصة الأصول الخضراء (GAR) في المحفظة الائتمانية وإدراج اختبارات التحمل المناخي لتمويلات الشركات الكبرى."
+            else:
+                sr_exec = f"<b>لجنة الاستدامة والتمويل المستدام ({r_val}%):</b> تأسيس وحدة مركزية للاستدامة وإطلاق أول تقرير إفصاح متوافق مع معايير GRI وضوابط البنك المركزي للتمويل المستدام."
+
+            deep_items = [sip_exec, ig_exec, sr_exec]
+            deep_analysis_text = "<ul style='margin:0;padding-right:20px;'>" + "".join(f"<li style='margin-bottom:6px;'>{x}</li>" for x in deep_items) + "</ul>"
+
+            return {
+                "bank": b_name,
+                "score": score,
+                "score_str": score_str_plain,
+                "s_val": s_val,
+                "i_val": i_val,
+                "r_val": r_val,
+                "urgency_badge": urgency_badge,
+                "urgency_color": urgency_color,
+                "top_gap_axis": top_gap_axis,
+                "top_gap_loss": top_gap_loss,
+                "recs": recs_list,
+                "deep": deep_analysis_text
+            }
+
         col_dec_in, col_dec_out = st.columns([1, 2], gap="large")
 
         with col_dec_in:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
-            recorded_banks_dec = list(dict.fromkeys([item["البنك"] for item in st.session_state.history_state]))
-            decision_bank_sel = st.selectbox("اختر البنك لاستعراض التوصيات", recorded_banks_dec, key="dec_bank")
-            generate_decision_btn = st.button("📋 إضافة وتثبيت توصيات البنك المختارة", use_container_width=True, type="primary")
+            recorded_banks_dec = list(dict.fromkeys([item["البنك"] for item in ssgi_records_dec]))
+            decision_bank_sel = st.selectbox("اختر البنك لاستعراض واعتماد توصياته", recorded_banks_dec, key="dec_bank")
+
+            # معاينة سريعة لمؤشرات البنك المختار قبل الاعتماد
+            preview_bank_row = next((item for item in reversed(ssgi_records_dec) if item["البنك"] == decision_bank_sel), None)
+            if preview_bank_row:
+                p_s = preview_bank_row["منصات المعلومات (40%)"]
+                p_i = preview_bank_row["الحوكمة المؤسسية (30%)"]
+                p_r = preview_bank_row["تقارير الاستدامة (30%)"]
+                p_tot = preview_bank_row["مؤشر SSGI المركب"]
+                st.markdown(flat_html(f"""
+                <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 10px 12px; margin: 10px 0 14px 0; font-size: 12.5px;">
+                    <div style="font-weight: 800; color: {CBE_NAVY}; margin-bottom: 4px;">📌 القراءة الفعلية المسجلة للبنك:</div>
+                    <div style="color: #334155;">المؤشر المركب: <b>{p_tot}%</b> | SIP: <b>{p_s}%</b> | IG: <b>{p_i}%</b> | SR: <b>{p_r}%</b></div>
+                </div>
+                """), unsafe_allow_html=True)
+
+            generate_decision_btn = st.button("📋 اعتماد وتثبيت توصيات البنك المختار", use_container_width=True, type="primary")
+
+            generate_all_decisions_btn = st.button(
+                f"⚡ اعتماد توصيات كافة البنوك المسجلة ({len(recorded_banks_dec)})",
+                use_container_width=True,
+                type="secondary"
+            )
 
             if st.button("🗑️ مسح وإعادة تعيين لوحة القرار", use_container_width=True, type="secondary"):
                 st.session_state.decision_results_dict = {}
                 st.rerun()
+
+            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
             # ------------------------------------------------------------------
             # بناء الآلية التجميعية لتقرير لوحة دعم القرار بالكامل لملف Word HTML
@@ -2019,22 +2133,23 @@ with tab4:
                 <h1>تقرير لوحة دعم اتخاذ القرار والسياسات المصرفية</h1>
                 <p class="sub-header">المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة | تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
                 <hr>
-                <h3>🛡️ تقرير وتوصيات البنوك المسجلة بالكامل (إجمالي: {dec_count}):</h3>
+                <h3>🛡️ تقرير وتوصيات البنوك المعتمدة بالكامل (إجمالي: {dec_count}):</h3>
             """
 
             if st.session_state.decision_results_dict:
                 for k, v in st.session_state.decision_results_dict.items():
+                    u_badge = v.get("urgency_badge", "توصيات تنفيذية معتمدة")
                     dec_word_html += f"""
                     <div class="card">
-                        <div class="card-title">تقرير وتوصيات بنك: {v['bank']} (المؤشر المركب: {v['score_str']})</div>
+                        <div class="card-title">تقرير وتوصيات بنك: {v['bank']} (المؤشر المركب: {v['score_str']}) — [{u_badge}]</div>
                         <div class="box-inner">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">🎯 التوصيات الاستراتيجية الموجهة:</p>
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">🎯 القرارات والتوصيات الاستراتيجية الموجهة لمجلس الإدارة:</p>
                             <ul>
                                 <li>{v['recs'][0]}</li>
                                 <li>{v['recs'][1]}</li>
                             </ul>
                             <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 10px 0;">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px;">💡 مصفوفة التكليفات التنفيذية حسب الإدارات واللجان المختصة:</p>
                             <div>{v['deep']}</div>
                         </div>
                     </div>
@@ -2045,7 +2160,7 @@ with tab4:
             dec_word_html += f"""
                 <hr>
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
-                <p>تعكس هذه التوصيات متطلبات الحوكمة المؤسسية والسيادة الرقمية وتوطين معايير الاستدامة وفق توجيهات البنك المركزي المعمول بها.</p>
+                <p>تعكس هذه التوصيات متطلبات الحوكمة المؤسسية والسيادة الرقمية وتوطين معايير الاستدامة وفق توجيهات البنك المركزي المصري المعمول بها.</p>
                 <hr>
                 <p class="footer">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والرفع بها للجان الحوكمة والمراجعة</p>
                 <p style="text-align: center; font-size: 11px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
@@ -2067,71 +2182,74 @@ with tab4:
             st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
 
             if generate_decision_btn:
-                if not st.session_state.history_state or decision_bank_sel == "اختر البنك المصرفي":
-                    st.warning("⚠️ يرجى أولاً إدخال بيانات البنك وحساب مؤشر SSGI في التبويب الثاني.")
+                if decision_bank_sel == "اختر البنك المصرفي":
+                    st.warning("⚠️ يرجى اختيار بنك مصرفي صحيح أولاً.")
                 else:
-                    # جلب أحدث سجل للبنك المختار
-                    bank_data = next((item for item in reversed(st.session_state.history_state) if item["البنك"] == decision_bank_sel), None)
+                    bank_data = next((item for item in reversed(ssgi_records_dec) if item["البنك"] == decision_bank_sel), None)
                     if bank_data:
-                        score = bank_data["مؤشر SSGI المركب"]
-                        s_val = bank_data["منصات المعلومات (40%)"]
-                        i_val = bank_data["الحوكمة المؤسسية (30%)"]
-                        r_val = bank_data["تقارير الاستدامة (30%)"]
-                        score_str_plain = get_colored_score_html(score)
-
-                        if score >= 80:
-                            recs_list = [
-                                f"<b>تعزيز ريادة الابتكار المصرفي لـ ({decision_bank_sel}):</b> توظيف منصات المعلومات المتقدمة ({s_val}%) لتصدير الخدمات المالية الرقمية وقيادة التحول نحو المعايير المستدامة.",
-                                f"<b>الحوكمة المؤسسية المتقدمة:</b> استثمار رصيد لجان المراجعة والالتزام ({i_val}%) لقيادة تطبيق أحدث نظم الرقابة التنظيمية (RegTech)."
-                            ]
-                        elif score >= 51:
-                            recs_list = [
-                                f"<b>تطوير البنية والمؤسسية لـ ({decision_bank_sel}):</b> تحسين كفاءة منصات المعلومات بناءً على قراءة ({s_val}%).",
-                                f"<b>دعم منظومة الالتزام:</b> تعزيز دور لجان المراجعة وإدارة المخاطر لتحسين مؤشر الحوكمة المسجل عند ({i_val}%)."
-                            ]
-                        else:
-                            recs_list = [
-                                f"<b>التدخل الاستباقي العاجل لـ ({decision_bank_sel}):</b> معالجة الاختناقات الهيكلية الحرجة في البنية التقنية ومنصات المعلومات ({s_val}%).",
-                                f"<b>إعادة هيكلة أطر الحوكمة:</b> تفعيل التزام تام بتعليمات البنك المركزي ورفع كفاءة التدقيق الداخلي ({i_val}%)."
-                            ]
-
-                        if r_val >= 80:
-                            sustainability_comment = f"الحفاظ على الأداء المتميز وتوسيع محفظة الأصول الخضراء والتمويل المستدام استناداً للجاهزية المرتفعة في الاستدامة ({r_val}%)."
-                        elif r_val >= 50:
-                            sustainability_comment = f"الاستمرار في توجيه الائتمان المصرفي نحو المشروعات الخضراء لتعزيز الأداء في الاستدامة ({r_val}%)."
-                        else:
-                            sustainability_comment = f"إطلاق برامج عاجلة لتطوير الإفصاح المالي وغير المالي وفق معايير الاستدامة لتعويض الضعف في ({r_val}%)."
-
-                        deep_items = [
-                            f"يتطلب من متخذ القرار تفعيل <b>'برامج الرقابة التنظيمية الآلية والذكية (RegTech)'</b> لرفع كفاءة تدفق البيانات والتقارير الرقابية استناداً إلى قراءة منصات المعلومات ({s_val}%).",
-                            sustainability_comment,
-                            f"تحديث أطر إدارة المخاطر الكلية والتحوط المرن بالتوازي مع متطلبات الحوكمة ({i_val}%)."
-                        ]
-                        deep_analysis_text = "<ul style='margin:0;padding-right:20px;'>" + "".join(f"<li>{x}</li>" for x in deep_items) + "</ul>"
-
-                        st.session_state.decision_results_dict[decision_bank_sel] = {
-                            "bank": decision_bank_sel,
-                            "score_str": score_str_plain,
-                            "recs": recs_list,
-                            "deep": deep_analysis_text
-                        }
-                        # تحديث الصفحة فوراً لتغذية زر تحميل Word بالبيانات الجديدة من أول مرة
+                        st.session_state.decision_results_dict[decision_bank_sel] = build_bank_decision_package(bank_data)
                         st.rerun()
+
+            if generate_all_decisions_btn:
+                for b_name_iter in recorded_banks_dec:
+                    b_data_iter = next((item for item in reversed(ssgi_records_dec) if item["البنك"] == b_name_iter), None)
+                    if b_data_iter:
+                        st.session_state.decision_results_dict[b_name_iter] = build_bank_decision_package(b_data_iter)
+                st.rerun()
 
             if st.session_state.decision_results_dict:
                 for b_key, item in list(st.session_state.decision_results_dict.items()):
+                    u_badge = item.get("urgency_badge", "توصيات تنفيذية معتمدة")
+                    u_color = item.get("urgency_color", CBE_GOLD)
+                    s_disp = item.get("s_val", "-")
+                    i_disp = item.get("i_val", "-")
+                    r_disp = item.get("r_val", "-")
+                    gap_axis_disp = item.get("top_gap_axis", "")
+                    gap_loss_disp = item.get("top_gap_loss", 0)
+
+                    gap_banner = (
+                        f"<div style='background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 7px 12px; margin-bottom: 10px; font-size: 12.5px; color: #92400E;'>"
+                        f"🎯 <b>محور التدخل ذو الأولوية القصوى:</b> {gap_axis_disp} (فجوة موزونة: <b>-{gap_loss_disp}</b> نقطة)</div>"
+                        if gap_axis_disp and gap_loss_disp > 0 else ""
+                    )
+
                     card_html = flat_html(f"""
                     <div style="background: #FFFFFF; padding: 22px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" dir="rtl">
-                        <h3 style="color: {CBE_NAVY}; font-weight: bold; margin-bottom: 8px; text-align: right;">🛡️ تقرير وتوصيات بنك: {item['bank']} (المؤشر المركب: {item['score_str']})</h3>
-                        <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 10px;">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">🎯 التوصيات الاستراتيجية الموجهة:</p>
-                            <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.8; text-align: right;">
-                                <li>{item['recs'][0]}</li>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 12px;">
+                            <h3 style="color: {CBE_NAVY}; font-weight: bold; margin: 0; font-size: 16.5px;">
+                                🛡️ حزمة القرار التنفيذي لبنك: <span style="color: {CBE_GOLD};">{item['bank']}</span> ({item['score_str']})
+                            </h3>
+                            <span style="background: #F8FAFC; color: {CBE_NAVY}; border: 1px solid {u_color}; border-right: 4px solid {u_color}; padding: 3px 10px; border-radius: 15px; font-size: 12px; font-weight: 700;">
+                                {u_badge}
+                            </span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; text-align: center;">
+                            <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                                <div style="font-size: 11px; color: #64748B; font-weight: bold;">منصات المعلومات (SIP)</div>
+                                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">{s_disp}%</div>
+                            </div>
+                            <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                                <div style="font-size: 11px; color: #64748B; font-weight: bold;">الحوكمة المؤسسية (IG)</div>
+                                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">{i_disp}%</div>
+                            </div>
+                            <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                                <div style="font-size: 11px; color: #64748B; font-weight: bold;">تقارير الاستدامة (SR)</div>
+                                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">{r_disp}%</div>
+                            </div>
+                        </div>
+
+                        {gap_banner}
+
+                        <div style="background: {CBE_BG}; padding: 14px; border-radius: 8px; border-right: 4px solid {CBE_GOLD};">
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right; font-size: 14px;">🎯 القرارات والتوصيات الاستراتيجية الموجهة لمجلس الإدارة:</p>
+                            <ul style="margin: 0; padding-right: 20px; color: #1E293B; line-height: 1.8; text-align: right; font-size: 13.5px;">
+                                <li style="margin-bottom: 6px;">{item['recs'][0]}</li>
                                 <li>{item['recs'][1]}</li>
                             </ul>
-                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 10px 0;">
-                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right;">💡 إضافات تحليلية استراتيجية عميقة ومخصصة:</p>
-                            <div style="color: #1E293B; line-height: 1.8; text-align: right; padding-right: 0;">
+                            <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 12px 0;">
+                            <p style="font-weight: bold; color: {CBE_NAVY}; margin-bottom: 6px; text-align: right; font-size: 14px;">💡 مصفوفة التكليفات التنفيذية حسب الإدارات واللجان المختصة:</p>
+                            <div style="color: #1E293B; line-height: 1.8; text-align: right; font-size: 13.5px;">
                                 {item['deep']}
                             </div>
                         </div>
@@ -2143,7 +2261,7 @@ with tab4:
                         st.rerun()
                     st.markdown("<br>", unsafe_allow_html=True)
             else:
-                st.info("🛡️ يرجى اختيار البنك المسجل والضغط على زر الإضافة لتثبيت التوصيات والتحليلات المخصصة هنا.")
+                st.info("🛡️ اختر البنك المسجل واضغط على زر الاعتماد لتوليد حزمة القرارات التنفيذية ومصفوفة التكليفات المخصصة هنا.")
             st.markdown('</div>', unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
 # التبويب الخامس: التقرير التنفيذي الموحد
