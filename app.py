@@ -1306,7 +1306,7 @@ with tab2:
     # --------------------------------------------------------------------------
     # الجدول الأول: ترتيب وسجلات البنوك المُشخَّصة
     # --------------------------------------------------------------------------
-    st.markdown("<h3 style='color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px);'>📋 ترتيب سجلات البنوك المُشخَّصة</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px);'>📋 قائمة البنوك المشخصة</h3>", unsafe_allow_html=True)
 
     ssgi_records = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
     if ssgi_records:
@@ -1361,7 +1361,7 @@ with tab2:
         with col_dl:
             csv_data = df_history.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="📥 تحميل جدول ترتيب البنوك والسجلات (Excel / CSV)",
+                label="📥 تحميل قائمة البنوك المشخصة  ",
                 data=csv_data,
                 file_name="ترتيب_البنوك_المصرية_SSGI.csv",
                 mime="text/csv",
