@@ -527,7 +527,7 @@ with st.form("login_form", clear_on_submit=False):
             password_input = st.text_input("كلمة المرور (Password)", type="password", placeholder="أدخل كلمة المرور...")
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
-        if submitted:
+            if submitted:
             # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
             clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
             clean_pass = str(password_input).strip()
