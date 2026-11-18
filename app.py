@@ -673,8 +673,8 @@ if "last_rag_result" not in st.session_state:
 with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
-        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي (Hybrid RAG & Gemini Engine)</h3>
-        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">استعراض الإجابات التحليلية الموثقة المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري لكل بنك على حدة.</p>
+        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي </h3>
+        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">استعراض الإجابات التحليلية المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري .</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -691,7 +691,7 @@ with tab1:
             key="query_text_box"
         )
 
-        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة (Zero-Click - اضغط للتنفيذ المباشر):</b>", unsafe_allow_html=True)
+        st.markdown("<b style='color: #002B49; font-size: 13.5px;'>📌 أسئلة مقترحة:</b>", unsafe_allow_html=True)
 
         def trigger_instant_query(question):
             st.session_state.query_text_box = question
@@ -730,7 +730,7 @@ with tab1:
             for i, q in enumerate(sip_questions):
                 st.button(f"⚡ {q}", key=f"btn_sip_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
-        ask_submit_btn = st.button("🚀 تقديم السؤال والتحليل المباشر", use_container_width=True, type="primary")
+        ask_submit_btn = st.button("🚀 تقديم السؤال ", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_q2:
@@ -841,7 +841,7 @@ with tab1:
                     st.session_state.last_rag_result = None
                     st.rerun()
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لتوليد التقرير فوراً دون الحاجة للضغط على زر إضافي.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لاستخراج الإجابات فوراً.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
