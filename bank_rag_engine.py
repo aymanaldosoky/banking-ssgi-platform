@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v7.2 - Gemini 3.8 Ready, Memory-Optimized & Quota-Safe Hybrid RAG)
-محرك "اسأل المنصة" المعتمد على Gemini API مع دعم الجيل الأحدث وإدارة الذاكرة المنخفضة.
+bank_rag_engine.py (v7.3 - Mobile-Responsive UI, Gemini 3.8 Ready, Memory-Optimized Hybrid RAG)
+محرك "اسأل المنصة" المعتمد على Gemini API مع دعم الجيل الأحدث، إدارة الذاكرة المنخفضة، وتجاوب كامل مع الهواتف الذكية.
 """
 
 import os
@@ -1074,15 +1074,15 @@ def render_card(bank: str, question: str, inner_html: str, tier: str, has_archiv
     foot_html = f'<p style="font-size:12px;color:#64748B;margin-top:14px;padding-top:8px;border-top:1px dashed #CBD5E1;">{foot_note}</p>'
 
     return f"""
-    <div dir="rtl" style="text-align:right; line-height:1.9; color:{CBE_NAVY}; background:#FFFFFF; padding:25px; border-radius:12px; border:1.5px solid {CBE_GOLD}; box-shadow:0 6px 18px rgba(0,0,0,0.06);">
-      <h3 style="color:{CBE_NAVY}; font-weight:bold; margin-bottom:12px;">🎯 التقرير التحليلي المفصل ({html.escape(bank)})</h3>
-      <p style="font-size:14.5px; margin-bottom:8px;"><b>السؤال / الاستفسار المطروح:</b> "{html.escape(question)}"</p>
-      <p style="font-size:12.5px; font-weight:bold; color:{color}; margin-bottom:10px;">{label}</p>
-      <div style="background:{CBE_BG}; padding:18px 20px; border-radius:8px; border-right:5px solid {CBE_GOLD}; margin-top:8px; color:#1E293B; font-size:14.5px;">
-        {inner_html}
-        {foot_html}
-      </div>
-    </div>"""
+<div dir="rtl" style="text-align:right; line-height:1.85; color:{CBE_NAVY}; background:#FFFFFF; padding:clamp(14px, 3vw, 25px); border-radius:12px; border:1.5px solid {CBE_GOLD}; box-shadow:0 6px 18px rgba(0,0,0,0.06); overflow-wrap:break-word;">
+  <h3 style="color:{CBE_NAVY}; font-weight:bold; font-size:clamp(16px, 4vw, 20px); margin-bottom:10px;">🎯 التقرير التحليلي المفصل ({html.escape(bank)})</h3>
+  <p style="font-size:clamp(13.5px, 3.5vw, 14.5px); margin-bottom:8px;"><b>السؤال / الاستفسار المطروح:</b> "{html.escape(question)}"</p>
+  <p style="font-size:12px; font-weight:bold; color:{color}; margin-bottom:10px;">{label}</p>
+  <div style="background:{CBE_BG}; padding:clamp(12px, 2.5vw, 20px); border-radius:8px; border-right:4px solid {CBE_GOLD}; margin-top:8px; color:#1E293B; font-size:clamp(13.5px, 3.5vw, 14.5px);">
+    {inner_html}
+    {foot_html}
+  </div>
+</div>"""
 
 def _build_fallback_card(bank_name: str, question: str, p: dict, err_detail: str) -> str:
     fallback_items = []
@@ -1222,6 +1222,25 @@ def load_survey_log_from_file():
     return []
 
 def render_tab_7_survey():
+    # تنسيق مقياس ليكرت الخماسي ليبقى أفقياً على الشاشات الكبيرة ويتحول عمودياً بسلاسة على الموبايل
+    st.markdown("""
+<style>
+@media (max-width: 768px) {
+    div[role="radiogroup"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    div[role="radiogroup"] > label {
+        width: 100% !important;
+        background: #FFFFFF;
+        padding: 8px 12px;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
     LIKERT = {"غير موافق تماماً": 1, "غير موافق": 2, "محايد": 3, "موافق": 4, "موافق تماماً": 5}
     likert_options = list(LIKERT.keys())
 
@@ -1375,7 +1394,7 @@ def render_tab_7_survey():
                     if current_spec else "اختر التخصص الوظيفي لتحديد مسار العبارات")
     st.markdown(f"""
     <div dir="rtl" style="background:#FFF;border:1.5px solid {CBE_GOLD};border-radius:12px;padding:18px;margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px;">
             <span style="font-weight:800;color:{CBE_NAVY};font-size:15px;">📍 ({step_num}/{max_wizard_steps}) {step_titles(step_key)}</span>
             <span style="font-weight:800;color:{CBE_GOLD};font-size:14px;">{progress_txt}</span>
         </div>
