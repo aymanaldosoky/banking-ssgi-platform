@@ -1156,7 +1156,7 @@ with tab2:
                     <div style="line-height: 1.8; font-size: clamp(13px, 3.3vw, 14px);">
                         <p>🟡 <b>جاهزية متوسطة تتطلب تدخلاً استباقياً:</b> بلغت القيمة المركبة لمؤشر الحوكمة الذكية المستدامة (SSGI) للبنك: <b>{score_str_plain}</b>.</p>
                         <hr style="border: 0; border-top: 1px solid #CBD5E1; margin: 8px 0;">
-                        <p><b>🔍 التفصيل والتشخيص المعمق للمحاور:</b></p>
+                        <p><b>🔍 تشخيص المحاور المفصل:</b></p>
                         <ul style="margin: 0; padding-right: 18px;">
                             <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> {get_sip_comment(sip_val)}</li>
                             <li><b>الحوكمة المؤسسية والامتثال (IG - وزن 30%):</b> {get_ig_comment(ig_val)}</li>
@@ -1247,7 +1247,7 @@ with tab2:
                 st.markdown(flat_html(f"""
                 <div dir="rtl" style="text-align: right; background: #FFFFFF; padding: clamp(14px, 3vw, 22px); border-radius: 12px; border: 1.5px solid {CBE_GOLD}; line-height: 1.8; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-top: 10px;">
                   <div style="background: {CBE_BG}; padding: clamp(12px, 2.5vw, 15px); border-radius: 8px; border-right: 5px solid {CBE_GOLD};">
-                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: clamp(14px, 3.5vw, 15px);">التشخيص القياسي المفصل:</p>
+                    <p style="margin: 0 0 8px 0; font-weight: bold; color: {CBE_NAVY}; font-size: clamp(14px, 3.5vw, 15px);">التشخيص القياسي الكلي:</p>
                     <div style="color: {CBE_NAVY};">{detailed_diag}</div>
                   </div>
                 </div>
@@ -1714,7 +1714,7 @@ with tab3:
 
             if st.session_state.simulated_results_dict:
                 st.markdown("---")
-                st.markdown("<h4>📋 مقارنة السيناريوهات المتعددة المثبتة للبنوك:</h4>", unsafe_allow_html=True)
+                st.markdown("<h4>📋  السيناريوهات المختارة للبنوك:</h4>", unsafe_allow_html=True)
                 for s_key, item in reversed(list(st.session_state.simulated_results_dict.items())):
                     st.markdown(f"<span style='color: #64748B; font-size: 12px;'>معرف السيناريو: {s_key}</span>", unsafe_allow_html=True)
                     st.markdown(item["html"], unsafe_allow_html=True)
