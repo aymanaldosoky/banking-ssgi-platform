@@ -1523,8 +1523,8 @@ if __name__ == "__main__":
     print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
 def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name: str, bank_name: str, standard_name: str) -> dict:
     """
-    قراءة وتدقيق تقرير الاستدامة (PDF / TXT) مباشرة باستخدام Gemini 2.5 Flash
-    وفق معايير GRI أو ISSB S1/S2 أو ضوابط البنك المركزي المصري (CBE).
+    قراءة وتدقيق تقرير الاستدامة (PDF / TXT) مباشرة عبر Gemini API
+    مع التبديل التلقائي بين أحدث النماذج المتاحة لتجنب خطأ 404.
     """
     import json
     import os
@@ -1573,15 +1573,39 @@ def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name:
         text_content = file_bytes.decode("utf-8", errors="ignore")[:120000]
         contents_payload.append(f"نص التقرير:\n{text_content}")
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=contents_payload,
-        config=types.GenerateContentConfig(
-            temperature=0.15,
-            response_mime_type="application/json",
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
-        ),
-    )
+    # قائمة النماذج المرتبة من الأحدث للأقدم لضمان الاستمرارية وعدم حدوث خطأ 404
+    candidate_models = [
+        "gemini-3.8-flash",
+        "gemini-3-flash",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash",
+    ]
+
+    last_error = None
+    response = None
+
+    for model_name in candidate_models:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents_payload,
+                config=types.GenerateContentConfig(
+                    temperature=0.15,
+                    response_mime_type="application/json",
+                ),
+            )
+            if response and response.text:
+                break
+        except Exception as e:
+            last_error = e
+            # إذا كان الخطأ 404 (نموذج غير متاح)، انتقل للنموذج التالي في القائمة
+            if "404" in str(e) or "NOT_FOUND" in str(e):
+                continue
+            else:
+                raise e
+
+    if not response or not response.text:
+        raise RuntimeError(f"فشلت جميع النماذج المتاحة. آخر خطأ: {last_error}")
 
     raw_json = (response.text or "").strip()
     raw_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_json, flags=re.IGNORECASE).strip()
