@@ -38,6 +38,15 @@ CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
+WORD_STYLE_HEADER = f"""
+<style>
+    body {{ font-family: 'Cairo', 'Traditional Arabic', Arial, sans-serif; direction: rtl; text-align: right; line-height: 1.8; }}
+    table {{ width: 100%; border-collapse: collapse; direction: rtl; margin: 12px 0; }}
+    th {{ background-color: {CBE_NAVY}; color: #FFFFFF; padding: 8px; border: 1px solid #CBD5E1; text-align: right; }}
+    td {{ padding: 8px; border: 1px solid #CBD5E1; text-align: right; }}
+</style>
+"""
+
 CUSTOM_CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -462,20 +471,20 @@ def load_visitors_log_from_file():
 
 def get_visitor_ip():
     try:
-        ctx = st.runtime.scriptrunner.get_script_run_ctx()
-        if ctx and hasattr(ctx, "session_id"):
-            from streamlit.web.server.websocket_headers import _get_websocket_headers
-            headers = _get_websocket_headers()
-            if headers:
-                ip = headers.get("X-Forwarded-For") or headers.get("X-Real-Ip") or headers.get("Remote-Addr")
-                if ip:
-                    return ip.split(",")[0].strip()
+        # الطريقة الرسمية الحديثة في Streamlit
+        if hasattr(st, "context") and hasattr(st.context, "headers"):
+            headers = st.context.headers
+            ip = headers.get("X-Forwarded-For") or headers.get("X-Real-Ip") or headers.get("Remote-Addr")
+            if ip:
+                return ip.split(",")[0].strip()
     except Exception:
         pass
     return "127.0.0.1 (محلي / Local)"
 
 def log_visitor_action(username, role):
     try:
+        if st.session_state.get("_visit_logged"):
+            return
         client_ip = get_visitor_ip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_record = {
@@ -485,14 +494,10 @@ def log_visitor_action(username, role):
             "وقت الدخول": timestamp
         }
         existing_logs = load_visitors_log_from_file()
-        exists = any(
-            item.get("عنوان IP") == client_ip and item.get("اسم المستخدم") == username
-            for item in existing_logs
-        )
-        if not exists:
-            existing_logs.append(new_record)
-            df_out = pd.DataFrame(existing_logs)
-            df_out.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
+        existing_logs.append(new_record)
+        df_out = pd.DataFrame(existing_logs)
+        df_out.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
+        st.session_state["_visit_logged"] = True
     except Exception:
         pass
 
@@ -548,6 +553,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
+
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
@@ -610,6 +616,7 @@ with col_h2:
         st.session_state.authenticated = False
         st.session_state.username = ""
         st.session_state.role = ""
+        st.session_state["_visit_logged"] = False
         st.rerun()
 
 st.markdown("""
@@ -660,6 +667,7 @@ else:
         "📖 دليل المستخدم الرسمي PDF"
     ])
     tab9 = None
+
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
@@ -780,8 +788,8 @@ with tab1:
             # تجهيز ملف Word للإجابة الحالية
             single_qa_word = f"""
             <html dir="rtl">
-            <head><meta charset="utf-8"><title>تحليل واستعلام ذكي - {res['bank']}</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; line-height: 1.8;">
+            <head><meta charset="utf-8"><title>تحليل واستعلام ذكي - {res['bank']}</title>{WORD_STYLE_HEADER}</head>
+            <body>
                 <h2 style="color: {CBE_NAVY}; text-align: center;">🎯 تقرير الاستخلاص والتحليل الذكي (Hybrid RAG)</h2>
                 <p style="text-align: center; color: #64748B; font-size: 13px;">تاريخ التوليد: {res['timestamp']}</p>
                 <hr style="border-top: 2px solid {CBE_GOLD};">
@@ -807,8 +815,8 @@ with tab1:
 
             full_history_word = f"""
             <html dir="rtl">
-            <head><meta charset="utf-8"><title>سجل الإجابات والردود الذكية</title></head>
-            <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; line-height: 1.8;">
+            <head><meta charset="utf-8"><title>سجل الإجابات والردود الذكية</title>{WORD_STYLE_HEADER}</head>
+            <body>
                 <h1 style="color: {CBE_NAVY}; text-align: center;">📚 سجل الاستفسارات والتحليلات الذكية المجمعة</h1>
                 <hr style="border-top: 2px solid {CBE_GOLD};">
                 {all_qa_blocks}
@@ -994,6 +1002,7 @@ def generate_ssgi_evaluation_excel():
         ss = wb.add_worksheet('ملخص_المحاور')
         ss.right_to_left()
         txt = wb.add_format({'border': 1})
+        int0 = wb.add_format({'num_format': '0', 'border': 1, 'align': 'center'})
         pct0 = wb.add_format({'num_format': '0%', 'border': 1, 'align': 'center'})
         num2 = wb.add_format({'num_format': '0.00', 'border': 1, 'align': 'center', 'bold': True})
         bold_gold = wb.add_format({'num_format': '0.00', 'border': 1, 'align': 'center', 'bold': True, 'bg_color': '#C5A059'})
@@ -1013,8 +1022,8 @@ def generate_ssgi_evaluation_excel():
             cnt = int((df["المحور الرئيسي"] == axis).sum())
             ss.write(r, 0, axis, txt)
             ss.write_number(r, 1, w, pct0)
-            ss.write_formula(r, 2, f'=COUNTIF({B},A{x})', pct0, cnt)
-            ss.write_formula(r, 3, f'=COUNTIFS({B},A{x},{F},"<>")', pct0, 0)
+            ss.write_formula(r, 2, f'=COUNTIF({B},A{x})', int0, cnt)
+            ss.write_formula(r, 3, f'=COUNTIFS({B},A{x},{F},"<>")', int0, 0)
             ss.write_formula(r, 4, f'=IF(D{x}<C{x},"",SUMIF({B},A{x},{G})/SUMIF({B},A{x},{E}))', num2, "")
             ss.write_formula(r, 5, f'=IF(E{x}="","",ROUND(E{x},0))', bold_gold, "")
         ss.write(4, 0, "مؤشر SSGI المركب (للاطلاع فقط)", txt)
@@ -1032,6 +1041,34 @@ def generate_ssgi_evaluation_excel():
         ss.set_column('E:F', 26)
 
     return output.getvalue()
+
+# ==============================================================================
+# تأمين تبويب المشرف (tab9) عند استخدامه لاحقاً في التطبيق
+# ==============================================================================
+if tab9 is not None:
+    with tab9:
+        st.markdown("""
+        <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
+            <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجل زوار المنصة (Admin)</h3>
+            <p style="color: #475569; font-size: 14px;">متابعة جلسات الدخول المسجلة وتدقيق الصلاحيات وحركة الزوار.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        visitors_data = load_visitors_log_from_file()
+        if visitors_data:
+            df_vis = pd.DataFrame(visitors_data)
+            st.metric("إجمالي جلسات الدخول المسجلة", len(df_vis))
+            st.dataframe(df_vis, use_container_width=True)
+            vis_csv = df_vis.to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                label="📥 تحميل سجل الزوار (CSV)",
+                data=vis_csv,
+                file_name="سجل_زوار_المنصة.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="dl_visitors_log_btn"
+            )
+        else:
+            st.info("📋 لا توجد سجلات دخول مسجلة حتى الآن.")
 
 # ==============================================================================
 # التبويب الثاني: المؤشر المركب (SSGI) - مطور ومحدث بالكامل
