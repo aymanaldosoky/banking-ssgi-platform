@@ -3202,9 +3202,9 @@ with tab7:
             <p style="margin-bottom: 0;">
                 <b>الباحث:</b> أيمن محمد إبراهيم الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)<br>
                 <b>تحت إشراف:</b><br>
-                • أ.د. ممدوح عبدالعزيز رفاعي (أستاذ إدارة الأعمال - كلية التجارة - جامعة عين شمس)<br>
-                • أ.د. محمد ماجد صلاح الدين خشبة (أستاذ إدارة الأعمال - مركز التخطيط والتنمية الصناعية - معهد التخطيط القومي)<br>
-                • د. إسلام محمد حجازي (أستاذ مساعد بقسم علوم الحاسب - كلية الحاسبات والمعلومات - جامعة عين شمس)
+- أ.د. ممدوح عبدالعزيز رفاعي (أستاذ إدارة الأعمال - كلية التجارة - جامعة عين شمس)<br>
+- أ.د. محمد ماجد صلاح الدين خشبة (أستاذ إدارة الأعمال - مركز التخطيط والتنمية الصناعية - معهد التخطيط القومي)<br>
+- د. إسلام محمد حجازي (أستاذ مساعد بقسم علوم الحاسب - كلية الحاسبات والمعلومات - جامعة عين شمس)
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -3279,9 +3279,6 @@ with tab7:
     # المسار الثاني: النموذج التفاعلي الأصلي بالمنصة (Supabase)
     # ==========================================================================
     else:
-        # ----------------------------------------------------------------------
-        # 1) البيانات الثابتة
-        # ----------------------------------------------------------------------
         LIKERT = {"غير موافق تماماً": 1, "غير موافق": 2, "محايد": 3, "موافق": 4, "موافق تماماً": 5}
         likert_options = list(LIKERT.keys())
 
@@ -3298,7 +3295,7 @@ with tab7:
             10: "يمثل الاعتماد على آليات الفلترة المحلية للوثائق والمعالجة المشفرة عبر روابط ذكية مدمجة الضمانة المثلى لحماية السرية المصرفية وأمن البيانات.",
             11: "يسمح النموذج بتكامل تقني (APIs) مع الأنظمة المصرفية الأساسية (Core Banking) لضمان دقة البيانات المستقاة.",
             12: "تساهم الشفافية الرقمية والتحول نحو الإفصاح الذكي عبر المنصة في تقليص فجوة عدم تماثل المعلومات بين الإدارة والمساهمين والمستثمرين.",
-            13: "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواحة لأصحاب المصلحة.",
+            13: "يساهم النموذج في رفع جودة الإفصاح المؤسسي عبر تقديم بيانات دقيقة وواضحة لأصحاب المصلحة.",
             14: "يعزز النموذج من فاعلية لجنة المراجعة في تتبع الأثر الفعلي لقرارات الاستدامة.",
             15: "يساعد النموذج مجلس الإدارة على تفعيل المساءلة بناءً على بيانات موضوعية مستخرجة آلياً لا تقبل التأويل.",
             16: "تعزز مخرجات النموذج من سياسات الشمول والعدالة في توزيع الفرص الائتمانية ومنع التمييز الخوارزمي بناءً على معايير ESG موضوعية.",
@@ -3327,7 +3324,7 @@ with tab7:
                            ("التخطيط والمراقبة بعد النشر", [8, 9]), ("التكامل والخصوصية", [10, 11])],
             },
             "IG": {
-                "icon": "🏛️", "label": "محور الحوكمة المؤسسية  (IG)", "nums": list(range(12, 20)),
+                "icon": "🏛️", "label": "محور الحوكمة المؤسسية (IG)", "nums": list(range(12, 20)),
                 "avg_col": "متوسط محور الحوكمة المؤسسية",
                 "groups": [("الشفافية والإفصاح", [12, 13]), ("المتابعة والمساءلة", [14, 15]),
                            ("العدالة والمساواة", [16]),
@@ -3400,7 +3397,7 @@ with tab7:
             st.markdown("<div style='margin-bottom:10px;'></div>", unsafe_allow_html=True)
 
         # ----------------------------------------------------------------------
-        # 3) تحديد المسار
+        # 3) تحديد المسار والخطوات
         # ----------------------------------------------------------------------
         current_spec = S.get("spec")
         axes_required = ROLE_ROUTES.get(current_spec, ["SIP", "IG", "SR"])
@@ -3424,31 +3421,41 @@ with tab7:
         total_req_count = len(required_stmts)
         progress_percentage = int(answered_count / total_req_count * 100) if total_req_count else 0
 
-        w_sip_cur = S.get("w_sip", 40)
-        w_ig_cur = S.get("w_ig", 30)
-        w_sr_cur = S.get("w_sr", 30)
+        w_sip_cur = int(S.get("w_sip", 40))
+        w_ig_cur = int(S.get("w_ig", 30))
+        w_sr_cur = int(S.get("w_sr", 30))
+        weights_confirmed = bool(S.get("weights_confirmed", False))
 
         def step_complete(k):
             if k == "profile":
                 return all(S.get(f) for f, _, _ in PROFILE_FIELDS) and S.get("listed") is not None
             if k in SURVEY_AXES:
                 return all(S.get(f"stmt_{n}") is not None for n in SURVEY_AXES[k]["nums"])
-            return (w_sip_cur + w_ig_cur + w_sr_cur == 100
-                    and all(S.get(f"stmt_{n}") is not None for n in required_stmts))
+            return (
+                (w_sip_cur + w_ig_cur + w_sr_cur == 100)
+                and weights_confirmed
+                and all(S.get(f"stmt_{n}") is not None for n in required_stmts)
+            )
 
         # ----------------------------------------------------------------------
-        # شريط التقدم
+        # شريط التقدم المرئي والمراحل
         # ----------------------------------------------------------------------
-        progress_txt = (f"نسبة إكمال العبارات المخصصة: {progress_percentage}% ({answered_count} من {total_req_count})"
-                        if current_spec else "اختر التخصص الوظيفي لتحديد مسار العبارات")
+        route_badge = (
+            "مسار شامل (31 عبارة)" if (current_spec and is_full_assessment)
+            else (f"مسار مخصص للتخصص ({total_req_count} عبارة)" if current_spec else "بانتظار تحديد التخصص")
+        )
+        progress_txt = (
+            f"{route_badge} | الإنجاز: {progress_percentage}% ({answered_count} من {total_req_count})"
+            if current_spec else "اختر التخصص الوظيفي لتحديد مسار العبارات"
+        )
         st.markdown(f"""
         <div dir="rtl" style="background:#FFF;border:1.5px solid {CBE_GOLD};border-radius:12px;padding:18px;margin-bottom:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
                 <span style="font-weight:800;color:{CBE_NAVY};font-size:15px;">📍 ({step_num}/{max_wizard_steps}) {step_titles(step_key)}</span>
-                <span style="font-weight:800;color:{CBE_GOLD};font-size:14px;">{progress_txt}</span>
+                <span style="font-weight:800;color:{CBE_GOLD};font-size:13.5px;">{progress_txt}</span>
             </div>
             <div style="background:#E2E8F0;border-radius:10px;height:10px;overflow:hidden;">
-                <div style="background:linear-gradient(90deg,{CBE_GOLD},{CBE_NAVY});width:{progress_percentage}%;height:100%;"></div>
+                <div style="background:linear-gradient(90deg,{CBE_GOLD},{CBE_NAVY});width:{progress_percentage}%;height:100%;transition:width 0.3s ease;"></div>
             </div>
         </div>""", unsafe_allow_html=True)
 
@@ -3500,20 +3507,29 @@ with tab7:
         else:  # final
             with st.container(border=True):
                 st.markdown(f"<div dir='rtl'><h4 style='color:{CBE_NAVY};font-weight:800;'>⚖️ الأوزان النسبية للمحاور وملاحظات التطبيق</h4>"
-                            f"<p style='color:#64748B;font-size:13.5px;'>حدد الوزن المئوي لكل محور حسب تقدير خبرتكم (المجموع = 100%).</p></div>",
+                            f"<p style='color:#64748B;font-size:13px;'>حدد الوزن المئوي لكل محور من محاور النموذج الثلاثة حسب تقدير خبرتكم المصرفية (المجموع = 100%).</p></div>",
                             unsafe_allow_html=True)
                 cw1, cw2, cw3 = st.columns(3)
                 for col, skey, lbl, dflt in [(cw1, "w_sip", "1. منصات المعلومات الذكية (SIP): (%)", 40),
                                              (cw2, "w_ig", "2. الحوكمة المؤسسية والامتثال (IG): (%)", 30),
                                              (cw3, "w_sr", "3. تقارير الاستدامة (SR): (%)", 30)]:
                     with col:
-                        st.number_input(lbl, min_value=0, max_value=100, value=S.get(skey, dflt), step=1,
+                        st.number_input(lbl, min_value=0, max_value=100, value=int(S.get(skey, dflt)), step=1,
                                         key=f"wi_{skey}", on_change=_sync, args=(f"wi_{skey}", skey))
-                total_weight = S.get("w_sip", 40) + S.get("w_ig", 30) + S.get("w_sr", 30)
+                total_weight = int(S.get("w_sip", 40)) + int(S.get("w_ig", 30)) + int(S.get("w_sr", 30))
                 if total_weight != 100:
                     st.error(f"⚠️ مجموع الأوزان الحالية ({total_weight}%). يجب أن يساوي 100% تماماً للإرسال.")
                 else:
                     st.success("✅ مجموع الأوزان النسبية صحيح (100%).")
+
+                st.checkbox(
+                    "✔️ أؤكد مراجعة وتحديد الأوزان النسبية أعلاه وفق تقديري المهني (إلزامي لتفعيل الإرسال)",
+                    value=bool(S.get("weights_confirmed", False)),
+                    key="wi_weights_confirmed",
+                    on_change=_sync,
+                    args=("wi_weights_confirmed", "weights_confirmed")
+                )
+
                 st.text_area("💬 مقترحات أو معوقات ترون أنها قد تؤثر على تطبيق هذا النموذج في البنوك المصرية:",
                              value=S.get("comments", ""), placeholder="اكتب الملاحظات أو المقترحات هنا...",
                              key="wi_comments", height=120, on_change=_sync, args=("wi_comments", "comments"))
@@ -3538,7 +3554,8 @@ with tab7:
                 else:
                     can_submit = step_complete("final")
                     if st.button("📤 إرسال وحفظ الاستبيان النهائي", use_container_width=True, type="primary",
-                                 disabled=not can_submit, key="submit_survey_final_btn"):
+                                 disabled=not can_submit, key="submit_survey_final_btn",
+                                 help=None if can_submit else "تأكد من أن مجموع الأوزان = 100% وتفعيل مربع التأكيد."):
 
                         answers, axis_scores = {}, {ax: [] for ax in SURVEY_AXES}
                         for n in range(1, 32):
@@ -3563,9 +3580,9 @@ with tab7:
                             "سنوات الخبرة": S.get("exp", ""),
                             "مقيدة بالبورصة": S.get("listed", ""),
                             "مسار الاستبيان": "شامل" if is_full_assessment else "مخصص",
-                            "وزن منصات المعلومات (%)": S.get("w_sip", 40),
-                            "وزن الحوكمة المؤسسية (%)": S.get("w_ig", 30),
-                            "وزن تقارير الاستدامة (%)": S.get("w_sr", 30),
+                            "وزن منصات المعلومات (%)": int(S.get("w_sip", 40)),
+                            "وزن الحوكمة المؤسسية (%)": int(S.get("w_ig", 30)),
+                            "وزن تقارير الاستدامة (%)": int(S.get("w_sr", 30)),
                             **{SURVEY_AXES[ax]["avg_col"]: _avg(ax) for ax in SURVEY_AXES},
                             **answers,
                             "ملاحظات ومقترحات إضافية": clean_text(S.get("comments", "")),
@@ -3574,6 +3591,7 @@ with tab7:
                         try:
                             save_survey_to_cloud(rec)
                             S["submitted_id"] = resp_id
+                            st.session_state.pop("cached_surveys_df", None)
                             st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
                             st.rerun()
                         except Exception as e:
@@ -3586,27 +3604,40 @@ with tab7:
         st.markdown("---")
         st.markdown("#### 📊 لوحة تحليل استجابات الاستبيان (خاص بالأدمن):")
 
-        col_adm1, col_adm2 = st.columns(2)
+        col_adm1, col_adm2, col_adm3 = st.columns(3)
         with col_adm1:
-            if st.button("🔄 اختبار الاتصال وتأكيد إنشاء جدول Supabase", key="admin_test_db", use_container_width=True):
+            if st.button("🔄 اختبار الاتصال وتهيئة Supabase", key="admin_test_db", use_container_width=True):
                 is_success, msg = init_db()
                 if is_success:
-                    st.success("✅ تم الاتصال وسحب التحديثات من Supabase؛ جدول `survey_responses` متوفر وجاهز الآن!")
+                    st.success("✅ جدول `survey_responses` متصل وجاهز!")
                 else:
                     st.error(f"❌ خطأ الاتصال: {msg}")
         with col_adm2:
+            if st.button("📥 سحب وتحديث الاستجابات من السحابة", key="admin_refresh_surveys", use_container_width=True, type="primary"):
+                st.session_state["cached_surveys_df"] = load_survey_log_from_cloud()
+        with col_adm3:
             st.link_button(
                 "🌐 فتح لوحة إدارة وبيانات KoboToolbox",
                 "https://kf.kobotoolbox.org/",
                 use_container_width=True
             )
 
-        df_surveys = load_survey_log_from_cloud()
+        if "cached_surveys_df" not in st.session_state:
+            st.session_state["cached_surveys_df"] = load_survey_log_from_cloud()
+
+        df_surveys = st.session_state["cached_surveys_df"]
         if not df_surveys.empty:
-            st.markdown(f"<p><b>إجمالي الاستجابات المرصودة في قاعدة البيانات السحابية (Supabase):</b> {len(df_surveys)} استجابة</p>", unsafe_allow_html=True)
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("إجمالي الاستجابات", f"{len(df_surveys)}")
+            if "avg_sip" in df_surveys.columns and df_surveys["avg_sip"].notna().any():
+                m2.metric("متوسط محور SIP (من 5)", f"{df_surveys['avg_sip'].mean():.2f}")
+            if "avg_ig" in df_surveys.columns and df_surveys["avg_ig"].notna().any():
+                m3.metric("متوسط محور IG (من 5)", f"{df_surveys['avg_ig'].mean():.2f}")
+            if "avg_sr" in df_surveys.columns and df_surveys["avg_sr"].notna().any():
+                m4.metric("متوسط محور SR (من 5)", f"{df_surveys['avg_sr'].mean():.2f}")
+
             st.dataframe(df_surveys, use_container_width=True)
 
-            # تحويل البيانات إلى شيت Excel حقيقي بـ Openpyxl لمنع مشكلة الرموز تماماً
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 df_surveys.to_excel(writer, index=False, sheet_name='استجابات الاستبيان')
@@ -3628,7 +3659,6 @@ with tab7:
         جميع الحقوق محفوظة للدراسة البحثية © 2026
     </div>
     """, unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الثامن: دليل المستخدم الرسمي للمنصة والتوثيق المنهجي PDF
 # ------------------------------------------------------------------------------
