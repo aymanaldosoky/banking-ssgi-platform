@@ -697,7 +697,7 @@ with tab1:
             st.session_state.query_text_box = question
             st.session_state.trigger_search = True
 
-        with st.expander("🏛️ محور الحوكمة والتأسيس والتاريخ (IG & History)"):
+        with st.expander("🏛️ محور الحوكمة المؤسسية (IG)"):
             ig_questions = [
                 "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
                 "عرف الحوكمة وتكوين مجلس الإدارة بالبنك",
@@ -709,7 +709,7 @@ with tab1:
             for i, q in enumerate(ig_questions):
                 st.button(f"⚡ {q}", key=f"btn_ig_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
-        with st.expander("🌱 محور تقارير الاستدامة والتمويل الأخضر والمناخ (SR/ESG)"):
+        with st.expander("🌱 محور الاستدامة (SR/ESG)"):
             sr_questions = [
                 "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
                 "ما هي نسبة الأصول الخضراء والمشروعات المستدامة ضمن محفظة الائتمان؟",
@@ -719,7 +719,7 @@ with tab1:
             for i, q in enumerate(sr_questions):
                 st.button(f"⚡ {q}", key=f"btn_sr_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
-        with st.expander("🔒 محور المنصات الذكية وحوكمة البيانات والامتثال (SIP/RegTech)"):
+        with st.expander("🔒 محور المنصات الذكية (SIP)"):
             sip_questions = [
                 "ما هي آليات حوكمة البيانات والامتثال الرقابي وتأمينها؟",
                 "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟",
@@ -841,7 +841,7 @@ with tab1:
                     st.session_state.last_rag_result = None
                     st.rerun()
         else:
-            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لاستخراج الإجابات فوراً.")
+            st.info("🎯 قم باختيار البنك والضغط على أي سؤال مقترح لاستخراج الإجابات الموثقة.")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
