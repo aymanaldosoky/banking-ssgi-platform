@@ -38,9 +38,23 @@ CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#F5D076"    # ذهبي مشرق عالي التباين للخطوط النشطة
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
+# تعريف عائلة الخط الهندسي الحديث (Bahij TheSansArabic + Readex Pro / Bukra Style)
+FONT_STACK = "'Bahij TheSansArabic', '29LT Bukra', 'Readex Pro', 'Tajawal', sans-serif"
+
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+/* استدعاء خط Bahij TheSansArabic وخط Readex Pro الهندسي المطابق لـ Bukra */
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+
+@font-face {{
+    font-family: 'Bahij TheSansArabic';
+    src: url('https://db.onlinewebfonts.com/t/0221c881c4560871580873308045880d.woff2') format('woff2'),
+         url('https://db.onlinewebfonts.com/t/0221c881c4560871580873308045880d.woff') format('woff');
+    font-weight: 400 800;
+    font-style: normal;
+    font-display: swap;
+}}
 
 header {{
     visibility: hidden !important;
@@ -52,19 +66,20 @@ header {{
     visibility: hidden !important;
 }}
 
+html, body, [class*="css"], .stApp, button, input, select, textarea, p, span, div, h1, h2, h3, h4, h5, h6, td, th, li {{
+    font-family: {FONT_STACK} !important;
+}}
+
 html, body, [class*="css"] {{
-    font-family: 'Cairo', sans-serif !important;
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
-    border: none !important;
 }}
 
 .stApp {{
     background-color: {CBE_BG} !important;
     direction: rtl !important;
     text-align: right !important;
-    border: none !important;
     overflow-x: hidden !important;
 }}
 
@@ -98,21 +113,13 @@ html, body, [class*="css"] {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
+/* ضبط اتجاه العناصر */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
 div[data-testid="stHorizontalBlock"], section {{
     direction: rtl !important;
     text-align: right !important;
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}}
-
-*:focus, *:active, *:focus-visible {{
-    outline: none !important;
-    box-shadow: none !important;
 }}
 
 div[data-baseweb="select"] *,
@@ -122,11 +129,9 @@ div[role="listbox"] *,
 div[role="option"] {{
     direction: rtl !important;
     text-align: right !important;
-    border: none !important;
-    outline: none !important;
 }}
 
-/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
+/* تصميم جدول RTL مخصص */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -134,7 +139,6 @@ div[role="option"] {{
     text-align: right !important;
     margin-top: 8px !important;
     margin-bottom: 12px !important;
-    font-family: 'Cairo', sans-serif !important;
     background-color: #FFFFFF !important;
     border-radius: 8px !important;
     overflow: hidden !important;
@@ -148,8 +152,6 @@ div[role="option"] {{
     padding: 10px 10px !important;
     font-weight: 700 !important;
     border-bottom: 2px solid {CBE_GOLD} !important;
-    border-right: none !important;
-    border-left: none !important;
     text-align: right !important;
     font-size: 13px !important;
     white-space: nowrap !important;
@@ -158,9 +160,6 @@ div[role="option"] {{
 .custom-rtl-table td {{
     padding: 8px 10px !important;
     border-bottom: 1px solid #F1F5F9 !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-left: none !important;
     color: #1E293B !important;
     font-size: 12.5px !important;
     text-align: right !important;
@@ -175,7 +174,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول عند العرض والتمرير والضغط */
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -183,14 +182,12 @@ button[kind="primaryFormSubmit"],
 button[kind="secondaryFormSubmit"] {{
     width: 100% !important;
     border-radius: 50px !important;
-    font-family: 'Cairo', sans-serif !important;
     font-weight: 700 !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
     transition: all 0.25s ease !important;
     box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15) !important;
-    outline: none !important;
     cursor: pointer !important;
 }}
 
@@ -200,7 +197,6 @@ div[data-testid="stFormSubmitButton"] > button * {{
     color: inherit !important;
 }}
 
-/* حالة التمرير (Hover) للأزرار */
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
@@ -213,7 +209,6 @@ button[kind="secondaryFormSubmit"]:hover {{
     box-shadow: 0 6px 18px rgba(0, 43, 73, 0.32) !important;
 }}
 
-/* حالة الضغط الفعلي (Active / Click) للأزرار */
 div.stButton > button:active,
 div.stDownloadButton > button:active,
 div[data-testid="stFormSubmitButton"] > button:active,
@@ -223,145 +218,103 @@ button[kind="secondaryFormSubmit"]:active {{
     color: {CBE_NAVY} !important;
     border-color: {CBE_NAVY} !important;
     transform: scale(0.98) !important;
-    box-shadow: 0 2px 8px rgba(0, 43, 73, 0.25) !important;
-}}
-
-div.stButton > button:focus,
-div.stDownloadButton > button:focus,
-div[data-testid="stFormSubmitButton"] > button:focus {{
-    border-color: {CBE_GOLD} !important;
-    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35) !important;
 }}
 
 /* ==============================================================================
-   الشريط العلوي لأقسام المنصة (خلفية CBE_NAVY + خط أبيض افتراضي + خط ذهبي Bold عند الضغط)
+   الحل الجذري للشريط العلوي لأقسام المنصة (بدون انفصال + خلفية CBE_NAVY + خط ذهبي للنشط)
    ============================================================================== */
-div[data-testid="stTabs"],
-div.stTabs {{
+div[data-testid="stTabs"] {{
     width: 100% !important;
-    max-width: 100% !important;
     direction: rtl !important;
-    background: transparent !important;
-    border: none !important;
 }}
 
-/* حاوية شريط التبويبات الموحدة */
-div[data-testid="stTabs"] [data-baseweb="tab-list"],
-div[data-testid="stTabs"] [role="tablist"],
-.stTabs [data-baseweb="tab-list"],
-.stTabs [role="tablist"] {{
+/* إلغاء أي خلفية أو ارتفاع فارغ من حاوية الـ tab-list حتى لا ينفصل شريط أزرق فوق التبويبات */
+div[data-testid="stTabs"] > div:first-child,
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: stretch !important;
-    justify-content: space-between !important;
+    justify-content: stretch !important;
     width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    gap: 5px !important;
     background-color: {CBE_NAVY} !important;
-    background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
-    padding: 7px 8px !important;
+    padding: 6px !important;
+    gap: 6px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
-    direction: rtl !important;
+    box-shadow: 0 6px 18px rgba(0, 43, 73, 0.25) !important;
     box-sizing: border-box !important;
+    overflow-x: auto !important;
 }}
 
-/* أزرار الأقسام بالوضع الافتراضي: خلفية زرقاء داكنة CBE_NAVY وخط أبيض واضح */
-div[data-testid="stTabs"] button[role="tab"],
-div[data-testid="stTabs"] [data-baseweb="tab"],
-.stTabs button[role="tab"],
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 1 auto !important;
-    height: auto !important;
-    min-height: 44px !important;
+/* تلوين كل قسم بنفس الخلفية الزرقاء الداكنة CBE_NAVY وتوزيعها بالتساوي */
+div[data-testid="stTabs"] button[role="tab"] {{
+    flex: 1 1 0px !important;
+    min-width: max-content !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
     border-radius: 8px !important;
-    padding: 8px 6px !important;
+    padding: 10px 8px !important;
     margin: 0 !important;
-    font-family: 'Cairo', sans-serif !important;
     font-weight: 600 !important;
-    font-size: clamp(11px, 0.9vw, 12.5px) !important;
-    line-height: 1.35 !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    font-size: 12.5px !important;
+    line-height: 1.4 !important;
     text-align: center !important;
-    display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    transition: all 0.22s ease !important;
-    white-space: normal !important;
+    transition: all 0.2s ease-in-out !important;
     cursor: pointer !important;
-    box-shadow: none !important;
 }}
 
-/* النصوص والأيقونات الداخلية بالوضع الافتراضي (أبيض واضح) */
+/* خط القسم غير النشط بالوضع الافتراضي: أبيض ناصع وواضح */
 div[data-testid="stTabs"] button[role="tab"] p,
 div[data-testid="stTabs"] button[role="tab"] span,
-div[data-testid="stTabs"] button[role="tab"] div,
-div[data-testid="stTabs"] [data-baseweb="tab"] p,
-.stTabs button[role="tab"] p {{
+div[data-testid="stTabs"] button[role="tab"] div {{
     color: #FFFFFF !important;
-    font-family: 'Cairo', sans-serif !important;
     font-weight: 600 !important;
-    font-size: inherit !important;
-    line-height: 1.35 !important;
+    font-size: 12.5px !important;
     margin: 0 !important;
-    text-align: center !important;
+    white-space: nowrap !important;
 }}
 
-/* حالة التمرير (Hover) على القسم */
-div[data-testid="stTabs"] button[role="tab"]:hover,
-div[data-testid="stTabs"] [data-baseweb="tab"]:hover,
-.stTabs button[role="tab"]:hover {{
+/* حالة التمرير بالماوس (Hover) */
+div[data-testid="stTabs"] button[role="tab"]:hover {{
     background-color: #003B63 !important;
-    color: {CBE_GOLD_LIGHT} !important;
-    border-color: rgba(197, 160, 89, 0.7) !important;
+    border-color: {CBE_GOLD} !important;
 }}
 
 div[data-testid="stTabs"] button[role="tab"]:hover p,
 div[data-testid="stTabs"] button[role="tab"]:hover span,
-div[data-testid="stTabs"] [data-baseweb="tab"]:hover p {{
+div[data-testid="stTabs"] button[role="tab"]:hover div {{
     color: {CBE_GOLD_LIGHT} !important;
 }}
 
-/* حالة الضغط والاختيار (Selected & Active): خط ذهبي واضح وBold على خلفية زرقاء داكنة */
+/* حالة الضغط والاختيار (Selected / Active): خط ذهبي عريض (Bold) على الخلفية الزرقاء الداكنة */
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-div[data-testid="stTabs"] button[role="tab"]:active,
-div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"],
-.stTabs button[role="tab"][aria-selected="true"],
-.stTabs button[role="tab"]:active {{
-    background-color: #001F38 !important;
-    background-image: linear-gradient(135deg, #003860 0%, {CBE_NAVY} 100%) !important;
-    color: {CBE_GOLD_LIGHT} !important;
-    font-weight: 800 !important;
+div[data-testid="stTabs"] button[role="tab"]:active {{
+    background-color: #001D33 !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 2px 10px rgba(197, 160, 89, 0.35) !important;
+    box-shadow: inset 0 0 10px rgba(197, 160, 89, 0.25) !important;
 }}
 
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div,
 div[data-testid="stTabs"] button[role="tab"]:active p,
-div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] p,
-.stTabs button[role="tab"][aria-selected="true"] p {{
+div[data-testid="stTabs"] button[role="tab"]:active span,
+div[data-testid="stTabs"] button[role="tab"]:active div {{
     color: {CBE_GOLD_LIGHT} !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
 }}
 
-/* إخفاء الخط السفلي الافتراضي الأحمر/الأزرق لـ Streamlit */
+/* إخفاء الخط الأحمر/الأزرق السفلي الافتراضي في Streamlit */
 div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-div[data-testid="stTabs"] [data-baseweb="tab-border"],
-.stTabs [data-baseweb="tab-highlight"],
-.stTabs [data-baseweb="tab-border"] {{
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
     display: none !important;
-    height: 0 !important;
-    opacity: 0 !important;
 }}
 
+/* الهيدر */
 .header-center {{
     text-align: center !important;
     background: linear-gradient(135deg, rgba(0, 43, 73, 0.95) 0%, rgba(0, 26, 51, 0.90) 100%),
@@ -439,7 +392,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"],
 }}
 
 /* ==============================================================================
-   تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
+   تحسينات التجاوب مع الهواتف المحمولة والتابلت
    ============================================================================== */
 @media (max-width: 992px) {{
     .block-container {{
@@ -449,20 +402,11 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"],
         padding-right: 0.75rem !important;
     }}
 
-    div[data-testid="stTabs"] [data-baseweb="tab-list"],
-    div[data-testid="stTabs"] [role="tablist"] {{
-        overflow-x: auto !important;
+    div[data-testid="stTabs"] > div:first-child,
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
         justify-content: flex-start !important;
-        padding: 8px !important;
+        padding: 6px !important;
         -webkit-overflow-scrolling: touch !important;
-    }}
-
-    div[data-testid="stTabs"] button[role="tab"],
-    div[data-testid="stTabs"] [data-baseweb="tab"] {{
-        flex: 0 0 auto !important;
-        white-space: nowrap !important;
-        font-size: 12.5px !important;
-        padding: 8px 14px !important;
     }}
 
     div.stButton > button,
@@ -483,7 +427,6 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"],
     [data-testid="stDataFrame"], .js-plotly-plot {{
         max-width: 100% !important;
         overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
     }}
 
     .custom-rtl-table {{
@@ -754,64 +697,6 @@ else:
         "📖 دليل المستخدم الرسمي"
     ])
     tab9 = None
-
-# معالج تفاعلي لضمان ثبات ألوان الشريط العلوي (أبيض افتراضي / ذهبي Bold عند الاختيار)
-components.html(f"""
-<script>
-(function() {{
-    const NAVY = "{CBE_NAVY}";
-    const GOLD = "{CBE_GOLD}";
-    const GOLD_LIGHT = "{CBE_GOLD_LIGHT}";
-
-    function styleTopTabs() {{
-        const doc = window.parent.document;
-        const tabLists = doc.querySelectorAll('[data-testid="stTabs"] [data-baseweb="tab-list"], [data-testid="stTabs"] [role="tablist"]');
-        tabLists.forEach(list => {{
-            list.style.setProperty('background-color', NAVY, 'important');
-            list.style.setProperty('border', '2px solid ' + GOLD, 'important');
-            list.style.setProperty('border-radius', '12px', 'important');
-            list.style.setProperty('padding', '7px 8px', 'important');
-            list.style.setProperty('display', 'flex', 'important');
-            list.style.setProperty('flex-direction', 'row', 'important');
-            list.style.setProperty('align-items', 'stretch', 'important');
-            list.style.setProperty('gap', '5px', 'important');
-            list.style.setProperty('height', 'auto', 'important');
-        }});
-
-        const tabs = doc.querySelectorAll('[data-testid="stTabs"] button[role="tab"], [data-testid="stTabs"] [data-baseweb="tab"]');
-        tabs.forEach(tab => {{
-            const isSelected = tab.getAttribute('aria-selected') === 'true';
-            tab.style.setProperty('flex', '1 1 auto', 'important');
-            tab.style.setProperty('height', 'auto', 'important');
-            tab.style.setProperty('border-radius', '8px', 'important');
-            tab.style.setProperty('padding', '8px 6px', 'important');
-            tab.style.setProperty('margin', '0', 'important');
-
-            if (isSelected) {{
-                tab.style.setProperty('background-color', '#003860', 'important');
-                tab.style.setProperty('color', GOLD_LIGHT, 'important');
-                tab.style.setProperty('font-weight', '800', 'important');
-                tab.style.setProperty('border', '2px solid ' + GOLD, 'important');
-            }} else {{
-                tab.style.setProperty('background-color', NAVY, 'important');
-                tab.style.setProperty('color', '#FFFFFF', 'important');
-                tab.style.setProperty('font-weight', '600', 'important');
-                tab.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.14)', 'important');
-            }}
-
-            tab.querySelectorAll('p, span, div').forEach(el => {{
-                el.style.setProperty('color', isSelected ? GOLD_LIGHT : '#FFFFFF', 'important');
-                el.style.setProperty('font-weight', isSelected ? '800' : '600', 'important');
-            }});
-        }});
-    }}
-
-    styleTopTabs();
-    const observer = new MutationObserver(() => styleTopTabs());
-    observer.observe(window.parent.document.body, {{ childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] }});
-}})();
-</script>
-""", height=0)
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
