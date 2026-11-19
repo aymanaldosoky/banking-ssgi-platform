@@ -36,12 +36,210 @@ st.set_page_config(
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
+CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والتبويب النشط)
+CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
+UI_CSS_VERSION = "tabs-v4"    # إصدار تنسيق الشريط العلوي (للتحقق من النسخة النشطة)
+
+# أولوية الخطوط: Bahij TheSansArabic (إن كان مثبتاً على جهاز المستخدم) ثم Readex Pro ثم Tajawal ثم Cairo
+APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
+
+# ------------------------------------------------------------------------------
+# تنسيق الشريط العلوي (التبويبات): CSS نقي بمحددات role/aria المستقرة عبر إصدارات Streamlit
+# ------------------------------------------------------------------------------
+TABS_RULES = f"""
+/* ---- حاوية التبويبات بعرض الشاشة كاملاً ---- */
+[data-testid="stTabs"], div.stTabs {{
+    width: 100% !important;
+    max-width: 100% !important;
+    direction: rtl !important;
+    border: none !important;
+}}
+
+[data-testid="stTabs"] [data-baseweb="tabs"],
+div.stTabs [data-baseweb="tabs"] {{
+    width: 100% !important;
+    max-width: 100% !important;
+}}
+
+/* ---- الشريط الأزرق الموحد: لون واحد + إطار ذهبي + توزيع متساوٍ دون انفصال ---- */
+[data-testid="stTabs"] [data-baseweb="tab-list"],
+div.stTabs [data-baseweb="tab-list"] {{
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    margin: 0 0 16px 0 !important;
+    background: {CBE_NAVY} !important;
+    background-image: none !important;
+    border: 2px solid {CBE_GOLD} !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 25px rgba(0, 43, 73, 0.25) !important;
+    direction: rtl !important;
+    overflow: visible !important;
+}}
+
+/* بعض إصدارات Streamlit تضع حاوية role=tablist داخلية: نجعلها شفافة وممتدة لتبقى الأقسام داخل الشريط */
+[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"],
+div.stTabs [data-baseweb="tab-list"] [role="tablist"] {{
+    display: flex !important;
+    flex: 1 1 100% !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    direction: rtl !important;
+}}
+
+/* ---- الوضع الافتراضي لكل قسم: خط أبيض ناصع بوزن 600 على أزرق داكن ---- */
+[data-testid="stTabs"] button[role="tab"],
+div.stTabs button[role="tab"] {{
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 8px 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: {CBE_NAVY} !important;
+    background-image: none !important;
+    color: #FFFFFF !important;
+    border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
+    border-radius: 8px !important;
+    font-family: {APP_FONT} !important;
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+    cursor: pointer !important;
+}}
+
+[data-testid="stTabs"] button[role="tab"] *,
+div.stTabs button[role="tab"] * {{
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+    text-align: center !important;
+    white-space: normal !important;
+    margin: 0 !important;
+}}
+
+/* ---- عند التمرير ---- */
+[data-testid="stTabs"] button[role="tab"]:hover,
+div.stTabs button[role="tab"]:hover {{
+    background: {CBE_NAVY_HOVER} !important;
+    color: {CBE_GOLD_BRIGHT} !important;
+    border-color: {CBE_GOLD} !important;
+}}
+
+/* ---- عند الضغط ---- */
+[data-testid="stTabs"] button[role="tab"]:active,
+div.stTabs button[role="tab"]:active {{
+    background: {CBE_NAVY_HOVER} !important;
+    color: {CBE_GOLD_BRIGHT} !important;
+    font-weight: 800 !important;
+    border: 2px solid {CBE_GOLD} !important;
+}}
+
+/* ---- القسم النشط / المحدد: ذهبي مشرق + Bold 800 + إطار ذهبي بارز ---- */
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div.stTabs button[role="tab"][aria-selected="true"] {{
+    background: {CBE_NAVY} !important;
+    color: {CBE_GOLD_BRIGHT} !important;
+    font-weight: 800 !important;
+    border: 2px solid {CBE_GOLD} !important;
+    box-shadow: inset 0 0 0 1px rgba(245, 208, 118, 0.35), 0 0 12px rgba(197, 160, 89, 0.45) !important;
+}}
+
+/* إخفاء الخط السفلي الافتراضي للتبويبات حتى لا يظهر أي انفصال */
+[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+[data-testid="stTabs"] [data-baseweb="tab-border"],
+div.stTabs [data-baseweb="tab-highlight"],
+div.stTabs [data-baseweb="tab-border"] {{
+    display: none !important;
+    height: 0 !important;
+    background: transparent !important;
+}}
+
+/* ---- الشاشات الصغيرة: تمرير أفقي داخل نفس الشريط بدل التكدس ---- */
+@media (max-width: 768px) {{
+    [data-testid="stTabs"] [data-baseweb="tab-list"],
+    div.stTabs [data-baseweb="tab-list"] {{
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        justify-content: flex-start !important;
+        padding: 6px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+    }}
+
+    [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"],
+    div.stTabs [data-baseweb="tab-list"] [role="tablist"] {{
+        flex: 0 0 auto !important;
+        width: max-content !important;
+    }}
+
+    [data-testid="stTabs"] button[role="tab"],
+    div.stTabs button[role="tab"] {{
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+        font-size: 12.5px !important;
+        padding: 8px 14px !important;
+    }}
+
+    [data-testid="stTabs"] button[role="tab"] *,
+    div.stTabs button[role="tab"] * {{
+        white-space: nowrap !important;
+    }}
+}}
+"""
+
+# نسخة قابلة لإعادة الحقن بعد st.tabs (تُوضع لاحقاً في DOM فتغلب أي تنسيق افتراضي لـ Streamlit)
+TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
+
+
+def inject_tabs_css():
+    """معالج خفيف: يعيد حقن CSS الشريط العلوي بعد إنشاء التبويبات (بدون JavaScript أو components.html)."""
+    st.markdown(TABS_CSS, unsafe_allow_html=True)
+
 
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+
+/* استخدام Bahij TheSansArabic من جهاز المستخدم إن كان مثبتاً (الخط تجاري ولا يُستضاف من هنا) */
+@font-face {{
+    font-family: 'Bahij TheSansArabic';
+    src: local('Bahij TheSansArabic'), local('Bahij TheSansArabic Plain'), local('Bahij_TheSansArabic-Plain');
+    font-weight: 400;
+}}
+@font-face {{
+    font-family: 'Bahij TheSansArabic';
+    src: local('Bahij TheSansArabic Bold'), local('Bahij_TheSansArabic-Bold');
+    font-weight: 700;
+}}
 
 header {{
     visibility: hidden !important;
@@ -54,11 +252,18 @@ header {{
 }}
 
 html, body, [class*="css"] {{
-    font-family: 'Cairo', sans-serif !important;
+    font-family: {APP_FONT} !important;
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
     border: none !important;
+}}
+
+/* تطبيق الخط على عناصر الواجهة دون المساس بخطوط الأيقونات (Material Icons) */
+.stApp p, .stApp label, .stApp li, .stApp td, .stApp th, .stApp h1, .stApp h2, .stApp h3,
+.stApp h4, .stApp h5, .stApp h6, .stApp input, .stApp textarea, .stApp select,
+.stApp button, .stApp a, .stApp div[data-baseweb] {{
+    font-family: {APP_FONT} !important;
 }}
 
 .stApp {{
@@ -67,6 +272,14 @@ html, body, [class*="css"] {{
     text-align: right !important;
     border: none !important;
     overflow-x: hidden !important;
+}}
+
+/* عرض المحتوى والتبويبات بعرض الشاشة لكل من المستخدم العادي والأدمن */
+.block-container, [data-testid="stMainBlockContainer"] {{
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -158,7 +371,7 @@ div[role="option"] {{
     text-align: right !important;
     margin-top: 8px !important;
     margin-bottom: 12px !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-family: {APP_FONT} !important;
     background-color: #FFFFFF !important;
     border-radius: 8px !important;
     overflow: hidden !important;
@@ -207,7 +420,7 @@ button[kind="primaryFormSubmit"],
 button[kind="secondaryFormSubmit"] {{
     width: 100% !important;
     border-radius: 50px !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-family: {APP_FONT} !important;
     font-weight: 700 !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
@@ -255,69 +468,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35) !important;
 }}
 
-div.stTabs {{
-    width: 100% !important;
-    max-width: 100% !important;
-    direction: rtl !important;
-    border: none !important;
-}}
-
-.stTabs [data-baseweb="tab-list"] {{
-    display: flex !important;
-    flex-direction: row-reverse !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    gap: 6px !important;
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    padding: 10px !important;
-    border-radius: 12px !important;
-    border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-    direction: rtl !important;
-    box-sizing: border-box !important;
-}}
-
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 1 0% !important;
-    width: 100% !important;
-    max-width: none !important;
-    background-color: rgba(0, 43, 73, 0.85) !important;
-    color: #FFFFFF !important;
-    border-radius: 8px !important;
-    padding: 10px 4px !important;
-    font-weight: 700 !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-size: 12px !important;
-    border: 1px solid rgba(197, 160, 89, 0.3) !important;
-    text-align: center !important;
-    justify-content: center !important;
-    align-items: center !important;
-    transition: all 0.3s ease !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    outline: none !important;
-    box-shadow: none !important;
-}}
-
-.stTabs [data-baseweb="tab"]:hover {{
-    background-color: #1D4ED8 !important;
-    color: #FFFFFF !important;
-    border-color: #FFFFFF !important;
-}}
-
-.stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
-    color: #FFFFFF !important;
-    border: 2px solid #FFFFFF !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
-    outline: none !important;
-}}
-
-.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
-.stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
-.stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
+{TABS_RULES}
 
 .header-center {{
     text-align: center !important;
@@ -396,32 +547,11 @@ div.stTabs {{
 }}
 
 @media (max-width: 768px) {{
-    .block-container {{
+    .block-container, [data-testid="stMainBlockContainer"] {{
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
-    }}
-
-    .stTabs [data-baseweb="tab-list"] {{
-        flex-direction: row !important;
-        overflow-x: auto !important;
-        flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
-        gap: 6px !important;
-        padding: 8px !important;
-        -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: thin !important;
-    }}
-
-    .stTabs [data-baseweb="tab"] {{
-        flex: 0 0 auto !important;
-        width: auto !important;
-        white-space: nowrap !important;
-        font-size: 12.5px !important;
-        padding: 8px 14px !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
     }}
 
     div.stButton > button,
@@ -663,7 +793,7 @@ if not st.session_state.authenticated:
 def get_colored_score_html(score):
     if score >= 80:
         return f"{score}% (أداء مرتفع ومنتظم 🟢)"
-    elif score >= 51:
+    elif score >= 50:  # كانت 51 فتسقط القيم بين 50 و50.99 إلى «حرجة»
         return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
     else:
         return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
@@ -770,6 +900,8 @@ else:
     ])
     tab9 = None
 
+# إعادة حقن تنسيق الشريط العلوي بعد إنشائه لضمان ثبات الشكل عبر تحديثات Streamlit Cloud
+inject_tabs_css()
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
