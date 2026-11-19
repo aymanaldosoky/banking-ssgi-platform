@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-bank_rag_engine.py (v7.3 - Mobile-Responsive UI, Gemini 3.8 Ready, Memory-Optimized Hybrid RAG)
-محرك "اسأل المنصة" المعتمد على Gemini API مع دعم الجيل الأحدث، إدارة الذاكرة المنخفضة، وتجاوب كامل مع الهواتف الذكية.
+bank_rag_engine.py (v7.4 - Full Output Tokens 8192, Mobile-Responsive UI, Gemini 3.8 Ready, Memory-Optimized Hybrid RAG)
+محرك "اسأل المنصة" المعتمد على Gemini API مع ضمان اكتمال الإجابات دون بتر، إدارة الذاكرة المنخفضة، وتجاوب كامل مع الهواتف الذكية.
 """
 
 import os
@@ -36,6 +36,7 @@ ARCHIVE_PARTS_PATTERN = "archive_part_*.json"
 FALLBACK_JSON_FILE = "national_banking_governance_archive.json"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
 DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+ENGINE_CACHE_VERSION = "v7.4_full_8192"
 
 BANKS_LIST_AR = [
     "اختر البنك المصرفي",
@@ -690,7 +691,7 @@ def load_all_knowledge_archives():
             indexed_list = []
             for rec in records:
                 if isinstance(rec, dict):
-                    raw_txt = _extract_entry_searchable_text(rec)[:1500]
+                    raw_txt = _extract_entry_searchable_text(rec)[:3500]
                     c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
                     b_field = str(rec.get("bank") or rec.get("bank_name") or rec.get("classification") or "")
                     b_field = re.sub(r"^تقرير بنك:\s*", "", b_field).strip()
@@ -731,7 +732,7 @@ def load_all_knowledge_archives():
             k_str = str(k)
             k_norm = norm(k_str)
             k_stems = frozenset(_stem(t) for t in _tokens(k_norm) if t not in b_words)
-            raw_txt = _extract_entry_searchable_text(val)[:1500]
+            raw_txt = _extract_entry_searchable_text(val)[:3500]
             c_stems = frozenset(_stem(t) for t in _tokens(norm(raw_txt)))
             entries_idx.append({
                 "key": k_str,
@@ -750,7 +751,6 @@ def load_all_knowledge_archives():
             "entries": entries_idx,
         }
 
-    # تفريغ merged_data من الذاكرة بعد بناء الفهرس مباشرة لمنع تضاعف البيانات في RAM
     merged_data.clear()
     gc.collect()
 
@@ -834,7 +834,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     results = []
     seen = set()
     for _, meta, raw_txt in scored:
-        cleaned = clean_raw_archive_text(raw_txt)[:1200]
+        cleaned = clean_raw_archive_text(raw_txt)[:3000]
         sig = cleaned[:120]
         if sig and sig not in seen:
             seen.add(sig)
@@ -851,7 +851,7 @@ def retrieve_top_archive_chunks(bank: str, question: str, intents: list, kb=None
     return results
 
 # ==============================================================================
-# 6) الاتصال المباشر بـ Gemini API (دعم Gemini 3.8 + حماية الحصة 429 والذاكرة)
+# 6) الاتصال المباشر بـ Gemini API (رفع max_output_tokens إلى 8192 ومنع البتر)
 # ==============================================================================
 def _get_gemini_api_key() -> str:
     """قراءة مفتاح Gemini بأمان من أسرار Streamlit أو متغيرات البيئة."""
@@ -887,8 +887,22 @@ def _get_candidate_models() -> list:
     ]
     return list(dict.fromkeys([m for m in candidates if m]))
 
+def _build_gen_config(system_instruction: str, model_name: str, max_tokens: int = 8192):
+    """بناء إعدادات التوليد مع رفع سقف التوكنات إلى 8192 وتصفير thinking_budget لنماذج 2.5."""
+    cfg_kwargs = {
+        "system_instruction": system_instruction,
+        "temperature": 0.2,
+        "max_output_tokens": max_tokens,
+    }
+    if "2.5" in model_name and hasattr(genai_types, "ThinkingConfig"):
+        try:
+            cfg_kwargs["thinking_config"] = genai_types.ThinkingConfig(thinking_budget=0)
+        except Exception:
+            pass
+    return genai_types.GenerateContentConfig(**cfg_kwargs)
+
 def call_gemini_direct(system_instruction: str, user_prompt: str):
-    """ترجع (النص_المولد, رسالة_الخطأ_إن_وجدت) مع إيقاف المحاولات فوراً عند استنفاد الحصة 429."""
+    """ترجع (النص_المولد_كاملاً, رسالة_الخطأ_إن_وجدت) بسقف 8192 توكن لمنع البتر."""
     api_key = _get_gemini_api_key()
     if not api_key:
         return "", "لم يتم العثور على GEMINI_API_KEY في Secrets"
@@ -903,16 +917,18 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
                 response = client.models.generate_content(
                     model=model_name,
                     contents=user_prompt,
-                    config=genai_types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.2,
-                        max_output_tokens=1600,
-                    ),
+                    config=_build_gen_config(system_instruction, model_name, max_tokens=8192),
                 )
                 if response and response.text:
+                    full_txt = response.text.strip()
+                    # التحقق من سبب التوقف للتأكد من اكتمال الجملة
+                    if getattr(response, "candidates", None):
+                        f_reason = str(getattr(response.candidates[0], "finish_reason", ""))
+                        if "MAX_TOKENS" in f_reason:
+                            full_txt += "\n\n- **تنبيه تقني:** بلغ النص الحد الأقصى لطول الاستجابة المسموح به."
                     if hasattr(st, "session_state"):
                         st.session_state["_active_gemini_model"] = model_name
-                    return response.text.strip(), ""
+                    return full_txt, ""
             except Exception as e:
                 last_error = f"SDK ({model_name}): {e}"
                 if "429" in last_error or "RESOURCE_EXHAUSTED" in last_error:
@@ -921,23 +937,28 @@ def call_gemini_direct(system_instruction: str, user_prompt: str):
 
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            gen_cfg = {"temperature": 0.2, "maxOutputTokens": 8192}
+            if "2.5" in model_name:
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
             payload = {
                 "systemInstruction": {"parts": [{"text": system_instruction}]},
                 "contents": [{"parts": [{"text": user_prompt}]}],
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1600},
+                "generationConfig": gen_cfg,
             }
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
                 headers={"content-type": "application/json", "x-goog-api-key": api_key},
             )
-            with urllib.request.urlopen(req, timeout=10) as r:
+            with urllib.request.urlopen(req, timeout=20) as r:
                 out = json.loads(r.read().decode("utf-8"))
                 cands = out.get("candidates") or []
                 if cands:
                     parts = cands[0].get("content", {}).get("parts", [])
                     txt = "".join(p.get("text", "") for p in parts).strip()
                     if txt:
+                        if str(cands[0].get("finishReason", "")) == "MAX_TOKENS":
+                            txt += "\n\n- **تنبيه تقني:** بلغ النص الحد الأقصى لطول الاستجابة المسموح به."
                         if hasattr(st, "session_state"):
                             st.session_state["_active_gemini_model"] = model_name
                         return txt, ""
@@ -957,7 +978,7 @@ def build_gemini_prompts(bank: str, question: str, p: dict, archive_chunks: list
         "قواعد صارمة يجب الالتزام بها:\n"
         "1. اعتمد أولاً على البيانات المسترجعة من أرشيف البنك وملفه التعريفي المرفق في السياق، ثم استكمل التحليل بمعرفتك المصرفية الموثقة حول القوانين المصرية (قانون 194 لسنة 2020) وتعليمات البنك المركزي المصري والهيئة العامة للرقابة المالية.\n"
         "2. لا تختلق أرقاماً مالية أو نسباً غير مؤكدة للبنك؛ وإذا لم يتوفر رقم تفصيلي للبنك في السياق، اذكر الإطار الرقابي والتطبيقي للبنك بوضوح، وأشر إلى التقرير السنوي أو تقرير الاستدامة للبنك كمرجع للأرقام الدقيقة.\n"
-        "3. نظّم الإجابة في محاور فرعية واضحة ونقاط موجزة ومحددة (تجنب الفقرات الطويلة المكدسة داخل نقطة واحدة).\n"
+        "3. نظّم الإجابة في محاور فرعية واضحة ونقاط موجزة ومحددة (تجنب الفقرات الطويلة المكدسة داخل نقطة واحدة)، وتأكد من إنهاء كل جملة ونقطة بشكل تام ومكتمل.\n"
         "4. ابدأ بالإجابة المباشرة فوراً دون مقدمات ترحيبية."
     )
 
@@ -994,12 +1015,12 @@ def build_gemini_prompts(bank: str, question: str, p: dict, archive_chunks: list
 === ثالثاً: المؤشرات المرجعية للقطاع المصرفي المصري ===
 {SECTOR_SUMMARY}
 
-المطلوب: قدّم تحليلاً شاملاً ومنظماً يجيب بدقة عن السؤال المطروح بخصوص ({bank}) مع مراعاة طبيعته ({p.get('type_label', '')})."""
+المطلوب: قدّم تحليلاً شاملاً ومنظماً ومكتمل الأركان يجيب بدقة عن السؤال المطروح بخصوص ({bank}) مع مراعاة طبيعته ({p.get('type_label', '')})."""
 
     return system_instruction, user_prompt
 
 # ==============================================================================
-# 7) تحويل الماركداون وعرض بطاقة الإجابة
+# 7) تحويل الماركداون وعرض بطاقة الإجابة (HTML منظم يحافظ على الأسطر والقوائم)
 # ==============================================================================
 def md_to_html(text: str) -> str:
     if not text:
@@ -1093,7 +1114,7 @@ def _build_fallback_card(bank_name: str, question: str, p: dict, err_detail: str
     return render_card(bank_name, question, fallback_html, "profile_fallback", has_archive=False, err_detail=err_detail)
 
 @st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
-def _cached_rag_execution(bank_name: str, clean_q: str) -> str:
+def _cached_rag_execution(bank_name: str, clean_q: str, version: str = ENGINE_CACHE_VERSION) -> str:
     """تنفيذ الاستعلام وتخزين نتيجته في الكاش بسقف 50 مدخلاً لحماية الذاكرة العشوائية."""
     kb = load_all_knowledge_archives()
     p = profile_of(bank_name)
@@ -1117,10 +1138,10 @@ def process_rag_gemini_query(bank_name: str, question: str) -> str:
         return "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
     if not is_valid_arabic_question(question):
         return "⚠️ **تنبيه:** يرجى كتابة سؤال واضح باللغة العربية لكي تتمكن المنصة من تحليله."
-    return _cached_rag_execution(bank_name, clean_text(question))
+    return _cached_rag_execution(bank_name, clean_text(question), ENGINE_CACHE_VERSION)
 
 def stream_rag_gemini_query(bank_name: str, question: str):
-    """مولّد بث مباشر حقيقي (Real-Time Streaming) من Gemini API مع إيقاف فوري عند خطأ 429."""
+    """مولّد بث مباشر حقيقي (Real-Time Streaming) من Gemini API بسقف 8192 توكن."""
     if bank_name == "اختر البنك المصرفي" or not (question or "").strip():
         yield "⚠️ يرجى اختيار البنك المصرفي وكتابة السؤال أو الاستفسار التنظيمي بدقة للحصول على التحليل."
         return
@@ -1138,7 +1159,7 @@ def stream_rag_gemini_query(bank_name: str, question: str):
     api_key = _get_gemini_api_key()
     client = _get_genai_client(api_key)
     if client is None:
-        yield _cached_rag_execution(bank_name, clean_q)
+        yield _cached_rag_execution(bank_name, clean_q, ENGINE_CACHE_VERSION)
         return
 
     sys_inst, usr_prompt = build_gemini_prompts(bank_name, clean_q, p, archive_chunks)
@@ -1150,11 +1171,7 @@ def stream_rag_gemini_query(bank_name: str, question: str):
             stream = client.models.generate_content_stream(
                 model=m_name,
                 contents=usr_prompt,
-                config=genai_types.GenerateContentConfig(
-                    system_instruction=sys_inst,
-                    temperature=0.2,
-                    max_output_tokens=1600,
-                ),
+                config=_build_gen_config(sys_inst, m_name, max_tokens=8192),
             )
             for chunk in stream:
                 if chunk and chunk.text:
@@ -1176,7 +1193,7 @@ def stream_rag_gemini_query(bank_name: str, question: str):
                 return
             continue
 
-    yield _cached_rag_execution(bank_name, clean_q)
+    yield _cached_rag_execution(bank_name, clean_q, ENGINE_CACHE_VERSION)
 
 def get_archive_diagnostics():
     kb = load_all_knowledge_archives()
@@ -1222,7 +1239,6 @@ def load_survey_log_from_file():
     return []
 
 def render_tab_7_survey():
-    # تنسيق مقياس ليكرت الخماسي ليبقى أفقياً على الشاشات الكبيرة ويتحول عمودياً بسلاسة على الموبايل
     st.markdown("""
 <style>
 @media (max-width: 768px) {
@@ -1517,30 +1533,12 @@ def render_tab_7_survey():
                     except Exception as e:
                         st.error(f"حدث خطأ أثناء حفظ الاستجابة: {e}")
 
-if __name__ == "__main__":
-    print("Archive Diagnostics:", get_archive_diagnostics())
-    test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
-    print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
 def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name: str, bank_name: str, standard_name: str) -> dict:
     """
     قراءة وتدقيق تقرير الاستدامة (PDF / TXT) مباشرة عبر Gemini API
     مع التبديل التلقائي بين أحدث النماذج المتاحة لتجنب خطأ 404.
     """
-    import json
-    import os
-    import re
-    import streamlit as st
-    from google import genai
-    from google.genai import types
-
-    api_key = ""
-    if "GEMINI_API_KEY" in st.secrets:
-        api_key = str(st.secrets["GEMINI_API_KEY"]).strip()
-    elif "gemini" in st.secrets and "api_key" in st.secrets["gemini"]:
-        api_key = str(st.secrets["gemini"]["api_key"]).strip()
-    else:
-        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-
+    api_key = _get_gemini_api_key()
     if not api_key:
         raise RuntimeError("مفتاح GEMINI_API_KEY غير معرف في إعدادات Secrets.")
 
@@ -1568,17 +1566,16 @@ def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name:
 
     contents_payload = [audit_prompt]
     if mime_type == "application/pdf":
-        contents_payload.append(types.Part.from_bytes(data=file_bytes, mime_type="application/pdf"))
+        contents_payload.append(genai_types.Part.from_bytes(data=file_bytes, mime_type="application/pdf"))
     else:
         text_content = file_bytes.decode("utf-8", errors="ignore")[:120000]
         contents_payload.append(f"نص التقرير:\n{text_content}")
 
-    # قائمة النماذج المرتبة من الأحدث للأقدم لضمان الاستمرارية وعدم حدوث خطأ 404
     candidate_models = [
         "gemini-3.8-flash",
-        "gemini-3-flash",
+        "gemini-3.0-flash",
         "gemini-2.5-pro",
-        "gemini-2.0-flash",
+        "gemini-2.5-flash",
     ]
 
     last_error = None
@@ -1586,19 +1583,26 @@ def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name:
 
     for model_name in candidate_models:
         try:
+            cfg_kwargs = {
+                "temperature": 0.15,
+                "max_output_tokens": 8192,
+                "response_mime_type": "application/json",
+            }
+            if "2.5" in model_name and hasattr(genai_types, "ThinkingConfig"):
+                try:
+                    cfg_kwargs["thinking_config"] = genai_types.ThinkingConfig(thinking_budget=0)
+                except Exception:
+                    pass
+
             response = client.models.generate_content(
                 model=model_name,
                 contents=contents_payload,
-                config=types.GenerateContentConfig(
-                    temperature=0.15,
-                    response_mime_type="application/json",
-                ),
+                config=genai_types.GenerateContentConfig(**cfg_kwargs),
             )
             if response and response.text:
                 break
         except Exception as e:
             last_error = e
-            # إذا كان الخطأ 404 (نموذج غير متاح)، انتقل للنموذج التالي في القائمة
             if "404" in str(e) or "NOT_FOUND" in str(e):
                 continue
             else:
@@ -1610,3 +1614,8 @@ def analyze_esg_report_with_gemini(file_bytes: bytes, mime_type: str, file_name:
     raw_json = (response.text or "").strip()
     raw_json = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_json, flags=re.IGNORECASE).strip()
     return json.loads(raw_json)
+
+if __name__ == "__main__":
+    print("Archive Diagnostics:", get_archive_diagnostics())
+    test_q = "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟"
+    print("Audit Result:", audit_differentiation(test_q)["is_differentiated"])
