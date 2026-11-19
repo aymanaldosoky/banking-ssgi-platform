@@ -40,7 +40,7 @@ CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 
 header {{
     visibility: hidden !important;
@@ -236,28 +236,33 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
 /* ==============================================================================
    تطوير الشريط العلوي لأقسام المنصة (CBE_NAVY + خط واضح عالي التباين)
+   متوافق مع أحدث بنية DOM في Streamlit (data-testid="stTabs")
    ============================================================================== */
+div[data-testid="stTabs"],
 div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
-    border: none !important;
     background-color: transparent !important;
 }}
 
+/* شريط التبويبات الكامل بخلفية زرقاء مصرفية عميقة موحدة */
+div[data-testid="stTabs"] [data-baseweb="tab-list"],
+div[data-testid="stTabs"] div[role="tablist"],
 .stTabs [data-baseweb="tab-list"],
 .stTabs div[role="tablist"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    align-items: stretch !important;
+    align-items: center !important;
     justify-content: flex-start !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-height: 54px !important;
     gap: 6px !important;
     background-color: {CBE_NAVY} !important;
     background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
-    padding: 9px 10px !important;
+    padding: 8px 10px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
     box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
@@ -269,31 +274,42 @@ div.stTabs {{
     scrollbar-color: {CBE_GOLD} {CBE_NAVY} !important;
 }}
 
-.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar,
-.stTabs div[role="tablist"]::-webkit-scrollbar {{
+/* إلغاء التدرج الأبيض الجانبي الافتراضي في Streamlit حول شريط التبويبات */
+div[data-testid="stTabs"] > div:first-child,
+div[data-testid="stTabs"] [data-baseweb="tab-list"]::before,
+div[data-testid="stTabs"] [data-baseweb="tab-list"]::after {{
+    background: transparent !important;
+    background-image: none !important;
+}}
+
+div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar,
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {{
     height: 5px !important;
 }}
 
-.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-thumb,
-.stTabs div[role="tablist"]::-webkit-scrollbar-thumb {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar-thumb,
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-thumb {{
     background-color: {CBE_GOLD} !important;
     border-radius: 10px !important;
 }}
 
-.stTabs [data-baseweb="tab"],
-.stTabs button[role="tab"] {{
+/* حالة عدم الضغط (الأقسام غير النشطة): خلفية زرقاء داكنة CBE_NAVY وخط أبيض واضح */
+div[data-testid="stTabs"] button[role="tab"],
+div[data-testid="stTabs"] [data-baseweb="tab"],
+.stTabs button[role="tab"],
+.stTabs [data-baseweb="tab"] {{
     flex: 1 0 auto !important;
     min-width: fit-content !important;
     background-color: {CBE_NAVY} !important;
-    color: #F8FAFC !important;
+    background-image: none !important;
+    color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 9px 12px !important;
-    font-weight: 700 !important;
+    padding: 8px 13px !important;
+    font-weight: 600 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 13px !important;
-    line-height: 1.4 !important;
-    letter-spacing: 0.1px !important;
-    border: 1px solid rgba(197, 160, 89, 0.35) !important;
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+    border: 1px solid rgba(197, 160, 89, 0.28) !important;
     text-align: center !important;
     justify-content: center !important;
     align-items: center !important;
@@ -304,45 +320,57 @@ div.stTabs {{
     outline: none !important;
     box-shadow: none !important;
     cursor: pointer !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
+    opacity: 1 !important;
 }}
 
-/* عند التمرير على أي قسم */
-.stTabs [data-baseweb="tab"]:hover,
+/* حالة التمرير بالمؤشر (Hover) */
+div[data-testid="stTabs"] button[role="tab"]:hover,
+div[data-testid="stTabs"] [data-baseweb="tab"]:hover,
 .stTabs button[role="tab"]:hover {{
-    background-color: #003D66 !important;
+    background-color: #003B63 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: {CBE_GOLD} !important;
-    transform: translateY(-1px) !important;
+    font-weight: 700 !important;
 }}
 
-/* القسم النشط والمحدد حالياً */
-.stTabs [aria-selected="true"],
+/* حالة الضغط والاختيار النشط (Active / Selected): لون ذهبي ملكي وخط Bold عريض */
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"],
 .stTabs button[role="tab"][aria-selected="true"] {{
-    background: linear-gradient(135deg, #003B63 0%, {CBE_NAVY} 100%) !important;
+    background-color: #00385E !important;
+    background-image: linear-gradient(135deg, #003F6B 0%, {CBE_NAVY} 100%) !important;
     color: {CBE_GOLD_LIGHT} !important;
     border: 2px solid {CBE_GOLD} !important;
     font-weight: 800 !important;
-    box-shadow: 0 3px 12px rgba(197, 160, 89, 0.32) !important;
+    font-size: 14px !important;
+    box-shadow: 0 3px 10px rgba(197, 160, 89, 0.35) !important;
     outline: none !important;
 }}
 
-.stTabs [data-baseweb="tab"] p,
+/* إجبار النصوص والأيقونات داخل التبويب على وراثة اللون والوزن بوضوح تام */
+div[data-testid="stTabs"] button[role="tab"] p,
+div[data-testid="stTabs"] button[role="tab"] span,
+div[data-testid="stTabs"] button[role="tab"] div,
 .stTabs button[role="tab"] p,
-.stTabs button[role="tab"] span,
-.stTabs button[role="tab"] div {{
+.stTabs button[role="tab"] span {{
     color: inherit !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: inherit !important;
     font-size: inherit !important;
+    line-height: 1.45 !important;
     white-space: nowrap !important;
+    margin: 0 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
 }}
 
+/* الشريط السفلي الذهبي أسفل التبويب المختار بدلاً من الأحمر الافتراضي */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-highlight"] {{
     background-color: {CBE_GOLD} !important;
     height: 3px !important;
 }}
 
+div[data-testid="stTabs"] [data-baseweb="tab-border"],
 .stTabs [data-baseweb="tab-border"] {{
     display: none !important;
 }}
@@ -436,8 +464,9 @@ div.stTabs {{
     }}
 
     /* تحسين شريط التبويبات على الهواتف */
-    .stTabs [data-baseweb="tab-list"],
-    .stTabs div[role="tablist"] {{
+    div[data-testid="stTabs"] [data-baseweb="tab-list"],
+    div[data-testid="stTabs"] div[role="tablist"],
+    .stTabs [data-baseweb="tab-list"] {{
         flex-direction: row !important;
         overflow-x: auto !important;
         flex-wrap: nowrap !important;
@@ -447,12 +476,12 @@ div.stTabs {{
         -webkit-overflow-scrolling: touch !important;
     }}
 
-    .stTabs [data-baseweb="tab"],
+    div[data-testid="stTabs"] button[role="tab"],
     .stTabs button[role="tab"] {{
         flex: 0 0 auto !important;
         width: auto !important;
         white-space: nowrap !important;
-        font-size: 12.5px !important;
+        font-size: 13px !important;
         padding: 8px 14px !important;
     }}
 
