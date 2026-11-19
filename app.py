@@ -234,69 +234,118 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35) !important;
 }}
 
+/* ==============================================================================
+   تطوير الشريط العلوي لأقسام المنصة (CBE_NAVY + خط واضح عالي التباين)
+   ============================================================================== */
 div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
     border: none !important;
+    background-color: transparent !important;
 }}
 
-.stTabs [data-baseweb="tab-list"] {{
+.stTabs [data-baseweb="tab-list"],
+.stTabs div[role="tablist"] {{
     display: flex !important;
-    flex-direction: row-reverse !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
     width: 100% !important;
     max-width: 100% !important;
     gap: 6px !important;
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    padding: 10px !important;
+    background-color: {CBE_NAVY} !important;
+    background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
+    padding: 9px 10px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
     direction: rtl !important;
     box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: {CBE_GOLD} {CBE_NAVY} !important;
 }}
 
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 1 0% !important;
-    width: 100% !important;
-    max-width: none !important;
-    background-color: rgba(0, 43, 73, 0.85) !important;
-    color: #FFFFFF !important;
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar,
+.stTabs div[role="tablist"]::-webkit-scrollbar {{
+    height: 5px !important;
+}}
+
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-thumb,
+.stTabs div[role="tablist"]::-webkit-scrollbar-thumb {{
+    background-color: {CBE_GOLD} !important;
+    border-radius: 10px !important;
+}}
+
+.stTabs [data-baseweb="tab"],
+.stTabs button[role="tab"] {{
+    flex: 1 0 auto !important;
+    min-width: fit-content !important;
+    background-color: {CBE_NAVY} !important;
+    color: #F8FAFC !important;
     border-radius: 8px !important;
-    padding: 10px 4px !important;
+    padding: 9px 12px !important;
     font-weight: 700 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 12px !important;
-    border: 1px solid rgba(197, 160, 89, 0.3) !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.1px !important;
+    border: 1px solid rgba(197, 160, 89, 0.35) !important;
     text-align: center !important;
     justify-content: center !important;
     align-items: center !important;
-    transition: all 0.3s ease !important;
+    transition: all 0.25s ease !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
     outline: none !important;
     box-shadow: none !important;
+    cursor: pointer !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
 }}
 
-.stTabs [data-baseweb="tab"]:hover {{
-    background-color: #1D4ED8 !important;
-    color: #FFFFFF !important;
-    border-color: #FFFFFF !important;
+/* عند التمرير على أي قسم */
+.stTabs [data-baseweb="tab"]:hover,
+.stTabs button[role="tab"]:hover {{
+    background-color: #003D66 !important;
+    color: {CBE_GOLD_LIGHT} !important;
+    border-color: {CBE_GOLD} !important;
+    transform: translateY(-1px) !important;
 }}
 
-.stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
-    color: #FFFFFF !important;
-    border: 2px solid #FFFFFF !important;
+/* القسم النشط والمحدد حالياً */
+.stTabs [aria-selected="true"],
+.stTabs button[role="tab"][aria-selected="true"] {{
+    background: linear-gradient(135deg, #003B63 0%, {CBE_NAVY} 100%) !important;
+    color: {CBE_GOLD_LIGHT} !important;
+    border: 2px solid {CBE_GOLD} !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+    box-shadow: 0 3px 12px rgba(197, 160, 89, 0.32) !important;
     outline: none !important;
 }}
 
-.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
-.stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
-.stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
+.stTabs [data-baseweb="tab"] p,
+.stTabs button[role="tab"] p,
+.stTabs button[role="tab"] span,
+.stTabs button[role="tab"] div {{
+    color: inherit !important;
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: inherit !important;
+    font-size: inherit !important;
+    white-space: nowrap !important;
+}}
+
+.stTabs [data-baseweb="tab-highlight"] {{
+    background-color: {CBE_GOLD} !important;
+    height: 3px !important;
+}}
+
+.stTabs [data-baseweb="tab-border"] {{
+    display: none !important;
+}}
 
 .header-center {{
     text-align: center !important;
@@ -386,8 +435,9 @@ div.stTabs {{
         padding-right: 0.75rem !important;
     }}
 
-    /* تحويل التبويبات إلى شريط قابل للتمرير الأفقي السلس بدلاً من تكدسها */
-    .stTabs [data-baseweb="tab-list"] {{
+    /* تحسين شريط التبويبات على الهواتف */
+    .stTabs [data-baseweb="tab-list"],
+    .stTabs div[role="tablist"] {{
         flex-direction: row !important;
         overflow-x: auto !important;
         flex-wrap: nowrap !important;
@@ -395,17 +445,15 @@ div.stTabs {{
         gap: 6px !important;
         padding: 8px !important;
         -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: thin !important;
     }}
 
-    .stTabs [data-baseweb="tab"] {{
+    .stTabs [data-baseweb="tab"],
+    .stTabs button[role="tab"] {{
         flex: 0 0 auto !important;
         width: auto !important;
         white-space: nowrap !important;
         font-size: 12.5px !important;
         padding: 8px 14px !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
     }}
 
     /* جعل الأزرار وحقول الإدخال ومفتاح تسجيل الدخول مريحة للمس (Touch-Friendly) */
@@ -587,6 +635,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
+
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
@@ -684,7 +733,7 @@ if st.session_state.role == "admin":
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
         "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي ",
+        "📖 دليل المستخدم الرسمي",
         "🔒 لوحة تحكم المشرف والزوار (Admin)"
     ])
 else:
@@ -696,7 +745,7 @@ else:
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
         "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي "
+        "📖 دليل المستخدم الرسمي"
     ])
     tab9 = None
 # ------------------------------------------------------------------------------
