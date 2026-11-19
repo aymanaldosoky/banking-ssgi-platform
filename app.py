@@ -37,6 +37,7 @@ CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
+RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
 
 CUSTOM_CSS = f"""
 <style>
@@ -126,6 +127,29 @@ div[role="option"] {{
     outline: none !important;
 }}
 
+/* تنسيق حاوية إجابات RAG لضمان سلامة الفقرات والقوائم */
+.rag-response-box {{
+    background: #FFFFFF !important;
+    border: 1.5px solid {CBE_GOLD} !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    line-height: 1.9 !important;
+    font-size: 14.5px !important;
+    color: #1E293B !important;
+    box-shadow: 0 4px 15px rgba(0, 43, 73, 0.06) !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}}
+
+.rag-response-box ul {{
+    padding-right: 22px !important;
+    margin: 8px 0 !important;
+}}
+
+.rag-response-box li {{
+    margin-bottom: 6px !important;
+}}
+
 /* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
@@ -200,7 +224,6 @@ div[data-testid="stFormSubmitButton"] > button * {{
     color: inherit !important;
 }}
 
-/* حالة التمرير (Hover) */
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
@@ -213,7 +236,6 @@ button[kind="secondaryFormSubmit"]:hover {{
     box-shadow: 0 6px 18px rgba(0, 43, 73, 0.32) !important;
 }}
 
-/* حالة الضغط الفعلي (Active / Click) */
 div.stButton > button:active,
 div.stDownloadButton > button:active,
 div[data-testid="stFormSubmitButton"] > button:active,
@@ -226,7 +248,6 @@ button[kind="secondaryFormSubmit"]:active {{
     box-shadow: 0 2px 8px rgba(0, 43, 73, 0.25) !important;
 }}
 
-/* حالة التركيز بعد النقر (Focus) دون إخفاء الإطار الذهبي */
 div.stButton > button:focus,
 div.stDownloadButton > button:focus,
 div[data-testid="stFormSubmitButton"] > button:focus {{
@@ -374,11 +395,7 @@ div.stTabs {{
     direction: rtl !important;
 }}
 
-/* ==============================================================================
-   تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
-   ============================================================================== */
 @media (max-width: 768px) {{
-    /* تقليل الهوامش الجانبية المهدرة في Streamlit */
     .block-container {{
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
@@ -386,7 +403,6 @@ div.stTabs {{
         padding-right: 0.75rem !important;
     }}
 
-    /* تحويل التبويبات إلى شريط قابل للتمرير الأفقي السلس بدلاً من تكدسها */
     .stTabs [data-baseweb="tab-list"] {{
         flex-direction: row !important;
         overflow-x: auto !important;
@@ -408,7 +424,6 @@ div.stTabs {{
         text-overflow: unset !important;
     }}
 
-    /* جعل الأزرار وحقول الإدخال ومفتاح تسجيل الدخول مريحة للمس (Touch-Friendly) */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stFormSubmitButton"] > button {{
@@ -421,10 +436,9 @@ div.stTabs {{
     }}
 
     input, textarea, select {{
-        font-size: 16px !important; /* يمنع تكبير الشاشة التلقائي المزعج في آيفون */
+        font-size: 16px !important;
     }}
 
-    /* جعل الجداول والرسوم البيانية قابلة للتمرير الأفقي دون كسر التصميم */
     [data-testid="stDataFrame"], .js-plotly-plot {{
         max-width: 100% !important;
         overflow-x: auto !important;
@@ -445,10 +459,66 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# الدوال المساعدة (Flat HTML & Clean Text)
+# الدوال المساعدة (تنسيق HTML السليم بدلاً من تدمير الأسطر)
 # ==============================================================================
 def flat_html(s: str) -> str:
+    """تُستخدم فقط لقوالب HTML الثابتة مثل Skeleton Loader."""
     return " ".join(l.strip() for l in s.splitlines() if l.strip())
+
+def format_rag_html(raw_response: str) -> str:
+    """
+    تحويل الرد القادم من محرك RAG إلى HTML منسق يحافظ على الفقرات والنقاط
+    سواء كان الرد بصيغة Markdown أو HTML جزئي أو نص عادي.
+    """
+    if not raw_response:
+        return "<div class='rag-response-box'>⚠️ لم يتم استرجاع نص للإجابة.</div>"
+
+    text = str(raw_response).strip()
+
+    # تحويل التنسيق الغامق في Markdown (**نص**) إلى <b>نص</b>
+    text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+
+    lines = text.splitlines()
+    formatted_lines = []
+    in_list = False
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if in_list:
+                formatted_lines.append("</ul>")
+                in_list = False
+            formatted_lines.append("<br>")
+            continue
+
+        # التعامل مع القوائم النقطية (- أو * أو •)
+        if re.match(r"^[-*•]\s+", stripped):
+            if not in_list:
+                formatted_lines.append("<ul>")
+                in_list = True
+            item_content = re.sub(r"^[-*•]\s+", "", stripped)
+            formatted_lines.append(f"<li>{item_content}</li>")
+        else:
+            if in_list:
+                formatted_lines.append("</ul>")
+                in_list = False
+            # إذا كان السطر يحتوي على وسوم HTML هيكلية بالفعل، أبقِه كما هو
+            if re.match(r"^<(div|h[1-6]|p|ul|ol|li|table|hr|blockquote)", stripped, re.IGNORECASE):
+                formatted_lines.append(stripped)
+            else:
+                formatted_lines.append(f"{stripped}<br>")
+
+    if in_list:
+        formatted_lines.append("</ul>")
+
+    html_body = "\n".join(formatted_lines)
+    # تنظيف التكرار الزائد لوسوم <br>
+    html_body = re.sub(r"(<br>\s*){3,}", "<br><br>", html_body)
+
+    # إذا لم يكن الرد مغلفاً بحاوية رئيسية، نغلفه بحاوية rag-response-box
+    if not re.match(r"^\s*<div", html_body, re.IGNORECASE):
+        return f"<div class='rag-response-box' dir='rtl'>{html_body}</div>"
+    return html_body
 
 def clean_text(text) -> str:
     if not isinstance(text, str):
@@ -568,7 +638,6 @@ if not st.session_state.authenticated:
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
             if submitted:
-                # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
                 clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
                 clean_pass = str(password_input).strip()
 
@@ -587,6 +656,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
+
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
@@ -699,11 +769,12 @@ else:
         "📖 دليل المستخدم الرسمي "
     ])
     tab9 = None
+
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
-def cached_rag_query(bank_name: str, question: str) -> str:
+def cached_rag_query(bank_name: str, question: str, cache_version: str = RAG_CACHE_VERSION) -> str:
     return process_rag_gemini_query(bank_name, question)
 
 if "last_rag_result" not in st.session_state:
@@ -713,7 +784,7 @@ with tab1:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 20px;">
         <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🎯 تحليل واستخلاص البيانات الذكي </h3>
-        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">استعراض الإجابات التحليلية المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري .</p>
+        <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">استعراض الإجابات التحليلية المستندة إلى أرشيف التقارير والأطر الرقابية للقطاع المصرفي المصري.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -769,7 +840,13 @@ with tab1:
             for i, q in enumerate(sip_questions):
                 st.button(f"⚡ {q}", key=f"btn_sip_{i}", on_click=trigger_instant_query, args=(q,), use_container_width=True)
 
-        ask_submit_btn = st.button("🚀 تقديم السؤال ", use_container_width=True, type="primary")
+        col_sub1, col_sub2 = st.columns([2, 1])
+        with col_sub1:
+            ask_submit_btn = st.button("🚀 تقديم السؤال", use_container_width=True, type="primary")
+        with col_sub2:
+            if st.button("🔄 تحديث الكاش", use_container_width=True, help="مسح الردود المخزنة مؤقتاً وإعادة التوليد"):
+                st.cache_data.clear()
+                st.toast("✅ تم مسح الذاكرة المؤقتة بنجاح.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_q2:
@@ -797,26 +874,26 @@ with tab1:
                 """)
                 skeleton_placeholder.markdown(skeleton_html, unsafe_allow_html=True)
 
-                # استدعاء سريع مع التخزين المؤقت
-                full_response = cached_rag_query(ask_bank_sel, active_q)
+                # استدعاء المحرك وتنسيق HTML مع الحفاظ الكامل على الأسطر والفقرات
+                full_response = cached_rag_query(ask_bank_sel, active_q, RAG_CACHE_VERSION)
+                formatted_answer = format_rag_html(full_response)
                 skeleton_placeholder.empty()
 
                 now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 st.session_state.last_rag_result = {
                     "bank": ask_bank_sel,
                     "question": active_q,
-                    "answer_html": flat_html(full_response),
+                    "answer_html": formatted_answer,
                     "timestamp": now_ts
                 }
                 st.session_state.rag_query_history.append(st.session_state.last_rag_result)
 
-        # عرض آخر نتيجة محفوظة + أزرار التحميل (تظل ثابتة ولا تختفي عند التحميل)
+        # عرض آخر نتيجة محفوظة + أزرار التحميل
         if st.session_state.last_rag_result:
             res = st.session_state.last_rag_result
             st.markdown(res["answer_html"], unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # تجهيز ملف Word للإجابة الحالية
             single_qa_word = f"""
             <html dir="rtl">
             <head><meta charset="utf-8"><title>تحليل واستعلام ذكي - {res['bank']}</title></head>
@@ -833,7 +910,6 @@ with tab1:
             </html>
             """
 
-            # تجهيز ملف Word لكافة الأسئلة والإجابات في الجلسة
             all_qa_blocks = ""
             for idx_q, item_q in enumerate(st.session_state.rag_query_history, 1):
                 all_qa_blocks += f"""
@@ -858,7 +934,7 @@ with tab1:
             col_dl_q1, col_dl_q2, col_clr_q = st.columns([1.2, 1.2, 0.8])
             with col_dl_q1:
                 st.download_button(
-                    label="📥 تحميل الرد الحالي ",
+                    label="📥 تحميل الرد الحالي",
                     data=single_qa_word.encode("utf-8-sig"),
                     file_name=f"تحليل_{res['bank']}.doc",
                     mime="application/msword",
@@ -867,7 +943,7 @@ with tab1:
                 )
             with col_dl_q2:
                 st.download_button(
-                    label=f"📥 تحميل كافة الردود",
+                    label="📥 تحميل كافة الردود",
                     data=full_history_word.encode("utf-8-sig"),
                     file_name="سجل_الإجابات_والردود_الذكية.doc",
                     mime="application/msword",
@@ -1029,7 +1105,6 @@ def generate_ssgi_evaluation_excel():
         ws.freeze_panes(1, 0)
         ws.right_to_left()
 
-        # ---------------- ورقة الملخص: نتيجة كل محور تلقائياً ----------------
         ss = wb.add_worksheet('ملخص_المحاور')
         ss.right_to_left()
         txt = wb.add_format({'border': 1})
@@ -1071,7 +1146,6 @@ def generate_ssgi_evaluation_excel():
         ss.set_column('E:F', 26)
 
     return output.getvalue()
-
 # ==============================================================================
 # التبويب الثاني: المؤشر المركب (SSGI) - مطور ومحدث بالكامل
 # ==============================================================================
