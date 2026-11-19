@@ -35,12 +35,12 @@ st.set_page_config(
 
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
-CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
+CBE_GOLD_LIGHT = "#F5D076"    # ذهبي مشرق عالي التباين للخطوط النشطة
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 
 header {{
     visibility: hidden !important;
@@ -235,144 +235,138 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 }}
 
 /* ==============================================================================
-   تطوير الشريط العلوي لأقسام المنصة (CBE_NAVY + خط واضح عالي التباين)
-   متوافق مع أحدث بنية DOM في Streamlit (data-testid="stTabs")
+   تطوير الشريط العلوي لأقسام المنصة (توزيع متساوٍ بعرض الشاشة + تباين ذهبي/أبيض)
    ============================================================================== */
-div[data-testid="stTabs"],
-div.stTabs {{
+div.stTabs,
+div[data-testid="stTabs"] {{
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
     background-color: transparent !important;
+    border: none !important;
 }}
 
-/* شريط التبويبات الكامل بخلفية زرقاء مصرفية عميقة موحدة */
-div[data-testid="stTabs"] [data-baseweb="tab-list"],
-div[data-testid="stTabs"] div[role="tablist"],
+/* الحاوية الرئيسية للشريط العلوي */
 .stTabs [data-baseweb="tab-list"],
+div[data-testid="stTabs"] [data-baseweb="tab-list"],
 .stTabs div[role="tablist"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 54px !important;
-    gap: 6px !important;
+    min-height: 52px !important;
+    gap: 5px !important;
     background-color: {CBE_NAVY} !important;
     background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
-    padding: 8px 10px !important;
+    padding: 7px 8px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
+    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.25) !important;
     direction: rtl !important;
     box-sizing: border-box !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: {CBE_GOLD} {CBE_NAVY} !important;
+    overflow: visible !important;
 }}
 
-/* إلغاء التدرج الأبيض الجانبي الافتراضي في Streamlit حول شريط التبويبات */
-div[data-testid="stTabs"] > div:first-child,
-div[data-testid="stTabs"] [data-baseweb="tab-list"]::before,
-div[data-testid="stTabs"] [data-baseweb="tab-list"]::after {{
-    background: transparent !important;
-    background-image: none !important;
+/* معالجة الحاوية الداخلية في إصدارات Streamlit الحديثة حتى لا ينزلق الشريط */
+.stTabs [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]),
+div[data-testid="stTabs"] [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 5px !important;
+    background-color: transparent !important;
 }}
 
-div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar,
-.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {{
-    height: 5px !important;
-}}
-
-div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar-thumb,
-.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-thumb {{
-    background-color: {CBE_GOLD} !important;
-    border-radius: 10px !important;
-}}
-
-/* حالة عدم الضغط (الأقسام غير النشطة): خلفية زرقاء داكنة CBE_NAVY وخط أبيض واضح */
-div[data-testid="stTabs"] button[role="tab"],
+/* أزرار الأقسام الموزعة بالتساوي بعرض الشاشة (8 للمستخدم / 9 للأدمن) */
+.stTabs [data-baseweb="tab"],
 div[data-testid="stTabs"] [data-baseweb="tab"],
 .stTabs button[role="tab"],
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 0 auto !important;
-    min-width: fit-content !important;
+div[data-testid="stTabs"] button[role="tab"] {{
+    flex: 1 1 0% !important;
+    width: 0 !important;
+    min-width: 0 !important;
     background-color: {CBE_NAVY} !important;
-    background-image: none !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 8px 13px !important;
-    font-weight: 600 !important;
+    padding: 8px 4px !important;
+    margin: 0 !important;
     font-family: 'Cairo', sans-serif !important;
-    font-size: 13.5px !important;
-    line-height: 1.45 !important;
+    font-weight: 600 !important;
+    font-size: clamp(10.5px, 0.88vw, 12.5px) !important;
+    line-height: 1.3 !important;
     border: 1px solid rgba(197, 160, 89, 0.28) !important;
     text-align: center !important;
+    display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     transition: all 0.25s ease !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
     outline: none !important;
     box-shadow: none !important;
     cursor: pointer !important;
-    opacity: 1 !important;
 }}
 
-/* حالة التمرير بالمؤشر (Hover) */
-div[data-testid="stTabs"] button[role="tab"]:hover,
+/* توحيد لون الخط الداخلي للأقسام غير المحددة باللون الأبيض الواضح */
+.stTabs [data-baseweb="tab"] *,
+div[data-testid="stTabs"] [data-baseweb="tab"] *,
+.stTabs button[role="tab"] * {{
+    color: #FFFFFF !important;
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: inherit !important;
+    text-align: center !important;
+    margin: 0 !important;
+}}
+
+/* حالة التمرير (Hover) على أي قسم */
+.stTabs [data-baseweb="tab"]:hover,
 div[data-testid="stTabs"] [data-baseweb="tab"]:hover,
 .stTabs button[role="tab"]:hover {{
     background-color: #003B63 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: {CBE_GOLD} !important;
-    font-weight: 700 !important;
 }}
 
-/* حالة الضغط والاختيار النشط (Active / Selected): لون ذهبي ملكي وخط Bold عريض */
-div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"],
-.stTabs button[role="tab"][aria-selected="true"] {{
-    background-color: #00385E !important;
-    background-image: linear-gradient(135deg, #003F6B 0%, {CBE_NAVY} 100%) !important;
+.stTabs [data-baseweb="tab"]:hover *,
+div[data-testid="stTabs"] [data-baseweb="tab"]:hover *,
+.stTabs button[role="tab"]:hover * {{
+    color: {CBE_GOLD_LIGHT} !important;
+}}
+
+/* حالة الضغط الفعلي والاختيار (Active & Selected) بلون ذهبي وخط Bold */
+.stTabs [aria-selected="true"],
+div[data-testid="stTabs"] [aria-selected="true"],
+.stTabs button[role="tab"][aria-selected="true"],
+.stTabs button[role="tab"]:active {{
+    background: linear-gradient(135deg, #003A63 0%, {CBE_NAVY} 100%) !important;
     color: {CBE_GOLD_LIGHT} !important;
     border: 2px solid {CBE_GOLD} !important;
     font-weight: 800 !important;
-    font-size: 14px !important;
-    box-shadow: 0 3px 10px rgba(197, 160, 89, 0.35) !important;
-    outline: none !important;
+    box-shadow: 0 3px 12px rgba(197, 160, 89, 0.35) !important;
 }}
 
-/* إجبار النصوص والأيقونات داخل التبويب على وراثة اللون والوزن بوضوح تام */
-div[data-testid="stTabs"] button[role="tab"] p,
-div[data-testid="stTabs"] button[role="tab"] span,
-div[data-testid="stTabs"] button[role="tab"] div,
-.stTabs button[role="tab"] p,
-.stTabs button[role="tab"] span {{
-    color: inherit !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-weight: inherit !important;
-    font-size: inherit !important;
-    line-height: 1.45 !important;
-    white-space: nowrap !important;
-    margin: 0 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) !important;
+.stTabs [aria-selected="true"] *,
+div[data-testid="stTabs"] [aria-selected="true"] *,
+.stTabs button[role="tab"][aria-selected="true"] *,
+.stTabs button[role="tab"]:active * {{
+    color: {CBE_GOLD_LIGHT} !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }}
 
-/* الشريط السفلي الذهبي أسفل التبويب المختار بدلاً من الأحمر الافتراضي */
-div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-.stTabs [data-baseweb="tab-highlight"] {{
-    background-color: {CBE_GOLD} !important;
-    height: 3px !important;
-}}
-
-div[data-testid="stTabs"] [data-baseweb="tab-border"],
+/* إخفاء شريط التمييز السفلي الأحمر/الأزرق الافتراضي في Streamlit */
+.stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] {{
     display: none !important;
+    visibility: hidden !important;
 }}
 
 .header-center {{
@@ -454,7 +448,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"],
 /* ==============================================================================
    تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
    ============================================================================== */
-@media (max-width: 768px) {{
+@media (max-width: 992px) {{
     /* تقليل الهوامش الجانبية المهدرة في Streamlit */
     .block-container {{
         padding-top: 1rem !important;
@@ -463,25 +457,27 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"],
         padding-right: 0.75rem !important;
     }}
 
-    /* تحسين شريط التبويبات على الهواتف */
-    div[data-testid="stTabs"] [data-baseweb="tab-list"],
-    div[data-testid="stTabs"] div[role="tablist"],
-    .stTabs [data-baseweb="tab-list"] {{
-        flex-direction: row !important;
+    /* تحويل الشريط إلى تمرير أفقي مريح على الشاشات الضيقة والهواتف */
+    .stTabs [data-baseweb="tab-list"],
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
         overflow-x: auto !important;
-        flex-wrap: nowrap !important;
         justify-content: flex-start !important;
-        gap: 6px !important;
         padding: 8px !important;
         -webkit-overflow-scrolling: touch !important;
     }}
 
-    div[data-testid="stTabs"] button[role="tab"],
+    .stTabs [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
+        width: max-content !important;
+    }}
+
+    .stTabs [data-baseweb="tab"],
+    div[data-testid="stTabs"] [data-baseweb="tab"],
     .stTabs button[role="tab"] {{
         flex: 0 0 auto !important;
         width: auto !important;
+        min-width: fit-content !important;
         white-space: nowrap !important;
-        font-size: 13px !important;
+        font-size: 12.5px !important;
         padding: 8px 14px !important;
     }}
 
