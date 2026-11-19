@@ -5,6 +5,7 @@ import re
 import hashlib
 import time
 import uuid
+import inspect
 from datetime import datetime
 import pandas as pd
 import streamlit as st
@@ -35,12 +36,16 @@ st.set_page_config(
 
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
-CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
+CBE_GOLD_LIGHT = "#F5D076"    # ذهبي مشرق عالي التباين للخطوط النشطة
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
+
+# عائلة الخطوط الهندسية الموحدة (مطابقة لـ 29LT Bukra و Bahij TheSansArabic)
+PLATFORM_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', sans-serif"
+PLOTLY_FONT = "Bahij TheSansArabic, Readex Pro, Tajawal, sans-serif"
 
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 header {{
     visibility: hidden !important;
@@ -52,8 +57,13 @@ header {{
     visibility: hidden !important;
 }}
 
+/* توحيد الخط الهندسي في كامل المنصة والقوائم والرسائل */
+html, body, .stApp, [class*="css"], button, input, textarea, select,
+p, span, div, h1, h2, h3, h4, h5, h6, th, td, label, li {{
+    font-family: {PLATFORM_FONT} !important;
+}}
+
 html, body, [class*="css"] {{
-    font-family: 'Cairo', sans-serif !important;
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
@@ -134,7 +144,7 @@ div[role="option"] {{
     text-align: right !important;
     margin-top: 8px !important;
     margin-bottom: 12px !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-family: {PLATFORM_FONT} !important;
     background-color: #FFFFFF !important;
     border-radius: 8px !important;
     overflow: hidden !important;
@@ -183,7 +193,7 @@ button[kind="primaryFormSubmit"],
 button[kind="secondaryFormSubmit"] {{
     width: 100% !important;
     border-radius: 50px !important;
-    font-family: 'Cairo', sans-serif !important;
+    font-family: {PLATFORM_FONT} !important;
     font-weight: 700 !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
@@ -200,7 +210,7 @@ div[data-testid="stFormSubmitButton"] > button * {{
     color: inherit !important;
 }}
 
-/* حالة التمرير (Hover) */
+/* حالة التمرير (Hover) للأزرار */
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
@@ -213,7 +223,7 @@ button[kind="secondaryFormSubmit"]:hover {{
     box-shadow: 0 6px 18px rgba(0, 43, 73, 0.32) !important;
 }}
 
-/* حالة الضغط الفعلي (Active / Click) */
+/* حالة الضغط الفعلي (Active / Click) للأزرار */
 div.stButton > button:active,
 div.stDownloadButton > button:active,
 div[data-testid="stFormSubmitButton"] > button:active,
@@ -226,7 +236,6 @@ button[kind="secondaryFormSubmit"]:active {{
     box-shadow: 0 2px 8px rgba(0, 43, 73, 0.25) !important;
 }}
 
-/* حالة التركيز بعد النقر (Focus) دون إخفاء الإطار الذهبي */
 div.stButton > button:focus,
 div.stDownloadButton > button:focus,
 div[data-testid="stFormSubmitButton"] > button:focus {{
@@ -234,69 +243,149 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.35) !important;
 }}
 
-div.stTabs {{
+/* ==============================================================================
+   الشريط العلوي لأقسام المنصة — CSS نقي 100% بدون أي تداخل أو انفصال
+   ============================================================================== */
+div[data-testid="stTabs"] {{
     width: 100% !important;
-    max-width: 100% !important;
     direction: rtl !important;
-    border: none !important;
+    background: transparent !important;
 }}
 
-.stTabs [data-baseweb="tab-list"] {{
+/* الحاوية الخارجية لشريط التبويبات */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     display: flex !important;
-    flex-direction: row-reverse !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
     width: 100% !important;
-    max-width: 100% !important;
-    gap: 6px !important;
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
-    padding: 10px !important;
+    height: auto !important;
+    min-height: 52px !important;
+    gap: 5px !important;
+    background-color: {CBE_NAVY} !important;
+    background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
+    padding: 7px 8px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-    direction: rtl !important;
+    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
     box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
 }}
 
-.stTabs [data-baseweb="tab"] {{
-    flex: 1 1 0% !important;
+/* منع الحاويات الفرعية داخل BaseWeb من كسر التوزيع الأفقي أو إخفاء الخلفية */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
     width: 100% !important;
-    max-width: none !important;
-    background-color: rgba(0, 43, 73, 0.85) !important;
+    gap: 5px !important;
+    background: transparent !important;
+}}
+
+/* أزرار الأقسام بالوضع الافتراضي (خلفية زرقاء داكنة CBE_NAVY + خط أبيض واضح) */
+div[data-testid="stTabs"] button[role="tab"],
+div[data-testid="stTabs"] [data-baseweb="tab"] {{
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 44px !important;
+    background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 10px 4px !important;
-    font-weight: 700 !important;
-    font-family: 'Cairo', sans-serif !important;
-    font-size: 12px !important;
-    border: 1px solid rgba(197, 160, 89, 0.3) !important;
+    padding: 8px 6px !important;
+    margin: 0 !important;
+    font-family: {PLATFORM_FONT} !important;
+    font-weight: 500 !important;
+    font-size: clamp(11px, 0.88vw, 12.5px) !important;
+    line-height: 1.35 !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
     text-align: center !important;
+    display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    transition: all 0.3s ease !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    outline: none !important;
+    transition: all 0.22s ease !important;
+    white-space: normal !important;
+    cursor: pointer !important;
     box-shadow: none !important;
 }}
 
-.stTabs [data-baseweb="tab"]:hover {{
-    background-color: #1D4ED8 !important;
+/* النصوص الداخلية في الوضع الافتراضي باللون الأبيض الواضح */
+div[data-testid="stTabs"] button[role="tab"] p,
+div[data-testid="stTabs"] button[role="tab"] span,
+div[data-testid="stTabs"] button[role="tab"] div,
+div[data-testid="stTabs"] [data-baseweb="tab"] p {{
     color: #FFFFFF !important;
-    border-color: #FFFFFF !important;
+    font-family: {PLATFORM_FONT} !important;
+    font-weight: 500 !important;
+    font-size: inherit !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    text-align: center !important;
 }}
 
-.stTabs [aria-selected="true"] {{
-    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%) !important;
-    color: #FFFFFF !important;
-    border: 2px solid #FFFFFF !important;
+/* حالة التمرير (Hover) على القسم */
+div[data-testid="stTabs"] button[role="tab"]:hover,
+div[data-testid="stTabs"] [data-baseweb="tab"]:hover {{
+    background-color: #003B63 !important;
+    color: {CBE_GOLD_LIGHT} !important;
+    border-color: rgba(197, 160, 89, 0.75) !important;
+}}
+
+div[data-testid="stTabs"] button[role="tab"]:hover p,
+div[data-testid="stTabs"] button[role="tab"]:hover span,
+div[data-testid="stTabs"] [data-baseweb="tab"]:hover p {{
+    color: {CBE_GOLD_LIGHT} !important;
+}}
+
+/* حالة الضغط والاختيار (Selected & Active): خط ذهبي واضح وBold على خلفية زرقاء داكنة */
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] button[role="tab"]:active,
+div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {{
+    background-color: #001F38 !important;
+    background-image: linear-gradient(135deg, #003860 0%, {CBE_NAVY} 100%) !important;
+    color: {CBE_GOLD_LIGHT} !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
-    outline: none !important;
+    border: 2px solid {CBE_GOLD} !important;
+    box-shadow: 0 2px 10px rgba(197, 160, 89, 0.35) !important;
 }}
 
-.stTabs [data-baseweb="tab"] p {{ color: inherit !important; }}
-.stTabs [data-baseweb="tab-highlight"] {{ background-color: #60A5FA !important; }}
-.stTabs [data-baseweb="tab-border"] {{ display: none !important; }}
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div,
+div[data-testid="stTabs"] button[role="tab"]:active p,
+div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] p {{
+    color: {CBE_GOLD_LIGHT} !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
+}}
+
+/* إخفاء شريط التحديد السفلي الافتراضي الأحمر/الأزرق لـ Streamlit */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
+    display: none !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}}
+
+/* تنسيق بطاقة الإجابة التحليلية لمنع أي قص أو التفاف خاطئ */
+.rag-answer-card {{
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-right: 5px solid {CBE_GOLD};
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(0, 43, 73, 0.05);
+    line-height: 1.85;
+    font-size: 15px;
+    color: #1E293B;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}}
 
 .header-center {{
     text-align: center !important;
@@ -316,7 +405,7 @@ div.stTabs {{
 .header-center h1 {{
     color: {CBE_GOLD} !important;
     font-size: clamp(18px, 4.5vw, 24px) !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     line-height: 1.45 !important;
     margin-bottom: 10px !important;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
@@ -325,7 +414,7 @@ div.stTabs {{
 .header-center h3 {{
     color: #F1F5F9 !important;
     font-size: clamp(13px, 3.2vw, 14.5px) !important;
-    font-weight: 500 !important;
+    font-weight: 400 !important;
     line-height: 1.6 !important;
     margin-bottom: 6px !important;
 }}
@@ -353,7 +442,7 @@ div.stTabs {{
     display: inline-block;
     padding: 8px 30px;
     font-size: 14px;
-    font-weight: bold;
+    font-weight: 600;
     color: #FFFFFF !important;
     direction: rtl !important;
 }}
@@ -370,15 +459,14 @@ div.stTabs {{
     margin-top: 40px;
     border-top: 1px solid #E2E8F0;
     padding-top: 15px;
-    font-weight: bold;
+    font-weight: 600;
     direction: rtl !important;
 }}
 
 /* ==============================================================================
    تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
    ============================================================================== */
-@media (max-width: 768px) {{
-    /* تقليل الهوامش الجانبية المهدرة في Streamlit */
+@media (max-width: 992px) {{
     .block-container {{
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
@@ -386,29 +474,24 @@ div.stTabs {{
         padding-right: 0.75rem !important;
     }}
 
-    /* تحويل التبويبات إلى شريط قابل للتمرير الأفقي السلس بدلاً من تكدسها */
-    .stTabs [data-baseweb="tab-list"] {{
-        flex-direction: row !important;
-        overflow-x: auto !important;
-        flex-wrap: nowrap !important;
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
         justify-content: flex-start !important;
-        gap: 6px !important;
         padding: 8px !important;
         -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: thin !important;
     }}
 
-    .stTabs [data-baseweb="tab"] {{
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
+        width: max-content !important;
+    }}
+
+    div[data-testid="stTabs"] button[role="tab"],
+    div[data-testid="stTabs"] [data-baseweb="tab"] {{
         flex: 0 0 auto !important;
-        width: auto !important;
         white-space: nowrap !important;
         font-size: 12.5px !important;
         padding: 8px 14px !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
     }}
 
-    /* جعل الأزرار وحقول الإدخال ومفتاح تسجيل الدخول مريحة للمس (Touch-Friendly) */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stFormSubmitButton"] > button {{
@@ -421,10 +504,9 @@ div.stTabs {{
     }}
 
     input, textarea, select {{
-        font-size: 16px !important; /* يمنع تكبير الشاشة التلقائي المزعج في آيفون */
+        font-size: 16px !important;
     }}
 
-    /* جعل الجداول والرسوم البيانية قابلة للتمرير الأفقي دون كسر التصميم */
     [data-testid="stDataFrame"], .js-plotly-plot {{
         max-width: 100% !important;
         overflow-x: auto !important;
@@ -445,7 +527,7 @@ div.stTabs {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# الدوال المساعدة (Flat HTML & Clean Text)
+# الدوال المساعدة ومعالج منع بتر الإجابات في محرك RAG
 # ==============================================================================
 def flat_html(s: str) -> str:
     return " ".join(l.strip() for l in s.splitlines() if l.strip())
@@ -460,6 +542,175 @@ def clean_text(text) -> str:
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
+
+def apply_platform_plotly_font(fig):
+    """توحيد الخط الهندسي للمنصة داخل كافة رسوم Plotly البيانية."""
+    fig.update_layout(
+        font=dict(family=PLOTLY_FONT, size=13, color=CBE_NAVY),
+        title_font=dict(family=PLOTLY_FONT, size=16, color=CBE_NAVY),
+    )
+    return fig
+
+def wrap_export_html_with_bukra(body_html: str, title: str = "تقرير المنصة الوطنية الذكية") -> str:
+    """توحيد الخط الهندسي في ملفات Word و HTML المصدرة."""
+    return f"""<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<style>
+    body {{
+        font-family: '29LT Bukra', 'Bahij TheSansArabic', 'Readex Pro', Arial, sans-serif;
+        direction: rtl;
+        text-align: right;
+        line-height: 1.75;
+        color: #1E293B;
+        padding: 24px;
+    }}
+    h1, h2, h3 {{
+        color: {CBE_NAVY};
+        font-weight: 700;
+    }}
+    table {{
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+    }}
+    th {{
+        background-color: {CBE_NAVY};
+        color: #FFFFFF;
+        padding: 10px;
+        border: 1px solid {CBE_GOLD};
+    }}
+    td {{
+        padding: 8px 10px;
+        border: 1px solid #CBD5E1;
+    }}
+</style>
+</head>
+<body>
+{body_html}
+</body>
+</html>"""
+
+def _is_truncated_text(text: str) -> bool:
+    """يتحقق مما إذا كانت الإجابة قد بُترت في منتصف جملة أو كلمة."""
+    if not text or not isinstance(text, str):
+        return False
+    stripped = text.strip()
+    if len(stripped) < 40:
+        return False
+    # علامات النهاية الطبيعية للجملة العربية أو الإنجليزية أو الجداول
+    valid_endings = (".", "!", "؟", "?", ":", ")", "]", "»", '"', "'", "|", "۔")
+    if stripped.endswith(valid_endings):
+        return False
+    # إذا انتهى النص بحرف عربي/إنجليزي متصل دون ترقيم ختامي فهو مبتور غالباً
+    return bool(re.search(r"[\u0600-\u06FFa-zA-Z0-9]$", stripped))
+
+def _invoke_rag_safe(query: str, bank_name: str):
+    """استدعاء آمن لمحرك RAG يدعم تمرير أقصى عدد من الرموز (max_tokens) لمنع البتر."""
+    sig = inspect.signature(process_rag_gemini_query)
+    kwargs = {}
+    for param_name in sig.parameters:
+        if param_name in ("bank_name", "selected_bank", "bank"):
+            kwargs[param_name] = bank_name
+        elif param_name in ("max_tokens", "max_output_tokens"):
+            kwargs[param_name] = 4096
+    if kwargs:
+        return process_rag_gemini_query(query, **kwargs)
+    return process_rag_gemini_query(query, bank_name)
+
+def get_complete_rag_response(query: str, bank_name: str) -> str:
+    """
+    يسترجع الإجابة الكاملة من محرك RAG، وإذا اكتشف أنها بُترت في منتصف جملة
+    يقوم بطلب استكمال تلقائي صامت ودمجه، أو تقليم الجزء المبتور بذكاء.
+    """
+    raw_result = _invoke_rag_safe(query, bank_name)
+    if isinstance(raw_result, dict):
+        answer_text = str(raw_result.get("answer") or raw_result.get("response") or raw_result.get("text") or "")
+    elif isinstance(raw_result, (tuple, list)) and len(raw_result) > 0:
+        answer_text = str(raw_result[0])
+    else:
+        answer_text = str(raw_result or "")
+
+    answer_text = answer_text.strip()
+
+    # محاولة استكمال الإجابة تلقائياً إذا انتهت في منتصف جملة
+    if _is_truncated_text(answer_text):
+        tail_snippet = answer_text[-140:]
+        continuation_prompt = (
+            f"أكمل النص التالي من حيث توقف بالضبط دون تكرار ما سبق، مع إنهاء جميع النقاط والفقرات بشكل كامل ومفصل:\n"
+            f"السؤال الأصلي: {query}\n"
+            f"آخر جزء توقف عنده النص: \"{tail_snippet}\""
+        )
+        try:
+            cont_raw = _invoke_rag_safe(continuation_prompt, bank_name)
+            if isinstance(cont_raw, dict):
+                cont_text = str(cont_raw.get("answer") or cont_raw.get("response") or cont_raw.get("text") or "")
+            elif isinstance(cont_raw, (tuple, list)) and len(cont_raw) > 0:
+                cont_text = str(cont_raw[0])
+            else:
+                cont_text = str(cont_raw or "")
+
+            cont_text = cont_text.strip()
+            if cont_text and not cont_text.startswith("⚠️"):
+                # إزالة أي تكرار محتمل لأخر جملة في بداية الاستكمال
+                last_words = answer_text.split()[-4:]
+                overlap_phrase = " ".join(last_words)
+                if overlap_phrase and overlap_phrase in cont_text[:120]:
+                    cont_text = cont_text.split(overlap_phrase, 1)[-1].strip()
+                answer_text = f"{answer_text} {cont_text}".strip()
+        except Exception:
+            pass
+
+    # خط دفاع أخير: إذا بقيت جملة ناقصة، يتم إرجاع النص حتى آخر جملة مكتملة بعلامة ترقيم
+    if _is_truncated_text(answer_text):
+        last_punct = max(
+            answer_text.rfind("."),
+            answer_text.rfind("؟"),
+            answer_text.rfind("!"),
+            answer_text.rfind(")"),
+        )
+        if last_punct > int(len(answer_text) * 0.5):
+            answer_text = answer_text[:last_punct + 1].strip()
+
+    return answer_text
+
+def stream_complete_rag_response(query: str, bank_name: str, placeholder=None) -> str:
+    """
+    يدير العرض المتدفق (Streaming) للإجابة مع منع البتر عند انتهاء التدفق،
+    وتحديث الحاوية بالنص الكامل الموثق فور اكتماله.
+    """
+    full_text = ""
+    try:
+        sig = inspect.signature(stream_rag_gemini_query)
+        kwargs = {}
+        for param_name in sig.parameters:
+            if param_name in ("bank_name", "selected_bank", "bank"):
+                kwargs[param_name] = bank_name
+            elif param_name in ("max_tokens", "max_output_tokens"):
+                kwargs[param_name] = 4096
+
+        stream_gen = stream_rag_gemini_query(query, **kwargs) if kwargs else stream_rag_gemini_query(query, bank_name)
+        for chunk in stream_gen:
+            if isinstance(chunk, dict):
+                piece = str(chunk.get("delta") or chunk.get("text") or chunk.get("answer") or "")
+            else:
+                piece = str(chunk or "")
+            full_text += piece
+            if placeholder is not None:
+                placeholder.markdown(f'<div class="rag-answer-card">{full_text} ▌</div>', unsafe_allow_html=True)
+    except Exception:
+        full_text = get_complete_rag_response(query, bank_name)
+
+    # التحقق من اكتمال النص بعد انتهاء البث واستكماله إذا كان مبتوراً
+    if not full_text.strip() or _is_truncated_text(full_text):
+        full_text = get_complete_rag_response(query, bank_name)
+
+    if placeholder is not None:
+        placeholder.markdown(f'<div class="rag-answer-card">{full_text}</div>', unsafe_allow_html=True)
+
+    return full_text
 
 # ==============================================================================
 # نظام تتبع الزوار والاستبيانات
@@ -555,7 +806,7 @@ if not st.session_state.authenticated:
     with col2:
         st.markdown(f"""
         <div style="background: #FFFFFF; padding: clamp(18px, 4vw, 30px); border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right; margin-top: 20px;" dir="rtl">
-            <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; font-size: clamp(18px, 4vw, 22px); margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
+            <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 700; font-size: clamp(18px, 4vw, 22px); margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي</h2>
             <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
                 إطار تطبيقي مقترح لبرنامج دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
             </p>
@@ -568,7 +819,6 @@ if not st.session_state.authenticated:
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
             if submitted:
-                # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
                 clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
                 clean_pass = str(password_input).strip()
 
@@ -587,6 +837,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
+
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
@@ -684,7 +935,7 @@ if st.session_state.role == "admin":
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
         "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي ",
+        "📖 دليل المستخدم الرسمي",
         "🔒 لوحة تحكم المشرف والزوار (Admin)"
     ])
 else:
@@ -696,7 +947,7 @@ else:
         "📑 التقرير التنفيذي الموحد",
         "🌿 مولد تقارير الاستدامة (GRI/ISSB)",
         "📋 استبيان فرق العمل المصرفي",
-        "📖 دليل المستخدم الرسمي "
+        "📖 دليل المستخدم الرسمي"
     ])
     tab9 = None
 # ------------------------------------------------------------------------------
