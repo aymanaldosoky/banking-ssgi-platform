@@ -200,7 +200,7 @@ div[data-testid="stFormSubmitButton"] > button * {{
     color: inherit !important;
 }}
 
-/* حالة التمرير (Hover) */
+/* حالة التمرير (Hover) للأزرار */
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
@@ -213,7 +213,7 @@ button[kind="secondaryFormSubmit"]:hover {{
     box-shadow: 0 6px 18px rgba(0, 43, 73, 0.32) !important;
 }}
 
-/* حالة الضغط الفعلي (Active / Click) */
+/* حالة الضغط الفعلي (Active / Click) للأزرار */
 div.stButton > button:active,
 div.stDownloadButton > button:active,
 div[data-testid="stFormSubmitButton"] > button:active,
@@ -226,7 +226,6 @@ button[kind="secondaryFormSubmit"]:active {{
     box-shadow: 0 2px 8px rgba(0, 43, 73, 0.25) !important;
 }}
 
-/* حالة التركيز بعد النقر (Focus) دون إخفاء الإطار الذهبي */
 div.stButton > button:focus,
 div.stDownloadButton > button:focus,
 div[data-testid="stFormSubmitButton"] > button:focus {{
@@ -235,21 +234,22 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 }}
 
 /* ==============================================================================
-   تطوير الشريط العلوي لأقسام المنصة (توزيع متساوٍ بعرض الشاشة + تباين ذهبي/أبيض)
+   الشريط العلوي لأقسام المنصة (خلفية CBE_NAVY + خط أبيض افتراضي + خط ذهبي Bold عند الضغط)
    ============================================================================== */
-div.stTabs,
-div[data-testid="stTabs"] {{
+div[data-testid="stTabs"],
+div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
-    background-color: transparent !important;
+    background: transparent !important;
     border: none !important;
 }}
 
-/* الحاوية الرئيسية للشريط العلوي */
-.stTabs [data-baseweb="tab-list"],
+/* حاوية شريط التبويبات الموحدة */
 div[data-testid="stTabs"] [data-baseweb="tab-list"],
-.stTabs div[role="tablist"] {{
+div[data-testid="stTabs"] [role="tablist"],
+.stTabs [data-baseweb="tab-list"],
+.stTabs [role="tablist"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -257,116 +257,109 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"],
     justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 52px !important;
+    height: auto !important;
     gap: 5px !important;
     background-color: {CBE_NAVY} !important;
     background-image: linear-gradient(135deg, {CBE_NAVY} 0%, #001B30 100%) !important;
     padding: 7px 8px !important;
     border-radius: 12px !important;
     border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.25) !important;
+    box-shadow: 0 6px 20px rgba(0, 43, 73, 0.22) !important;
     direction: rtl !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
 }}
 
-/* معالجة الحاوية الداخلية في إصدارات Streamlit الحديثة حتى لا ينزلق الشريط */
-.stTabs [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]),
-div[data-testid="stTabs"] [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    gap: 5px !important;
-    background-color: transparent !important;
-}}
-
-/* أزرار الأقسام الموزعة بالتساوي بعرض الشاشة (8 للمستخدم / 9 للأدمن) */
-.stTabs [data-baseweb="tab"],
+/* أزرار الأقسام بالوضع الافتراضي: خلفية زرقاء داكنة CBE_NAVY وخط أبيض واضح */
+div[data-testid="stTabs"] button[role="tab"],
 div[data-testid="stTabs"] [data-baseweb="tab"],
 .stTabs button[role="tab"],
-div[data-testid="stTabs"] button[role="tab"] {{
-    flex: 1 1 0% !important;
-    width: 0 !important;
-    min-width: 0 !important;
+.stTabs [data-baseweb="tab"] {{
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 44px !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
     border-radius: 8px !important;
-    padding: 8px 4px !important;
+    padding: 8px 6px !important;
     margin: 0 !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: 600 !important;
-    font-size: clamp(10.5px, 0.88vw, 12.5px) !important;
-    line-height: 1.3 !important;
-    border: 1px solid rgba(197, 160, 89, 0.28) !important;
+    font-size: clamp(11px, 0.9vw, 12.5px) !important;
+    line-height: 1.35 !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     text-align: center !important;
-    display: flex !important;
+    display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    transition: all 0.25s ease !important;
+    transition: all 0.22s ease !important;
     white-space: normal !important;
-    word-break: keep-all !important;
-    overflow-wrap: break-word !important;
-    outline: none !important;
-    box-shadow: none !important;
     cursor: pointer !important;
+    box-shadow: none !important;
 }}
 
-/* توحيد لون الخط الداخلي للأقسام غير المحددة باللون الأبيض الواضح */
-.stTabs [data-baseweb="tab"] *,
-div[data-testid="stTabs"] [data-baseweb="tab"] *,
-.stTabs button[role="tab"] * {{
+/* النصوص والأيقونات الداخلية بالوضع الافتراضي (أبيض واضح) */
+div[data-testid="stTabs"] button[role="tab"] p,
+div[data-testid="stTabs"] button[role="tab"] span,
+div[data-testid="stTabs"] button[role="tab"] div,
+div[data-testid="stTabs"] [data-baseweb="tab"] p,
+.stTabs button[role="tab"] p {{
     color: #FFFFFF !important;
     font-family: 'Cairo', sans-serif !important;
     font-weight: 600 !important;
     font-size: inherit !important;
-    text-align: center !important;
+    line-height: 1.35 !important;
     margin: 0 !important;
+    text-align: center !important;
 }}
 
-/* حالة التمرير (Hover) على أي قسم */
-.stTabs [data-baseweb="tab"]:hover,
+/* حالة التمرير (Hover) على القسم */
+div[data-testid="stTabs"] button[role="tab"]:hover,
 div[data-testid="stTabs"] [data-baseweb="tab"]:hover,
 .stTabs button[role="tab"]:hover {{
     background-color: #003B63 !important;
     color: {CBE_GOLD_LIGHT} !important;
-    border-color: {CBE_GOLD} !important;
+    border-color: rgba(197, 160, 89, 0.7) !important;
 }}
 
-.stTabs [data-baseweb="tab"]:hover *,
-div[data-testid="stTabs"] [data-baseweb="tab"]:hover *,
-.stTabs button[role="tab"]:hover * {{
+div[data-testid="stTabs"] button[role="tab"]:hover p,
+div[data-testid="stTabs"] button[role="tab"]:hover span,
+div[data-testid="stTabs"] [data-baseweb="tab"]:hover p {{
     color: {CBE_GOLD_LIGHT} !important;
 }}
 
-/* حالة الضغط الفعلي والاختيار (Active & Selected) بلون ذهبي وخط Bold */
-.stTabs [aria-selected="true"],
-div[data-testid="stTabs"] [aria-selected="true"],
+/* حالة الضغط والاختيار (Selected & Active): خط ذهبي واضح وBold على خلفية زرقاء داكنة */
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] button[role="tab"]:active,
+div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"],
 .stTabs button[role="tab"][aria-selected="true"],
 .stTabs button[role="tab"]:active {{
-    background: linear-gradient(135deg, #003A63 0%, {CBE_NAVY} 100%) !important;
+    background-color: #001F38 !important;
+    background-image: linear-gradient(135deg, #003860 0%, {CBE_NAVY} 100%) !important;
     color: {CBE_GOLD_LIGHT} !important;
+    font-weight: 800 !important;
     border: 2px solid {CBE_GOLD} !important;
-    font-weight: 800 !important;
-    box-shadow: 0 3px 12px rgba(197, 160, 89, 0.35) !important;
+    box-shadow: 0 2px 10px rgba(197, 160, 89, 0.35) !important;
 }}
 
-.stTabs [aria-selected="true"] *,
-div[data-testid="stTabs"] [aria-selected="true"] *,
-.stTabs button[role="tab"][aria-selected="true"] *,
-.stTabs button[role="tab"]:active * {{
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div,
+div[data-testid="stTabs"] button[role="tab"]:active p,
+div[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] p,
+.stTabs button[role="tab"][aria-selected="true"] p {{
     color: {CBE_GOLD_LIGHT} !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
 }}
 
-/* إخفاء شريط التمييز السفلي الأحمر/الأزرق الافتراضي في Streamlit */
+/* إخفاء الخط السفلي الافتراضي الأحمر/الأزرق لـ Streamlit */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"],
 .stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] {{
     display: none !important;
-    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
 }}
 
 .header-center {{
@@ -449,7 +442,6 @@ div[data-testid="stTabs"] [aria-selected="true"] *,
    تحسينات التجاوب مع الهواتف المحمولة والتابلت (Responsive Mobile & Tablet)
    ============================================================================== */
 @media (max-width: 992px) {{
-    /* تقليل الهوامش الجانبية المهدرة في Streamlit */
     .block-container {{
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
@@ -457,31 +449,22 @@ div[data-testid="stTabs"] [aria-selected="true"] *,
         padding-right: 0.75rem !important;
     }}
 
-    /* تحويل الشريط إلى تمرير أفقي مريح على الشاشات الضيقة والهواتف */
-    .stTabs [data-baseweb="tab-list"],
-    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+    div[data-testid="stTabs"] [data-baseweb="tab-list"],
+    div[data-testid="stTabs"] [role="tablist"] {{
         overflow-x: auto !important;
         justify-content: flex-start !important;
         padding: 8px !important;
         -webkit-overflow-scrolling: touch !important;
     }}
 
-    .stTabs [data-baseweb="tab-list"] > div:not([data-baseweb="tab-highlight"]) {{
-        width: max-content !important;
-    }}
-
-    .stTabs [data-baseweb="tab"],
-    div[data-testid="stTabs"] [data-baseweb="tab"],
-    .stTabs button[role="tab"] {{
+    div[data-testid="stTabs"] button[role="tab"],
+    div[data-testid="stTabs"] [data-baseweb="tab"] {{
         flex: 0 0 auto !important;
-        width: auto !important;
-        min-width: fit-content !important;
         white-space: nowrap !important;
         font-size: 12.5px !important;
         padding: 8px 14px !important;
     }}
 
-    /* جعل الأزرار وحقول الإدخال ومفتاح تسجيل الدخول مريحة للمس (Touch-Friendly) */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stFormSubmitButton"] > button {{
@@ -494,10 +477,9 @@ div[data-testid="stTabs"] [aria-selected="true"] *,
     }}
 
     input, textarea, select {{
-        font-size: 16px !important; /* يمنع تكبير الشاشة التلقائي المزعج في آيفون */
+        font-size: 16px !important;
     }}
 
-    /* جعل الجداول والرسوم البيانية قابلة للتمرير الأفقي دون كسر التصميم */
     [data-testid="stDataFrame"], .js-plotly-plot {{
         max-width: 100% !important;
         overflow-x: auto !important;
@@ -641,7 +623,6 @@ if not st.session_state.authenticated:
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
             if submitted:
-                # تنظيف شامل يزيل أي مسافات أو رموز خفية ويوحد الحروف الصغيرة
                 clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
                 clean_pass = str(password_input).strip()
 
@@ -773,6 +754,64 @@ else:
         "📖 دليل المستخدم الرسمي"
     ])
     tab9 = None
+
+# معالج تفاعلي لضمان ثبات ألوان الشريط العلوي (أبيض افتراضي / ذهبي Bold عند الاختيار)
+components.html(f"""
+<script>
+(function() {{
+    const NAVY = "{CBE_NAVY}";
+    const GOLD = "{CBE_GOLD}";
+    const GOLD_LIGHT = "{CBE_GOLD_LIGHT}";
+
+    function styleTopTabs() {{
+        const doc = window.parent.document;
+        const tabLists = doc.querySelectorAll('[data-testid="stTabs"] [data-baseweb="tab-list"], [data-testid="stTabs"] [role="tablist"]');
+        tabLists.forEach(list => {{
+            list.style.setProperty('background-color', NAVY, 'important');
+            list.style.setProperty('border', '2px solid ' + GOLD, 'important');
+            list.style.setProperty('border-radius', '12px', 'important');
+            list.style.setProperty('padding', '7px 8px', 'important');
+            list.style.setProperty('display', 'flex', 'important');
+            list.style.setProperty('flex-direction', 'row', 'important');
+            list.style.setProperty('align-items', 'stretch', 'important');
+            list.style.setProperty('gap', '5px', 'important');
+            list.style.setProperty('height', 'auto', 'important');
+        }});
+
+        const tabs = doc.querySelectorAll('[data-testid="stTabs"] button[role="tab"], [data-testid="stTabs"] [data-baseweb="tab"]');
+        tabs.forEach(tab => {{
+            const isSelected = tab.getAttribute('aria-selected') === 'true';
+            tab.style.setProperty('flex', '1 1 auto', 'important');
+            tab.style.setProperty('height', 'auto', 'important');
+            tab.style.setProperty('border-radius', '8px', 'important');
+            tab.style.setProperty('padding', '8px 6px', 'important');
+            tab.style.setProperty('margin', '0', 'important');
+
+            if (isSelected) {{
+                tab.style.setProperty('background-color', '#003860', 'important');
+                tab.style.setProperty('color', GOLD_LIGHT, 'important');
+                tab.style.setProperty('font-weight', '800', 'important');
+                tab.style.setProperty('border', '2px solid ' + GOLD, 'important');
+            }} else {{
+                tab.style.setProperty('background-color', NAVY, 'important');
+                tab.style.setProperty('color', '#FFFFFF', 'important');
+                tab.style.setProperty('font-weight', '600', 'important');
+                tab.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.14)', 'important');
+            }}
+
+            tab.querySelectorAll('p, span, div').forEach(el => {{
+                el.style.setProperty('color', isSelected ? GOLD_LIGHT : '#FFFFFF', 'important');
+                el.style.setProperty('font-weight', isSelected ? '800' : '600', 'important');
+            }});
+        }});
+    }}
+
+    styleTopTabs();
+    const observer = new MutationObserver(() => styleTopTabs());
+    observer.observe(window.parent.document.body, {{ childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] }});
+}})();
+</script>
+""", height=0)
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
