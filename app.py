@@ -40,7 +40,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v6"    # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v7"    # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -168,6 +168,7 @@ div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {{
     border-color: {CBE_GOLD} !important;
 }}
 
+div[data-testid="stTabs"] button[role="tab"]:hover [data-testid="stMarkdownContainer"],
 div[data-testid="stTabs"] button[role="tab"]:hover [data-testid="stMarkdownContainer"] p,
 div[data-testid="stTabs"] button[role="tab"]:hover p,
 div[data-testid="stTabs"] button[role="tab"]:hover span,
@@ -189,7 +190,9 @@ div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {{
     box-shadow: inset 0 0 0 1px rgba(245, 208, 118, 0.35), 0 0 12px rgba(197, 160, 89, 0.45) !important;
 }}
 
+div[data-testid="stTabs"] button[role="tab"]:active [data-testid="stMarkdownContainer"],
 div[data-testid="stTabs"] button[role="tab"]:active [data-testid="stMarkdownContainer"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] [data-testid="stMarkdownContainer"],
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] [data-testid="stMarkdownContainer"] p,
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
@@ -245,8 +248,9 @@ TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 
 def inject_tabs_css():
-    """حقن CSS + فرض الألوان مباشرة على عناصر DOM وإخفاء الخط الأحمر."""
+    """حقن CSS + مراقب DOM فوري يفرض الألوان البيضاء والذهبية ويزيل شريط BaseWeb الأحمر."""
     st.markdown(TABS_CSS, unsafe_allow_html=True)
+    safe_css_js = json.dumps(TABS_RULES)
     components.html(
         f"""
         <script>
@@ -259,36 +263,61 @@ def inject_tabs_css():
                 styleEl.id = styleId;
                 doc.head.appendChild(styleEl);
             }}
-            styleEl.innerHTML = `{TABS_RULES}`;
+            styleEl.textContent = {safe_css_js};
+
+            function paintButton(btn, forceGold) {{
+                const isSelected = btn.getAttribute('aria-selected') === 'true';
+                const isHovered = btn.matches(':hover') || btn.matches(':active') || Boolean(forceGold);
+                const activeState = isSelected || isHovered;
+                const textColor = activeState ? '{CBE_GOLD_BRIGHT}' : '#FFFFFF';
+                const bgColor = (isHovered && !isSelected) ? '{CBE_NAVY_HOVER}' : '{CBE_NAVY}';
+                const fontWeight = isSelected ? '800' : '600';
+
+                btn.style.setProperty('background-color', bgColor, 'important');
+                btn.style.setProperty('color', textColor, 'important');
+                btn.style.setProperty('-webkit-text-fill-color', textColor, 'important');
+
+                btn.querySelectorAll('[data-testid="stMarkdownContainer"], p, span, div').forEach(node => {{
+                    node.style.setProperty('color', textColor, 'important');
+                    node.style.setProperty('-webkit-text-fill-color', textColor, 'important');
+                    node.style.setProperty('font-weight', fontWeight, 'important');
+                }});
+            }}
 
             function enforceTabStyles() {{
-                // إخفاء الخط الأحمر السفلي الافتراضي
+                // إخفاء الخط الأحمر السفلي لـ BaseWeb نهائياً
                 doc.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]').forEach(el => {{
                     el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('height', '0px', 'important');
                 }});
 
-                // فرض ألوان النص والخلفية مباشرة على الأزرار ونصوصها
-                doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]').forEach(btn => {{
-                    const isSelected = btn.getAttribute('aria-selected') === 'true';
-                    const isHovered = btn.matches(':hover');
-                    const textColor = (isSelected || isHovered) ? '{CBE_GOLD_BRIGHT}' : '#FFFFFF';
-                    const bgColor = isHovered ? '{CBE_NAVY_HOVER}' : '{CBE_NAVY}';
-
-                    btn.style.setProperty('background-color', bgColor, 'important');
-                    btn.style.setProperty('color', textColor, 'important');
-
-                    btn.querySelectorAll('p, span, div').forEach(node => {{
-                        node.style.setProperty('color', textColor, 'important');
-                        node.style.setProperty('-webkit-text-fill-color', textColor, 'important');
-                    }});
+                // فرض ألوان النص والخلفية مباشرة على الأزرار وحاويات الماركداون الداخلية
+                doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"], div[data-testid="stTabs"] button[data-baseweb="tab"]').forEach(btn => {{
+                    paintButton(btn, false);
+                    if (!btn.dataset.ssgiBound) {{
+                        btn.dataset.ssgiBound = '1';
+                        btn.addEventListener('pointerenter', () => paintButton(btn, true));
+                        btn.addEventListener('pointerleave', () => paintButton(btn, false));
+                        btn.addEventListener('pointerdown', () => paintButton(btn, true));
+                        btn.addEventListener('click', () => setTimeout(enforceTabStyles, 0));
+                    }}
                 }});
             }}
 
             enforceTabStyles();
-            const observer = new MutationObserver(enforceTabStyles);
-            observer.observe(doc.body, {{ childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] }});
-            doc.addEventListener('mouseover', enforceTabStyles, true);
-            doc.addEventListener('mouseout', enforceTabStyles, true);
+            setTimeout(enforceTabStyles, 50);
+            setTimeout(enforceTabStyles, 250);
+
+            if (!window.parent.__ssgiTabObserver) {{
+                const observer = new MutationObserver(enforceTabStyles);
+                observer.observe(doc.body, {{
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['aria-selected', 'class', 'style']
+                }});
+                window.parent.__ssgiTabObserver = observer;
+            }}
         }})();
         </script>
         """,
@@ -320,6 +349,14 @@ header {{
 .stAppToolbar, div[data-testid="stHeader"] {{
     display: none !important;
     visibility: hidden !important;
+}}
+
+/* إخفاء إطارات السكربت المخفية حتى لا تترك فراغاً رأسياً */
+iframe[height="0"] {{
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }}
 
 html, body, [class*="css"] {{
