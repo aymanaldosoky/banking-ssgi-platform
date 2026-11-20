@@ -52,7 +52,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v12"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v13"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -151,7 +151,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         height: auto !important;
         min-height: 48px !important;
         margin: 0 !important;
-        padding: 8px 6px !important;
+        padding: 8px 5px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -159,7 +159,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         border-radius: 8px !important;
         font-family: {APP_FONT} !important;
         font-weight: 600 !important;
-        font-size: 12.5px !important;
+        font-size: 12px !important;
         line-height: 1.35 !important;
         text-align: center !important;
         white-space: normal !important;
@@ -553,6 +553,71 @@ div[role="option"] {{
 
 .rag-response-box li {{
     margin-bottom: 6px !important;
+}}
+
+/* تصميم بطاقات الصفحة الرئيسية والنموذج البحثي */
+.home-hero-card {{
+    background: #FFFFFF;
+    border: 1.5px solid {CBE_GOLD};
+    border-right: 6px solid {CBE_NAVY};
+    border-radius: 14px;
+    padding: clamp(16px, 3vw, 24px);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 18px rgba(0, 43, 73, 0.06);
+}}
+
+.model-pillar-card {{
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-top: 4px solid {CBE_NAVY};
+    border-radius: 12px;
+    padding: 18px;
+    height: 100%;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}}
+
+.model-pillar-card.mediator {{
+    border-top-color: {CBE_GOLD};
+    background: linear-gradient(180deg, #FFFDF7 0%, #FFFFFF 100%);
+}}
+
+.model-pillar-card.dependent {{
+    border-top-color: #0F766E;
+}}
+
+.dim-badge {{
+    display: inline-block;
+    background: #F1F5F9;
+    color: {CBE_NAVY};
+    border: 1px solid #CBD5E1;
+    border-radius: 20px;
+    padding: 4px 12px;
+    margin: 4px 3px;
+    font-size: 12.5px;
+    font-weight: 600;
+}}
+
+.dim-badge.gold {{
+    background: #FEF3C7;
+    color: #92400E;
+    border-color: #F59E0B;
+}}
+
+.dim-badge.teal {{
+    background: #CCFBF1;
+    color: #115E59;
+    border-color: #14B8A6;
+}}
+
+.tour-step-card {{
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-right: 4px solid {CBE_GOLD};
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }}
 
 /* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
@@ -1173,7 +1238,8 @@ st.markdown("""
 # التبويبات الرئيسة (تتمدد بعرض الشاشة الكامل لكل من user و admin)
 # ==============================================================================
 if st.session_state.role == "admin":
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+    tab_home, tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+        "🏠 الرئيسية",
         "🎯 اسأل المنصة",
         "📊 المؤشر المركب (SSGI)",
         "📈 محاكي السياسات",
@@ -1185,7 +1251,8 @@ if st.session_state.role == "admin":
         "🔒 لوحة التحكم"
     ])
 else:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+    tab_home, tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+        "🏠 الرئيسية",
         "🎯 اسأل المنصة",
         "📊 المؤشر المركب (SSGI)",
         "📈 محاكي السياسات",
@@ -1199,6 +1266,142 @@ else:
 
 # حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل
 inject_tabs_css()
+
+# ==============================================================================
+# التبويب التمهيدي: الرئيسية والإطار المنهجي (تهيئة الزائر والمحكم فور الدخول)
+# ==============================================================================
+with tab_home:
+    st.markdown(f"""
+    <div class="home-hero-card" dir="rtl">
+        <h2 style="color: {CBE_NAVY}; font-weight: 800; font-size: clamp(17px, 3.8vw, 22px); margin-bottom: 10px;">
+            🏛️ مرحباً بكم في المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة (SSGI)
+        </h2>
+        <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
+            تمثل هذه المنصة التطبيق العملي المقترح ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030.
+        </p>
+        <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
+            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح ساكنة إلى <b>منظومة ذكاء اصطناعي تفاعلية (RAG)</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 14px 0;">
+        🧭 خريطة النموذج البحثي المعتمد للمنصة (المتغيرات والأبعاد الـ 15)
+    </h3>
+    """, unsafe_allow_html=True)
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+
+    with col_m1:
+        st.markdown(f"""
+        <div class="model-pillar-card" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #64748B; margin-bottom: 4px;">1️⃣ المتغير المستقل (Independent Variable)</div>
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; font-size: 16px; margin-bottom: 8px;">💻 منصات المعلومات الذكية<br><span style="font-size: 12.5px; font-weight: 600; color: #475569;">(Smart Information Platforms)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                البنية التحتية الرقمية والأنظمة الذكية المسؤولة عن جمع البيانات ومعالجتها وضمان موثوقيتها وأمنها.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
+            <div>
+                <span class="dim-badge">جودة المعلومات</span>
+                <span class="dim-badge">الامتثال التقني</span>
+                <span class="dim-badge">التخطيط والمراقبة بعد النشر</span>
+                <span class="dim-badge">التكامل والخصوصية</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_m2:
+        st.markdown(f"""
+        <div class="model-pillar-card mediator" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 4px;">2️⃣ المتغير الوسيط (Mediating Variable)</div>
+            <h4 style="color: #92400E; font-weight: 800; font-size: 16px; margin-bottom: 8px;">🌿 تقارير الاستدامة<br><span style="font-size: 12.5px; font-weight: 600; color: #78350F;">(Sustainability Reporting)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                آلية الإفصاح المؤسسي والبيئي والاجتماعي التي تنقل أثر البنية الذكية لتعزيز ممارسات الحوكمة الرشيدة.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: #92400E; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
+            <div>
+                <span class="dim-badge gold">الاستراتيجية</span>
+                <span class="dim-badge gold">الأبعاد التشغيلية</span>
+                <span class="dim-badge gold">إدارة المخاطر</span>
+                <span class="dim-badge gold">المقاييس والأهداف</span>
+                <span class="dim-badge gold">التنوع والشمول</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_m3:
+        st.markdown(f"""
+        <div class="model-pillar-card dependent" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #0F766E; margin-bottom: 4px;">3️⃣ المتغير التابع (Dependent Variable)</div>
+            <h4 style="color: #115E59; font-weight: 800; font-size: 16px; margin-bottom: 8px;">⚖️ الحوكمة المؤسسية<br><span style="font-size: 12.5px; font-weight: 600; color: #134E4A;">(Institutional Governance)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                منظومة الضبط والرقابة والشفافية والمساءلة التي تضمن استدامة الأداء المصرفي وحماية حقوق أصحاب المصلحة.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: #115E59; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
+            <div>
+                <span class="dim-badge teal">الشفافية والإفصاح</span>
+                <span class="dim-badge teal">المتابعة والمساءلة</span>
+                <span class="dim-badge teal">العدالة والمساواة</span>
+                <span class="dim-badge teal">المشاركة</span>
+                <span class="dim-badge teal">سيادة القانون</span>
+                <span class="dim-badge teal">مجلس الإدارة</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
+        🔄 مسار التأثير المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 12px 0;">
+        🗺️ جولة سريعة في مكونات وأدوات المنصة
+    </h3>
+    """, unsafe_allow_html=True)
+
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        st.markdown(f"""
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">🎯 اسأل المنصة (محرك RAG الذكي):</b>
+            <span style="color: #475569; font-size: 13.5px;"> استعلام تحليلي فوري مدعوم بأرشيف تقارير الاستدامة والأطر الرقابية للبنوك المصرية.</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">📊 المؤشر المركب (SSGI):</b>
+            <span style="color: #475569; font-size: 13.5px;"> قياس كمي ومقارن لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة المستدامة.</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">📈 محاكي السياسات الاستشرافي:</b>
+            <span style="color: #475569; font-size: 13.5px;"> اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام نماذج الانحدار.</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">🛡️ لوحة دعم اتخاذ القرار:</b>
+            <span style="color: #475569; font-size: 13.5px;"> تشخيص الفجوات الهيكلية وتوليد مصفوفة توصيات تنفيذية موجهة للإدارة العليا والجهات الرقابية.</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_t2:
+        st.markdown(f"""
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">📑 التقرير التنفيذي:</b>
+            <span style="color: #475569; font-size: 13.5px;"> إعداد وتصدير تقارير تقييمية رسمية بصيغة Word (.docx) جاهزة للعرض على مجالس الإدارات.</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">🌿 تقارير الاستدامة:</b>
+            <span style="color: #475569; font-size: 13.5px;"> استعراض وتحليل مؤشرات الإفصاح البيئي والتمويل الأخضر وفق المعايير الدولية (GRI / ISSB).</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">📋 استبيان فرق العمل:</b>
+            <span style="color: #475569; font-size: 13.5px;"> أداة التقييم الميداني الموجهة لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</span>
+        </div>
+        <div class="tour-step-card" dir="rtl">
+            <b style="color: {CBE_NAVY};">📖 دليل المستخدم:</b>
+            <span style="color: #475569; font-size: 13.5px;"> التوثيق المنهجي الكامل وشرح آليات التشغيل والمنهجية الإحصائية للمنصة.</span>
+        </div>
+        """, unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
