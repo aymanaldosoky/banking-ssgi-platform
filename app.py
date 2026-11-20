@@ -40,7 +40,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v9"    # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v10"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -187,43 +187,34 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
 """
 
 TABS_COLOR_RULES = f"""
-/* الوضع الافتراضي: نص أبيض */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"],
-[data-baseweb="tab-list"] button[role="tab"] {{
-    background-color: {CBE_NAVY} !important;
+/* الوضع الافتراضي: نص أبيض على الزر وكل أبنائه */
+html body [data-baseweb="tab-list"] button[role="tab"],
+html body [data-baseweb="tab-list"] button[role="tab"] * {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
 }}
 
-/* كل العناصر الداخلية ترث لون الزر مهما كان نوعها أو عمقها */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"] *,
-[data-baseweb="tab-list"] button[role="tab"] * {{
-    color: inherit !important;
-    -webkit-text-fill-color: currentColor !important;
+html body [data-baseweb="tab-list"] button[role="tab"] {{
+    background-color: {CBE_NAVY} !important;
+}}
+
+html body [data-baseweb="tab-list"] button[role="tab"] * {{
     background: transparent !important;
-    font-weight: inherit !important;
 }}
 
 /* تمرير / ضغط / تبويب محدد: نص ذهبي */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:hover,
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:active,
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:focus-visible,
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
-[data-baseweb="tab-list"] button[role="tab"]:hover,
-[data-baseweb="tab-list"] button[role="tab"]:active,
-[data-baseweb="tab-list"] button[role="tab"]:focus-visible,
-[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
+html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
+html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) * {{
     color: {CBE_GOLD_BRIGHT} !important;
     -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
 }}
 
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:hover,
-[data-baseweb="tab-list"] button[role="tab"]:hover {{
+html body [data-baseweb="tab-list"] button[role="tab"]:hover {{
     background-color: {CBE_NAVY_HOVER} !important;
 }}
 
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
-[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
+html body [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
     background-color: {CBE_NAVY} !important;
     font-weight: 800 !important;
     border: 2px solid {CBE_GOLD} !important;
@@ -239,41 +230,51 @@ TABS_GUARD_JS = """
 (function () {
   var W = window;
   if (W.__ssgiTabsObserver) { try { W.__ssgiTabsObserver.disconnect(); } catch (e) {} }
-  var NAVY = '%NAVY%', HOVER = '%HOVER%', GOLD = '%GOLD%';
+  var NAVY = '%NAVY%', HOVER = '%HOVER%', GOLD = '%GOLD%', WHITE = '#FFFFFF';
+  var SEL = '[data-baseweb="tab-list"] button[role="tab"]';
+
+  function setColor(el, c) {
+    el.style.setProperty('color', c, 'important');
+    el.style.setProperty('-webkit-text-fill-color', c, 'important');
+  }
 
   function paint(btn, hot) {
     var sel = btn.getAttribute('aria-selected') === 'true';
-    var color = (sel || hot) ? GOLD : '#FFFFFF';
-    btn.style.setProperty('color', color, 'important');
-    btn.style.setProperty('-webkit-text-fill-color', color, 'important');
+    var c = (sel || hot) ? GOLD : WHITE;
+    setColor(btn, c);
     btn.style.setProperty('background-color', (hot && !sel) ? HOVER : NAVY, 'important');
-    btn.querySelectorAll('[data-testid="stMarkdownContainer"], p, span, div').forEach(function (el) {
-      el.style.setProperty('color', color, 'important');
-      el.style.setProperty('-webkit-text-fill-color', color, 'important');
-    });
+    btn.querySelectorAll('*').forEach(function (n) { setColor(n, c); });
   }
 
   function run() {
     document.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]')
       .forEach(function (el) { el.style.setProperty('display', 'none', 'important'); });
 
-    document.querySelectorAll('[data-baseweb="tab-list"] button[role="tab"]').forEach(function (b) {
+    document.querySelectorAll(SEL).forEach(function (b) {
       paint(b, b.matches(':hover'));
       if (!b.__ssgi) {
         b.__ssgi = 1;
         b.addEventListener('pointerenter', function () { paint(b, true); });
         b.addEventListener('pointerleave', function () { paint(b, false); });
         b.addEventListener('pointerdown',  function () { paint(b, true); });
+        b.addEventListener('pointerup',    function () { paint(b, false); });
         b.addEventListener('click', function () { setTimeout(run, 0); });
       }
     });
+  }
+
+  var queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () { queued = false; run(); });
   }
 
   run();
   setTimeout(run, 100);
   setTimeout(run, 400);
 
-  W.__ssgiTabsObserver = new MutationObserver(run);
+  W.__ssgiTabsObserver = new MutationObserver(schedule);
   W.__ssgiTabsObserver.observe(document.body, {
     childList: true, subtree: true,
     attributes: true, attributeFilter: ['aria-selected']
@@ -283,7 +284,7 @@ TABS_GUARD_JS = """
 
 
 def inject_tabs_css():
-    """CSS يتحكم في الألوان، وسكربت احتياطي يُحقن في الصفحة الأم فيبقى حياً بعد كل rerun."""
+    """يحقن CSS والسكربت في <head> الصفحة الأم فيبقيان فعّالين بعد كل rerun."""
     st.markdown(TABS_CSS, unsafe_allow_html=True)
 
     guard_js = (
@@ -298,13 +299,19 @@ def inject_tabs_css():
         <script>
         (function() {{
             var doc = window.parent.document;
-            var id = 'ssgi-tabs-guard-{UI_CSS_VERSION}';
-            var old = doc.getElementById(id);
-            if (old) old.remove();
-            var s = doc.createElement('script');
-            s.id = id;
-            s.textContent = {json.dumps(guard_js)};
-            doc.head.appendChild(s);   // يُنفَّذ في سياق الصفحة الأم لا الـ iframe
+
+            doc.querySelectorAll('style[id^="ssgi-tabs-css-"], script[id^="ssgi-tabs-guard-"]')
+               .forEach(function (n) {{ n.remove(); }});
+
+            var st = doc.createElement('style');
+            st.id = 'ssgi-tabs-css-{UI_CSS_VERSION}';
+            st.textContent = {json.dumps(TABS_RULES)};
+            doc.head.appendChild(st);
+
+            var sc = doc.createElement('script');
+            sc.id = 'ssgi-tabs-guard-{UI_CSS_VERSION}';
+            sc.textContent = {json.dumps(guard_js)};
+            doc.head.appendChild(sc);
         }})();
         </script>
         """,
