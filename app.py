@@ -1,15 +1,11 @@
 import io
 import os
-import re
 import json
-import html
+import re
+import hashlib
 import time
 import uuid
-import hmac
-import hashlib
-import threading
 from datetime import datetime
-
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -28,31 +24,30 @@ from bank_rag_engine import (
 )
 
 # ==============================================================================
-# 1. إعدادات صفحة Streamlit والثوابت البصرية للمنصة (CBE Identity + RTL)
+# إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL + Responsive)
 # ==============================================================================
 st.set_page_config(
     page_title="مقترح المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة",
     page_icon="🏛️",
     layout="wide",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="auto"
 )
 
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
-CBE_NAVY_DARK = "#001A33"     # أزرق داكن للتدرجات
-CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
 CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والضغط والتبويب النشط)
+CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
+RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
+UI_CSS_VERSION = "tabs-v9"    # إصدار محدث لإبطال الكاش فوراً
 
-RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v8"    # إصدار محدث لإبطال كاش المتصفح فوراً
-
+# أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
 
-# ==============================================================================
-# 2. قواعد تنسيق الشريط العلوي (التبويبات): فصل الهيكل عن الألوان لمنع التعارض
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# تنسيق الشريط العلوي (التبويبات): محددات عالية الأولوية تغلب Emotion/BaseWeb CSS
+# ------------------------------------------------------------------------------
 TABS_RULES = f"""
 /* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً ---- */
 div[data-testid="stTabs"],
@@ -112,7 +107,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     direction: rtl !important;
 }}
 
-/* ---- التوزيع الهيكلي والخطوط لأزرار التبويبات ---- */
+/* ---- مفاتيح التبويبات: التوزيع والتنسيق الهيكلي ---- */
 div[data-testid="stTabs"] button[role="tab"],
 div[data-testid="stTabs"] button[data-baseweb="tab"] {{
     flex: 1 1 0% !important;
@@ -136,7 +131,7 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {{
     white-space: normal !important;
     outline: none !important;
     box-shadow: none !important;
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
 }}
 
@@ -192,36 +187,43 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
 """
 
 TABS_COLOR_RULES = f"""
-/* اللون الافتراضي: أبيض ناصع */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"] {{
+/* الوضع الافتراضي: نص أبيض */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"],
+[data-baseweb="tab-list"] button[role="tab"] {{
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
 }}
 
-/* جميع العناصر الداخلية ترث لون الزر مهما كان نوعها أو عمقها */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"] * {{
+/* كل العناصر الداخلية ترث لون الزر مهما كان نوعها أو عمقها */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"] *,
+[data-baseweb="tab-list"] button[role="tab"] * {{
     color: inherit !important;
     -webkit-text-fill-color: currentColor !important;
     background: transparent !important;
     font-weight: inherit !important;
 }}
 
-/* التمرير والضغط والتركيز والتبويب المحدد: ذهبي مشرق */
+/* تمرير / ضغط / تبويب محدد: نص ذهبي */
 div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:hover,
 div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:active,
 div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:focus-visible,
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
+[data-baseweb="tab-list"] button[role="tab"]:hover,
+[data-baseweb="tab-list"] button[role="tab"]:active,
+[data-baseweb="tab-list"] button[role="tab"]:focus-visible,
+[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
     color: {CBE_GOLD_BRIGHT} !important;
     -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
 }}
 
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:hover {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"]:hover,
+[data-baseweb="tab-list"] button[role="tab"]:hover {{
     background-color: {CBE_NAVY_HOVER} !important;
 }}
 
-/* التبويب النشط */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
+[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
     background-color: {CBE_NAVY} !important;
     font-weight: 800 !important;
     border: 2px solid {CBE_GOLD} !important;
@@ -230,92 +232,58 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] button[role="tab"][aria-sele
 """
 
 TABS_RULES = TABS_RULES + TABS_COLOR_RULES
+
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
-TABS_GUARD_JS = r"""
+TABS_GUARD_JS = """
 (function () {
-    var W = window;
-    var DOC = document;
+  var W = window;
+  if (W.__ssgiTabsObserver) { try { W.__ssgiTabsObserver.disconnect(); } catch (e) {} }
+  var NAVY = '%NAVY%', HOVER = '%HOVER%', GOLD = '%GOLD%';
 
-    var NAVY = '%NAVY%';
-    var HOVER = '%HOVER%';
-    var GOLD = '%GOLD%';
-
-    // التخلص من المراقب السابق عند إعادة الحقن
-    if (W.__ssgiTabsObserver) {
-        try {
-            W.__ssgiTabsObserver.disconnect();
-        } catch (e) {}
-    }
-
-    var boundButtons = new WeakSet();
-    var scheduled = false;
-
-    function paint(btn, hot) {
-        if (!btn || !btn.isConnected) return;
-
-        var selected = btn.getAttribute('aria-selected') === 'true';
-        var hovered = hot || btn.matches(':hover') || btn.matches(':active');
-        var color = (selected || hovered) ? GOLD : '#FFFFFF';
-        var bg = (hovered && !selected) ? HOVER : NAVY;
-
-        btn.style.setProperty('color', color, 'important');
-        btn.style.setProperty('-webkit-text-fill-color', color, 'important');
-        btn.style.setProperty('background-color', bg, 'important');
-        btn.style.setProperty('font-weight', selected ? '800' : '600', 'important');
-    }
-
-    function run() {
-        scheduled = false;
-
-        // إخفاء مؤشر BaseWeb الافتراضي
-        DOC.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]')
-            .forEach(function (el) {
-                el.style.setProperty('display', 'none', 'important');
-            });
-
-        // معالجة أزرار التبويبات فقط
-        DOC.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]')
-            .forEach(function (btn) {
-                paint(btn, btn.matches(':hover'));
-
-                if (boundButtons.has(btn)) return;
-                boundButtons.add(btn);
-
-                btn.addEventListener('pointerenter', function () { paint(btn, true); });
-                btn.addEventListener('pointerleave', function () { paint(btn, false); });
-                btn.addEventListener('pointerdown',  function () { paint(btn, true); });
-                btn.addEventListener('click', function () { requestAnimationFrame(run); });
-            });
-    }
-
-    function scheduleRun() {
-        if (scheduled) return;
-        scheduled = true;
-        requestAnimationFrame(run);
-    }
-
-    run();
-    setTimeout(run, 100);
-    setTimeout(run, 400);
-
-    // مراقبة الصفحة الأم دون مراقبة style لتجنب حلقات التحديث
-    W.__ssgiTabsObserver = new MutationObserver(scheduleRun);
-    W.__ssgiTabsObserver.observe(DOC.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['aria-selected']
+  function paint(btn, hot) {
+    var sel = btn.getAttribute('aria-selected') === 'true';
+    var color = (sel || hot) ? GOLD : '#FFFFFF';
+    btn.style.setProperty('color', color, 'important');
+    btn.style.setProperty('-webkit-text-fill-color', color, 'important');
+    btn.style.setProperty('background-color', (hot && !sel) ? HOVER : NAVY, 'important');
+    btn.querySelectorAll('[data-testid="stMarkdownContainer"], p, span, div').forEach(function (el) {
+      el.style.setProperty('color', color, 'important');
+      el.style.setProperty('-webkit-text-fill-color', color, 'important');
     });
+  }
+
+  function run() {
+    document.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]')
+      .forEach(function (el) { el.style.setProperty('display', 'none', 'important'); });
+
+    document.querySelectorAll('[data-baseweb="tab-list"] button[role="tab"]').forEach(function (b) {
+      paint(b, b.matches(':hover'));
+      if (!b.__ssgi) {
+        b.__ssgi = 1;
+        b.addEventListener('pointerenter', function () { paint(b, true); });
+        b.addEventListener('pointerleave', function () { paint(b, false); });
+        b.addEventListener('pointerdown',  function () { paint(b, true); });
+        b.addEventListener('click', function () { setTimeout(run, 0); });
+      }
+    });
+  }
+
+  run();
+  setTimeout(run, 100);
+  setTimeout(run, 400);
+
+  W.__ssgiTabsObserver = new MutationObserver(run);
+  W.__ssgiTabsObserver.observe(document.body, {
+    childList: true, subtree: true,
+    attributes: true, attributeFilter: ['aria-selected']
+  });
 })();
 """
 
 
 def inject_tabs_css():
-    """
-    تثبيت CSS للشريط الأساسي، وحقن JavaScript الاحتياطي في صفحة Streamlit الأم
-    ليبقى فعالاً بعد كل إعادة تشغيل (Rerun).
-    """
+    """CSS يتحكم في الألوان، وسكربت احتياطي يُحقن في الصفحة الأم فيبقى حياً بعد كل rerun."""
     st.markdown(TABS_CSS, unsafe_allow_html=True)
 
     guard_js = (
@@ -329,19 +297,14 @@ def inject_tabs_css():
         f"""
         <script>
         (function() {{
-            var parentWindow = window.parent;
-            var doc = parentWindow.document;
-            var scriptId = 'ssgi-tabs-guard-{UI_CSS_VERSION}';
-
-            var oldScript = doc.getElementById(scriptId);
-            if (oldScript) {{
-                oldScript.remove();
-            }}
-
-            var script = doc.createElement('script');
-            script.id = scriptId;
-            script.textContent = {json.dumps(guard_js)};
-            doc.head.appendChild(script);
+            var doc = window.parent.document;
+            var id = 'ssgi-tabs-guard-{UI_CSS_VERSION}';
+            var old = doc.getElementById(id);
+            if (old) old.remove();
+            var s = doc.createElement('script');
+            s.id = id;
+            s.textContent = {json.dumps(guard_js)};
+            doc.head.appendChild(s);   // يُنفَّذ في سياق الصفحة الأم لا الـ iframe
         }})();
         </script>
         """,
@@ -350,9 +313,6 @@ def inject_tabs_css():
     )
 
 
-# ==============================================================================
-# 3. التنسيق العام للمنصة (CUSTOM_CSS)
-# ==============================================================================
 CUSTOM_CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -368,23 +328,24 @@ CUSTOM_CSS = f"""
     font-weight: 700;
 }}
 
-header, .stAppToolbar, div[data-testid="stHeader"] {{
+header {{
+    visibility: hidden !important;
+    display: none !important;
+}}
+
+.stAppToolbar, div[data-testid="stHeader"] {{
     display: none !important;
     visibility: hidden !important;
 }}
 
-/* إخفاء إطار المكونات الصفري بصرياً دون إيقاف تنفيذ السكربت في Safari وباقي المتصفحات */
+/* إخفاء إطارات السكربت المخفية دون إيقاف تنفيذ JavaScript في Safari وباقي المتصفحات */
 iframe[height="0"] {{
     position: absolute !important;
     width: 0 !important;
     height: 0 !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
     border: 0 !important;
     opacity: 0 !important;
     pointer-events: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }}
 
 html, body, [class*="css"] {{
@@ -449,7 +410,7 @@ html, body, [class*="css"] {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* إزالة الإطارات الرمادية عند التنقل بين الأقسام */
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -477,7 +438,7 @@ div[role="option"] {{
     outline: none !important;
 }}
 
-/* تنسيق حاوية إجابات RAG */
+/* تنسيق حاوية إجابات RAG لضمان سلامة الفقرات والقوائم */
 .rag-response-box {{
     background: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
@@ -500,7 +461,7 @@ div[role="option"] {{
     margin-bottom: 6px !important;
 }}
 
-/* تصميم جدول RTL مخصص ونظيف */
+/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -517,11 +478,13 @@ div[role="option"] {{
 }}
 
 .custom-rtl-table th {{
-    background: linear-gradient(135deg, {CBE_NAVY} 0%, {CBE_NAVY_DARK} 100%) !important;
+    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     color: #F8FAFC !important;
     padding: 10px 10px !important;
     font-weight: 700 !important;
     border-bottom: 2px solid {CBE_GOLD} !important;
+    border-right: none !important;
+    border-left: none !important;
     text-align: right !important;
     font-size: 13px !important;
     white-space: nowrap !important;
@@ -530,6 +493,9 @@ div[role="option"] {{
 .custom-rtl-table td {{
     padding: 8px 10px !important;
     border-bottom: 1px solid #F1F5F9 !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
     color: #1E293B !important;
     font-size: 12.5px !important;
     text-align: right !important;
@@ -544,7 +510,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل */
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -574,7 +540,7 @@ div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
 button[kind="primaryFormSubmit"]:hover,
 button[kind="secondaryFormSubmit"]:hover {{
-    background-color: {CBE_NAVY_DARK} !important;
+    background-color: #001A33 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: #FFFFFF !important;
     transform: translateY(-1px) !important;
@@ -723,50 +689,21 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. الدوال المساعدة والتعقيم الأمني للمخرجات
+# الدوال المساعدة (تنسيق HTML السليم بدلاً من تدمير الأسطر)
 # ==============================================================================
 def flat_html(s: str) -> str:
-    """تُستخدم لقوالب HTML الثابتة مثل Skeleton Loader."""
-    return " ".join(line.strip() for line in s.splitlines() if line.strip())
-
-
-def sanitize_rag_html(html_content: str) -> str:
-    """
-    تعقيم مخرجات HTML قبل حقنها في الصفحة لمنع أي حقن برمجي (XSS)
-    مع الإبقاء على وسوم التنسيق الأكاديمي الآمنة.
-    """
-    cleaned = re.sub(
-        r"<\s*(script|iframe|object|embed|form|style|link|meta)[^>]*>.*?<\s*/\s*\1\s*>",
-        "",
-        html_content,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    cleaned = re.sub(
-        r"<\s*(script|iframe|object|embed|form|style|link|meta)[^>]*/?\s*>",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-    cleaned = re.sub(r"\s+on[a-z]+\s*=\s*(['\"]).*?\1", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\s+on[a-z]+\s*=\s*[^\s>]+", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(
-        r"(href|src)\s*=\s*(['\"])\s*javascript:.*?\2",
-        r'\1=\2#\2',
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-    return cleaned
-
+    """تُستخدم فقط لقوالب HTML الثابتة مثل Skeleton Loader."""
+    return " ".join(l.strip() for l in s.splitlines() if l.strip())
 
 def format_rag_html(raw_response: str) -> str:
     """
-    تحويل الرد القادم من محرك RAG إلى HTML منسق وآمن يحافظ على الفقرات والنقاط
+    تحويل الرد القادم من محرك RAG إلى HTML منسق يحافظ على الفقرات والنقاط
     سواء كان الرد بصيغة Markdown أو HTML جزئي أو نص عادي.
     """
     if not raw_response:
         return "<div class='rag-response-box'>⚠️ لم يتم استرجاع نص للإجابة.</div>"
 
-    text = sanitize_rag_html(str(raw_response).strip())
+    text = str(raw_response).strip()
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
 
     lines = text.splitlines()
@@ -792,7 +729,7 @@ def format_rag_html(raw_response: str) -> str:
             if in_list:
                 formatted_lines.append("</ul>")
                 in_list = False
-            if re.match(r"^<(div|h[1-6]|p|ul|ol|li|table|thead|tbody|tr|th|td|hr|blockquote)", stripped, re.IGNORECASE):
+            if re.match(r"^<(div|h[1-6]|p|ul|ol|li|table|hr|blockquote)", stripped, re.IGNORECASE):
                 formatted_lines.append(stripped)
             else:
                 formatted_lines.append(f"{stripped}<br>")
@@ -807,7 +744,6 @@ def format_rag_html(raw_response: str) -> str:
         return f"<div class='rag-response-box' dir='rtl'>{html_body}</div>"
     return html_body
 
-
 def clean_text(text) -> str:
     if not isinstance(text, str):
         return str(text)
@@ -816,80 +752,46 @@ def clean_text(text) -> str:
     t = t.replace("\xa0", " ").replace("\u200b", "")
     return re.sub(r"\s+", " ", t).strip()
 
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # ==============================================================================
-# 5. نظام المصادقة الآمن (PBKDF2-HMAC-SHA256 + توافق SHA-256)
-# ==============================================================================
-_PBKDF2_SALT = b"ssgi_cbe_platform_2026_salt"
-
-
-def hash_password_pbkdf2(password: str) -> str:
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), _PBKDF2_SALT, 120_000)
-    return f"pbkdf2_sha256${dk.hex()}"
-
-
-def verify_password(plain_password: str, stored_hash: str) -> bool:
-    if not plain_password or not stored_hash:
-        return False
-    if stored_hash.startswith("pbkdf2_sha256$"):
-        computed = hash_password_pbkdf2(plain_password)
-        return hmac.compare_digest(computed, stored_hash)
-    legacy_sha256 = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
-    return hmac.compare_digest(legacy_sha256, stored_hash)
-
-
-# ==============================================================================
-# 6. نظام تتبع الزوار والاستبيانات بآلية كتابة ذرية (Thread-Safe Atomic CSV)
+# نظام تتبع الزوار والاستبيانات
 # ==============================================================================
 LOG_FILE = "visitors_log.csv"
 SURVEY_LOG_FILE = "survey_responses_log.csv"
-_FILE_LOCK = threading.Lock()
-
-
-def _atomic_write_csv(df: pd.DataFrame, filepath: str) -> None:
-    tmp_path = f"{filepath}.{uuid.uuid4().hex}.tmp"
-    df.to_csv(tmp_path, index=False, encoding="utf-8-sig")
-    os.replace(tmp_path, filepath)
-
 
 def init_visitor_log_file():
-    with _FILE_LOCK:
-        if not os.path.exists(LOG_FILE):
-            try:
-                df_init = pd.DataFrame(columns=["عنوان IP", "اسم المستخدم", "الدور", "وقت الدخول"])
-                _atomic_write_csv(df_init, LOG_FILE)
-            except Exception:
-                pass
-
+    if not os.path.exists(LOG_FILE):
+        try:
+            df_init = pd.DataFrame(columns=["عنوان IP", "اسم المستخدم", "الدور", "وقت الدخول"])
+            df_init.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
+        except Exception:
+            pass
 
 def init_survey_log_file():
-    with _FILE_LOCK:
-        if not os.path.exists(SURVEY_LOG_FILE):
-            try:
-                df_init = pd.DataFrame(columns=[
-                    "معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة",
-                    "محور منصات المعلومات", "محور الحوكمة المؤسسية", "محور تقارير الاستدامة",
-                    "ملاحظات وتوصيات إضافية", "وقت الإرسال"
-                ])
-                _atomic_write_csv(df_init, SURVEY_LOG_FILE)
-            except Exception:
-                pass
-
+    if not os.path.exists(SURVEY_LOG_FILE):
+        try:
+            df_init = pd.DataFrame(columns=[
+                "معرف الاستجابة", "اسم البنك", "المسمى الوظيفي / الإدارة", "سنوات الخبرة",
+                "محور منصات المعلومات", "محور الحوكمة المؤسسية", "محور تقارير الاستدامة",
+                "ملاحظات وتوصيات إضافية", "وقت الإرسال"
+            ])
+            df_init.to_csv(SURVEY_LOG_FILE, index=False, encoding="utf-8-sig")
+        except Exception:
+            pass
 
 init_visitor_log_file()
 init_survey_log_file()
 
-
 def load_visitors_log_from_file():
-    with _FILE_LOCK:
-        if os.path.exists(LOG_FILE):
-            try:
-                df = pd.read_csv(LOG_FILE, encoding="utf-8-sig")
-                return df.to_dict(orient="records")
-            except Exception:
-                return []
+    if os.path.exists(LOG_FILE):
+        try:
+            df = pd.read_csv(LOG_FILE, encoding="utf-8-sig")
+            return df.to_dict(orient="records")
+        except Exception:
+            return []
     return []
-
 
 def get_visitor_ip():
     try:
@@ -905,8 +807,7 @@ def get_visitor_ip():
         pass
     return "127.0.0.1 (محلي / Local)"
 
-
-def log_visitor_action(username: str, role: str):
+def log_visitor_action(username, role):
     try:
         client_ip = get_visitor_ip()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -914,66 +815,35 @@ def log_visitor_action(username: str, role: str):
             "عنوان IP": client_ip,
             "اسم المستخدم": username,
             "الدور": role,
-            "وقت الدخول": timestamp,
+            "وقت الدخول": timestamp
         }
-        with _FILE_LOCK:
-            existing_logs = []
-            if os.path.exists(LOG_FILE):
-                try:
-                    existing_logs = pd.read_csv(LOG_FILE, encoding="utf-8-sig").to_dict(orient="records")
-                except Exception:
-                    existing_logs = []
-
-            exists = any(
-                item.get("عنوان IP") == client_ip and item.get("اسم المستخدم") == username
-                for item in existing_logs
-            )
-            if not exists:
-                existing_logs.append(new_record)
-                _atomic_write_csv(pd.DataFrame(existing_logs), LOG_FILE)
+        existing_logs = load_visitors_log_from_file()
+        exists = any(
+            item.get("عنوان IP") == client_ip and item.get("اسم المستخدم") == username
+            for item in existing_logs
+        )
+        if not exists:
+            existing_logs.append(new_record)
+            df_out = pd.DataFrame(existing_logs)
+            df_out.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
     except Exception:
         pass
 
-
 # ==============================================================================
-# 7. تهيئة متغيرات الجلسة (Unified Session State Initialization)
+# إدارة جلسة الدخول والصلاحيات الآمنة
 # ==============================================================================
-SESSION_DEFAULTS = {
-    "authenticated": False,
-    "username": "",
-    "role": "",
-    "login_attempts": 0,
-    "login_locked_until": 0.0,
-    "survey_submitted_by_user": False,
-    "history_state": [],
-    "rag_query_history": [],
-    "simulated_results_dict": {},
-    "decision_results_dict": {},
-    "query_text_box": "",
-    "trigger_search": False,
-    "draft_generated_state": False,
-    "draft_bank_name": "",
-}
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+if "role" not in st.session_state:
+    st.session_state.role = ""
+if "survey_submitted_by_user" not in st.session_state:
+    st.session_state.survey_submitted_by_user = False
 
-for _key, _default_val in SESSION_DEFAULTS.items():
-    if _key not in st.session_state:
-        st.session_state[_key] = _default_val
+ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
+ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 
-# تحميل بيانات الاعتماد من st.secrets مع دعم التوافق مع البيئة المحلية
-_admin_secrets = st.secrets.get("admin_credentials", {})
-_user_secrets = st.secrets.get("user_credentials", {})
-
-ADMIN_USER = str(_admin_secrets.get("username", "admin")).strip().lower()
-ADMIN_PASS_HASH = str(_admin_secrets.get("password_hash", hash_password_pbkdf2("admin123")))
-
-USER_ALIASES = tuple(
-    u.strip().lower() for u in _user_secrets.get("usernames", ["user", "users"])
-)
-USER_PASS_HASH = str(_user_secrets.get("password_hash", hash_password_pbkdf2("123")))
-
-# ==============================================================================
-# 8. بوابة تسجيل الدخول المحمية
-# ==============================================================================
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -992,82 +862,83 @@ if not st.session_state.authenticated:
             submitted = st.form_submit_button("🔐 تسجيل الدخول للمنصة", use_container_width=True)
 
             if submitted:
-                now_ts = time.time()
-                if now_ts < st.session_state.login_locked_until:
-                    remaining = int(st.session_state.login_locked_until - now_ts) + 1
-                    st.error(f"⏳ تم تجاوز الحد المسموح لمحاولات الدخول. يرجى المحاولة بعد {remaining} ثانية.")
-                else:
-                    clean_user = re.sub(r"[^a-zA-Z0-9_.-]", "", str(username_input)).lower()
-                    clean_pass = str(password_input).strip()
+                clean_user = re.sub(r"[^a-zA-Z0-9]", "", str(username_input)).lower()
+                clean_pass = str(password_input).strip()
 
-                    if clean_user == ADMIN_USER and verify_password(clean_pass, ADMIN_PASS_HASH):
-                        st.session_state.authenticated = True
-                        st.session_state.username = "مشرف النظام (Admin)"
-                        st.session_state.role = "admin"
-                        st.session_state.login_attempts = 0
-                        log_visitor_action("admin", "مشرف (Admin)")
-                        st.rerun()
-                    elif clean_user in USER_ALIASES and verify_password(clean_pass, USER_PASS_HASH):
-                        st.session_state.authenticated = True
-                        st.session_state.username = "باحث / مستخدم (User)"
-                        st.session_state.role = "user"
-                        st.session_state.login_attempts = 0
-                        log_visitor_action("user", "مستخدم عادي (User)")
-                        st.rerun()
-                    else:
-                        st.session_state.login_attempts += 1
-                        if st.session_state.login_attempts >= 5:
-                            st.session_state.login_locked_until = time.time() + 30
-                            st.error("🔒 تم إيقاف تسجيل الدخول مؤقتاً لمدة 30 ثانية لتعدد المحاولات الخاطئة.")
-                        else:
-                            st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
+                if clean_user == ADMIN_USER.strip().lower() and hash_password(clean_pass) == ADMIN_PASS_HASH:
+                    st.session_state.authenticated = True
+                    st.session_state.username = "مشرف النظام (Admin)"
+                    st.session_state.role = "admin"
+                    log_visitor_action("admin", "مشرف (Admin)")
+                    st.rerun()
+                elif clean_user in ("user", "users") and clean_pass == "123":
+                    st.session_state.authenticated = True
+                    st.session_state.username = "باحث / مستخدم (User)"
+                    st.session_state.role = "user"
+                    log_visitor_action("user", "مستخدم عادي (User)")
+                    st.rerun()
+                else:
+                    st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
     st.stop()
 
 # ==============================================================================
-# 9. دوال تقييم ووصف الأداء للمحاور الثلاثة (SSGI Dimensions)
+# دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
-def get_colored_score_html(score: float) -> str:
+def get_colored_score_html(score):
     if score >= 80:
         return f"{score}% (أداء مرتفع ومنتظم 🟢)"
     elif score >= 50:
         return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
-    return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
+    else:
+        return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
 
-
-def describe_sip(val: float) -> str:
+def describe_sip(val):
     if val >= 80:
         return f"منصات المعلومات والبنية التقنية متقدمة للغاية ({val}%) وتتيح تكاملاً تاماً مع أنظمة البنك المركزي والتقارير الرقابية الآلية."
     elif val >= 50:
         return f"البنية التقنية متوسطة الكفاءة ({val}%) وتحتاج لتحديث سعات تدفق البيانات وحوكمة الخوارزميات."
-    return f"تعاني البنية التقنية من فجوة هيكلية حرجة ({val}%) تعيق أتمتة الالتزام والرقابة التنظيمية."
+    else:
+        return f"تعاني البنية التقنية من فجوة هيكلية حرجة ({val}%) تعيق أتمتة الالتزام والرقابة التنظيمية."
 
-
-def describe_ig(val: float) -> str:
+def describe_ig(val):
     if val >= 80:
         return f"حوكمة مؤسسية راسخة ({val}%) مع استقلالية تامة لمجلس الإدارة ولجان المراجعة والامتثال بأعلى معايير الشفافية."
     elif val >= 50:
         return f"الحوكمة المؤسسية في نطاق متوازن ({val}%) وتتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين."
-    return f"قصور حاد في الحوكمة المؤسسية ({val}%) يستوجب تدخلاً رقابياً لإعادة هندسة لجان المراجعة وإدارة المخاطر."
+    else:
+        return f"قصور حاد في الحوكمة المؤسسية ({val}%) يستوجب تدخلاً رقابياً لإعادة هندسة لجان المراجعة وإدارة المخاطر."
 
-
-def describe_sr(val: float) -> str:
+def describe_sr(val):
     if val >= 80:
         return f"أداء متميز والتزام ريادي في تقارير الاستدامة والتمويل الأخضر ({val}%) مع دمج فعال لمخاطر المناخ وتوسيع الأصول الخضراء وفق معايير (GRI/ISSB)."
     elif val >= 50:
         return f"أداء متوسط في تقارير الاستدامة ({val}%) يستوجب التوسع في محفظة التمويل المستدام ومخاطر المناخ."
-    return f"ضعف هيكلي في ملف الاستدامة والتمويل الأخضر ({val}%) يعيق امتثال البنك للمعايير الدولية."
+    else:
+        return f"ضعف هيكلي في ملف الاستدامة والتمويل الأخضر ({val}%) يعيق امتثال البنك للمعايير الدولية."
 
+if "history_state" not in st.session_state:
+    st.session_state.history_state = []
+if "rag_query_history" not in st.session_state:
+    st.session_state.rag_query_history = []
+if "simulated_results_dict" not in st.session_state:
+    st.session_state.simulated_results_dict = {}
+if "decision_results_dict" not in st.session_state:
+    st.session_state.decision_results_dict = {}
+if "query_text_box" not in st.session_state:
+    st.session_state.query_text_box = ""
+if "trigger_search" not in st.session_state:
+    st.session_state.trigger_search = False
+if "draft_generated_state" not in st.session_state:
+    st.session_state.draft_generated_state = False
+if "draft_bank_name" not in st.session_state:
+    st.session_state.draft_bank_name = ""
 
 # ==============================================================================
-# 10. الهيدر والشريط الإخباري
+# الهيدر والشريط الإخباري
 # ==============================================================================
 col_h1, col_h2 = st.columns([4, 1])
 with col_h2:
-    safe_user_display = html.escape(st.session_state.username)
-    st.markdown(
-        f"<div style='text-align: right; font-size: 13px; color: #475569; padding-top: 6px; margin-bottom: 4px;'>👤 مسجل باسم: <b>{safe_user_display}</b></div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"<div style='text-align: right; font-size: 13px; color: #475569; padding-top: 6px; margin-bottom: 4px;'>👤 مسجل باسم: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
     if st.button("🚪 تسجيل الخروج", use_container_width=True):
         st.session_state.authenticated = False
         st.session_state.username = ""
@@ -1096,28 +967,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 11. التبويبات الرئيسة وحقن التنسيق الثابت
+# التبويبات الرئيسة (تتمدد بعرض الشاشة الكامل لكل من user و admin)
 # ==============================================================================
-BASE_TABS_LABELS = [
-    "🎯 اسأل المنصة",
-    "📊 المؤشر المركب (SSGI)",
-    "📈 محاكي السياسات ",
-    "🛡️ لوحة دعم اتخاذ القرار",
-    "📑 التقرير التنفيذي الموحد",
-    "🌿 مولد تقارير الاستدامة ",
-    "📋 استبيان فرق العمل المصرفي",
-    "📖 دليل المستخدم الرسمي ",
-]
-
 if st.session_state.role == "admin":
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs(
-        BASE_TABS_LABELS + ["🔒 لوحة تحكم المشرف والزوار "]
-    )
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+        "🎯 اسأل المنصة",
+        "📊 المؤشر المركب (SSGI)",
+        "📈 محاكي السياسات ",
+        "🛡️ لوحة دعم اتخاذ القرار",
+        "📑 التقرير التنفيذي الموحد",
+        "🌿 مولد تقارير الاستدامة ",
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي ",
+        "🔒 لوحة تحكم المشرف والزوار "
+    ])
 else:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(BASE_TABS_LABELS)
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+        "🎯 اسأل المنصة",
+        "📊 المؤشر المركب (SSGI)",
+        "📈 محاكي السياسات ",
+        "🛡️ لوحة دعم اتخاذ القرار",
+        "📑 التقرير التنفيذي الموحد",
+        "🌿 مولد تقارير الاستدامة ",
+        "📋 استبيان فرق العمل المصرفي",
+        "📖 دليل المستخدم الرسمي "
+    ])
     tab9 = None
 
-# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل (يجب أن يبقى بعد st.tabs مباشرة)
+# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل
 inject_tabs_css()
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
