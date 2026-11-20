@@ -3253,7 +3253,7 @@ with tab6:
                 st.markdown(flat_html(f"""
                 <div style="background: #FFFFFF; padding: 25px; border-radius: 12px; border: 1.5px solid {CBE_GOLD}; margin-bottom: 15px;" dir="rtl">
                     <h3 style="color: {CBE_NAVY}; margin-top: 0;">🌿 مسودة تقرير الاستدامة المخصصة للبنك: {b_name}</h3>
-                    <p style="color: #64748B;">تتيح لك الأقسام أدناه التحكم الكامل في توسيع أو تقليص بنود مسودة تقرير الاستدامة التوجيهية المفصلة بالكامل للبنك، بالإضافة إلى إمكانية تحميل الملف بكافة تفاصيله دون اختصار.</p>
+                    <p style="color: #64748B;">تتيح الأقسام أدناه العرض الكامل لكافة بنود مسودة تقرير الاستدامة التوجيهية المفصلة بالكامل للبنك، بالإضافة إلى إمكانية تحميل الملف بكافة تفاصيله .</p>
                 </div>
                 """), unsafe_allow_html=True)
 
@@ -3339,7 +3339,7 @@ with tab6:
                 </html>
                 """
                 st.download_button(
-                    label=f"📥 تحميل مسودة تقرير الاستدامة المفصلة بالكامل للبنك ({b_name}) بدون اختصار (Word)",
+                    label=f"📥 تحميل مسودة تقرير الاستدامة المفصلة بالكامل للبنك ({b_name}) ",
                     data=docx_full_download.encode("utf-8-sig"),
                     file_name=f"مسودة_تقرير_الاستدامة_المفصلة_{b_name}.doc",
                     mime="application/msword",
