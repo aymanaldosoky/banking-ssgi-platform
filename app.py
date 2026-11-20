@@ -52,7 +52,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v13"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v14"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -328,6 +328,21 @@ TABS_GUARD_JS = """
     btn.querySelectorAll('*').forEach(function (n) { setColor(n, c); });
   }
 
+  function goToTab(idx) {
+    var tabs = document.querySelectorAll(SEL);
+    if (tabs && tabs[idx]) {
+      tabs[idx].click();
+      setTimeout(run, 20);
+      if (window.innerWidth <= 768) {
+        try { tabs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
+      }
+      var tabList = document.querySelector('[role="tablist"]');
+      if (tabList) {
+        try { tabList.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+      }
+    }
+  }
+
   function run() {
     document.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]')
       .forEach(function (el) { el.style.setProperty('display', 'none', 'important'); });
@@ -344,6 +359,28 @@ TABS_GUARD_JS = """
           setTimeout(run, 0);
           if (window.innerWidth <= 768) {
             try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
+          }
+        });
+      }
+    });
+
+    /* ربط بطاقات التنقل السريع في الصفحة الرئيسية بالتبويبات المقابلة */
+    document.querySelectorAll('[data-tab-target]').forEach(function (card) {
+      if (!card.__ssgiNav) {
+        card.__ssgiNav = 1;
+        card.addEventListener('click', function () {
+          var idx = parseInt(card.getAttribute('data-tab-target'), 10);
+          if (!isNaN(idx)) {
+            goToTab(idx);
+          }
+        });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            var idx = parseInt(card.getAttribute('data-tab-target'), 10);
+            if (!isNaN(idx)) {
+              goToTab(idx);
+            }
           }
         });
       }
@@ -610,14 +647,74 @@ div[role="option"] {{
     border-color: #14B8A6;
 }}
 
-.tour-step-card {{
+/* مفاتيح الجولة السريعة التفاعلية (تعمل كأزرار انتقال مباشر للتبويبات) */
+.tour-nav-btn {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-right: 4px solid {CBE_GOLD};
-    border-radius: 10px;
-    padding: 12px 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    border: 1.5px solid #E2E8F0;
+    border-right: 5px solid {CBE_GOLD};
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 10px rgba(0, 43, 73, 0.05);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.22s ease;
+}}
+
+.tour-nav-btn:hover {{
+    background: linear-gradient(135deg, {CBE_NAVY} 0%, #003B63 100%);
+    border-color: {CBE_GOLD};
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 43, 73, 0.22);
+}}
+
+.tour-nav-btn:active {{
+    transform: scale(0.985);
+}}
+
+.tour-nav-title {{
+    color: {CBE_NAVY};
+    font-size: 14.5px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    transition: color 0.2s ease;
+}}
+
+.tour-nav-desc {{
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.55;
+    transition: color 0.2s ease;
+}}
+
+.tour-nav-arrow {{
+    flex-shrink: 0;
+    background: #F1F5F9;
+    color: {CBE_NAVY};
+    border: 1px solid {CBE_GOLD};
+    border-radius: 50px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}}
+
+.tour-nav-btn:hover .tour-nav-title {{
+    color: {CBE_GOLD_BRIGHT};
+}}
+
+.tour-nav-btn:hover .tour-nav-desc {{
+    color: #F1F5F9;
+}}
+
+.tour-nav-btn:hover .tour-nav-arrow {{
+    background: {CBE_GOLD};
+    color: {CBE_NAVY};
 }}
 
 /* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
@@ -841,6 +938,15 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     .ticker-item {{
         font-size: 12.5px !important;
         padding: 6px 18px !important;
+    }}
+
+    .tour-nav-btn {{
+        flex-direction: column;
+        align-items: flex-start;
+    }}
+
+    .tour-nav-arrow {{
+        align-self: flex-end;
     }}
 }}
 </style>
@@ -1274,10 +1380,10 @@ with tab_home:
     st.markdown(f"""
     <div class="home-hero-card" dir="rtl">
         <h2 style="color: {CBE_NAVY}; font-weight: 800; font-size: clamp(17px, 3.8vw, 22px); margin-bottom: 10px;">
-            🏛️ مرحباً بكم في مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري (رصين)
+            🏛️ مرحباً بكم في المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة (SSGI)
         </h2>
         <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
-            تمثل هذه المنصة التطبيق العملي المقترح ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b>    في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
+            تمثل هذه المنصة التطبيق العملي المقترح ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030.
         </p>
         <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
             <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح ساكنة إلى <b>منظومة ذكاء اصطناعي تفاعلية (RAG)</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
@@ -1352,54 +1458,81 @@ with tab_home:
 
     st.markdown(f"""
     <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
-        🔄 مسار التأثير المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+        🔄 مسار التأثير المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
-    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 12px 0;">
-        🗺️ جولة سريعة في مكونات وأدوات المنصة
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 4px 0;">
+        🗺️ جولة سريعة في مكونات وأدوات المنصة (انقر للانتقال المباشر)
     </h3>
+    <p style="color: #64748B; font-size: 13px; margin-bottom: 14px;">
+        اختر أي وحدة من وحدات المنصة أدناه للانتقال الفوري إليها وبدء التفاعل معها:
+    </p>
     """, unsafe_allow_html=True)
 
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.markdown(f"""
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">🎯 اسأل المنصة (محرك RAG الذكي):</b>
-            <span style="color: #475569; font-size: 13.5px;"> استعلام تحليلي فوري مدعوم بأرشيف تقارير الاستدامة والأطر الرقابية للبنوك المصرية.</span>
+        st.markdown("""
+        <div class="tour-nav-btn" data-tab-target="1" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🎯 اسأل المنصة (محرك RAG الذكي)</div>
+                <div class="tour-nav-desc">استعلام تحليلي فوري مدعوم بأرشيف تقارير الاستدامة والأطر الرقابية للبنوك المصرية.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">📊 المؤشر المركب (SSGI):</b>
-            <span style="color: #475569; font-size: 13.5px;"> قياس كمي ومقارن لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة المستدامة.</span>
+        <div class="tour-nav-btn" data-tab-target="2" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📊 المؤشر المركب (SSGI)</div>
+                <div class="tour-nav-desc">قياس كمي ومقارن لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة المستدامة.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">📈 محاكي السياسات الاستشرافي:</b>
-            <span style="color: #475569; font-size: 13.5px;"> اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام نماذج الانحدار.</span>
+        <div class="tour-nav-btn" data-tab-target="3" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📈 محاكي السياسات الاستشرافي</div>
+                <div class="tour-nav-desc">اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام نماذج الانحدار.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">🛡️ لوحة دعم اتخاذ القرار:</b>
-            <span style="color: #475569; font-size: 13.5px;"> تشخيص الفجوات الهيكلية وتوليد مصفوفة توصيات تنفيذية موجهة للإدارة العليا والجهات الرقابية.</span>
+        <div class="tour-nav-btn" data-tab-target="4" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🛡️ لوحة دعم اتخاذ القرار</div>
+                <div class="tour-nav-desc">تشخيص الفجوات الهيكلية وتوليد مصفوفة توصيات تنفيذية موجهة للإدارة العليا والجهات الرقابية.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
         """, unsafe_allow_html=True)
 
     with col_t2:
-        st.markdown(f"""
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">📑 التقرير التنفيذي:</b>
-            <span style="color: #475569; font-size: 13.5px;"> إعداد وتصدير تقارير تقييمية رسمية بصيغة Word (.docx) جاهزة للعرض على مجالس الإدارات.</span>
+        st.markdown("""
+        <div class="tour-nav-btn" data-tab-target="5" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📑 التقرير التنفيذي</div>
+                <div class="tour-nav-desc">إعداد وتصدير تقارير تقييمية رسمية بصيغة Word (.docx) جاهزة للعرض على مجالس الإدارات.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">🌿 تقارير الاستدامة:</b>
-            <span style="color: #475569; font-size: 13.5px;"> استعراض وتحليل مؤشرات الإفصاح البيئي والتمويل الأخضر وفق المعايير الدولية (GRI / ISSB).</span>
+        <div class="tour-nav-btn" data-tab-target="6" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🌿 تقارير الاستدامة</div>
+                <div class="tour-nav-desc">استعراض وتحليل مؤشرات الإفصاح البيئي والتمويل الأخضر وفق المعايير الدولية (GRI / ISSB).</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">📋 استبيان فرق العمل:</b>
-            <span style="color: #475569; font-size: 13.5px;"> أداة التقييم الميداني الموجهة لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</span>
+        <div class="tour-nav-btn" data-tab-target="7" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📋 استبيان فرق العمل</div>
+                <div class="tour-nav-desc">أداة التقييم الميداني الموجهة لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
-        <div class="tour-step-card" dir="rtl">
-            <b style="color: {CBE_NAVY};">📖 دليل المستخدم:</b>
-            <span style="color: #475569; font-size: 13.5px;"> التوثيق المنهجي الكامل وشرح آليات التشغيل والمنهجية الإحصائية للمنصة.</span>
+        <div class="tour-nav-btn" data-tab-target="8" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📖 دليل المستخدم</div>
+                <div class="tour-nav-desc">التوثيق المنهجي الكامل وشرح آليات التشغيل والمنهجية الإحصائية للمنصة.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
         """, unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
