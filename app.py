@@ -40,7 +40,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v10"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v11"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -222,7 +222,63 @@ html body [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
 }}
 """
 
-TABS_RULES = TABS_RULES + TABS_COLOR_RULES
+TABS_ROLE_RULES = f"""
+/* شريط التبويبات: بدون الاعتماد على data-baseweb أو data-testid */
+html body [role="tablist"] {{
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    background-color: {CBE_NAVY} !important;
+    border: 2px solid {CBE_GOLD} !important;
+    border-radius: 12px !important;
+    direction: rtl !important;
+}}
+
+/* الوضع الافتراضي: نص أبيض */
+html body [role="tablist"] [role="tab"] {{
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    background-color: {CBE_NAVY} !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+}}
+
+/* كل ما بداخل الزر يرث اللون */
+html body [role="tablist"] [role="tab"] * {{
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: transparent !important;
+    font-weight: inherit !important;
+    opacity: 1 !important;
+}}
+
+/* تمرير / ضغط / تبويب محدد: نص ذهبي */
+html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) {{
+    color: {CBE_GOLD_BRIGHT} !important;
+    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
+}}
+
+html body [role="tablist"] [role="tab"]:hover {{
+    background-color: {CBE_NAVY_HOVER} !important;
+}}
+
+html body [role="tablist"] [role="tab"][aria-selected="true"] {{
+    background-color: {CBE_NAVY} !important;
+    font-weight: 800 !important;
+    border: 2px solid {CBE_GOLD} !important;
+    box-shadow: 0 0 12px rgba(197, 160, 89, 0.45) !important;
+}}
+"""
+
+TABS_RULES = TABS_RULES + TABS_COLOR_RULES + TABS_ROLE_RULES
 
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
@@ -231,7 +287,7 @@ TABS_GUARD_JS = """
   var W = window;
   if (W.__ssgiTabsObserver) { try { W.__ssgiTabsObserver.disconnect(); } catch (e) {} }
   var NAVY = '%NAVY%', HOVER = '%HOVER%', GOLD = '%GOLD%', WHITE = '#FFFFFF';
-  var SEL = '[data-baseweb="tab-list"] button[role="tab"]';
+  var SEL = '[role="tablist"] [role="tab"]';
 
   function setColor(el, c) {
     el.style.setProperty('color', c, 'important');
