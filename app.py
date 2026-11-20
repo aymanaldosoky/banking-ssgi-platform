@@ -40,7 +40,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v5"    # إصدار تنسيق الشريط العلوي
+UI_CSS_VERSION = "tabs-v6"    # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -49,10 +49,9 @@ APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
 # تنسيق الشريط العلوي (التبويبات): محددات عالية الأولوية تغلب Emotion/BaseWeb CSS
 # ------------------------------------------------------------------------------
 TABS_RULES = f"""
-/* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً للمستخدم والمشرف ---- */
-.stApp [data-testid="stTabs"],
-.stApp div.stTabs,
-div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
+/* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً ---- */
+div[data-testid="stTabs"],
+div.stTabs {{
     width: 100% !important;
     max-width: 100% !important;
     min-width: 100% !important;
@@ -62,17 +61,14 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     padding: 0 !important;
 }}
 
-.stApp [data-testid="stTabs"] > div,
-.stApp [data-testid="stTabs"] [data-baseweb="tabs"],
-.stApp div.stTabs [data-baseweb="tabs"] {{
+div[data-testid="stTabs"] > div,
+div[data-testid="stTabs"] [data-baseweb="tabs"],
+div.stTabs [data-baseweb="tabs"] {{
     width: 100% !important;
     max-width: 100% !important;
 }}
 
-/* ---- شريط التبويبات الرئيسي بلون CBE_NAVY وبعرض الشاشة الكامل ---- */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
-.stApp div.stTabs [data-baseweb="tab-list"],
-.stApp [role="tablist"] {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -95,8 +91,8 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
 }}
 
 /* الحاوية الداخلية إن وجدت في بعض إصدارات Streamlit */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] > div,
-.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
+div[data-testid="stTabs"] [data-baseweb="tab-list"] > div,
+div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     display: flex !important;
     flex: 1 1 100% !important;
     flex-direction: row !important;
@@ -111,11 +107,9 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     direction: rtl !important;
 }}
 
-/* ---- مفاتيح التبويبات: بعرض الشاشة بالتساوي + خلفية CBE_NAVY + نص أبيض ---- */
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"],
-.stApp [data-testid="stTabs"] button[role="tab"],
-.stApp div.stTabs button[data-baseweb="tab"],
-.stApp div.stTabs button[role="tab"] {{
+/* ---- مفاتيح التبويبات: الوضع الافتراضي (أبيض ناصع) ---- */
+div[data-testid="stTabs"] button[role="tab"],
+div[data-testid="stTabs"] button[data-baseweb="tab"] {{
     flex: 1 1 0% !important;
     min-width: 0 !important;
     width: 100% !important;
@@ -146,28 +140,27 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     cursor: pointer !important;
 }}
 
-/* فرض اللون الأبيض على كافة النصوص والعناصر الداخلية للتبويب في الوضع الافتراضي */
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] *,
-.stApp [data-testid="stTabs"] button[role="tab"] p,
-.stApp [data-testid="stTabs"] button[role="tab"] span,
-.stApp [data-testid="stTabs"] button[role="tab"] div {{
+/* استهداف حاوية الماركداون الداخلية في Streamlit لفرض اللون الأبيض */
+div[data-testid="stTabs"] button[role="tab"] [data-testid="stMarkdownContainer"],
+div[data-testid="stTabs"] button[role="tab"] [data-testid="stMarkdownContainer"] p,
+div[data-testid="stTabs"] button[role="tab"] p,
+div[data-testid="stTabs"] button[role="tab"] span,
+div[data-testid="stTabs"] button[role="tab"] div {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     background: transparent !important;
     font-family: {APP_FONT} !important;
-    font-size: inherit !important;
-    font-weight: inherit !important;
-    line-height: inherit !important;
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
     text-align: center !important;
     white-space: normal !important;
     margin: 0 !important;
 }}
 
 /* ---- عند المرور بالمؤشر (Hover): يتحول النص للذهبي ---- */
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:hover,
-.stApp [data-testid="stTabs"] button[role="tab"]:hover,
-.stApp div.stTabs button[role="tab"]:hover {{
+div[data-testid="stTabs"] button[role="tab"]:hover,
+div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {{
     background-color: {CBE_NAVY_HOVER} !important;
     background: {CBE_NAVY_HOVER} !important;
     color: {CBE_GOLD_BRIGHT} !important;
@@ -175,19 +168,18 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     border-color: {CBE_GOLD} !important;
 }}
 
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:hover *,
-.stApp [data-testid="stTabs"] button[role="tab"]:hover *,
-.stApp [data-testid="stTabs"] button[role="tab"]:hover p {{
+div[data-testid="stTabs"] button[role="tab"]:hover [data-testid="stMarkdownContainer"] p,
+div[data-testid="stTabs"] button[role="tab"]:hover p,
+div[data-testid="stTabs"] button[role="tab"]:hover span,
+div[data-testid="stTabs"] button[role="tab"]:hover div {{
     color: {CBE_GOLD_BRIGHT} !important;
     -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
 }}
 
 /* ---- عند الضغط (Active) أو التبويب المحدد (Selected): يتحول النص للذهبي ---- */
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:active,
-.stApp [data-testid="stTabs"] button[role="tab"]:active,
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-.stApp div.stTabs button[role="tab"][aria-selected="true"] {{
+div[data-testid="stTabs"] button[role="tab"]:active,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {{
     background-color: {CBE_NAVY} !important;
     background: {CBE_NAVY} !important;
     color: {CBE_GOLD_BRIGHT} !important;
@@ -197,32 +189,29 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     box-shadow: inset 0 0 0 1px rgba(245, 208, 118, 0.35), 0 0 12px rgba(197, 160, 89, 0.45) !important;
 }}
 
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:active *,
-.stApp [data-testid="stTabs"] button[role="tab"]:active *,
-.stApp [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
-.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {{
+div[data-testid="stTabs"] button[role="tab"]:active [data-testid="stMarkdownContainer"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] [data-testid="stMarkdownContainer"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span,
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] div {{
     color: {CBE_GOLD_BRIGHT} !important;
     -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
     font-weight: 800 !important;
 }}
 
-/* ---- إخفاء الخط الأحمر / الافتراضي السفلي الخاص بـ Streamlit نهائياً ---- */
-.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
-.stApp [data-testid="stTabs"] [data-baseweb="tab-border"],
-.stApp div.stTabs [data-baseweb="tab-highlight"],
-.stApp div.stTabs [data-baseweb="tab-border"] {{
+/* ---- إخفاء الخط الأحمر السفلي لـ BaseWeb نهائياً ---- */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     opacity: 0 !important;
-    background: transparent !important;
+    background-color: transparent !important;
 }}
 
 /* ---- الشاشات الصغيرة: تمرير أفقي سلس داخل الشريط الأزرق ---- */
 @media (max-width: 768px) {{
-    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
-    .stApp div.stTabs [data-baseweb="tab-list"] {{
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
         overflow-x: auto !important;
         overflow-y: hidden !important;
         justify-content: flex-start !important;
@@ -231,14 +220,14 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
         scrollbar-width: thin !important;
     }}
 
-    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] > div,
-    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] > div,
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         flex: 0 0 auto !important;
         width: max-content !important;
     }}
 
-    .stApp [data-testid="stTabs"] button[data-baseweb="tab"],
-    .stApp [data-testid="stTabs"] button[role="tab"] {{
+    div[data-testid="stTabs"] button[role="tab"],
+    div[data-testid="stTabs"] button[data-baseweb="tab"] {{
         flex: 0 0 auto !important;
         width: auto !important;
         white-space: nowrap !important;
@@ -246,7 +235,7 @@ div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
         padding: 8px 14px !important;
     }}
 
-    .stApp [data-testid="stTabs"] button[role="tab"] * {{
+    div[data-testid="stTabs"] button[role="tab"] * {{
         white-space: nowrap !important;
     }}
 }}
@@ -256,20 +245,50 @@ TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 
 def inject_tabs_css():
-    """حقن CSS + مراقب DOM خفيف لضمان تمدد التبويبات بعرض الشاشة وتثبيت الألوان فوراً."""
+    """حقن CSS + فرض الألوان مباشرة على عناصر DOM وإخفاء الخط الأحمر."""
     st.markdown(TABS_CSS, unsafe_allow_html=True)
     components.html(
         f"""
         <script>
         (function() {{
-            const parentDoc = window.parent.document;
+            const doc = window.parent.document;
             const styleId = 'ssgi-dynamic-tabs-{UI_CSS_VERSION}';
-            if (!parentDoc.getElementById(styleId)) {{
-                const style = parentDoc.createElement('style');
-                style.id = styleId;
-                style.innerHTML = `{TABS_RULES}`;
-                parentDoc.head.appendChild(style);
+            let styleEl = doc.getElementById(styleId);
+            if (!styleEl) {{
+                styleEl = doc.createElement('style');
+                styleEl.id = styleId;
+                doc.head.appendChild(styleEl);
             }}
+            styleEl.innerHTML = `{TABS_RULES}`;
+
+            function enforceTabStyles() {{
+                // إخفاء الخط الأحمر السفلي الافتراضي
+                doc.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]').forEach(el => {{
+                    el.style.setProperty('display', 'none', 'important');
+                }});
+
+                // فرض ألوان النص والخلفية مباشرة على الأزرار ونصوصها
+                doc.querySelectorAll('div[data-testid="stTabs"] button[role="tab"]').forEach(btn => {{
+                    const isSelected = btn.getAttribute('aria-selected') === 'true';
+                    const isHovered = btn.matches(':hover');
+                    const textColor = (isSelected || isHovered) ? '{CBE_GOLD_BRIGHT}' : '#FFFFFF';
+                    const bgColor = isHovered ? '{CBE_NAVY_HOVER}' : '{CBE_NAVY}';
+
+                    btn.style.setProperty('background-color', bgColor, 'important');
+                    btn.style.setProperty('color', textColor, 'important');
+
+                    btn.querySelectorAll('p, span, div').forEach(node => {{
+                        node.style.setProperty('color', textColor, 'important');
+                        node.style.setProperty('-webkit-text-fill-color', textColor, 'important');
+                    }});
+                }});
+            }}
+
+            enforceTabStyles();
+            const observer = new MutationObserver(enforceTabStyles);
+            observer.observe(doc.body, {{ childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] }});
+            doc.addEventListener('mouseover', enforceTabStyles, true);
+            doc.addEventListener('mouseout', enforceTabStyles, true);
         }})();
         </script>
         """,
