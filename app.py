@@ -36,47 +36,55 @@ st.set_page_config(
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
-CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والتبويب النشط)
+CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والضغط والتبويب النشط)
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v4"    # إصدار تنسيق الشريط العلوي (للتحقق من النسخة النشطة)
+UI_CSS_VERSION = "tabs-v5"    # إصدار تنسيق الشريط العلوي
 
-# أولوية الخطوط: Bahij TheSansArabic (إن كان مثبتاً على جهاز المستخدم) ثم Readex Pro ثم Tajawal ثم Cairo
+# أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
 
 # ------------------------------------------------------------------------------
-# تنسيق الشريط العلوي (التبويبات): CSS نقي بمحددات role/aria المستقرة عبر إصدارات Streamlit
+# تنسيق الشريط العلوي (التبويبات): محددات عالية الأولوية تغلب Emotion/BaseWeb CSS
 # ------------------------------------------------------------------------------
 TABS_RULES = f"""
-/* ---- حاوية التبويبات بعرض الشاشة كاملاً ---- */
-[data-testid="stTabs"], div.stTabs {{
+/* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً للمستخدم والمشرف ---- */
+.stApp [data-testid="stTabs"],
+.stApp div.stTabs,
+div[data-testid="stAppViewContainer"] [data-testid="stTabs"] {{
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 100% !important;
     direction: rtl !important;
     border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }}
 
-[data-testid="stTabs"] [data-baseweb="tabs"],
-div.stTabs [data-baseweb="tabs"] {{
+.stApp [data-testid="stTabs"] > div,
+.stApp [data-testid="stTabs"] [data-baseweb="tabs"],
+.stApp div.stTabs [data-baseweb="tabs"] {{
     width: 100% !important;
     max-width: 100% !important;
 }}
 
-/* ---- الشريط الأزرق الموحد: لون واحد + إطار ذهبي + توزيع متساوٍ دون انفصال ---- */
-[data-testid="stTabs"] [data-baseweb="tab-list"],
-div.stTabs [data-baseweb="tab-list"] {{
+/* ---- شريط التبويبات الرئيسي بلون CBE_NAVY وبعرض الشاشة الكامل ---- */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
+.stApp div.stTabs [data-baseweb="tab-list"],
+.stApp [role="tablist"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: stretch !important;
-    justify-content: stretch !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     gap: 6px !important;
     padding: 8px !important;
-    margin: 0 0 16px 0 !important;
+    margin: 0 0 18px 0 !important;
+    background-color: {CBE_NAVY} !important;
     background: {CBE_NAVY} !important;
     background-image: none !important;
     border: 2px solid {CBE_GOLD} !important;
@@ -86,9 +94,9 @@ div.stTabs [data-baseweb="tab-list"] {{
     overflow: visible !important;
 }}
 
-/* بعض إصدارات Streamlit تضع حاوية role=tablist داخلية: نجعلها شفافة وممتدة لتبقى الأقسام داخل الشريط */
-[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"],
-div.stTabs [data-baseweb="tab-list"] [role="tablist"] {{
+/* الحاوية الداخلية إن وجدت في بعض إصدارات Streamlit */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] > div,
+.stApp [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     display: flex !important;
     flex: 1 1 100% !important;
     flex-direction: row !important;
@@ -103,12 +111,14 @@ div.stTabs [data-baseweb="tab-list"] [role="tablist"] {{
     direction: rtl !important;
 }}
 
-/* ---- الوضع الافتراضي لكل قسم: خط أبيض ناصع بوزن 600 على أزرق داكن ---- */
-[data-testid="stTabs"] button[role="tab"],
-div.stTabs button[role="tab"] {{
+/* ---- مفاتيح التبويبات: بعرض الشاشة بالتساوي + خلفية CBE_NAVY + نص أبيض ---- */
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"],
+.stApp [data-testid="stTabs"] button[role="tab"],
+.stApp div.stTabs button[data-baseweb="tab"],
+.stApp div.stTabs button[role="tab"] {{
     flex: 1 1 0% !important;
     min-width: 0 !important;
-    width: auto !important;
+    width: 100% !important;
     max-width: none !important;
     height: auto !important;
     min-height: 48px !important;
@@ -117,9 +127,11 @@ div.stTabs button[role="tab"] {{
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    background-color: {CBE_NAVY} !important;
     background: {CBE_NAVY} !important;
     background-image: none !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
     border-radius: 8px !important;
     font-family: {APP_FONT} !important;
@@ -130,14 +142,20 @@ div.stTabs button[role="tab"] {{
     white-space: normal !important;
     outline: none !important;
     box-shadow: none !important;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
 }}
 
-[data-testid="stTabs"] button[role="tab"] *,
-div.stTabs button[role="tab"] * {{
-    color: inherit !important;
-    font-family: inherit !important;
+/* فرض اللون الأبيض على كافة النصوص والعناصر الداخلية للتبويب في الوضع الافتراضي */
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] *,
+.stApp [data-testid="stTabs"] button[role="tab"] p,
+.stApp [data-testid="stTabs"] button[role="tab"] span,
+.stApp [data-testid="stTabs"] button[role="tab"] div {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    background: transparent !important;
+    font-family: {APP_FONT} !important;
     font-size: inherit !important;
     font-weight: inherit !important;
     line-height: inherit !important;
@@ -146,47 +164,65 @@ div.stTabs button[role="tab"] * {{
     margin: 0 !important;
 }}
 
-/* ---- عند التمرير ---- */
-[data-testid="stTabs"] button[role="tab"]:hover,
-div.stTabs button[role="tab"]:hover {{
+/* ---- عند المرور بالمؤشر (Hover): يتحول النص للذهبي ---- */
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:hover,
+.stApp [data-testid="stTabs"] button[role="tab"]:hover,
+.stApp div.stTabs button[role="tab"]:hover {{
+    background-color: {CBE_NAVY_HOVER} !important;
     background: {CBE_NAVY_HOVER} !important;
     color: {CBE_GOLD_BRIGHT} !important;
+    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
     border-color: {CBE_GOLD} !important;
 }}
 
-/* ---- عند الضغط ---- */
-[data-testid="stTabs"] button[role="tab"]:active,
-div.stTabs button[role="tab"]:active {{
-    background: {CBE_NAVY_HOVER} !important;
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:hover *,
+.stApp [data-testid="stTabs"] button[role="tab"]:hover *,
+.stApp [data-testid="stTabs"] button[role="tab"]:hover p {{
     color: {CBE_GOLD_BRIGHT} !important;
-    font-weight: 800 !important;
-    border: 2px solid {CBE_GOLD} !important;
+    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
 }}
 
-/* ---- القسم النشط / المحدد: ذهبي مشرق + Bold 800 + إطار ذهبي بارز ---- */
-[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-div.stTabs button[role="tab"][aria-selected="true"] {{
+/* ---- عند الضغط (Active) أو التبويب المحدد (Selected): يتحول النص للذهبي ---- */
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:active,
+.stApp [data-testid="stTabs"] button[role="tab"]:active,
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+.stApp div.stTabs button[role="tab"][aria-selected="true"] {{
+    background-color: {CBE_NAVY} !important;
     background: {CBE_NAVY} !important;
     color: {CBE_GOLD_BRIGHT} !important;
+    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
     font-weight: 800 !important;
     border: 2px solid {CBE_GOLD} !important;
     box-shadow: inset 0 0 0 1px rgba(245, 208, 118, 0.35), 0 0 12px rgba(197, 160, 89, 0.45) !important;
 }}
 
-/* إخفاء الخط السفلي الافتراضي للتبويبات حتى لا يظهر أي انفصال */
-[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-[data-testid="stTabs"] [data-baseweb="tab-border"],
-div.stTabs [data-baseweb="tab-highlight"],
-div.stTabs [data-baseweb="tab-border"] {{
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"]:active *,
+.stApp [data-testid="stTabs"] button[role="tab"]:active *,
+.stApp [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] *,
+.stApp [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {{
+    color: {CBE_GOLD_BRIGHT} !important;
+    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
+    font-weight: 800 !important;
+}}
+
+/* ---- إخفاء الخط الأحمر / الافتراضي السفلي الخاص بـ Streamlit نهائياً ---- */
+.stApp [data-testid="stTabs"] [data-baseweb="tab-highlight"],
+.stApp [data-testid="stTabs"] [data-baseweb="tab-border"],
+.stApp div.stTabs [data-baseweb="tab-highlight"],
+.stApp div.stTabs [data-baseweb="tab-border"] {{
     display: none !important;
+    visibility: hidden !important;
     height: 0 !important;
+    opacity: 0 !important;
     background: transparent !important;
 }}
 
-/* ---- الشاشات الصغيرة: تمرير أفقي داخل نفس الشريط بدل التكدس ---- */
+/* ---- الشاشات الصغيرة: تمرير أفقي سلس داخل الشريط الأزرق ---- */
 @media (max-width: 768px) {{
-    [data-testid="stTabs"] [data-baseweb="tab-list"],
-    div.stTabs [data-baseweb="tab-list"] {{
+    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"],
+    .stApp div.stTabs [data-baseweb="tab-list"] {{
         overflow-x: auto !important;
         overflow-y: hidden !important;
         justify-content: flex-start !important;
@@ -195,41 +231,57 @@ div.stTabs [data-baseweb="tab-border"] {{
         scrollbar-width: thin !important;
     }}
 
-    [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"],
-    div.stTabs [data-baseweb="tab-list"] [role="tablist"] {{
+    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] > div,
+    .stApp [data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         flex: 0 0 auto !important;
         width: max-content !important;
     }}
 
-    [data-testid="stTabs"] button[role="tab"],
-    div.stTabs button[role="tab"] {{
+    .stApp [data-testid="stTabs"] button[data-baseweb="tab"],
+    .stApp [data-testid="stTabs"] button[role="tab"] {{
         flex: 0 0 auto !important;
+        width: auto !important;
         white-space: nowrap !important;
         font-size: 12.5px !important;
         padding: 8px 14px !important;
     }}
 
-    [data-testid="stTabs"] button[role="tab"] *,
-    div.stTabs button[role="tab"] * {{
+    .stApp [data-testid="stTabs"] button[role="tab"] * {{
         white-space: nowrap !important;
     }}
 }}
 """
 
-# نسخة قابلة لإعادة الحقن بعد st.tabs (تُوضع لاحقاً في DOM فتغلب أي تنسيق افتراضي لـ Streamlit)
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 
 def inject_tabs_css():
-    """معالج خفيف: يعيد حقن CSS الشريط العلوي بعد إنشاء التبويبات (بدون JavaScript أو components.html)."""
+    """حقن CSS + مراقب DOM خفيف لضمان تمدد التبويبات بعرض الشاشة وتثبيت الألوان فوراً."""
     st.markdown(TABS_CSS, unsafe_allow_html=True)
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            const parentDoc = window.parent.document;
+            const styleId = 'ssgi-dynamic-tabs-{UI_CSS_VERSION}';
+            if (!parentDoc.getElementById(styleId)) {{
+                const style = parentDoc.createElement('style');
+                style.id = styleId;
+                style.innerHTML = `{TABS_RULES}`;
+                parentDoc.head.appendChild(style);
+            }}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 
 CUSTOM_CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
-/* استخدام Bahij TheSansArabic من جهاز المستخدم إن كان مثبتاً (الخط تجاري ولا يُستضاف من هنا) */
 @font-face {{
     font-family: 'Bahij TheSansArabic';
     src: local('Bahij TheSansArabic'), local('Bahij TheSansArabic Plain'), local('Bahij_TheSansArabic-Plain');
@@ -259,7 +311,6 @@ html, body, [class*="css"] {{
     border: none !important;
 }}
 
-/* تطبيق الخط على عناصر الواجهة دون المساس بخطوط الأيقونات (Material Icons) */
 .stApp p, .stApp label, .stApp li, .stApp td, .stApp th, .stApp h1, .stApp h2, .stApp h3,
 .stApp h4, .stApp h5, .stApp h6, .stApp input, .stApp textarea, .stApp select,
 .stApp button, .stApp a, .stApp div[data-baseweb] {{
@@ -275,11 +326,13 @@ html, body, [class*="css"] {{
 }}
 
 /* عرض المحتوى والتبويبات بعرض الشاشة لكل من المستخدم العادي والأدمن */
-.block-container, [data-testid="stMainBlockContainer"] {{
+.block-container,
+[data-testid="stMainBlockContainer"],
+[data-testid="stAppViewBlockContainer"] {{
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -412,7 +465,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول عند العرض والتمرير والضغط */
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -547,7 +600,9 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 }}
 
 @media (max-width: 768px) {{
-    .block-container, [data-testid="stMainBlockContainer"] {{
+    .block-container,
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stAppViewBlockContainer"] {{
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 0.75rem !important;
@@ -604,8 +659,6 @@ def format_rag_html(raw_response: str) -> str:
         return "<div class='rag-response-box'>⚠️ لم يتم استرجاع نص للإجابة.</div>"
 
     text = str(raw_response).strip()
-
-    # تحويل التنسيق الغامق في Markdown (**نص**) إلى <b>نص</b>
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
 
     lines = text.splitlines()
@@ -621,7 +674,6 @@ def format_rag_html(raw_response: str) -> str:
             formatted_lines.append("<br>")
             continue
 
-        # التعامل مع القوائم النقطية (- أو * أو •)
         if re.match(r"^[-*•]\s+", stripped):
             if not in_list:
                 formatted_lines.append("<ul>")
@@ -632,7 +684,6 @@ def format_rag_html(raw_response: str) -> str:
             if in_list:
                 formatted_lines.append("</ul>")
                 in_list = False
-            # إذا كان السطر يحتوي على وسوم HTML هيكلية بالفعل، أبقِه كما هو
             if re.match(r"^<(div|h[1-6]|p|ul|ol|li|table|hr|blockquote)", stripped, re.IGNORECASE):
                 formatted_lines.append(stripped)
             else:
@@ -642,10 +693,8 @@ def format_rag_html(raw_response: str) -> str:
         formatted_lines.append("</ul>")
 
     html_body = "\n".join(formatted_lines)
-    # تنظيف التكرار الزائد لوسوم <br>
     html_body = re.sub(r"(<br>\s*){3,}", "<br><br>", html_body)
 
-    # إذا لم يكن الرد مغلفاً بحاوية رئيسية، نغلفه بحاوية rag-response-box
     if not re.match(r"^\s*<div", html_body, re.IGNORECASE):
         return f"<div class='rag-response-box' dir='rtl'>{html_body}</div>"
     return html_body
@@ -793,7 +842,7 @@ if not st.session_state.authenticated:
 def get_colored_score_html(score):
     if score >= 80:
         return f"{score}% (أداء مرتفع ومنتظم 🟢)"
-    elif score >= 50:  # كانت 51 فتسقط القيم بين 50 و50.99 إلى «حرجة»
+    elif score >= 50:
         return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
     else:
         return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
@@ -873,7 +922,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسة
+# التبويبات الرئيسة (تتمدد بعرض الشاشة الكامل لكل من user و admin)
 # ==============================================================================
 if st.session_state.role == "admin":
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
@@ -900,9 +949,8 @@ else:
     ])
     tab9 = None
 
-# إعادة حقن تنسيق الشريط العلوي بعد إنشائه لضمان ثبات الشكل عبر تحديثات Streamlit Cloud
+# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل
 inject_tabs_css()
-
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
