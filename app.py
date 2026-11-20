@@ -52,13 +52,13 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v11"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v12"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
 
 # ------------------------------------------------------------------------------
-# تنسيق الشريط العلوي (التبويبات): محددات عالية الأولوية تغلب Emotion/BaseWeb CSS
+# تنسيق الشريط العلوي (التبويبات): متجاوب 100% بين اللابتوب والموبايل
 # ------------------------------------------------------------------------------
 TABS_RULES = f"""
 /* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً ---- */
@@ -80,12 +80,23 @@ div.stTabs [data-baseweb="tabs"] {{
     max-width: 100% !important;
 }}
 
-div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+/* ---- إخفاء الخط الأحمر السفلي لـ BaseWeb نهائياً ---- */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    background-color: transparent !important;
+}}
+
+/* ---- التنسيق الأساسي لشريط التبويبات ---- */
+html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
+html body [role="tablist"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: stretch !important;
-    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -99,17 +110,14 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     border-radius: 12px !important;
     box-shadow: 0 8px 25px rgba(0, 43, 73, 0.25) !important;
     direction: rtl !important;
-    overflow: visible !important;
 }}
 
 /* الحاوية الداخلية إن وجدت في بعض إصدارات Streamlit */
 div[data-testid="stTabs"] [data-baseweb="tab-list"] > div,
 div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     display: flex !important;
-    flex: 1 1 100% !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    width: 100% !important;
     gap: 6px !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -119,169 +127,176 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     direction: rtl !important;
 }}
 
-/* ---- مفاتيح التبويبات: التوزيع والتنسيق الهيكلي ---- */
-div[data-testid="stTabs"] button[role="tab"],
-div[data-testid="stTabs"] button[data-baseweb="tab"] {{
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-    min-height: 48px !important;
-    margin: 0 !important;
-    padding: 8px 6px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
-    border-radius: 8px !important;
-    font-family: {APP_FONT} !important;
-    font-weight: 600 !important;
-    font-size: 12.5px !important;
-    line-height: 1.35 !important;
-    text-align: center !important;
-    white-space: normal !important;
-    outline: none !important;
-    box-shadow: none !important;
-    transition: all 0.2s ease !important;
-    cursor: pointer !important;
+/* ---- شاشات اللابتوب والكمبيوتر (> 768px): توزيع متساوٍ بعرض الشاشة الكامل ---- */
+@media (min-width: 769px) {{
+    html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
+    html body [role="tablist"] {{
+        justify-content: space-between !important;
+        overflow: visible !important;
+    }}
+
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] > div,
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
+        flex: 1 1 100% !important;
+        width: 100% !important;
+    }}
+
+    html body div[data-testid="stTabs"] button[role="tab"],
+    html body div[data-testid="stTabs"] button[data-baseweb="tab"],
+    html body [role="tablist"] [role="tab"] {{
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 48px !important;
+        margin: 0 !important;
+        padding: 8px 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
+        border-radius: 8px !important;
+        font-family: {APP_FONT} !important;
+        font-weight: 600 !important;
+        font-size: 12.5px !important;
+        line-height: 1.35 !important;
+        text-align: center !important;
+        white-space: normal !important;
+        outline: none !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }}
+
+    html body div[data-testid="stTabs"] button[role="tab"] *,
+    html body [role="tablist"] [role="tab"] * {{
+        white-space: normal !important;
+    }}
 }}
 
-div[data-testid="stTabs"] button[role="tab"] * {{
-    font-family: {APP_FONT} !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    text-align: center !important;
-    white-space: normal !important;
-    margin: 0 !important;
-}}
-
-/* ---- إخفاء الخط الأحمر السفلي لـ BaseWeb نهائياً ---- */
-div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    background-color: transparent !important;
-}}
-
-/* ---- الشاشات الصغيرة: تمرير أفقي سلس داخل الشريط الأزرق ---- */
+/* ---- شاشات الموبايل والتابلت الصغير (<= 768px): تمرير أفقي واضح بلا تقطيع ---- */
 @media (max-width: 768px) {{
-    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+    html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
+    html body [role="tablist"] {{
         overflow-x: auto !important;
         overflow-y: hidden !important;
         justify-content: flex-start !important;
-        padding: 6px !important;
+        padding: 8px !important;
+        gap: 8px !important;
         -webkit-overflow-scrolling: touch !important;
         scrollbar-width: thin !important;
+        scrollbar-color: {CBE_GOLD} {CBE_NAVY} !important;
+    }}
+
+    html body div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar,
+    html body [role="tablist"]::-webkit-scrollbar {{
+        height: 4px !important;
+    }}
+    html body div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar-track,
+    html body [role="tablist"]::-webkit-scrollbar-track {{
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-radius: 4px !important;
+    }}
+    html body div[data-testid="stTabs"] [data-baseweb="tab-list"]::-webkit-scrollbar-thumb,
+    html body [role="tablist"]::-webkit-scrollbar-thumb {{
+        background: {CBE_GOLD} !important;
+        border-radius: 4px !important;
     }}
 
     div[data-testid="stTabs"] [data-baseweb="tab-list"] > div,
     div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         flex: 0 0 auto !important;
         width: max-content !important;
+        gap: 8px !important;
     }}
 
-    div[data-testid="stTabs"] button[role="tab"],
-    div[data-testid="stTabs"] button[data-baseweb="tab"] {{
+    html body div[data-testid="stTabs"] button[role="tab"],
+    html body div[data-testid="stTabs"] button[data-baseweb="tab"],
+    html body [role="tablist"] [role="tab"] {{
         flex: 0 0 auto !important;
+        min-width: max-content !important;
         width: auto !important;
-        white-space: nowrap !important;
-        font-size: 12.5px !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 42px !important;
+        margin: 0 !important;
         padding: 8px 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1.5px solid rgba(197, 160, 89, 0.45) !important;
+        border-radius: 8px !important;
+        font-family: {APP_FONT} !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        outline: none !important;
+        box-shadow: none !important;
     }}
 
-    div[data-testid="stTabs"] button[role="tab"] * {{
+    html body div[data-testid="stTabs"] button[role="tab"] *,
+    html body [role="tablist"] [role="tab"] * {{
         white-space: nowrap !important;
+        display: inline !important;
     }}
+
+    /* إخفاء زر السهم الجانبي التلقائي لـ BaseWeb الذي يغطي التبويبات في الموبايل */
+    div[data-testid="stTabs"] button[aria-label*="scroll"],
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] ~ button {{
+        display: none !important;
+    }}
+}}
+
+/* ---- تنسيق النصوص والأيقونات داخل التبويبات ---- */
+div[data-testid="stTabs"] button[role="tab"] *,
+html body [role="tablist"] [role="tab"] * {{
+    font-family: {APP_FONT} !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    text-align: center !important;
+    margin: 0 !important;
 }}
 """
 
 TABS_COLOR_RULES = f"""
 /* الوضع الافتراضي: نص أبيض على الزر وكل أبنائه */
 html body [data-baseweb="tab-list"] button[role="tab"],
-html body [data-baseweb="tab-list"] button[role="tab"] * {{
+html body [data-baseweb="tab-list"] button[role="tab"] *,
+html body [role="tablist"] [role="tab"],
+html body [role="tablist"] [role="tab"] * {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }}
 
-html body [data-baseweb="tab-list"] button[role="tab"] {{
+html body [data-baseweb="tab-list"] button[role="tab"],
+html body [role="tablist"] [role="tab"] {{
     background-color: {CBE_NAVY} !important;
 }}
 
-html body [data-baseweb="tab-list"] button[role="tab"] * {{
+html body [data-baseweb="tab-list"] button[role="tab"] *,
+html body [role="tablist"] [role="tab"] * {{
     background: transparent !important;
 }}
 
 /* تمرير / ضغط / تبويب محدد: نص ذهبي */
 html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
-html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) * {{
+html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) *,
+html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
+html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) * {{
     color: {CBE_GOLD_BRIGHT} !important;
     -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
 }}
 
-html body [data-baseweb="tab-list"] button[role="tab"]:hover {{
-    background-color: {CBE_NAVY_HOVER} !important;
-}}
-
-html body [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {{
-    background-color: {CBE_NAVY} !important;
-    font-weight: 800 !important;
-    border: 2px solid {CBE_GOLD} !important;
-    box-shadow: 0 0 12px rgba(197, 160, 89, 0.45) !important;
-}}
-"""
-
-TABS_ROLE_RULES = f"""
-/* شريط التبويبات: بدون الاعتماد على data-baseweb أو data-testid */
-html body [role="tablist"] {{
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    gap: 6px !important;
-    padding: 8px !important;
-    background-color: {CBE_NAVY} !important;
-    border: 2px solid {CBE_GOLD} !important;
-    border-radius: 12px !important;
-    direction: rtl !important;
-}}
-
-/* الوضع الافتراضي: نص أبيض */
-html body [role="tablist"] [role="tab"] {{
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    min-height: 48px !important;
-    background-color: {CBE_NAVY} !important;
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    opacity: 1 !important;
-}}
-
-/* كل ما بداخل الزر يرث اللون */
-html body [role="tablist"] [role="tab"] * {{
-    color: inherit !important;
-    -webkit-text-fill-color: currentColor !important;
-    background: transparent !important;
-    font-weight: inherit !important;
-    opacity: 1 !important;
-}}
-
-/* تمرير / ضغط / تبويب محدد: نص ذهبي */
-html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) {{
-    color: {CBE_GOLD_BRIGHT} !important;
-    -webkit-text-fill-color: {CBE_GOLD_BRIGHT} !important;
-}}
-
+html body [data-baseweb="tab-list"] button[role="tab"]:hover,
 html body [role="tablist"] [role="tab"]:hover {{
     background-color: {CBE_NAVY_HOVER} !important;
 }}
 
+html body [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
 html body [role="tablist"] [role="tab"][aria-selected="true"] {{
     background-color: {CBE_NAVY} !important;
     font-weight: 800 !important;
@@ -290,7 +305,7 @@ html body [role="tablist"] [role="tab"][aria-selected="true"] {{
 }}
 """
 
-TABS_RULES = TABS_RULES + TABS_COLOR_RULES + TABS_ROLE_RULES
+TABS_RULES = TABS_RULES + TABS_COLOR_RULES
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 TABS_GUARD_JS = """
@@ -325,7 +340,12 @@ TABS_GUARD_JS = """
         b.addEventListener('pointerleave', function () { paint(b, false); });
         b.addEventListener('pointerdown',  function () { paint(b, true); });
         b.addEventListener('pointerup',    function () { paint(b, false); });
-        b.addEventListener('click', function () { setTimeout(run, 0); });
+        b.addEventListener('click', function () {
+          setTimeout(run, 0);
+          if (window.innerWidth <= 768) {
+            try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
+          }
+        });
       }
     });
   }
@@ -367,7 +387,7 @@ def inject_tabs_css():
         (function() {{
             var doc = window.parent.document;
 
-            doc.querySelectorAll('style[id^="ssgi-tabs-css-"], script[id^="ssgi-tabs-guard-"]')
+            doc.querySelectorAll('style[id^="ssgi-tabs-css-"], script[id^="ssgi-tabs-guard-"], style[id^="ssgi-tabs-"]')
                .forEach(function (n) {{ n.remove(); }});
 
             var st = doc.createElement('style');
@@ -1179,7 +1199,6 @@ else:
 
 # حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل
 inject_tabs_css()
-
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل المنصة (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
