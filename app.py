@@ -4170,6 +4170,9 @@ def load_survey_log_from_cloud():
 KOBO_SURVEY_URL = "https://ee.kobotoolbox.org/x/eSYulrAD"
 
 with tab7:
+    import base64
+    import zlib
+
     # مرساة علوية ثابتة للعودة التلقائية إلى بداية الاستبيان عند الانتقال بين المراحل
     st.markdown('<div id="survey-top-anchor" style="scroll-margin-top: 16px;"></div>', unsafe_allow_html=True)
 
@@ -4184,6 +4187,123 @@ with tab7:
     </style>
     """, unsafe_allow_html=True)
 
+    # ==========================================================================
+    # دوال الحماية والاستعادة التلقائية للاستبيان ضد F5 / Refresh
+    # ==========================================================================
+    def _encode_survey_draft(store_dict: dict, step_val: int) -> str:
+        """ضغط وتشفير مسودة الاستبيان بصيغة zlib+base64 آمنة للرابط والمتصفح."""
+        try:
+            clean_store = {k: v for k, v in store_dict.items() if v is not None and v != ""}
+            if not clean_store:
+                return ""
+            raw = json.dumps({"s": clean_store, "p": int(step_val)}, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            comp = zlib.compress(raw, level=9)
+            return base64.urlsafe_b64encode(comp).decode("ascii").rstrip("=")
+        except Exception:
+            return ""
+
+    def _decode_survey_draft(token: str) -> tuple[dict, int]:
+        """فك ضغط مسودة الاستبيان المسترجعة من الرابط أو المتصفح."""
+        if not token:
+            return {}, 1
+        try:
+            padded = token + "=" * (-len(token) % 4)
+            comp = base64.urlsafe_b64decode(padded.encode("ascii"))
+            raw = zlib.decompress(comp).decode("utf-8")
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict) and isinstance(parsed.get("s"), dict):
+                return parsed["s"], int(parsed.get("p", 1))
+        except Exception:
+            pass
+        return {}, 1
+
+    def restore_survey_browser_backup():
+        """استعادة كافة إجابات الاستبيان والمرحلة الحالية تلقائياً عند الضغط على F5."""
+        if "survey_store" not in st.session_state:
+            st.session_state.survey_store = {}
+        if "survey_wizard_step" not in st.session_state:
+            st.session_state.survey_wizard_step = 1
+
+        # 1) الاستعادة الفورية من URL Query Params (الأسرع والأكثر موثوقية عند F5)
+        url_draft = st.query_params.get("sdraft", "")
+        if url_draft and not st.session_state.survey_store:
+            restored_store, restored_step = _decode_survey_draft(url_draft)
+            if restored_store:
+                st.session_state.survey_store.update(restored_store)
+                st.session_state.survey_wizard_step = restored_step
+
+        # 2) جسر localStorage بالمتصفح كنسخة احتياطية ثانية إذا فُتح الرابط بدون معاملات
+        has_data = bool(st.session_state.survey_store)
+        components.html(
+            f"""
+            <script>
+            (function() {{
+                try {{
+                    var LS_TOKEN_KEY = 'raseen_survey_token_v3';
+                    var hasServerData = {json.dumps(has_data)};
+                    var savedToken = window.parent.localStorage.getItem(LS_TOKEN_KEY);
+                    if (!hasServerData && savedToken) {{
+                        var u = new URL(window.parent.location.href);
+                        if (u.searchParams.get('sdraft') !== savedToken) {{
+                            u.searchParams.set('sdraft', savedToken);
+                            u.searchParams.set('tab', '7');
+                            window.parent.location.replace(u.toString());
+                        }}
+                    }}
+                }} catch (e) {{}}
+            }})();
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
+
+    def sync_survey_browser_backup():
+        """حفظ ومزامنة إجابات الاستبيان ومرحلته لحظياً في الرابط وفي localStorage."""
+        store_data = st.session_state.get("survey_store", {})
+        step_val = st.session_state.get("survey_wizard_step", 1)
+        is_submitted = bool(store_data.get("submitted_id"))
+
+        if is_submitted:
+            if "sdraft" in st.query_params:
+                del st.query_params["sdraft"]
+            token_str = ""
+        else:
+            token_str = _encode_survey_draft(store_data, step_val)
+            if token_str:
+                st.query_params["sdraft"] = token_str
+                st.query_params["tab"] = "7"
+
+        components.html(
+            f"""
+            <script>
+            (function() {{
+                try {{
+                    var LS_TOKEN_KEY = 'raseen_survey_token_v3';
+                    var LS_LEGACY_KEY = 'raseen_survey_draft_v2';
+                    var submitted = {json.dumps(is_submitted)};
+                    var token = {json.dumps(token_str)};
+                    if (submitted) {{
+                        window.parent.localStorage.removeItem(LS_TOKEN_KEY);
+                        window.parent.localStorage.removeItem(LS_LEGACY_KEY);
+                    }} else if (token) {{
+                        window.parent.localStorage.setItem(LS_TOKEN_KEY, token);
+                        var u = new URL(window.parent.location.href);
+                        u.searchParams.set('sdraft', token);
+                        u.searchParams.set('tab', '7');
+                        window.parent.history.replaceState({{}}, '', u.toString());
+                    }}
+                }} catch (e) {{}}
+            }})();
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
+
+    # استعادة البيانات المحفوظة قبل رسم مكونات التبويب
+    restore_survey_browser_backup()
+
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
@@ -4193,7 +4313,7 @@ with tab7:
 
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 12px 18px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; text-align: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);" dir="rtl">
-        <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة الاستجابات والتقييم الميداني.</span>
+        <span style="font-weight: 800; color: {CBE_NAVY}; font-size: 14.5px;">⏳ تنويه: استغراق تعبئة هذا الاستبيان لا يتجاوز 10 دقائق تقريباً لضمان دقة الاستجابات والتقييم الميداني (يتم حفظ إجاباتك تلقائياً ضد انقطاع الاتصال أو F5).</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -4444,12 +4564,15 @@ with tab7:
 
         S = st.session_state.survey_store
 
-        # مزامنة تلقائية لمسودة الاستبيان مع المتصفح لحمايتها من الفقدان عند التحديث
-        if "sync_survey_browser_backup" in globals():
-            sync_survey_browser_backup()
+        # مزامنة تلقائية لمسودة الاستبيان مع المتصفح والرابط لحمايتها من F5 / Refresh
+        sync_survey_browser_backup()
 
         def _sync(widget_key, store_key):
             S[store_key] = st.session_state.get(widget_key)
+            token_now = _encode_survey_draft(S, st.session_state.get("survey_wizard_step", 1))
+            if token_now:
+                st.query_params["sdraft"] = token_now
+                st.query_params["tab"] = "7"
 
         def sv_select(label, options, skey):
             cur = S.get(skey)
@@ -4547,6 +4670,9 @@ with tab7:
                 S.clear()
                 st.session_state.survey_wizard_step = 1
                 st.session_state.scroll_survey_top = True
+                if "sdraft" in st.query_params:
+                    del st.query_params["sdraft"]
+                sync_survey_browser_backup()
                 st.rerun()
 
         elif step_key == "profile":
@@ -4635,6 +4761,10 @@ with tab7:
                 S["comments"] = st.session_state["wi_comments"]
             st.session_state.survey_wizard_step += delta
             st.session_state.scroll_survey_top = True
+            token_now = _encode_survey_draft(S, st.session_state.survey_wizard_step)
+            if token_now:
+                st.query_params["sdraft"] = token_now
+                st.query_params["tab"] = "7"
 
         if not already_submitted:
             col_prev, _sp, col_next = st.columns([1, 2, 1])
@@ -4709,6 +4839,9 @@ with tab7:
                             S["submitted_id"] = resp_id
                             st.session_state.pop("cached_surveys_df", None)
                             st.session_state.scroll_survey_top = True
+                            if "sdraft" in st.query_params:
+                                del st.query_params["sdraft"]
+                            sync_survey_browser_backup()
                             st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
                             st.rerun()
                         except Exception as e:
