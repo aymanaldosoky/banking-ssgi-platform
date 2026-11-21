@@ -1723,7 +1723,7 @@ with tab1:
         with col_sub1:
             ask_submit_btn = st.button("🚀 تقديم السؤال", use_container_width=True, type="primary")
         with col_sub2:
-            if st.button("🔄 تحديث الكاش", use_container_width=True, help="مسح الردود المخزنة مؤقتاً وإعادة التوليد"):
+            if st.button("🔄 تحديث", use_container_width=True, help="مسح الردود المخزنة مؤقتاً وإعادة التوليد"):
                 st.cache_data.clear()
                 st.toast("✅ تم مسح الذاكرة المؤقتة بنجاح.")
         st.markdown('</div>', unsafe_allow_html=True)
