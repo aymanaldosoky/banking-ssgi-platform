@@ -102,7 +102,7 @@ html body [role="tablist"] {{
     box-sizing: border-box !important;
     gap: 6px !important;
     padding: 8px !important;
-    margin: 0 0 16px 0 !important;
+    margin: 0 0 14px 0 !important;
     background-color: {CBE_NAVY} !important;
     background: {CBE_NAVY} !important;
     background-image: none !important;
@@ -126,6 +126,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     direction: rtl !important;
 }}
 
+/* ---- شاشات اللابتوب والكمبيوتر (> 768px): توزيع متساوٍ بعرض الشاشة الكامل ---- */
 @media (min-width: 769px) {{
     html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
     html body [role="tablist"] {{
@@ -173,6 +174,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     }}
 }}
 
+/* ---- شاشات الموبايل والتابلت الصغير (<= 768px): تمرير أفقي واضح بلا تقطيع ---- */
 @media (max-width: 768px) {{
     html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
     html body [role="tablist"] {{
@@ -246,6 +248,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     }}
 }}
 
+/* ---- تنسيق النصوص والأيقونات داخل التبويبات ---- */
 div[data-testid="stTabs"] button[role="tab"] *,
 html body [role="tablist"] [role="tab"] * {{
     font-family: {APP_FONT} !important;
@@ -257,6 +260,7 @@ html body [role="tablist"] [role="tab"] * {{
 """
 
 TABS_COLOR_RULES = f"""
+/* الوضع الافتراضي: نص أبيض على الزر وكل أبنائه */
 html body [data-baseweb="tab-list"] button[role="tab"],
 html body [data-baseweb="tab-list"] button[role="tab"] *,
 html body [role="tablist"] [role="tab"],
@@ -276,6 +280,7 @@ html body [role="tablist"] [role="tab"] * {{
     background: transparent !important;
 }}
 
+/* تمرير / ضغط / تبويب محدد: نص ذهبي */
 html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
 html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) *,
 html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
@@ -321,52 +326,56 @@ TABS_GUARD_JS = """
     btn.querySelectorAll('*').forEach(function (n) { setColor(n, c); });
   }
 
-  function syncUrlTab(idx) {
+  function saveActiveTabToUrl(idx) {
     try {
-      var u = new URL(window.parent.location.href);
+      var u = new URL(window.location.href);
       u.searchParams.set('tab', String(idx));
-      window.parent.history.replaceState({}, '', u.toString());
+      window.history.replaceState({}, '', u.toString());
     } catch (e) {}
   }
 
-  function restoreUrlTab() {
-    if (W.__ssgiTabRestored) return;
-    try {
-      var u = new URL(window.parent.location.href);
-      var t = parseInt(u.searchParams.get('tab'), 10);
-      var tabs = document.querySelectorAll(SEL);
-      if (!isNaN(t) && tabs && tabs[t]) {
-        W.__ssgiTabRestored = true;
-        if (tabs[t].getAttribute('aria-selected') !== 'true') {
-          tabs[t].click();
-          setTimeout(run, 30);
-        }
-      }
-    } catch (e) {}
-  }
-
-  function goToTab(idx) {
+  function goToTab(idx, shouldScroll) {
     var tabs = document.querySelectorAll(SEL);
     if (tabs && tabs[idx]) {
       tabs[idx].click();
-      syncUrlTab(idx);
+      saveActiveTabToUrl(idx);
       setTimeout(run, 20);
       if (window.innerWidth <= 768) {
         try { tabs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       }
-      var tabList = document.querySelector('[role="tablist"]');
-      if (tabList) {
-        try { tabList.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+      if (shouldScroll) {
+        var tabList = document.querySelector('[role="tablist"]');
+        if (tabList) {
+          try { tabList.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+        }
       }
     }
+  }
+
+  function restoreTabFromUrl() {
+    if (W.__ssgiTabRestored) return;
+    try {
+      var u = new URL(window.location.href);
+      var t = u.searchParams.get('tab');
+      if (t !== null && t !== '0') {
+        var idx = parseInt(t, 10);
+        var tabs = document.querySelectorAll(SEL);
+        if (!isNaN(idx) && tabs && tabs[idx]) {
+          W.__ssgiTabRestored = true;
+          tabs[idx].click();
+          setTimeout(run, 30);
+        }
+      } else {
+        W.__ssgiTabRestored = true;
+      }
+    } catch (e) {}
   }
 
   function run() {
     document.querySelectorAll('[data-baseweb="tab-highlight"], [data-baseweb="tab-border"]')
       .forEach(function (el) { el.style.setProperty('display', 'none', 'important'); });
 
-    var allTabs = document.querySelectorAll(SEL);
-    allTabs.forEach(function (b, index) {
+    document.querySelectorAll(SEL).forEach(function (b, idx) {
       paint(b, b.matches(':hover'));
       if (!b.__ssgi) {
         b.__ssgi = 1;
@@ -375,7 +384,7 @@ TABS_GUARD_JS = """
         b.addEventListener('pointerdown',  function () { paint(b, true); });
         b.addEventListener('pointerup',    function () { paint(b, false); });
         b.addEventListener('click', function () {
-          syncUrlTab(index);
+          saveActiveTabToUrl(idx);
           setTimeout(run, 0);
           if (window.innerWidth <= 768) {
             try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
@@ -384,15 +393,14 @@ TABS_GUARD_JS = """
       }
     });
 
-    restoreUrlTab();
-
+    /* ربط بطاقات التنقل السريع في الصفحة الرئيسية بالتبويبات المقابلة */
     document.querySelectorAll('[data-tab-target]').forEach(function (card) {
       if (!card.__ssgiNav) {
         card.__ssgiNav = 1;
         card.addEventListener('click', function () {
           var idx = parseInt(card.getAttribute('data-tab-target'), 10);
           if (!isNaN(idx)) {
-            goToTab(idx);
+            goToTab(idx, true);
           }
         });
         card.addEventListener('keydown', function (e) {
@@ -400,7 +408,7 @@ TABS_GUARD_JS = """
             e.preventDefault();
             var idx = parseInt(card.getAttribute('data-tab-target'), 10);
             if (!isNaN(idx)) {
-              goToTab(idx);
+              goToTab(idx, true);
             }
           }
         });
@@ -416,7 +424,7 @@ TABS_GUARD_JS = """
   }
 
   run();
-  setTimeout(run, 100);
+  setTimeout(function () { restoreTabFromUrl(); run(); }, 120);
   setTimeout(run, 400);
 
   W.__ssgiTabsObserver = new MutationObserver(schedule);
@@ -465,6 +473,42 @@ def inject_tabs_css():
     )
 
 
+def sync_survey_browser_backup():
+    """
+    حفظ نسخة احتياطية من إجابات الاستبيان في localStorage بالمتصفح
+    لمنع فقدان الإجابات في حال الضغط على F5 أو انقطاع الاتصال المؤقت.
+    """
+    store_data = st.session_state.get("survey_store", {})
+    step_val = st.session_state.get("survey_wizard_step", 1)
+    is_submitted = bool(store_data.get("submitted_id"))
+
+    payload = json.dumps({
+        "store": store_data,
+        "step": step_val,
+        "submitted": is_submitted
+    }, ensure_ascii=False)
+
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            try {{
+                var LS_KEY = 'raseen_survey_draft_v2';
+                var data = {payload};
+                if (data.submitted) {{
+                    window.parent.localStorage.removeItem(LS_KEY);
+                }} else if (data.store && Object.keys(data.store).length > 0) {{
+                    window.parent.localStorage.setItem(LS_KEY, JSON.stringify(data));
+                }}
+            }} catch (e) {{}}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
 CUSTOM_CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -480,18 +524,23 @@ CUSTOM_CSS = f"""
     font-weight: 700;
 }}
 
-/* إزالة شريط Streamlit العلوي والمساحة الفارغة الكبيرة فوق الهيدر */
-header[data-testid="stHeader"],
-.stAppToolbar,
-div[data-testid="stHeader"],
-div[data-testid="stDecoration"],
-div[data-testid="stStatusWidget"] {{
+header {{
+    visibility: hidden !important;
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}}
+
+.stAppToolbar, div[data-testid="stHeader"], div[data-testid="stDecoration"] {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
-    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }}
 
+/* إخفاء إطارات السكربت المخفية دون إيقاف تنفيذ JavaScript في Safari وباقي المتصفحات */
 iframe[height="0"] {{
     position: absolute !important;
     width: 0 !important;
@@ -499,6 +548,8 @@ iframe[height="0"] {{
     border: 0 !important;
     opacity: 0 !important;
     pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }}
 
 html, body, [class*="css"] {{
@@ -525,17 +576,24 @@ html, body, [class*="css"] {{
     overflow-x: hidden !important;
 }}
 
-/* تقليص المسافة الفارغة العلوية في الحاوية الرئيسة */
+/* إلغاء المسافة الفارغة الكبيرة أعلى الصفحة وضبط العرض الكامل */
+[data-testid="stAppViewContainer"],
+section[data-testid="stMain"],
+.main {{
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}}
+
 .block-container,
 [data-testid="stMainBlockContainer"],
-[data-testid="stAppViewBlockContainer"],
-section.main > div.block-container {{
+[data-testid="stAppViewBlockContainer"] {{
     width: 100% !important;
     max-width: 100% !important;
-    padding-top: 0.65rem !important;
+    padding-top: 0.45rem !important;
     padding-bottom: 1.5rem !important;
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
+    margin-top: 0 !important;
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -568,6 +626,7 @@ section.main > div.block-container {{
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -595,6 +654,7 @@ div[role="option"] {{
     outline: none !important;
 }}
 
+/* تنسيق حاوية إجابات RAG لضمان سلامة الفقرات والقوائم */
 .rag-response-box {{
     background: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
@@ -617,6 +677,7 @@ div[role="option"] {{
     margin-bottom: 6px !important;
 }}
 
+/* تصميم بطاقات الصفحة الرئيسية والنموذج البحثي */
 .home-hero-card {{
     background: #FFFFFF;
     border: 1.5px solid {CBE_GOLD};
@@ -671,6 +732,7 @@ div[role="option"] {{
     border-color: #14B8A6;
 }}
 
+/* مفاتيح الجولة السريعة التفاعلية (تعمل كأزرار انتقال مباشر للتبويبات) */
 .tour-nav-btn {{
     display: flex;
     align-items: center;
@@ -740,6 +802,7 @@ div[role="option"] {{
     color: {CBE_NAVY};
 }}
 
+/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -788,6 +851,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -852,11 +916,11 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     background-size: cover !important;
     background-position: center !important;
     color: #FFFFFF !important;
-    padding: clamp(14px, 2.5vw, 22px) clamp(12px, 3vw, 20px) !important;
+    padding: clamp(16px, 3vw, 26px) clamp(12px, 3vw, 20px) !important;
     border-radius: 16px !important;
-    border-bottom: 5px solid {CBE_GOLD} !important;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.18) !important;
-    margin-top: 2px !important;
+    border-bottom: 4px solid {CBE_GOLD} !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18) !important;
+    margin-top: 4px !important;
     margin-bottom: 14px !important;
     direction: rtl !important;
 }}
@@ -865,7 +929,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     color: {CBE_GOLD} !important;
     font-size: clamp(18px, 4.2vw, 23px) !important;
     font-weight: 800 !important;
-    line-height: 1.38 !important;
+    line-height: 1.4 !important;
     margin-top: 0 !important;
     margin-bottom: 6px !important;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
@@ -875,7 +939,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     color: #F1F5F9 !important;
     font-size: clamp(12.5px, 3vw, 14px) !important;
     font-weight: 500 !important;
-    line-height: 1.5 !important;
+    line-height: 1.55 !important;
     margin-top: 0 !important;
     margin-bottom: 4px !important;
 }}
@@ -901,7 +965,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
 .ticker-item {{
     display: inline-block;
-    padding: 7px 30px;
+    padding: 7px 28px;
     font-size: 13.5px;
     font-weight: bold;
     color: #FFFFFF !important;
@@ -927,9 +991,8 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 @media (max-width: 768px) {{
     .block-container,
     [data-testid="stMainBlockContainer"],
-    [data-testid="stAppViewBlockContainer"],
-    section.main > div.block-container {{
-        padding-top: 0.45rem !important;
+    [data-testid="stAppViewBlockContainer"] {{
+        padding-top: 0.4rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
@@ -982,10 +1045,15 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 # الدوال المساعدة (تنسيق HTML السليم + تصدير Word .docx أصلي بدون تحذيرات)
 # ==============================================================================
 def flat_html(s: str) -> str:
+    """تُستخدم فقط لقوالب HTML الثابتة مثل Skeleton Loader."""
     return " ".join(l.strip() for l in s.splitlines() if l.strip())
 
 
 def format_rag_html(raw_response: str) -> str:
+    """
+    تحويل الرد القادم من محرك RAG إلى HTML منسق يحافظ على الفقرات والنقاط
+    سواء كان الرد بصيغة Markdown أو HTML جزئي أو نص عادي.
+    """
     if not raw_response:
         return "<div class='rag-response-box'>⚠️ لم يتم استرجاع نص للإجابة.</div>"
 
@@ -1045,6 +1113,7 @@ def hash_password(password: str) -> str:
 
 
 def _set_rtl_paragraph(p):
+    """ضبط اتجاه الفقرة RTL في مستندات python-docx."""
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     pPr = p._p.get_or_add_pPr()
     bidi = OxmlElement("w:bidi")
@@ -1052,10 +1121,15 @@ def _set_rtl_paragraph(p):
 
 
 def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes, str, str]:
+    """
+    تحويل المحتوى إلى ملف Word (.docx) أصلي 100% مع ترويسة وتذييل رسمي واتجاه RTL
+    بلا أي رسائل تحذير في Microsoft Word، مع Fallback آمن إلى HTML .doc عند الحاجة.
+    """
     if HAS_PYTHON_DOCX:
         doc = Document()
         section = doc.sections[0]
 
+        # الترويسة والتذييل الرسمي
         header = section.header
         hp = header.paragraphs[0]
         hp.text = "المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة (SSGI)"
@@ -1072,6 +1146,7 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
             fp.runs[0].font.size = Pt(9)
             fp.runs[0].font.color.rgb = RGBColor(0x64, 0x74, 0x8B)
 
+        # العنوان الرئيسي والعنوان الفرعي
         h_main = doc.add_heading(clean_text(title), level=0)
         h_main.alignment = WD_ALIGN_PARAGRAPH.CENTER
         if h_main.runs:
@@ -1084,6 +1159,7 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
                 p_sub.runs[0].font.size = Pt(11)
                 p_sub.runs[0].font.color.rgb = RGBColor(0xC5, 0xA0, 0x59)
 
+        # تحليل وسوم HTML الأساسية وتحويلها إلى فقرات وعناوين وقوائم منظمة
         normalized = re.sub(r"<(br|hr)\s*/?>", "\n", html_body, flags=re.IGNORECASE)
         normalized = re.sub(r"</(p|div|h[1-6]|li|tr)>", "\n", normalized, flags=re.IGNORECASE)
         normalized = re.sub(r"<li[^>]*>", "• ", normalized, flags=re.IGNORECASE)
@@ -1211,8 +1287,16 @@ def log_visitor_action(username, role):
 
 
 # ==============================================================================
-# إدارة جلسة الدخول والصلاحيات مع الثبات ضد F5 / Refresh عبر Query Params
+# إدارة جلسة الدخول المستمرة (الصمود أمام F5 / Refresh)
 # ==============================================================================
+ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
+ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
+USER_PASS_HASH = st.secrets.get("user_credentials", {}).get("password_hash", hash_password("123"))
+
+# توكنات مشفرة مشتقة من كلمات المرور لربط الجلسة بالمتصفح بأمان عند الضغط على F5
+ADMIN_SESSION_TOKEN = hashlib.sha256(f"raseen_admin_{ADMIN_PASS_HASH}".encode()).hexdigest()[:24]
+USER_SESSION_TOKEN = hashlib.sha256(f"raseen_user_{USER_PASS_HASH}".encode()).hexdigest()[:24]
+
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "username" not in st.session_state:
@@ -1222,30 +1306,23 @@ if "role" not in st.session_state:
 if "survey_submitted_by_user" not in st.session_state:
     st.session_state.survey_submitted_by_user = False
 
-ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
-ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
-USER_PASS_HASH = st.secrets.get("user_credentials", {}).get("password_hash", hash_password("123"))
-SESSION_SECRET_SALT = st.secrets.get("session_salt", "raseen_ssgi_2026_secure_token")
-
-
-def _make_auth_token(role: str) -> str:
-    return hashlib.sha256(f"{role}:{SESSION_SECRET_SALT}".encode()).hexdigest()[:24]
-
-
-# استعادة الجلسة تلقائياً عند الضغط على F5 أو عمل Refresh للمتصفح
+# استعادة الجلسة تلقائياً من Query Params في حال الضغط على F5 أو تحديث المتصفح
 if not st.session_state.authenticated:
-    qp_role = st.query_params.get("r", "")
-    qp_token = st.query_params.get("t", "")
-    if qp_role in ("admin", "user") and qp_token == _make_auth_token(qp_role):
+    url_token = st.query_params.get("auth", "")
+    if url_token == ADMIN_SESSION_TOKEN:
         st.session_state.authenticated = True
-        st.session_state.role = qp_role
-        st.session_state.username = "مشرف النظام (Admin)" if qp_role == "admin" else "باحث / مستخدم (User)"
+        st.session_state.username = "مشرف النظام (Admin)"
+        st.session_state.role = "admin"
+    elif url_token == USER_SESSION_TOKEN:
+        st.session_state.authenticated = True
+        st.session_state.username = "باحث / مستخدم (User)"
+        st.session_state.role = "user"
 
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown(f"""
-        <div style="background: #FFFFFF; padding: clamp(18px, 4vw, 30px); border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right; margin-top: 10px;" dir="rtl">
+        <div style="background: #FFFFFF; padding: clamp(18px, 4vw, 30px); border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right; margin-top: 12px;" dir="rtl">
             <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; font-size: clamp(18px, 4vw, 22px); margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري (رصين)</h2>
             <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
                 إطار تطبيقي مقترح ضمن متطلبات نيل درجة دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
@@ -1266,16 +1343,14 @@ if not st.session_state.authenticated:
                     st.session_state.authenticated = True
                     st.session_state.username = "مشرف النظام (Admin)"
                     st.session_state.role = "admin"
-                    st.query_params["r"] = "admin"
-                    st.query_params["t"] = _make_auth_token("admin")
+                    st.query_params["auth"] = ADMIN_SESSION_TOKEN
                     log_visitor_action("admin", "مشرف (Admin)")
                     st.rerun()
                 elif clean_user in ("user", "users") and clean_pass_hash == USER_PASS_HASH:
                     st.session_state.authenticated = True
                     st.session_state.username = "باحث / مستخدم (User)"
                     st.session_state.role = "user"
-                    st.query_params["r"] = "user"
-                    st.query_params["t"] = _make_auth_token("user")
+                    st.query_params["auth"] = USER_SESSION_TOKEN
                     log_visitor_action("user", "مستخدم عادي (User)")
                     st.rerun()
                 else:
@@ -1339,11 +1414,15 @@ if "draft_bank_name" not in st.session_state:
     st.session_state.draft_bank_name = ""
 
 # ==============================================================================
-# الهيدر المدمج بدون مسافات فارغة والشريط الإخباري
+# الهيدر المدمج (بدون مسافات فارغة علوية) والشريط الإخباري
 # ==============================================================================
-col_h1, col_h2 = st.columns([4.5, 1])
+col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
-    st.markdown(f"<div style='text-align: right; font-size: 13px; color: #475569; padding-top: 6px;'>👤 مسجل باسم: <b>{st.session_state.username}</b></div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;" dir="rtl">
+        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة محمية ضد التحديث العرضي (F5)</span>
+    </div>
+    """, unsafe_allow_html=True)
 with col_h2:
     if st.button("🚪 تسجيل الخروج", use_container_width=True, key="logout_top_btn"):
         st.session_state.authenticated = False
@@ -1354,8 +1433,9 @@ with col_h2:
 
 st.markdown("""
 <div class="header-center">
-<h1>مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري — منصة (رصين)</h1>
-<h3>إطار تطبيقي مقترح ضمن متطلبات نيل درجة دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس</h3>
+<h1>مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري</h1>
+<h1>منصة (رصين)</h1>
+<h3>إطار تطبيقي مقترح ضمن متطلبات نيل درجة دكتوراة الفلسفة في العلوم البيئية - جامعة عين شمس</h3>
 <h3>إعداد الباحث: أيمن الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)</h3>
 </div>
 """, unsafe_allow_html=True)
@@ -1403,8 +1483,171 @@ else:
     ])
     tab9 = None
 
-# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل
+# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل + استعادة التبويب النشط
 inject_tabs_css()
+
+# ==============================================================================
+# التبويب التمهيدي: الرئيسية والإطار المنهجي (تهيئة الزائر والمحكم فور الدخول)
+# ==============================================================================
+with tab_home:
+    st.markdown(f"""
+    <div class="home-hero-card" dir="rtl">
+        <h2 style="color: {CBE_NAVY}; font-weight: 800; font-size: clamp(17px, 3.8vw, 22px); margin-bottom: 10px;">
+            🏛️ مرحباً بكم في مقترح المنصة الوطنية الذكية لتعزيز حوكمة القطاع المصرفي المصري (رصين)
+        </h2>
+        <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
+            تمثل هذه المنصة التطبيق العملي المقترح ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
+        </p>
+        <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
+            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح ساكنة إلى <b>منظومة ذكاء اصطناعي تفاعلية (RAG)</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 14px 0;">
+        🧭 خريطة النموذج البحثي المعتمد للمنصة (المتغيرات والأبعاد الـ 15)
+    </h3>
+    """, unsafe_allow_html=True)
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+
+    with col_m1:
+        st.markdown(f"""
+        <div class="model-pillar-card" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #64748B; margin-bottom: 4px;">1️⃣ المتغير المستقل (Independent Variable)</div>
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; font-size: 16px; margin-bottom: 8px;">💻 منصات المعلومات الذكية<br><span style="font-size: 12.5px; font-weight: 600; color: #475569;">(Smart Information Platforms)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                البنية التحتية الرقمية والأنظمة الذكية المسؤولة عن جمع البيانات ومعالجتها وضمان موثوقيتها وأمنها.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
+            <div>
+                <span class="dim-badge">جودة المعلومات</span>
+                <span class="dim-badge">الامتثال التقني</span>
+                <span class="dim-badge">التخطيط والمراقبة بعد النشر</span>
+                <span class="dim-badge">التكامل والخصوصية</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_m2:
+        st.markdown(f"""
+        <div class="model-pillar-card mediator" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 4px;">2️⃣ المتغير الوسيط (Mediating Variable)</div>
+            <h4 style="color: #92400E; font-weight: 800; font-size: 16px; margin-bottom: 8px;">🌿 تقارير الاستدامة<br><span style="font-size: 12.5px; font-weight: 600; color: #78350F;">(Sustainability Reporting)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                آلية الإفصاح المؤسسي والبيئي والاجتماعي التي تنقل أثر البنية الذكية لتعزيز ممارسات الحوكمة الرشيدة.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: #92400E; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
+            <div>
+                <span class="dim-badge gold">الاستراتيجية</span>
+                <span class="dim-badge gold">الأبعاد التشغيلية</span>
+                <span class="dim-badge gold">إدارة المخاطر</span>
+                <span class="dim-badge gold">المقاييس والأهداف</span>
+                <span class="dim-badge gold">التنوع والشمول</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_m3:
+        st.markdown(f"""
+        <div class="model-pillar-card dependent" dir="rtl">
+            <div style="font-size: 12px; font-weight: 700; color: #0F766E; margin-bottom: 4px;">3️⃣ المتغير التابع (Dependent Variable)</div>
+            <h4 style="color: #115E59; font-weight: 800; font-size: 16px; margin-bottom: 8px;">⚖️ الحوكمة المؤسسية<br><span style="font-size: 12.5px; font-weight: 600; color: #134E4A;">(Institutional Governance)</span></h4>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+                منظومة الضبط والرقابة والشفافية والمساءلة التي تضمن استدامة الأداء المصرفي وحماية حقوق أصحاب المصلحة.
+            </p>
+            <div style="font-size: 12.5px; font-weight: 700; color: #115E59; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
+            <div>
+                <span class="dim-badge teal">الشفافية والإفصاح</span>
+                <span class="dim-badge teal">المتابعة والمساءلة</span>
+                <span class="dim-badge teal">العدالة والمساواة</span>
+                <span class="dim-badge teal">المشاركة</span>
+                <span class="dim-badge teal">سيادة القانون</span>
+                <span class="dim-badge teal">مجلس الإدارة</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
+        🔄 مسار التأثير المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 4px 0;">
+        🗺️ جولة سريعة في مكونات وأدوات المنصة (انقر للانتقال المباشر)
+    </h3>
+    <p style="color: #64748B; font-size: 13px; margin-bottom: 14px;">
+        اختر أي وحدة من وحدات المنصة أدناه للانتقال الفوري إليها وبدء التفاعل معها:
+    </p>
+    """, unsafe_allow_html=True)
+
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        st.markdown("""
+        <div class="tour-nav-btn" data-tab-target="1" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🎯 اسأل رصين (محرك RAG الذكي)</div>
+                <div class="tour-nav-desc">استعلام تحليلي فوري مدعوم بأرشيف تقارير الاستدامة والأطر الرقابية للبنوك المصرية.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="2" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📊 المؤشر المركب (SSGI)</div>
+                <div class="tour-nav-desc">قياس كمي ومقارن لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة المستدامة.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="3" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📈 محاكي السياسات الاستشرافي</div>
+                <div class="tour-nav-desc">اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام نماذج الانحدار.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="4" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🛡️ لوحة دعم اتخاذ القرار</div>
+                <div class="tour-nav-desc">تشخيص الفجوات الهيكلية وتوليد مصفوفة توصيات تنفيذية موجهة للإدارة العليا والجهات الرقابية.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_t2:
+        st.markdown("""
+        <div class="tour-nav-btn" data-tab-target="5" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📑 التقرير التنفيذي</div>
+                <div class="tour-nav-desc">إعداد وتصدير تقارير تقييمية رسمية بصيغة Word (.docx) جاهزة للعرض على مجالس الإدارات.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="6" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">🌿 تقارير الاستدامة</div>
+                <div class="tour-nav-desc">استعراض وتحليل مؤشرات الإفصاح البيئي والتمويل الأخضر وفق المعايير الدولية (GRI / ISSB).</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="7" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📋 استبيان فرق العمل</div>
+                <div class="tour-nav-desc">أداة التقييم الميداني الموجهة لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        <div class="tour-nav-btn" data-tab-target="8" role="button" tabindex="0" dir="rtl">
+            <div>
+                <div class="tour-nav-title">📖 دليل المستخدم</div>
+                <div class="tour-nav-desc">التوثيق المنهجي الكامل وشرح آليات التشغيل والمنهجية الإحصائية للمنصة.</div>
+            </div>
+            <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
+        </div>
+        """, unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل رصين (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
