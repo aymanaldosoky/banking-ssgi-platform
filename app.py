@@ -4083,6 +4083,20 @@ def load_survey_log_from_cloud():
 KOBO_SURVEY_URL = "https://ee.kobotoolbox.org/x/eSYulrAD"
 
 with tab7:
+    # مرساة علوية ثابتة للعودة التلقائية إلى بداية الاستبيان عند الانتقال بين المراحل
+    st.markdown('<div id="survey-top-anchor" style="scroll-margin-top: 16px;"></div>', unsafe_allow_html=True)
+
+    # منع القفز العشوائي للشاشة أثناء اختيار الإجابات في Streamlit Radio
+    st.markdown("""
+    <style>
+        div[data-testid="stVerticalBlock"],
+        div[data-testid="stRadio"],
+        div.element-container {
+            overflow-anchor: none !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
         <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
@@ -4114,9 +4128,9 @@ with tab7:
             <p style="margin-bottom: 0;">
                 <b>الباحث:</b> أيمن محمد إبراهيم الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي)<br>
                 <b>تحت إشراف:</b><br>
-                - أ.د. ممدوح عبدالعزيز رفاعي (أستاذ إدارة الأعمال - كلية التجارة - جامعة عين شمس)<br>
-                - أ.د. محمد ماجد صلاح الدين خشبة (أستاذ إدارة الأعمال - مركز التخطيط والتنمية الصناعية - معهد التخطيط القومي)<br>
-                - د. إسلام محمد حجازي (أستاذ مساعد بقسم علوم الحاسب - كلية الحاسبات والمعلومات - جامعة عين شمس)
+- أ.د. ممدوح عبدالعزيز رفاعي (أستاذ إدارة الأعمال - كلية التجارة - جامعة عين شمس)<br>
+- أ.د. محمد ماجد صلاح الدين خشبة (أستاذ إدارة الأعمال - مركز التخطيط والتنمية الصناعية - معهد التخطيط القومي)<br>
+- د. إسلام محمد حجازي (أستاذ مساعد بقسم علوم الحاسب - كلية الحاسبات والمعلومات - جامعة عين شمس)
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -4338,7 +4352,14 @@ with tab7:
             st.session_state.survey_store = {}
         if "survey_wizard_step" not in st.session_state:
             st.session_state.survey_wizard_step = 1
+        if "scroll_survey_top" not in st.session_state:
+            st.session_state.scroll_survey_top = False
+
         S = st.session_state.survey_store
+
+        # مزامنة تلقائية لمسودة الاستبيان مع المتصفح لحمايتها من الفقدان عند التحديث
+        if "sync_survey_browser_backup" in globals():
+            sync_survey_browser_backup()
 
         def _sync(widget_key, store_key):
             S[store_key] = st.session_state.get(widget_key)
@@ -4422,7 +4443,7 @@ with tab7:
             if current_spec else "اختر التخصص الوظيفي لتحديد مسار العبارات"
         )
         st.markdown(f"""
-        <div dir="rtl" style="background:#FFF;border:1.5px solid {CBE_GOLD};border-radius:12px;padding:18px;margin-bottom:20px;">
+        <div id="survey-wizard-header" dir="rtl" style="background:#FFF;border:1.5px solid {CBE_GOLD};border-radius:12px;padding:18px;margin-bottom:20px;scroll-margin-top:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
                 <span style="font-weight:800;color:{CBE_NAVY};font-size:15px;">📍 ({step_num}/{max_wizard_steps}) {step_titles(step_key)}</span>
                 <span style="font-weight:800;color:{CBE_GOLD};font-size:13.5px;">{progress_txt}</span>
@@ -4438,6 +4459,7 @@ with tab7:
             if st.button("📝 تعبئة استجابة جديدة", key="survey_new_response"):
                 S.clear()
                 st.session_state.survey_wizard_step = 1
+                st.session_state.scroll_survey_top = True
                 st.rerun()
 
         elif step_key == "profile":
@@ -4525,6 +4547,7 @@ with tab7:
             if "wi_comments" in st.session_state and st.session_state["wi_comments"] is not None:
                 S["comments"] = st.session_state["wi_comments"]
             st.session_state.survey_wizard_step += delta
+            st.session_state.scroll_survey_top = True
 
         if not already_submitted:
             col_prev, _sp, col_next = st.columns([1, 2, 1])
@@ -4598,10 +4621,37 @@ with tab7:
                                 pass
                             S["submitted_id"] = resp_id
                             st.session_state.pop("cached_surveys_df", None)
+                            st.session_state.scroll_survey_top = True
                             st.success("✅ تم حفظ الاستجابة بنجاح في السحابة!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ حدث خطأ أثناء حفظ الاستجابة في السحابة: {e}")
+
+        # تنفيذ التمرير السلس إلى بداية الاستبيان عند الانتقال بين المراحل
+        if st.session_state.get("scroll_survey_top", False):
+            st.session_state.scroll_survey_top = False
+            components.html(
+                f"""
+                <script>
+                (function() {{
+                    function scrollToSurveyStart() {{
+                        var doc = window.parent.document;
+                        var target = doc.getElementById('survey-wizard-header') || doc.getElementById('survey-top-anchor');
+                        if (target) {{
+                            target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                        }} else {{
+                            window.parent.scrollTo({{ top: 0, behavior: 'smooth' }});
+                        }}
+                    }}
+                    scrollToSurveyStart();
+                    setTimeout(scrollToSurveyStart, 120);
+                    setTimeout(scrollToSurveyStart, 350);
+                }})();
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
 
     # --------------------------------------------------------------------------
     # لوحة التحليل الإداري للأدمن (التصدير بصيغة Excel نقية ومتوافقة مع العربية)
