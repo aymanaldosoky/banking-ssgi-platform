@@ -1420,7 +1420,7 @@ col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
     st.markdown(f"""
     <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;" dir="rtl">
-        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة محمية ضد التحديث العرضي (F5)</span>
+        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;"/span>
     </div>
     """, unsafe_allow_html=True)
 with col_h2:
