@@ -2,6 +2,7 @@ import io
 import os
 import json
 import re
+import base64
 import hashlib
 import time
 import uuid
@@ -52,7 +53,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v15"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v16"   # إصدار محدث لإبطال الكاش فوراً
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -312,6 +313,7 @@ TABS_GUARD_JS = """
   if (W.__ssgiTabsObserver) { try { W.__ssgiTabsObserver.disconnect(); } catch (e) {} }
   var NAVY = '%NAVY%', HOVER = '%HOVER%', GOLD = '%GOLD%', WHITE = '#FFFFFF';
   var SEL = '[role="tablist"] [role="tab"]';
+  var TAB_STORE_KEY = 'raseen_active_tab_idx';
 
   function setColor(el, c) {
     el.style.setProperty('color', c, 'important');
@@ -326,21 +328,39 @@ TABS_GUARD_JS = """
     btn.querySelectorAll('*').forEach(function (n) { setColor(n, c); });
   }
 
-  function saveActiveTabToUrl(idx) {
+  function saveActiveTab(idx) {
     try {
-      var u = new URL(window.location.href);
+      W.sessionStorage.setItem(TAB_STORE_KEY, String(idx));
+      var u = new URL(W.location.href);
       u.searchParams.set('tab', String(idx));
-      window.history.replaceState({}, '', u.toString());
+      W.history.replaceState({}, '', u.toString());
     } catch (e) {}
+  }
+
+  function getSavedTabIndex() {
+    try {
+      var u = new URL(W.location.href);
+      var tUrl = u.searchParams.get('tab');
+      if (tUrl !== null && !isNaN(parseInt(tUrl, 10))) {
+        return parseInt(tUrl, 10);
+      }
+      var tSess = W.sessionStorage.getItem(TAB_STORE_KEY);
+      if (tSess !== null && !isNaN(parseInt(tSess, 10))) {
+        return parseInt(tSess, 10);
+      }
+    } catch (e) {}
+    return 0;
   }
 
   function goToTab(idx, shouldScroll) {
     var tabs = document.querySelectorAll(SEL);
     if (tabs && tabs[idx]) {
-      tabs[idx].click();
-      saveActiveTabToUrl(idx);
+      saveActiveTab(idx);
+      if (tabs[idx].getAttribute('aria-selected') !== 'true') {
+        tabs[idx].click();
+      }
       setTimeout(run, 20);
-      if (window.innerWidth <= 768) {
+      if (W.innerWidth <= 768) {
         try { tabs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
       }
       if (shouldScroll) {
@@ -352,23 +372,16 @@ TABS_GUARD_JS = """
     }
   }
 
-  function restoreTabFromUrl() {
-    if (W.__ssgiTabRestored) return;
-    try {
-      var u = new URL(window.location.href);
-      var t = u.searchParams.get('tab');
-      if (t !== null && t !== '0') {
-        var idx = parseInt(t, 10);
-        var tabs = document.querySelectorAll(SEL);
-        if (!isNaN(idx) && tabs && tabs[idx]) {
-          W.__ssgiTabRestored = true;
-          tabs[idx].click();
-          setTimeout(run, 30);
-        }
-      } else {
-        W.__ssgiTabRestored = true;
-      }
-    } catch (e) {}
+  function enforceSavedTab() {
+    var savedIdx = getSavedTabIndex();
+    var tabs = document.querySelectorAll(SEL);
+    if (!tabs || !tabs.length || savedIdx < 0 || savedIdx >= tabs.length) return;
+    var targetBtn = tabs[savedIdx];
+    if (targetBtn && targetBtn.getAttribute('aria-selected') !== 'true') {
+      targetBtn.click();
+      saveActiveTab(savedIdx);
+      setTimeout(run, 25);
+    }
   }
 
   function run() {
@@ -384,9 +397,9 @@ TABS_GUARD_JS = """
         b.addEventListener('pointerdown',  function () { paint(b, true); });
         b.addEventListener('pointerup',    function () { paint(b, false); });
         b.addEventListener('click', function () {
-          saveActiveTabToUrl(idx);
+          saveActiveTab(idx);
           setTimeout(run, 0);
-          if (window.innerWidth <= 768) {
+          if (W.innerWidth <= 768) {
             try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch (e) {}
           }
         });
@@ -424,8 +437,10 @@ TABS_GUARD_JS = """
   }
 
   run();
-  setTimeout(function () { restoreTabFromUrl(); run(); }, 120);
-  setTimeout(run, 400);
+  enforceSavedTab();
+  setTimeout(function () { enforceSavedTab(); run(); }, 100);
+  setTimeout(function () { enforceSavedTab(); run(); }, 300);
+  setTimeout(function () { enforceSavedTab(); run(); }, 650);
 
   W.__ssgiTabsObserver = new MutationObserver(schedule);
   W.__ssgiTabsObserver.observe(document.body, {
@@ -473,14 +488,83 @@ def inject_tabs_css():
     )
 
 
+def restore_survey_from_url_or_browser():
+    """
+    استعادة إجابات الاستبيان ومرحلة المعالج تلقائياً عند الضغط على F5 أو Refresh
+    من رابط الصفحة (sdraft) أو من localStorage بالمتصفح دون فقدان أي بيانات.
+    """
+    if "survey_store" not in st.session_state:
+        st.session_state.survey_store = {}
+    if "survey_wizard_step" not in st.session_state:
+        st.session_state.survey_wizard_step = 1
+
+    # 1) الاستعادة الفورية من Query Params إذا كانت المسودة موجودة في الرابط
+    encoded_draft = st.query_params.get("sdraft", "")
+    if encoded_draft and not st.session_state.survey_store:
+        try:
+            raw_json = base64.urlsafe_b64decode(encoded_draft.encode("utf-8")).decode("utf-8")
+            parsed = json.loads(raw_json)
+            if isinstance(parsed, dict):
+                restored_store = parsed.get("store", {})
+                restored_step = int(parsed.get("step", 1))
+                if isinstance(restored_store, dict) and restored_store:
+                    st.session_state.survey_store.update(restored_store)
+                    st.session_state.survey_wizard_step = restored_step
+        except Exception:
+            pass
+
+    # 2) جسر JavaScript لاستعادة المسودة من localStorage إلى الرابط إذا فُقدت جلسة الخادم بعد F5
+    has_data = bool(st.session_state.survey_store)
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            try {{
+                var LS_KEY = 'raseen_survey_draft_v2';
+                var hasServerData = {json.dumps(has_data)};
+                var raw = window.parent.localStorage.getItem(LS_KEY);
+                if (!hasServerData && raw) {{
+                    var parsed = JSON.parse(raw);
+                    if (parsed && !parsed.submitted && parsed.store && Object.keys(parsed.store).length > 0) {{
+                        var b64 = btoa(unescape(encodeURIComponent(raw)))
+                            .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+                        var u = new URL(window.parent.location.href);
+                        if (u.searchParams.get('sdraft') !== b64) {{
+                            u.searchParams.set('sdraft', b64);
+                            u.searchParams.set('tab', '7');
+                            window.parent.location.replace(u.toString());
+                        }}
+                    }}
+                }}
+            }} catch (e) {{}}
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
 def sync_survey_browser_backup():
     """
-    حفظ نسخة احتياطية من إجابات الاستبيان في localStorage بالمتصفح
-    لمنع فقدان الإجابات في حال الضغط على F5 أو انقطاع الاتصال المؤقت.
+    حفظ نسخة احتياطية فورية من إجابات الاستبيان في localStorage بالمتصفح وفي URL
+    لمنع فقدان الإجابات نهائياً في حال الضغط على F5 أو تحديث المستعرض.
     """
     store_data = st.session_state.get("survey_store", {})
     step_val = st.session_state.get("survey_wizard_step", 1)
     is_submitted = bool(store_data.get("submitted_id"))
+
+    if is_submitted:
+        if "sdraft" in st.query_params:
+            del st.query_params["sdraft"]
+    elif store_data:
+        try:
+            compact_json = json.dumps({"store": store_data, "step": step_val}, ensure_ascii=False, separators=(",", ":"))
+            b64_str = base64.urlsafe_b64encode(compact_json.encode("utf-8")).decode("utf-8").rstrip("=")
+            if len(b64_str) <= 3500:
+                st.query_params["sdraft"] = b64_str
+        except Exception:
+            pass
 
     payload = json.dumps({
         "store": store_data,
@@ -1413,6 +1497,9 @@ if "draft_generated_state" not in st.session_state:
 if "draft_bank_name" not in st.session_state:
     st.session_state.draft_bank_name = ""
 
+# استعادة بيانات الاستبيان ومرحلته تلقائياً قبل بناء التبويبات لحمايتها من F5 / Refresh
+restore_survey_from_url_or_browser()
+
 # ==============================================================================
 # الهيدر المدمج (بدون مسافات فارغة علوية) والشريط الإخباري
 # ==============================================================================
@@ -1420,7 +1507,7 @@ col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
     st.markdown(f"""
     <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;" dir="rtl">
-        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;"/span>
+        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة والاستبيان محميان ضد التحديث العرضي (F5)</span>
     </div>
     """, unsafe_allow_html=True)
 with col_h2:
@@ -1483,7 +1570,7 @@ else:
     ])
     tab9 = None
 
-# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل + استعادة التبويب النشط
+# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل + استعادة وتثبيت التبويب النشط
 inject_tabs_css()
 
 # ==============================================================================
