@@ -53,7 +53,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v16"   # إصدار محدث لإبطال الكاش فوراً
+UI_CSS_VERSION = "tabs-v17"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
 APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
@@ -307,6 +307,172 @@ html body [role="tablist"] [role="tab"][aria-selected="true"] {{
 TABS_RULES = TABS_RULES + TABS_COLOR_RULES
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
+# ==============================================================================
+# محرك الصوت التفاعلي الفوري (Web Audio API - Zero Latency - Chime & Click)
+# ==============================================================================
+SOUND_ENGINE_JS = """
+(function () {
+  var W = window;
+  var SOUND_PREF_KEY = 'raseen_ui_sound_enabled';
+
+  if (typeof W.__raseenAudioCtx === 'undefined') {
+    W.__raseenAudioCtx = null;
+  }
+
+  function isSoundEnabled() {
+    try {
+      var val = W.localStorage.getItem(SOUND_PREF_KEY);
+      return val === null ? true : (val === '1');
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setSoundEnabled(enabled) {
+    try {
+      W.localStorage.setItem(SOUND_PREF_KEY, enabled ? '1' : '0');
+    } catch (e) {}
+    updateToggleBadges();
+  }
+
+  function getAudioContext() {
+    try {
+      var AudioCtx = W.AudioContext || W.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!W.__raseenAudioCtx) {
+        W.__raseenAudioCtx = new AudioCtx();
+      }
+      if (W.__raseenAudioCtx.state === 'suspended') {
+        W.__raseenAudioCtx.resume();
+      }
+      return W.__raseenAudioCtx;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function playUiTone(kind) {
+    if (!isSoundEnabled()) return;
+    var ctx = getAudioContext();
+    if (!ctx) return;
+
+    try {
+      var now = ctx.currentTime;
+
+      if (kind === 'tab') {
+        // نغمة جرس كريستالي خفيف ("تن" ناعمة ومميزة للتبويبات وبطاقات التنقل)
+        var osc1 = ctx.createOscillator();
+        var osc2 = ctx.createOscillator();
+        var gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(880, now);          // A5 نغمة صافية
+        osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.09); // D6 لمسة رنين خفيفة
+        osc2.frequency.setValueAtTime(1760, now);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.055, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.25);
+        osc2.stop(now + 0.25);
+
+      } else if (kind === 'radio') {
+        // نغمة اختيار خفيفة جداً ("Pop" ناعمة لخيارات الاستبيان والقوائم)
+        var oscR = ctx.createOscillator();
+        var gainR = ctx.createGain();
+        oscR.type = 'sine';
+        oscR.frequency.setValueAtTime(540, now);
+        oscR.frequency.exponentialRampToValueAtTime(760, now + 0.055);
+
+        gainR.gain.setValueAtTime(0.0001, now);
+        gainR.gain.linearRampToValueAtTime(0.04, now + 0.008);
+        gainR.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+
+        oscR.connect(gainR);
+        gainR.connect(ctx.destination);
+        oscR.start(now);
+        oscR.stop(now + 0.08);
+
+      } else {
+        // نقرة لمسية رقيقة ("تك" احترافية لجميع الأزرار والمفاتيح)
+        var oscB = ctx.createOscillator();
+        var gainB = ctx.createGain();
+        oscB.type = 'triangle';
+        oscB.frequency.setValueAtTime(680, now);
+        oscB.frequency.exponentialRampToValueAtTime(420, now + 0.05);
+
+        gainB.gain.setValueAtTime(0.0001, now);
+        gainB.gain.linearRampToValueAtTime(0.05, now + 0.006);
+        gainB.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
+
+        oscB.connect(gainB);
+        gainB.connect(ctx.destination);
+        oscB.start(now);
+        oscB.stop(now + 0.07);
+      }
+    } catch (e) {}
+  }
+
+  function updateToggleBadges() {
+    var enabled = isSoundEnabled();
+    document.querySelectorAll('[data-raseen-sound-toggle]').forEach(function (el) {
+      el.innerHTML = enabled ? '🔊 الصوت: مفعّل' : '🔇 الصوت: صامت';
+      el.style.borderColor = enabled ? '#C5A059' : '#94A3B8';
+      el.style.color = enabled ? '#002B49' : '#64748B';
+    });
+  }
+
+  W.__raseenPlayTone = playUiTone;
+
+  if (!W.__raseenGlobalSoundBound) {
+    W.__raseenGlobalSoundBound = true;
+    document.addEventListener('pointerdown', function (e) {
+      var target = e.target;
+      if (!target || !target.closest) return;
+
+      // زر كتم/تفعيل المؤثرات الصوتية
+      var soundToggle = target.closest('[data-raseen-sound-toggle]');
+      if (soundToggle) {
+        var nextState = !isSoundEnabled();
+        setSoundEnabled(nextState);
+        if (nextState) {
+          playUiTone('tab');
+        }
+        return;
+      }
+
+      // 1) التبويبات الرئيسية أو بطاقات الجولة السريعة في الرئيسية
+      if (target.closest('[role="tab"], [data-tab-target]')) {
+        playUiTone('tab');
+        return;
+      }
+
+      // 2) كافة الأزرار ومفاتيح التنقل والتحميل والإرسال
+      if (target.closest('button, a[kind], [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"], [data-testid="stFormSubmitButton"] button')) {
+        playUiTone('button');
+        return;
+      }
+
+      // 3) خيارات الراديو، مربعات الاختيار، والقوائم المنسدلة
+      if (target.closest('div[role="radiogroup"] label, [data-baseweb="checkbox"], [data-baseweb="select"], summary')) {
+        playUiTone('radio');
+        return;
+      }
+    }, true);
+  }
+
+  updateToggleBadges();
+})();
+"""
+
 TABS_GUARD_JS = """
 (function () {
   var W = window;
@@ -449,6 +615,26 @@ TABS_GUARD_JS = """
   });
 })();
 """
+
+
+def inject_ui_sound_engine():
+    """يحقن محرك المؤثرات الصوتية التفاعلية في الصفحة الأم (يعمل حتى في شاشة الدخول)."""
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            var doc = window.parent.document;
+            doc.querySelectorAll('script[id^="raseen-sound-engine-"]').forEach(function (n) {{ n.remove(); }});
+            var sc = doc.createElement('script');
+            sc.id = 'raseen-sound-engine-{UI_CSS_VERSION}';
+            sc.textContent = {json.dumps(SOUND_ENGINE_JS)};
+            doc.head.appendChild(sc);
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 
 def inject_tabs_css():
@@ -678,6 +864,30 @@ section[data-testid="stMain"],
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
     margin-top: 0 !important;
+}}
+
+/* تصميم زر التحكم بالصوت في الشريط العلوي */
+.sound-toggle-pill {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFFFFF;
+    color: {CBE_NAVY};
+    border: 1.5px solid {CBE_GOLD};
+    border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 43, 73, 0.08);
+}}
+
+.sound-toggle-pill:hover {{
+    background: {CBE_NAVY};
+    color: {CBE_GOLD_BRIGHT} !important;
+    transform: translateY(-1px);
 }}
 
 /* تصميم Skeleton Loader ذكي ومخصص */
@@ -1125,6 +1335,9 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
+# حقن محرك الصوت التفاعلي فوراً ليشمل شاشة الدخول وجميع التبويبات والمفاتيح
+inject_ui_sound_engine()
+
 # ==============================================================================
 # الدوال المساعدة (تنسيق HTML السليم + تصدير Word .docx أصلي بدون تحذيرات)
 # ==============================================================================
@@ -1506,8 +1719,11 @@ restore_survey_from_url_or_browser()
 col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
     st.markdown(f"""
-    <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;" dir="rtl">
-        👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة والاستبيان محميان ضد التحديث العرضي (F5)</span>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;" dir="rtl">
+        <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;">
+            👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة والاستبيان محميان ضد التحديث العرضي (F5)</span>
+        </div>
+        <span class="sound-toggle-pill" data-raseen-sound-toggle="1" role="button" tabindex="0" title="تفعيل أو كتم المؤثرات الصوتية عند النقر">🔊 الصوت: مفعّل</span>
     </div>
     """, unsafe_allow_html=True)
 with col_h2:
