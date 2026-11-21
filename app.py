@@ -4677,7 +4677,7 @@ with tab8:
             <p style="color: #64748B; font-size: 13.5px; margin: 6px 0 0 0;">نموذج مقترح لتعزيز الحوكمة المؤسسية باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة</p>
         </div>
         <p style="color: #1E293B; font-size: 14px; margin-bottom: 10px;">
-            <b>1️⃣ الإطار الأكاديمي والرؤية العلمية:</b><br>
+            <b>1️ الإطار الأكاديمي والرؤية العلمية:</b><br>
             تمثل هذه المنصة البيئة التطبيقية لرسالة دكتوراه الفلسفة في العلوم الاقتصادية والإدارية والقانونية البيئية (<b>كلية الدراسات العليا والبحوث البيئية – جامعة عين شمس</b>)، إعداد الباحث/ <b>أيمن محمد إبراهيم الدسوقي</b> (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي). وتستهدف المنصة توطين حلول الذكاء الاصطناعي والبيانات الضخمة لتعزيز الحوكمة المؤسسية، ودعم السيادة الرقمية، وأتمتة تقييم وتوليد تقارير الاستدامة في القطاع المصرفي المصري.
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; text-align: center;">
@@ -4701,7 +4701,7 @@ with tab8:
     </div>
     """), unsafe_allow_html=True)
 
-    with st.expander("2️⃣ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة", expanded=True):
+    with st.expander("2️ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة", expanded=True):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ul style="margin: 0; padding-right: 20px;">
@@ -4720,7 +4720,7 @@ with tab8:
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("3️⃣ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
+    with st.expander("3️ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ol style="margin: 0; padding-right: 22px;">
@@ -4733,7 +4733,7 @@ with tab8:
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("4️⃣ البنية التقنية وضوابط الخصوصية وأمن المعلومات", expanded=False):
+    with st.expander("4️ البنية التقنية وضوابط الخصوصية وأمن المعلومات", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ul style="margin: 0; padding-right: 20px;">
