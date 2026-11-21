@@ -5151,424 +5151,157 @@ with tab7:
 with tab8:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 18px;">
-        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة الحوكمة المصرفية</h3>
+        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة (رصين)</h3>
         <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">المرجع التشغيلي والأكاديمي المعتمد للمحكمين، أعضاء لجنة المناقشة، الباحثين، والقيادات المصرفية لاستخدام كافة وحدات المنصة بكفاءة تامة.</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(flat_html(f"""
-    <div style="background: #FFFFFF; padding: clamp(18px, 3.5vw, 30px); border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 1.95; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 18px;" dir="rtl">
+    <div style="background: #FFFFFF; padding: clamp(18px, 3.5vw, 30px); border-radius: 14px; border: 1.5px solid {CBE_GOLD}; border-right: 6px solid {CBE_NAVY}; line-height: 1.95; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 18px;" dir="rtl">
         <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 12px; margin-bottom: 16px;">
-            <h2 style="color: {CBE_NAVY}; margin: 0; font-size: clamp(17px, 4vw, 21px); font-weight: 800;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية</h2>
+            <h2 style="color: {CBE_NAVY}; margin: 0; font-size: clamp(17px, 4vw, 21px); font-weight: 800;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية (رصين)</h2>
             <p style="color: #64748B; font-size: 13.5px; margin: 6px 0 0 0;">نموذج مقترح لتعزيز الحوكمة المؤسسية باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة</p>
         </div>
-        <p style="color: #1E293B; font-size: 14px; margin-bottom: 10px;">
-            <b>1️ الإطار الأكاديمي والرؤية العلمية:</b><br>
-            تمثل هذه المنصة البيئة التطبيقية لرسالة دكتوراه الفلسفة في العلوم الاقتصادية والإدارية والقانونية البيئية (<b>كلية الدراسات العليا والبحوث البيئية – جامعة عين شمس</b>)، إعداد الباحث/ <b>أيمن محمد إبراهيم الدسوقي</b> (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي). وتستهدف المنصة توطين حلول الذكاء الاصطناعي والبيانات الضخمة لتعزيز الحوكمة المؤسسية، ودعم السيادة الرقمية، وأتمتة تقييم وتوليد تقارير الاستدامة في القطاع المصرفي المصري.
+        <p style="color: #1E293B; font-size: 14px; margin-bottom: 12px;">
+            <b>1️⃣ الإطار الأكاديمي والرؤية العلمية:</b><br>
+            تمثل منصة <b>(رصين)</b> التطبيق العملي والبرمجي المقترح ضمن متطلبات نيل درجة دكتوراه الفلسفة في العلوم البيئية (<b>جامعة عين شمس</b>)، إعداد الباحث/ <b>أيمن الدسوقي</b> (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي). وتهدف المنصة إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في القطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري، رؤية مصر 2030، ومقررات لجنة بازل.
         </p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; text-align: center;">
-            <div style="background: {CBE_BG}; padding: 10px; border-radius: 8px; border-right: 4px solid {CBE_NAVY};">
-                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">مؤشر القياس المركب</div>
-                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">SSGI (63 متغيراً)</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin-top: 14px; text-align: center;">
+            <div style="background: {CBE_BG}; padding: 11px; border-radius: 8px; border-right: 4px solid {CBE_NAVY};">
+                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">هيكل النموذج البحثي</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: {CBE_NAVY};">3 محاور (15 بُعداً)</div>
             </div>
-            <div style="background: {CBE_BG}; padding: 10px; border-radius: 8px; border-right: 4px solid {CBE_GOLD};">
-                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">الأوزان النسبية المعتمدة</div>
-                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">SIP 40% | IG 30% | SR 30%</div>
+            <div style="background: {CBE_BG}; padding: 11px; border-radius: 8px; border-right: 4px solid {CBE_GOLD};">
+                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">مؤشر القياس المركب (SSGI)</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: {CBE_NAVY};">63 متغيراً (40/30/30%)</div>
             </div>
-            <div style="background: {CBE_BG}; padding: 10px; border-radius: 8px; border-right: 4px solid #10B981;">
-                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">التدقيق والاستخلاص الذكي</div>
-                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">Hybrid RAG</div>
+            <div style="background: {CBE_BG}; padding: 11px; border-radius: 8px; border-right: 4px solid #10B981;">
+                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">محرك المعرفة والتدقيق</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: {CBE_NAVY};">Hybrid RAG + Gemini</div>
             </div>
-            <div style="background: {CBE_BG}; padding: 10px; border-radius: 8px; border-right: 4px solid #3B82F6;">
-                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">الاستبيان الميداني</div>
-                <div style="font-size: 15px; font-weight: 800; color: {CBE_NAVY};">Supabase + KoboToolbox</div>
+            <div style="background: {CBE_BG}; padding: 11px; border-radius: 8px; border-right: 4px solid #3B82F6;">
+                <div style="font-size: 11.5px; color: #64748B; font-weight: 700;">الاستبيان والحماية من F5</div>
+                <div style="font-size: 14.5px; font-weight: 800; color: {CBE_NAVY};">Supabase + Kobo + AutoSave</div>
             </div>
         </div>
     </div>
     """), unsafe_allow_html=True)
 
-    with st.expander("2️ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة", expanded=True):
+    with st.expander("2️⃣ خريطة النموذج البحثي المعتمد (المتغيرات الثلاثة والأبعاد الـ 15)", expanded=True):
         st.markdown(flat_html(f"""
-        <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
+        <div dir="rtl" style="text-align: right; line-height: 1.9; font-size: 14px; color: #1E293B;">
+            <p style="margin-bottom: 10px;">يرتكز البناء القياسي والتحليلي للمنصة على مسار تأثير منهجي يربط بين البنية الرقمية الذكية والإفصاح المستدام وصولاً إلى الحوكمة المؤسسية الرشيدة:</p>
             <ul style="margin: 0; padding-right: 20px;">
-                <li style="margin-bottom: 10px;"><b>🎯 التبويب الأول — اسأل رصين (Hybrid RAG Engine):</b> محرك استخلاص وتحليل معرفي مخصص لكل بنك مصري على حدة، يعتمد على تقنية الاسترجاع المعزز بالتوليد (RAG) للإجابة عن أسئلة التأسيس والملكية، الحوكمة، الاستدامة، والسيادة الرقمية بدقة موثقة مع إمكانية تصدير الرد الفردي أو سجل الجلسة كاملاً بصيغة (Word).</li>
-                <li style="margin-bottom: 10px;"><b>📊 التبويب الثاني — المؤشر المركب (SSGI):</b> منظومة تشخيص كمي متعددة الأبعاد تقيس جاهزية البنك عبر <b>63 متغيراً فرعياً</b> موزعة على ثلاثة محاور رئيسة: منصات المعلومات الذكية (SIP - 40% بواقع 16 متغيراً)، الحوكمة المؤسسية (IG - 30% بواقع 25 متغيراً)، وتقارير الاستدامة (SR - 30% بواقع 22 متغيراً). يتيح تحميل نموذج تقييم Excel تفاعلي بالمعادلات، وعرض رسوم رادارية ومقارنات مرجعية وترتيب تنازلي للبنوك.</li>
-                <li style="margin-bottom: 10px;"><b>📈 التبويب الثالث — محاكي السياسات (Policy Simulator):</b> أداة استشرافية لاختبار أثر التدخلات المستقبلية عبر ثلاثة سيناريوهات استراتيجية (التشاؤمي، المعتدل/التفاؤلي، والطموح/الاستباقي) مع تحديد المحور الأضعف والأقوى تلقائياً وحساب صافي التغير المتوقع بيانياً ورقمياً.</li>
-                <li style="margin-bottom: 10px;"><b>🛡️ التبويب الرابع — لوحة دعم اتخاذ القرار:</b> تحوّل نتائج التشخيص القياسي الفعلي لكل بنك إلى حزمة قرارات تنفيذية إلزامية موجهة لمجلس الإدارة ومصفوفة تكليفات محددة للجان المراجعة والمخاطر والاستدامة وقطاع تكنولوجيا المعلومات.</li>
-                <li style="margin-bottom: 10px;"><b>📑 التبويب الخامس — التقرير التنفيذي الموحد:</b> يجمع تلقائياً ترتيب البنوك المسجلة، ملامح البنك المتصدر، مخرجات المحاكاة الاستشرافية، وتوصيات لوحة القرار في مستند استراتيجي موحد قابل للتحميل بصيغة (Word).</li>
-                <li style="margin-bottom: 10px;"><b>🌿 التبويب السادس — تقييم ومولد تقارير الاستدامة (GRI / ISSB / CBE):</b> يضم ثلاث وحدات متكاملة:
-                    <br>① <i>المدقق الآلي لتقارير الاستدامة (AI ESG Audit):</i> يقرأ ملفات تقارير الاستدامة المرفوعة (PDF/TXT) ويقيّم امتثالها البيئي والاجتماعي والحوكمي مع مزامنة النتيجة مباشرة مع سجل البنك.
-                    <br>② <i>مولد المسودات التوجيهية:</i> يصيغ مسودة تقرير استدامة مفصلة ومخصصة لأرقام كل بنك.
-                    <br>③ <i>الدليل العملي الشامل:</i> يستعرض 30 مؤشراً معيارياً مستمداً من (GRI, ISSB S1/S2, UNDP SDG Impact Standards).</li>
-                <li style="margin-bottom: 10px;"><b>📋 التبويب السابع — استبيان فرق العمل المصرفي (Dual-Channel Survey):</b> أداة جمع البيانات الميدانية عبر قناتين معتمدتين: نموذج المنصة التفاعلي (المرتبط سحابياً بـ <b>Supabase</b> مع مسارات ذكية مخصصة حسب التخصص الوظيفي أو مسار شامل من 31 عبارة)، واستمارة <b>KoboToolbox</b> الدولية المدمجة.</li>
-                <li><b>📖 التبويب الثامن — دليل المستخدم الرسمي (هذا القسم):</b> التوثيق المنهجي والتشغيلي الموحد لكافة مكونات المنصة وإرشادات الاستخدام.</li>
+                <li style="margin-bottom: 10px;"><b>💻 المتغير المستقل — منصات المعلومات الذكية (SIP - الوزن النسبي 40%):</b> يقيس جاهزية البنية الرقمية عبر <b>4 أبعاد رئيسة</b> (16 متغيراً فرعياً): <i>جودة المعلومات، الامتثال التقني، التخطيط والمراقبة بعد النشر، والتكامل والخصوصية</i>.</li>
+                <li style="margin-bottom: 10px;"><b>🌿 المتغير الوسيط — تقارير الاستدامة (SR - الوزن النسبي 30%):</b> ينقل أثر البنية الذكية إلى ممارسات الإفصاح عبر <b>5 أبعاد رئيسة</b> (22 متغيراً فرعياً): <i>الاستراتيجية، الأبعاد التشغيلية، إدارة المخاطر، المقاييس والأهداف، والتنوع والشمول</i>.</li>
+                <li><b>⚖️ المتغير التابع — الحوكمة المؤسسية (IG - الوزن النسبي 30%):</b> يمثل محصلة الضبط والرقابة المؤسسية عبر <b>6 أبعاد رئيسة</b> (25 متغيراً فرعياً): <i>الشفافية والإفصاح، المتابعة والمساءلة، العدالة والمساواة، المشاركة، سيادة القانون، ومجلس الإدارة</i>.</li>
             </ul>
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("3️ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
+    with st.expander("3️⃣ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة", expanded=True):
+        st.markdown(flat_html(f"""
+        <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
+            <ul style="margin: 0; padding-right: 20px;">
+                <li style="margin-bottom: 10px;"><b>🏠 التبويب التمهيدي — الرئيسية والإطار المنهجي:</b> بوابة تعريفية تفاعلية تعرض الرؤية العلمية، خريطة الأبعاد الـ 15، و<b>بطاقات الجولة السريعة التفاعلية</b> التي تتيح الانتقال الفوري بضغطة واحدة إلى أي قسم من أقسام المنصة.</li>
+                <li style="margin-bottom: 10px;"><b>🎯 التبويب الأول — اسأل رصين (Hybrid RAG Engine):</b> محرك استخلاص وتحليل معرفي مخصص لكل بنك مصري على حدة، يعتمد على تقنية الاسترجاع المعزز بالتوليد (RAG) للإجابة عن أسئلة التأسيس والملكية، الحوكمة، الاستدامة، والسيادة الرقمية بدقة موثقة مع إمكانية تصدير الرد الفردي أو سجل الجلسة كاملاً بصيغة <b>Word (.docx)</b>.</li>
+                <li style="margin-bottom: 10px;"><b>📊 التبويب الثاني — المؤشر المركب (SSGI):</b> منظومة تشخيص كمي متعددة الأبعاد تقيس جاهزية البنك عبر <b>63 متغيراً فرعياً</b> (SIP 40%، IG 30%، SR 30%). يتيح تحميل نموذج تقييم Excel تفاعلي بالمعادلات، وعرض رسوم رادارية ومقارنات مرجعية وترتيب تنازلي للبنوك.</li>
+                <li style="margin-bottom: 10px;"><b>📈 التبويب الثالث — محاكي السياسات (Policy Simulator):</b> أداة استشرافية لاختبار أثر التدخلات المستقبلية عبر ثلاثة سيناريوهات استراتيجية (التشاؤمي، المعتدل/التفاؤلي، والطموح/الاستباقي) مع تحديد المحور الأضعف والأقوى تلقائياً وحساب صافي التغير المتوقع بيانياً ورقمياً.</li>
+                <li style="margin-bottom: 10px;"><b>🛡️ التبويب الرابع — لوحة دعم اتخاذ القرار:</b> تحوّل نتائج التشخيص القياسي الفعلي لكل بنك إلى حزمة قرارات تنفيذية إلزامية موجهة لمجلس الإدارة ومصفوفة تكليفات محددة للجان المراجعة والمخاطر والاستدامة وقطاع تكنولوجيا المعلومات.</li>
+                <li style="margin-bottom: 10px;"><b>📑 التبويب الخامس — التقرير التنفيذي الموحد:</b> يجمع تلقائياً ترتيب البنوك المسجلة، ملامح البنك المتصدر، مخرجات المحاكاة الاستشرافية، وتوصيات لوحة القرار في مستند استراتيجي موحد قابل للتحميل بصيغة <b>Word (.docx)</b> أصلية.</li>
+                <li style="margin-bottom: 10px;"><b>🌿 التبويب السادس — تقارير الاستدامة (GRI / ISSB / CBE):</b> يضم ثلاث وحدات متكاملة:
+                    <br>① <i>المدقق الآلي لتقارير الاستدامة (AI ESG Audit):</i> يقرأ ملفات تقارير الاستدامة المرفوعة (PDF/TXT) ويقيّم امتثالها البيئي والاجتماعي والحوكمي مع مزامنة النتيجة مباشرة مع سجل البنك.
+                    <br>② <i>مولد المسودات التوجيهية:</i> يصيغ مسودة تقرير استدامة مفصلة ومخصصة لأرقام كل بنك.
+                    <br>③ <i>الدليل العملي الشامل:</i> يستعرض 30 مؤشراً معيارياً مستمداً من (GRI, ISSB S1/S2, UNDP SDG Impact Standards).</li>
+                <li style="margin-bottom: 10px;"><b>📋 التبويب السابع — استبيان فرق العمل المصرفي (Dual-Channel Survey):</b> أداة جمع البيانات الميدانية عبر قناتين معتمدتين: نموذج المنصة التفاعلي (المرتبط سحابياً بـ <b>Supabase</b> مع مسارات ذكية مخصصة حسب التخصص الوظيفي أو مسار شامل من 31 عبارة محمي بالكامل ضد التحديث العرضي)، واستمارة <b>KoboToolbox</b> الدولية المدمجة.</li>
+                <li style="margin-bottom: 10px;"><b>📖 التبويب الثامن — دليل المستخدم الرسمي (هذا القسم):</b> التوثيق المنهجي والتشغيلي الموحد لكافة مكونات المنصة مع إمكانية تحميل نسخة Word (.docx) رسمية.</li>
+                <li><b>🔒 التبويب التاسع — لوحة تحكم المشرف (Admin Dashboard):</b> متاحة لحساب المشرف فقط لمراقبة مؤشرات المنصة، فحص تمايز إجابات الذكاء الاصطناعي بين البنوك (<code>audit_differentiation</code>)، وتصفية وتصدير سجلات الزوار وعناوين IP.</li>
+            </ul>
+        </div>
+        """), unsafe_allow_html=True)
+
+    with st.expander("4️⃣ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ol style="margin: 0; padding-right: 22px;">
-                <li style="margin-bottom: 8px;"><b>الخطوة الأولى (الاستكشاف المعرفي):</b> ابدأ بتبويب <b>«🎯 اسأل رصين»</b> لاختيار البنك المصرفي واستعراض خلفيته المؤسسية وممارساته في الحوكمة والاستدامة.</li>
+                <li style="margin-bottom: 8px;"><b>الخطوة الأولى (التهيئة والاستكشاف المعرفي):</b> ابدأ بتبويب <b>«🏠 الرئيسية»</b> للتعرف على خريطة الأبعاد، ثم انتقل إلى <b>«🎯 اسأل رصين»</b> لاختيار البنك المصرفي واستعراض خلفيته المؤسسية وممارساته في الحوكمة والاستدامة.</li>
                 <li style="margin-bottom: 8px;"><b>الخطوة الثانية (التشخيص القياسي):</b> انتقل إلى <b>«📊 المؤشر المركب (SSGI)»</b>، وحمل ملف التقييم التفصيلي (Excel) أو اضبط أشرطة القياس للمحاور الثلاثة، ثم اضغط على <i>«احسب وسجل مؤشر البنك»</i> لتسجيل البنك في ذاكرة الجلسة.</li>
                 <li style="margin-bottom: 8px;"><b>الخطوة الثالثة (الاستشراف واتخاذ القرار):</b> انتقل إلى <b>«📈 محاكي السياسات»</b> لاختبار سيناريوهات التحسين، ثم إلى <b>«🛡️ لوحة دعم اتخاذ القرار»</b> لاعتماد حزمة التوصيات التنفيذية للبنك.</li>
-                <li style="margin-bottom: 8px;"><b>الخطوة الرابعة (التدقيق وتوليد التقارير):</b> استخدم تبويب <b>«🌿 مولد تقارير الاستدامة»</b> لتدقيق تقرير الاستدامة الفعلي للبنك (PDF) أو توليد مسودة تقرير متوافقة مع (GRI/ISSB)، ثم استخرج الحصيلة الكاملة من <b>«📑 التقرير التنفيذي الموحد»</b>.</li>
-                <li><b>الخطوة الخامسة (المشاركة الميدانية):</b> شارك برأيك المهني عبر تبويب <b>«📋 استبيان فرق العمل المصرفي»</b> سواء عبر النموذج التفاعلي السحابي أو عبر استمارة KoboToolbox.</li>
+                <li style="margin-bottom: 8px;"><b>الخطوة الرابعة (التدقيق وتوليد التقارير):</b> استخدم تبويب <b>«🌿 تقارير الاستدامة»</b> لتدقيق تقرير الاستدامة الفعلي للبنك (PDF) أو توليد مسودة تقرير متوافقة مع (GRI/ISSB)، ثم استخرج الحصيلة الكاملة بصيغة Word أصلية من <b>«📑 التقرير التنفيذي»</b>.</li>
+                <li><b>الخطوة الخامسة (المشاركة الميدانية):</b> شارك برأيك المهني عبر تبويب <b>«📋 استبيان فرق العمل»</b> سواء عبر النموذج التفاعلي السحابي أو عبر استمارة KoboToolbox.</li>
             </ol>
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("4️ البنية التقنية وضوابط الخصوصية وأمن المعلومات", expanded=False):
+    with st.expander("5️⃣ الخصائص الهندسية، استمرارية الجلسة (F5 Protection)، والتفاعل الذكي", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ul style="margin: 0; padding-right: 20px;">
+                <li style="margin-bottom: 8px;"><b>الحماية الكاملة ضد التحديث العرضي (F5 / Refresh):</b> زُوِّدت المنصة بنظام مزامنة ثلاثي الطبقات يحفظ تلقائياً: (1) حالة تسجيل الدخول عبر توكن مشفر، (2) التبويب النشط حالياً دون العودة القسرية للبداية، و(3) كافة إجابات وخطوات الاستبيان الميداني في ذاكرة المتصفح (<code>localStorage</code>) ورابط الجلسة لمنع فقدان أي بيانات.</li>
+                <li style="margin-bottom: 8px;"><b>محرك المؤثرات الصوتية التفاعلية (Web Audio API):</b> يولّد تنبيهات سمعية لحظية فائقة الخفة (Zero Latency) تميّز بين التنقل بين التبويبات، النقر على الأزرار التنفيذية، واختيار بنود الاستبيان، مع إمكانية تفعيل الصوت أو كتمه بضغطة واحدة من الشريط العلوي.</li>
+                <li style="margin-bottom: 8px;"><b>تصدير مستندات Word أصلية (.docx):</b> تعتمد كافة أزرار التحميل في المنصة على محرك <code>python-docx</code> لتوليد ملفات Word حقيقية منسقة من اليمين إلى اليسار (RTL) بترويسة وتذييل رسمي بلا أي تحذيرات توافقية.</li>
                 <li style="margin-bottom: 8px;"><b>منع الهلوسة المعلوماتية (Anti-Hallucination):</b> يعتمد محرك الاستعلام على التقييد السياقي الصارم بالمصادر الرسمية والتقارير المصرفية المعتمدة، مع تدقيق آلي للتباين بين البنوك (<code>audit_differentiation</code>).</li>
-                <li style="margin-bottom: 8px;"><b>حوكمة الصلاحيات والجلسات:</b> تفصل المنصة بين واجهة المستخدم/الباحث وواجهة المشرف الإداري (Admin) المحمية بتشفير (SHA-256) لإدارة قواعد البيانات السحابية وسجلات المتابعة.</li>
-                <li><b>التوافق مع الأجهزة (Responsive RTL):</b> تم تصميم الواجهة بالكامل لدعم اللغة العربية من اليمين إلى اليسار (RTL) والتكيف التلقائي مع الحواسيب والهواتف الذكية والأجهزة اللوحية.</li>
+                <li><b>التوافق المتجاوب مع الأجهزة (Responsive RTL):</b> تم تصميم الواجهة بالكامل لدعم اللغة العربية من اليمين إلى اليسار (RTL) والتكيف التلقائي مع شاشات الحواسيب والهواتف الذكية والأجهزة اللوحية.</li>
             </ul>
         </div>
         """), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    manual_download_data = f"""
-    <html dir="rtl">
-    <head>
-        <meta charset="utf-8">
-        <title>دليل المستخدم الرسمي للمنصة الوطنية الذكية</title>
-        <style>
-            body {{ font-family: 'Cairo', Arial, sans-serif; text-align: right; direction: rtl; color: #1E293B; line-height: 1.85; }}
-            h1 {{ color: {CBE_NAVY}; text-align: center; margin-bottom: 6px; }}
-            h2, h3 {{ color: {CBE_NAVY}; border-bottom: 1.5px solid {CBE_GOLD}; padding-bottom: 6px; margin-top: 22px; }}
-            .subtitle {{ text-align: center; color: #64748B; font-size: 13.5px; margin-bottom: 20px; }}
-            .box {{ background-color: #F8FAFC; border-right: 4px solid {CBE_GOLD}; padding: 14px; border-radius: 8px; margin: 12px 0; }}
-            ul, ol {{ margin: 0; padding-right: 22px; }}
-            li {{ margin-bottom: 8px; }}
-            hr {{ border: none; border-top: 1.5px solid {CBE_GOLD}; margin: 22px 0; }}
-        </style>
-    </head>
-    <body>
-        <h1>📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية</h1>
-        <p class="subtitle">نموذج مقترح لتعزيز الحوكمة المؤسسية باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة | تاريخ التوليد: {datetime.now().strftime('%Y-%m-%d')}</p>
-        <hr>
+    manual_html_content = f"""
+        <h3>1. الإطار الأكاديمي والرؤية العلمية</h3>
+        <p>تمثل منصة (رصين) التطبيق العملي والبرمجي المقترح ضمن متطلبات نيل درجة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، إعداد الباحث/ أيمن الدسوقي (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي). وتستهدف المنصة توطين حلول الذكاء الاصطناعي لتعزيز الحوكمة المؤسسية، ودعم السيادة الرقمية، وأتمتة تقييم وتوليد تقارير الاستدامة في القطاع المصرفي المصري.</p>
+        <p>المعادلة الهيكلية لمؤشر الحوكمة الذكية المستدامة (SSGI): منصات المعلومات الذكية SIP (40%) + الحوكمة المؤسسية IG (30%) + تقارير الاستدامة SR (30%)، بإجمالي 63 متغيراً فرعياً موزعة على 15 بُعداً رئيساً.</p>
 
-        <h3>1️⃣ الإطار الأكاديمي والرؤية العلمية</h3>
-        <div class="box">
-            <p>تمثل هذه المنصة البيئة التطبيقية والبرمجية المتكاملة لرسالة دكتوراه الفلسفة في العلوم الاقتصادية والإدارية والقانونية البيئية (<b>كلية الدراسات العليا والبحوث البيئية – جامعة عين شمس</b>)، إعداد الباحث/ <b>أيمن محمد إبراهيم الدسوقي</b> (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي).</p>
-            <p><b>المعادلة الهيكلية لمؤشر الحوكمة الذكية المستدامة (SSGI):</b> منصات المعلومات الذكية SIP (40%) + الحوكمة المؤسسية IG (30%) + تقارير الاستدامة SR (30%)، بإجمالي <b>63 متغيراً فرعياً</b>.</p>
-        </div>
-
-        <h3>2️⃣ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة</h3>
+        <h3>2. خريطة النموذج البحثي المعتمد (15 بُعداً)</h3>
         <ul>
-            <li><b>🎯 اسأل رصين (Hybrid RAG Engine):</b> محرك استخلاص وتحليل معرفي مخصص لكل بنك مصري على حدة، يعتمد على تقنية الاسترجاع المعزز بالتوليد (RAG) للإجابة عن أسئلة التأسيس والملكية، الحوكمة، الاستدامة، والسيادة الرقمية مع إمكانية تصدير الردود بصيغة Word.</li>
-            <li><b>📊 المؤشر المركب (SSGI):</b> أداة تشخيص كمي تقيس جاهزية البنك عبر 63 متغيراً فرعياً (SIP 40%، IG 30%، SR 30%) مع نموذج Excel تفاعلي بالمعادلات وتحليل راداري ومقارنات مرجعية.</li>
-            <li><b>📈 محاكي السياسات (Policy Simulator):</b> أداة استشرافية لاختبار السيناريوهات الاستراتيجية (التشاؤمي، المعتدل، الطموح) وحساب صافي التغير المتوقع.</li>
-            <li><b>🛡️ لوحة دعم اتخاذ القرار:</b> تحويل نتائج التشخيص الفعلي لكل بنك إلى قرارات تنفيذية ومصفوفة تكليفات للجان مجلس الإدارة.</li>
-            <li><b>📑 التقرير التنفيذي الموحد:</b> تجميع آلي شامل لترتيب البنوك، ملامح البنك المتصدر، مخرجات المحاكاة، وتوصيات لوحة القرار.</li>
-            <li><b>🌿 تقييم ومولد تقارير الاستدامة (GRI / ISSB / CBE):</b> يشمل المدقق الآلي لتقارير الاستدامة عبر Gemini AI، ومولد المسودات التوجيهية، والدليل العملي المكون من 30 مؤشراً لـ (ESG).</li>
-            <li><b>📋 استبيان فرق العمل المصرفي (Dual-Channel):</b> أداة جمع البيانات الميدانية عبر نموذج المنصة السحابي (Supabase) واستمارة KoboToolbox الدولية.</li>
-            <li><b>📖 دليل المستخدم الرسمي:</b> التوثيق المنهجي والتشغيلي الموحد للمنصة.</li>
+            <li>المتغير المستقل — منصات المعلومات الذكية (SIP - 40%): يضم 4 أبعاد (جودة المعلومات، الامتثال التقني، التخطيط والمراقبة بعد النشر، والتكامل والخصوصية) بإجمالي 16 متغيراً فرعياً.</li>
+            <li>المتغير الوسيط — تقارير الاستدامة (SR - 30%): يضم 5 أبعاد (الاستراتيجية، الأبعاد التشغيلية، إدارة المخاطر، المقاييس والأهداف، والتنوع والشمول) بإجمالي 22 متغيراً فرعياً.</li>
+            <li>المتغير التابع — الحوكمة المؤسسية (IG - 30%): يضم 6 أبعاد (الشفافية والإفصاح، المتابعة والمساءلة، العدالة والمساواة، المشاركة، سيادة القانون، ومجلس الإدارة) بإجمالي 25 متغيراً فرعياً.</li>
         </ul>
 
-        <h3>3️⃣ مسار الاستخدام الموصى به (Workflow)</h3>
-        <ol>
-            <li><b>الاستكشاف المعرفي:</b> اختيار البنك في تبويب «اسأل رصين» لاستعراض بياناته الموثقة.</li>
-            <li><b>التشخيص القياسي:</b> حساب وتسجيل مؤشر SSGI للبنك عبر أشرطة القياس أو نموذج الـ 63 متغيراً.</li>
-            <li><b>الاستشراف واتخاذ القرار:</b> اختبار السيناريوهات في «محاكي السياسات» واعتماد التوصيات في «لوحة دعم القرار».</li>
-            <li><b>التدقيق وتوليد التقارير:</b> تدقيق ملف الاستدامة الفعلي أو توليد مسودة التقرير المخصصة واستخراج التقرير التنفيذي الموحد.</li>
-            <li><b>المشاركة الميدانية:</b> تعبئة الاستبيان الميداني المخصص لفرق العمل المصرفي.</li>
-        </ol>
-
-        <h3>4️⃣ البنية التقنية وضوابط الخصوصية وأمن المعلومات</h3>
+        <h3>3. الدليل التشغيلي المفصل لوحدات وتبويبات المنصة</h3>
         <ul>
-            <li><b>منع الهلوسة المعلوماتية:</b> التقييد السياقي بالمصادر الرسمية والتقارير المصرفية المعتمدة.</li>
-            <li><b>حوكمة الصلاحيات والجلسات:</b> فصل واجهة المستخدم عن لوحة المشرف الإداري المحمية بالتشفير.</li>
-            <li><b>التوافق مع الأجهزة:</b> واجهة عربية متجاوبة بالكامل (RTL) تدعم الحواسيب والهواتف الذكية.</li>
+            <li>الرئيسية: عرض الإطار المنهجي وخريطة الأبعاد الـ 15 وبطاقات الجولة السريعة للانتقال المباشر بين التبويبات.</li>
+            <li>اسأل رصين (Hybrid RAG Engine): محرك استخلاص وتحليل معرفي مخصص لكل بنك مصري على حدة للإجابة عن أسئلة التأسيس والملكية، الحوكمة، الاستدامة، والسيادة الرقمية مع إمكانية تصدير الردود بصيغة Word (.docx).</li>
+            <li>المؤشر المركب (SSGI): أداة تشخيص كمي تقيس جاهزية البنك عبر 63 متغيراً فرعياً مع نموذج Excel تفاعلي بالمعادلات وتحليل راداري ومقارنات مرجعية.</li>
+            <li>محاكي السياسات (Policy Simulator): أداة استشرافية لاختبار السيناريوهات الاستراتيجية (التشاؤمي، المعتدل، الطموح) وحساب صافي التغير المتوقع.</li>
+            <li>لوحة دعم اتخاذ القرار: تحويل نتائج التشخيص الفعلي لكل بنك إلى قرارات تنفيذية ومصفوفة تكليفات للجان مجلس الإدارة.</li>
+            <li>التقرير التنفيذي الموحد: تجميع آلي شامل لترتيب البنوك، ملامح البنك المتصدر، مخرجات المحاكاة، وتوصيات لوحة القرار بصيغة Word (.docx) أصلية.</li>
+            <li>تقارير الاستدامة (GRI / ISSB / CBE): يشمل المدقق الآلي لتقارير الاستدامة عبر Gemini AI، ومولد المسودات التوجيهية، والدليل العملي المكون من 30 مؤشراً لـ (ESG).</li>
+            <li>استبيان فرق العمل المصرفي (Dual-Channel): أداة جمع البيانات الميدانية عبر نموذج المنصة السحابي (Supabase) المحمي ضد التحديث العرضي واستمارة KoboToolbox الدولية.</li>
+            <li>دليل المستخدم الرسمي: التوثيق المنهجي والتشغيلي الموحد للمنصة.</li>
+            <li>لوحة تحكم المشرف (Admin Dashboard): متابعة مؤشرات المنصة، فحص تمايز إجابات الذكاء الاصطناعي بين البنوك، وإدارة وتصدير سجلات الزوار وعناوين IP.</li>
         </ul>
 
-        <hr>
-        <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية والمتابعة مع البنك المركزي المصري</p>
-        <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
-    </body>
-    </html>
+        <h3>4. مسار الاستخدام الموصى به (Workflow)</h3>
+        <p>• الخطوة الأولى (التهيئة والاستكشاف): استعراض خريطة النموذج في تبويب «الرئيسية» ثم اختيار البنك في «اسأل رصين» لاستعراض بياناته الموثقة.</p>
+        <p>• الخطوة الثانية (التشخيص القياسي): حساب وتسجيل مؤشر SSGI للبنك عبر أشرطة القياس أو نموذج الـ 63 متغيراً.</p>
+        <p>• الخطوة الثالثة (الاستشراف واتخاذ القرار): اختبار السيناريوهات في «محاكي السياسات» واعتماد التوصيات في «لوحة دعم القرار».</p>
+        <p>• الخطوة الرابعة (التدقيق وتوليد التقارير): تدقيق ملف الاستدامة الفعلي أو توليد مسودة التقرير المخصصة واستخراج التقرير التنفيذي الموحد.</p>
+        <p>• الخطوة الخامسة (المشاركة الميدانية): تعبئة الاستبيان الميداني المخصص لفرق العمل المصرفي.</p>
+
+        <h3>5. الخصائص الهندسية وأمن المعلومات</h3>
+        <ul>
+            <li>الحماية ضد التحديث العرضي (F5): حفظ تلقائي للجلسة، التبويب النشط، ومسودات الاستبيان في المتصفح ورابط الجلسة.</li>
+            <li>التفاعل الصوتي الفوري (Web Audio API): تنبيهات سمعية مميزة للتبويبات والأزرار والاستبيان مع زر كتم/تفعيل في الشريط العلوي.</li>
+            <li>منع الهلوسة المعلوماتية: التقييد السياقي بالمصادر الرسمية والتقارير المصرفية المعتمدة وفحص التمايز بين البنوك.</li>
+            <li>حوكمة الصلاحيات والتوافق المتجاوب: فصل واجهة المستخدم عن لوحة المشرف المحمية بتشفير SHA-256، مع تصميم عربي متجاوب بالكامل (RTL).</li>
+        </ul>
     """
 
+    manual_bytes, manual_ext, manual_mime = build_native_docx(
+        title="دليل المستخدم الرسمي والتوثيق المنهجي لمنصة (رصين)",
+        subtitle="نموذج مقترح لتعزيز الحوكمة المؤسسية باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة",
+        html_body=manual_html_content,
+    )
+
     st.download_button(
-        label="📥 تحميل دليل المستخدم الرسمي",
-        data=manual_download_data.encode("utf-8-sig"),
-        file_name="دليل_المستخدم_الرسمي_للمنصة_المصرفية_2026.doc",
-        mime="application/msword",
+        label=f"📥 تحميل دليل المستخدم الرسمي ({manual_ext})",
+        data=manual_bytes,
+        file_name=f"دليل_المستخدم_الرسمي_لمنصة_رصين_2026{manual_ext}",
+        mime=manual_mime,
         use_container_width=True,
         type="primary",
         key="dl_official_user_manual_btn"
     )
-
-# ------------------------------------------------------------------------------
-# التبويب التاسع: لوحة تحكم المشرف والزوار (Admin Dashboard)
-# ------------------------------------------------------------------------------
-if tab9 is not None:
-    with tab9:
-        st.markdown("""
-        <div dir="rtl" style="text-align: right; margin-bottom: 18px;">
-            <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">🔒 لوحة تحكم المشرف وسجلات الزوار وتدقيق الجودة (Admin Dashboard)</h3>
-            <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">مراقبة مؤشرات المنصة، تدقيق تمايز مخرجات محرك الذكاء الاصطناعي بين البنوك، وإدارة وتصدير سجلات دخول الزوار وعناوين IP.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        visitors_data_list = load_visitors_log_from_file()
-        df_v_raw = pd.DataFrame(visitors_data_list) if visitors_data_list else pd.DataFrame()
-        unique_ips_count = df_v_raw["عنوان IP"].nunique() if (not df_v_raw.empty and "عنوان IP" in df_v_raw.columns) else 0
-        diagnosed_banks_cnt = len([r for r in st.session_state.get("history_state", []) if isinstance(r, dict) and "مؤشر SSGI المركب" in r])
-        rag_queries_cnt = len(st.session_state.get("rag_query_history", []))
-        has_gemini_key = bool(st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY"))
-        has_supabase_url = bool("postgres" in st.secrets and "url" in st.secrets["postgres"])
-
-        st.markdown(flat_html(f"""
-        <div dir="rtl" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
-            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {CBE_NAVY}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">إجمالي جلسات الدخول</span>
-                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{len(df_v_raw)}</div>
-                <span style="font-size: 11px; color: #475569;">عناوين IP فريدة: <b>{unique_ips_count}</b></span>
-            </div>
-            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {CBE_GOLD}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">البنوك المُشخَّصة (الجلسة)</span>
-                <div style="font-size: 22px; font-weight: 900; color: {CBE_NAVY}; margin-top: 4px;">{diagnosed_banks_cnt}</div>
-                <span style="font-size: 11px; color: #475569;">استعلامات RAG: <b>{rag_queries_cnt}</b></span>
-            </div>
-            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {'#10B981' if has_gemini_key else '#EF4444'}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">حالة محرك Gemini AI</span>
-                <div style="font-size: 16px; font-weight: 800; color: {'#10B981' if has_gemini_key else '#EF4444'}; margin-top: 8px;">{'🟢 متصل ومفعّل' if has_gemini_key else '🔴 غير مفعّل'}</div>
-            </div>
-            <div style="background: #FFFFFF; padding: 14px; border-radius: 12px; border-right: 5px solid {'#10B981' if has_supabase_url else '#F59E0B'}; border: 1px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                <span style="font-size: 11.5px; color: #64748B; font-weight: 700;">سحابة الاستبيانات (Supabase)</span>
-                <div style="font-size: 16px; font-weight: 800; color: {'#10B981' if has_supabase_url else '#F59E0B'}; margin-top: 8px;">{'🟢 مهيأة للاتصال' if has_supabase_url else '🟡 وضع محلي'}</div>
-            </div>
-        </div>
-        """), unsafe_allow_html=True)
-
-        st.markdown("---")
-
-        st.markdown("""
-        <div dir="rtl" style="text-align: right; margin-bottom: 10px;">
-            <h4 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">🔍 أداة فحص تدقيق التشابه والتمايز بين البنوك (<code>audit_differentiation</code>)</h4>
-            <p style="color: #64748B; font-size: 13px;">اختبار جودة واستقلالية إجابات المحرك الذكي عبر البنوك للتأكد من عدم تكرار النصوص القالبية وتجاوز عتبة التشابه الدلالي.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        col_aud_cfg1, col_aud_cfg2 = st.columns([1, 2], gap="medium")
-        with col_aud_cfg1:
-            threshold_slider = st.slider(
-                "عتبة التشابه المسموحة (Threshold)",
-                min_value=0.50,
-                max_value=0.99,
-                value=0.90,
-                step=0.01,
-                key="admin_diff_threshold",
-                help="أي زوج من الإجابات تتجاوز نسبة التشابه بينهما هذه القيمة سيتم رصده كتنبيه."
-            )
-            available_banks_only = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
-            selected_audit_banks = st.multiselect(
-                "نطاق البنوك للفحص (اتركه فارغاً لفحص كافة البنوك)",
-                options=available_banks_only,
-                default=[],
-                key="admin_audit_banks_sel"
-            )
-
-        with col_aud_cfg2:
-            default_audit_questions = [
-                "متى تأسس البنك ومن هو مؤسسه وما هي ملكيته؟",
-                "كيف يتعامل البنك مع مخاطر المناخ والتمويل الأخضر؟",
-                "كيف يضمن البنك الحصانة السيبرانية ومنع تسريب البيانات المالية الحساسة؟"
-            ]
-            custom_q_text = st.text_area(
-                "الأسئلة المعيارية للاختبار (سؤال واحد في كل سطر):",
-                value="\n".join(default_audit_questions),
-                height=115,
-                key="admin_audit_questions_box"
-            )
-
-        col_aud_btn1, col_aud_btn2 = st.columns([2, 1])
-        with col_aud_btn1:
-            run_diff_audit_btn = st.button("🚀 تشغيل فحص تمايز الإجابات الآن", type="primary", use_container_width=True, key="run_diff_audit_btn")
-        with col_aud_btn2:
-            if st.session_state.get("last_diff_audit_report"):
-                if st.button("🗑️ مسح نتيجة الفحص", type="secondary", use_container_width=True, key="clear_diff_audit_btn"):
-                    del st.session_state["last_diff_audit_report"]
-                    st.rerun()
-
-        def _safe_run_differentiation_audit(banks_list, questions_list, thresh_val):
-            """
-            دالة غلاف ذكية تفحص توقيع الدالة الأصلية audit_differentiation وتمرر المعاملات بالصيغة الصحيحة
-            دون إثارة TypeError، مع محرك احتياطي مدمج للمقارنة النصية بين البنوك.
-            """
-            if "audit_differentiation" in globals() and callable(globals()["audit_differentiation"]):
-                fn = globals()["audit_differentiation"]
-                try:
-                    sig = inspect.signature(fn)
-                    params = list(sig.parameters.keys())
-                    if len(params) == 0:
-                        return fn()
-                    elif len(params) == 1:
-                        p0 = params[0]
-                        if "thresh" in p0 or "sim" in p0:
-                            return fn(thresh_val)
-                        return fn(banks_list)
-                    elif len(params) == 2:
-                        return fn(banks_list, questions_list)
-                    else:
-                        return fn(banks_list, questions_list, thresh_val)
-                except Exception:
-                    pass
-
-            flagged_res = []
-            rag_fn = globals().get("process_rag_gemini_query") or globals().get("generate_rag_response") or globals().get("query_bank_rag")
-            if callable(rag_fn):
-                for q in questions_list:
-                    answers_map = {}
-                    for b in banks_list:
-                        try:
-                            ans = rag_fn(b, q)
-                            answers_map[b] = str(ans or "")
-                        except Exception:
-                            answers_map[b] = ""
-                    b_keys = list(answers_map.keys())
-                    for i in range(len(b_keys)):
-                        for j in range(i + 1, len(b_keys)):
-                            b1, b2 = b_keys[i], b_keys[j]
-                            t1, t2 = answers_map[b1], answers_map[b2]
-                            if t1 and t2:
-                                ratio = SequenceMatcher(None, t1, t2).ratio()
-                                if ratio >= thresh_val:
-                                    flagged_res.append((q, b1, b2, round(ratio, 4)))
-            return flagged_res
-
-        if run_diff_audit_btn:
-            banks_to_check = selected_audit_banks if selected_audit_banks else available_banks_only
-            questions_to_check = [q.strip() for q in custom_q_text.splitlines() if q.strip()]
-
-            if len(banks_to_check) < 2:
-                st.warning("⚠️ يرجى اختيار بنكين على الأقل لإجراء المقارنة والتدقيق.")
-            elif not questions_to_check:
-                st.warning("⚠️ يرجى إدخال سؤال واحد على الأقل لتشغيل الفحص.")
-            else:
-                with st.spinner("⏳ جاري مقارنة إجابات البنوك وقياس معاملات التشابه..."):
-                    flagged_pairs = _safe_run_differentiation_audit(
-                        banks_to_check,
-                        questions_to_check,
-                        threshold_slider
-                    )
-
-                    st.session_state["last_diff_audit_report"] = {
-                        "flagged": flagged_pairs or [],
-                        "threshold": threshold_slider,
-                        "banks_count": len(banks_to_check),
-                        "questions_count": len(questions_to_check),
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }
-
-        if "last_diff_audit_report" in st.session_state:
-            rep_audit = st.session_state["last_diff_audit_report"]
-            flagged = rep_audit["flagged"]
-            st.caption(f"🕒 آخر فحص: {rep_audit['timestamp']} | شمل {rep_audit['banks_count']} بنكاً و {rep_audit['questions_count']} أسئلة عند عتبة ({rep_audit['threshold']}).")
-
-            if flagged:
-                st.warning(f"⚠️ تنبيه: تم رصد **{len(flagged)}** حالة تجاوزت عتبة التشابه `{rep_audit['threshold']}`:")
-                structured_rows = []
-                for item in flagged:
-                    if isinstance(item, dict):
-                        structured_rows.append(item)
-                    elif isinstance(item, (list, tuple)) and len(item) >= 4:
-                        structured_rows.append({
-                            "السؤال المختبر": item[0],
-                            "البنك الأول": item[1],
-                            "البنك الثاني": item[2],
-                            "نسبة التشابه": round(float(item[3]), 4) if isinstance(item[3], (int, float)) else item[3]
-                        })
-                    else:
-                        structured_rows.append({"تفاصيل الحالة المرصودة": str(item)})
-
-                df_flagged = pd.DataFrame(structured_rows)
-                st.dataframe(df_flagged, use_container_width=True)
-
-                csv_flagged = df_flagged.to_csv(index=False).encode("utf-8-sig")
-                st.download_button(
-                    label="📥 تحميل تقرير حالات التشابه المرصودة (CSV)",
-                    data=csv_flagged,
-                    file_name="تقرير_تدقيق_تمايز_إجابات_البنوك.csv",
-                    mime="text/csv",
-                    use_container_width=True,
-                    key="dl_flagged_diff_csv"
-                )
-            else:
-                st.success(f"✅ ممتاز! جميع الإجابات متمايزة ومستقلة تماماً ولم تتجاوز أي حالة عتبة التشابه ({rep_audit['threshold']}).")
-
-        st.markdown("---")
-
-        st.markdown("""
-        <div dir="rtl" style="text-align: right; margin-bottom: 10px;">
-            <h4 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 سجلات الزوار وعناوين IP (من السيرفر الدائم)</h4>
-            <p style="color: #64748B; font-size: 13px;">متابعة حركة الدخول للمنصة وتصفية السجلات حسب الدور أو عنوان IP وتصديرها بصيغة Excel أو CSV.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if not df_v_raw.empty:
-            col_f1, col_f2 = st.columns([2, 1], gap="medium")
-            with col_f1:
-                search_ip_user = st.text_input(
-                    "🔎 بحث سريع (بالاسم أو عنوان IP أو وقت الدخول):",
-                    placeholder="اكتب للبحث الفوري في السجلات...",
-                    key="admin_visitor_search"
-                )
-            with col_f2:
-                roles_avail = ["الكل"] + (list(df_v_raw["الدور"].dropna().unique()) if "الدور" in df_v_raw.columns else [])
-                role_filter = st.selectbox("تصفية حسب الدور:", roles_avail, key="admin_visitor_role_filter")
-
-            df_v_filtered = df_v_raw.copy()
-            if role_filter != "الكل" and "الدور" in df_v_filtered.columns:
-                df_v_filtered = df_v_filtered[df_v_filtered["الدور"] == role_filter]
-            if search_ip_user.strip():
-                mask = df_v_filtered.astype(str).apply(
-                    lambda col: col.str.contains(search_ip_user.strip(), case=False, na=False)
-                ).any(axis=1)
-                df_v_filtered = df_v_filtered[mask]
-
-            df_v_display = df_v_filtered.iloc[::-1].reset_index(drop=True)
-            st.dataframe(df_v_display, use_container_width=True)
-
-            col_v_dl1, col_v_dl2, col_v_clr = st.columns([1.2, 1.2, 0.8], gap="medium")
-            with col_v_dl1:
-                csv_visitors = df_v_display.to_csv(index=False).encode("utf-8-sig")
-                st.download_button(
-                    label="📥 تحميل سجل الزوار (CSV)",
-                    data=csv_visitors,
-                    file_name="سجل_الزوار_وعناوين_IP_للبنوك.csv",
-                    mime="text/csv",
-                    use_container_width=True,
-                    key="dl_visitors_csv_btn"
-                )
-            with col_v_dl2:
-                vis_excel_buf = io.BytesIO()
-                with pd.ExcelWriter(vis_excel_buf, engine="openpyxl") as writer:
-                    df_v_display.to_excel(writer, index=False, sheet_name="سجل_الزوار")
-                st.download_button(
-                    label="📥 تحميل سجل الزوار (Excel .xlsx)",
-                    data=vis_excel_buf.getvalue(),
-                    file_name="سجل_الزوار_وعناوين_IP_للبنوك.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                    key="dl_visitors_xlsx_btn"
-                )
-            with col_v_clr:
-                if st.button("🗑️ تصفير السجل", use_container_width=True, type="secondary", key="clear_visitors_log_btn"):
-                    try:
-                        df_empty = pd.DataFrame(columns=["عنوان IP", "اسم المستخدم", "الدور", "وقت الدخول"])
-                        df_empty.to_csv(LOG_FILE, index=False, encoding="utf-8-sig")
-                        st.success("✅ تم مسح سجل الزوار بنجاح.")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ تعذر مسح السجل: {e}")
-        else:
-            st.info("📂 لا توجد سجلات زيارات مسجلة حتى الآن.")
-
-st.markdown('<div class="footer-copyright">جميع الحقوق محفوظة للدراسة البحثية © 2026</div>', unsafe_allow_html=True)
