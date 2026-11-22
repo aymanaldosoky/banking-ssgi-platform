@@ -1651,7 +1651,7 @@ if not st.session_state.authenticated:
                     log_visitor_action("user", "مستخدم عادي (User)")
                     st.rerun()
                 else:
-                    st.error("⚠️ اسم المستخدم أو كلمة المرور خاطئة.")
+                    st.error("⚠️تعذر تسجيل الدخول؛ يرجى التأكد من صحة اسم المستخدم وكلمة المرور والمحاولة مجدداً.")
     st.stop()
 
 # ==============================================================================
@@ -2402,7 +2402,7 @@ with tab2:
         st.markdown('<div dir="rtl" style="text-align: right;">', unsafe_allow_html=True)
         if calc_ssgi_btn:
             if bank_ssgi_sel == "اختر البنك المصرفي":
-                st.warning("⚠️ يرجى اختيار بنك مصرفي حقيقي من القائمة لتنفيذ التشخيص القياسي.")
+                st.warning("⚠️ يرجى تحديد اسم البنك من القائمة أعلاه للبدء في احتساب المؤشر.")
             else:
                 skeleton_placeholder = st.empty()
                 skeleton_html = flat_html("""
@@ -2973,11 +2973,21 @@ with tab3:
 
             is_pessimistic = scenario_dropdown.startswith("📉")
             if is_pessimistic:
-                st.caption("ℹ️ في السيناريو التشاؤمي يتم احتساب أثر التراجع التلقائي نتيجة تجميد الاستثمارات.")
-
-            var1_sip = st.slider("1️⃣ نسبة التحفيز في منصات المعلومات والبنية التقنية (%)", 0, 50, 20, key="sim_v1", disabled=is_pessimistic)
-            var2_ig = st.slider("2️⃣ نسبة التحفيز في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2", disabled=is_pessimistic)
-            var3_sr = st.slider("3️⃣ نسبة التحفيز في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3", disabled=is_pessimistic)
+                var1_sip, var2_ig, var3_sr = 0, 0, 0
+                st.markdown("""
+                <div dir="rtl" style="background: #FEF2F2; border: 1px solid #FECACA; border-right: 4px solid #DC2626; border-radius: 8px; padding: 12px 14px; margin: 10px 0 14px 0; text-align: right;">
+                    <div style="color: #991B1B; font-weight: 800; font-size: 13.5px; margin-bottom: 6px;">📉 معاملات الانكماش الافتراضية (تجميد الاستثمارات):</div>
+                    <ul style="margin: 0; padding-right: 18px; color: #7F1D1D; font-size: 13px; line-height: 1.75;">
+                        <li><b>منصات المعلومات والبنية التقنية (SIP):</b> تراجع بنسبة <b>-10%</b></li>
+                        <li><b>كفاءة الحوكمة المؤسسية (IG):</b> تراجع بنسبة <b>-9%</b></li>
+                        <li><b>تقارير الاستدامة والتمويل الأخضر (SR):</b> تراجع بنسبة <b>-11%</b></li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                var1_sip = st.slider("1️⃣ نسبة التحفيز في منصات المعلومات والبنية التقنية (%)", 0, 50, 20, key="sim_v1")
+                var2_ig = st.slider("2️⃣ نسبة التحفيز في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2")
+                var3_sr = st.slider("3️⃣ نسبة التحفيز في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3")
 
             run_sim_btn = st.button("📈 تشغيل وتثبيت السيناريو", use_container_width=True, type="primary")
 
@@ -2992,6 +3002,8 @@ with tab3:
                     sim_body_items += f"<h3>معرف السيناريو: {k}</h3><div>{v['html']}</div><div>{v['deep']}</div><hr>"
             else:
                 sim_body_items += "<p>لا توجد سيناريوهات محاكاة مسجلة حالياً في الجلسة.</p>"
+
+            sim_body_items += "<p style='color: #475569; font-size: 12px; margin-top: 16px;'>تنويه استرشادي: تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف.</p>"
 
             sim_bytes, sim_ext, sim_mime = build_native_docx(
                 "تقرير محاكي السياسات الاستشرافي والمتابعة التراكمية",
@@ -3193,7 +3205,6 @@ with tab3:
             else:
                 st.info("📈 قم باختيار البنك والسيناريو ومتغيرات التحفيز واضغط على مفتاح الإضافة لتثبيت ومتابعة السيناريوهات.")
             st.markdown('</div>', unsafe_allow_html=True)
-
 # ==============================================================================
 # التبويب الرابع: لوحة دعم اتخاذ القرار (Decision Support Dashboard) - مطور ومحدث بالكامل
 # ==============================================================================
@@ -3318,7 +3329,7 @@ with tab4:
             generate_decision_btn = st.button("🛡️ استعراض حزمة القرارات التنفيذية", use_container_width=True, type="primary")
 
             generate_all_decisions_btn = st.button(
-                "⚡ استعراض توصيات كافة البنوك المسجلة",
+                "⚡ استعراض قرارات كافة البنوك المسجلة",
                 use_container_width=True,
                 type="secondary"
             )
@@ -3605,7 +3616,7 @@ with tab5:
                 <h3>📈 ملخص النتائج التحليلية التراكمية والمعمقة لكافة أقسام المنصة:</h3>
                 {word_blocks_html}
                 <hr>
-                <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
+                <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">تنويه استرشادي: تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف</p>
                 <p style="text-align: center; font-size: 12px; color: #64748B;">جميع الحقوق محفوظة للدراسة البحثية © 2026</p>
             </body>
             </html>
@@ -4105,7 +4116,7 @@ with tab6:
                         <li><b>تعزيز الشفافية والتوكيد الخارجي:</b> إخضاع تقارير الاستدامة لعمليات تدقيق وتوكيد خارجي مستقل لزيادة ثقة المستثمرين والمؤسسات المالية الدولية.</li>
                     </ul>
                     <hr>
-                    <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
+                    <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">تنويه استرشادي: تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف</p>
                 </body>
                 </html>
                 """
@@ -4202,7 +4213,7 @@ with tab6:
                 <ul style="margin-bottom: 0;">
                     <li><b>المؤشر (21):</b> التنوع الهيكلي والمهني في تشكيل مجلس الإدارة (Board Diversity & Expertise).</li>
                     <li><b>المؤشر (22):</b> نسبة الأعضاء المستقلين غير التنفيذيين في مجلس الإدارة ولجان المراجعة والترشيحات (Independent Board Members Ratio).</li>
-                    <li><b>المؤشر (23):</b> وجود حوافز ومكافئات مرتبطة بتحقيق مستهدفات الاستدامة وخفض الانبعاثات للقيادات التنفيذية (Sustainability-linked Executive Compensation).</li>
+                    <li><b>المؤشر (23):</b> وجود حوافز ومكافآت مرتبطة بتحقيق مستهدفات الاستدامة وخفض الانبعاثات للقيادات التنفيذية (Sustainability-linked Executive Compensation).</li>
                     <li><b>المؤشر (24):</b> مدونة قواعد سلوك الموردين والشركاء التجاريين ومعايير تقييمهم بيئياً ومجتمعياً (Supplier Code of Conduct).</li>
                     <li><b>المؤشر (25):</b> فاعلية سياسات وإجراءات مكافحة الفساد، الرشوة، وغسل الأموال (Anti-Corruption & Anti-Bribery Policies).</li>
                     <li><b>المؤشر (26):</b> سياسات حماية سرية البيانات الشخصية للعملاء والسيادة الرقمية (GDPR & Data Privacy Compliance).</li>
@@ -4225,7 +4236,7 @@ with tab6:
         <body style="font-family: 'Cairo', Arial, sans-serif; text-align: right;">
             {comprehensive_guide_html}
             <hr>
-            <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">يُنصح بالمراجعة الدقيقة للقرارات الاستراتيجية</p>
+            <p style="text-align: center; font-weight: bold; color: {CBE_GOLD}; margin-top: 20px;">تنويه استرشادي: تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف</p>
         </body>
         </html>
         """
@@ -4541,7 +4552,7 @@ with tab7:
             </div>
             <p><b>السادة الأفاضل/ .................................................................</b></p>
             <p><b>السلام عليكم ورحمة الله وبركاته،،،</b></p>
-            <p>في إطار متطلبات الحصول على درجة دكتوراة فلسفة العلوم الاقتصادية والإدارية والقانونية يقوم الباحث بإعداد دراسة تطبيقية بعنوان:</p>
+            <p>في إطار متطلبات الحصول على درجة دكتوراة الفلسفة في العلوم الاقتصادية والإدارية والقانونية يقوم الباحث بإعداد دراسة تطبيقية بعنوان:</p>
             <div style="background: {CBE_BG}; padding: 12px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; text-align: center; font-weight: bold; color: {CBE_NAVY}; margin: 10px 0;">
                 نموذج مقترح لتعزيز الحوكمة المؤسسية باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة
             </div>
