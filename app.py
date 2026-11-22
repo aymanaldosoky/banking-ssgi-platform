@@ -3315,10 +3315,10 @@ with tab4:
                 </div>
                 """), unsafe_allow_html=True)
 
-            generate_decision_btn = st.button("📋 اعتماد وتثبيت توصيات البنك المختار", use_container_width=True, type="primary")
+            generate_decision_btn = st.button("📋 استعراض توصيات البنك المختار", use_container_width=True, type="primary")
 
             generate_all_decisions_btn = st.button(
-                "⚡ اعتماد توصيات كافة البنوك المسجلة",
+                "⚡ استعراض توصيات كافة البنوك المسجلة",
                 use_container_width=True,
                 type="secondary"
             )
