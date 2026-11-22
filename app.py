@@ -1721,9 +1721,9 @@ with col_h1:
     st.markdown(f"""
     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;" dir="rtl">
         <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;">
-            👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة فعالة الآن</span>
+            👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة تعمل الآن</span>
         </div>
-        <span class="sound-toggle-pill" data-raseen-sound-toggle="1" role="button" tabindex="0" title="تفعيل أو كتم المؤثرات الصوتية عند النقر">🔊 الصوت: مفعّل</span>
+        <span class="sound-toggle-pill" data-raseen-sound-toggle="1" role="button" tabindex="0" title="تفعيل أو كتم المؤثرات الصوتية عند النقر">🔊 الصوت: مفعل</span>
     </div>
     """, unsafe_allow_html=True)
 with col_h2:
@@ -1799,10 +1799,10 @@ with tab_home:
             🏛️ مرحباً بكم في مقترح المنصة الوطنية الذكية لتعزيز حوكمة القطاع المصرفي المصري (رصين)
         </h2>
         <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
-            تمثل هذه المنصة التطبيق العملي المقترح ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
+            تمثل هذه المنصة التطبيق العملي ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
         </p>
         <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
-            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح ساكنة إلى <b>منظومة ذكاء اصطناعي تفاعلية (RAG)</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
+            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بدون معلومات مغلوطة/ مضللة </b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1874,16 +1874,16 @@ with tab_home:
 
     st.markdown(f"""
     <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
-        🔄 مسار التأثير المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+        🔄 مسار المنهجيال:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 4px 0;">
-        🗺️ جولة سريعة في مكونات وأدوات المنصة (انقر للانتقال المباشر)
+        🗺️ جولة سريعة في مكونات وأدوات المنصة
     </h3>
     <p style="color: #64748B; font-size: 13px; margin-bottom: 14px;">
-        اختر أي وحدة من وحدات المنصة أدناه للانتقال الفوري إليها وبدء التفاعل معها:
+        اختر أي وحدة من وحدات المنصة أدناه للانتقال الفوري إليها:
     </p>
     """, unsafe_allow_html=True)
 
@@ -1900,14 +1900,14 @@ with tab_home:
         <div class="tour-nav-btn" data-tab-target="2" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📊 المؤشر المركب (SSGI)</div>
-                <div class="tour-nav-desc">قياس كمي ومقارن لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة المستدامة.</div>
+                <div class="tour-nav-desc">قياس كمي وتشخيصي لأداء البنوك عبر المحاور الثلاثة وحساب الدرجة المركبة للحوكمة الذكية المستدامة.</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
         <div class="tour-nav-btn" data-tab-target="3" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📈 محاكي السياسات الاستشرافي</div>
-                <div class="tour-nav-desc">اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام نماذج الانحدار.</div>
+                <div class="tour-nav-desc">اختبار سيناريوهات التحسين وتقدير الأثر المتوقع على الحوكمة المؤسسية باستخدام السيناريوهات.</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
@@ -1925,7 +1925,7 @@ with tab_home:
         <div class="tour-nav-btn" data-tab-target="5" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📑 التقرير التنفيذي</div>
-                <div class="tour-nav-desc">إعداد وتصدير تقارير تقييمية رسمية بصيغة Word (.docx) جاهزة للعرض على مجالس الإدارات.</div>
+                <div class="tour-nav-desc">إعداد وتصدير تقارير رسمية جاهزة للعرض على مجالس الإدارات.</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
@@ -1939,14 +1939,14 @@ with tab_home:
         <div class="tour-nav-btn" data-tab-target="7" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📋 استبيان فرق العمل</div>
-                <div class="tour-nav-desc">أداة التقييم الميداني الموجهة لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</div>
+                <div class="tour-nav-desc">أداة التقييم الميداني الموجه لقيادات وفرق العمل بالبنوك المصرية لقياس أبعاد النموذج البحثي.</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
         <div class="tour-nav-btn" data-tab-target="8" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📖 دليل المستخدم</div>
-                <div class="tour-nav-desc">التوثيق المنهجي الكامل وشرح آليات التشغيل والمنهجية الإحصائية للمنصة.</div>
+                <div class="tour-nav-desc">التوثيق المنهجي  للمنصة الوطنية الذكية (رصين) وشرح آليات التشغيل .</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
