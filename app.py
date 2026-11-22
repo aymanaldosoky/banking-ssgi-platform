@@ -1809,7 +1809,7 @@ with tab_home:
 
     st.markdown(f"""
     <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 14px 0;">
-        🧭 خريطة النموذج البحثي المعتمد للمنصة (المتغيرات والأبعاد الـ 15)
+        🧭 خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد)
     </h3>
     """, unsafe_allow_html=True)
 
@@ -1874,7 +1874,7 @@ with tab_home:
 
     st.markdown(f"""
     <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
-        🔄 مسار المنهجيال:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+        🔄 المسار المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
     </div>
     """, unsafe_allow_html=True)
 
