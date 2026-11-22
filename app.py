@@ -1802,7 +1802,7 @@ with tab_home:
             تمثل هذه المنصة التطبيق العملي ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
         </p>
         <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
-            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بدون معلومات مغلوطة/ مضللة </b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
+            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بمعلومات ذكية موثوقة غير مضللة </b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -4894,7 +4894,7 @@ with tab7:
         elif step_key == "profile":
             with st.container(border=True):
                 st.markdown(f"<div dir='rtl'><h4 style='color:{CBE_NAVY};font-weight:800;'>👤 أولاً: البيانات الديموغرافية والوظيفية للمشارك</h4>"
-                            f"<p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول إلزامية (عدا خانة الاسم فهي اختيارية)، وتُستخدم لأغراض التوصيف الإحصائي للعينة فقط.</p></div>",
+                            f"<p style='color:#EF4444;font-size:13px;font-weight:700;'>⚠️ جميع الحقول إلزامية (عدا خانة الاسم فهي اختيارية).</p></div>",
                             unsafe_allow_html=True)
                 c1, c2 = st.columns(2, gap="medium")
                 for i, (skey, label, opts) in enumerate(PROFILE_FIELDS):
@@ -5151,7 +5151,7 @@ with tab7:
 with tab8:
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 18px;">
-        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">📖 دليل المستخدم الرسمي والتوثيق المنهجي لمنصة (رصين)</h3>
+        <h3 style="color: #002B49; font-weight: 800; font-size: clamp(16px, 4vw, 20px); margin-bottom: 4px;">📖 دليل المستخدم والتوثيق المنهجي لمنصة (رصين)</h3>
         <p style="color: #475569; font-size: clamp(13px, 3.2vw, 14px);">المرجع التشغيلي والأكاديمي المعتمد للمحكمين، أعضاء لجنة المناقشة، الباحثين، والقيادات المصرفية لاستخدام كافة وحدات المنصة بكفاءة تامة.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -5159,7 +5159,7 @@ with tab8:
     st.markdown(flat_html(f"""
     <div style="background: #FFFFFF; padding: clamp(18px, 3.5vw, 30px); border-radius: 14px; border: 1.5px solid {CBE_GOLD}; line-height: 1.95; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 18px;" dir="rtl">
         <div style="text-align: center; border-bottom: 2px solid {CBE_GOLD}; padding-bottom: 12px; margin-bottom: 16px;">
-            <h2 style="color: {CBE_NAVY}; margin: 0; font-size: clamp(17px, 4vw, 21px); font-weight: 800;">📖 دليل المستخدم الرسمي والتوثيق المنهجي للمنصة الوطنية الذكية (رصين)</h2>
+            <h2 style="color: {CBE_NAVY}; margin: 0; font-size: clamp(17px, 4vw, 21px); font-weight: 800;">📖 دليل المستخدم والتوثيق المنهجي للمنصة الوطنية الذكية (رصين)</h2>
             <p style="color: #64748B; font-size: 13.5px; margin: 6px 0 0 0;">نموذج مقترح لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة</p>
         </div>
         <p style="color: #1E293B; font-size: 14px; margin-bottom: 10px;">
