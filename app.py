@@ -2610,7 +2610,7 @@ with tab2:
             )
             st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
             st.download_button(
-                label=f"📄 تحميل بطاقة التشخيص القياسي لبنك ({d_bank}) (Word)",
+                label=f"📄 تحميل بطاقة التشخيص القياسي لبنك ({d_bank}) ",
                 data=diag_bytes,
                 file_name=f"التشخيص_القياسي_SSGI_{d_bank}{diag_ext}",
                 mime=diag_mime,
