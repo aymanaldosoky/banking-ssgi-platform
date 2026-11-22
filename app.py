@@ -3315,7 +3315,7 @@ with tab4:
                 </div>
                 """), unsafe_allow_html=True)
 
-            generate_decision_btn = st.button(" استعراض 🛡️ توليد حزمة القرارات التنفيذية", use_container_width=True, type="primary")
+            generate_decision_btn = st.button("🛡️ استعراض حزمة القرارات التنفيذية", use_container_width=True, type="primary")
 
             generate_all_decisions_btn = st.button(
                 "⚡ استعراض توصيات كافة البنوك المسجلة",
