@@ -5277,7 +5277,7 @@ with tab8:
     )
 
     st.download_button(
-        label=f"📥 تحميل دليل المستخدم الرسمي ({manual_ext})",
+        label=f"📥 تحميل دليل المستخدم الرسمي",
         data=manual_bytes,
         file_name=f"دليل_المستخدم_الرسمي_منصة_رصين_2026{manual_ext}",
         mime=manual_mime,
