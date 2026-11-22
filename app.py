@@ -2395,7 +2395,7 @@ with tab2:
         </div>
         """), unsafe_allow_html=True)
 
-        calc_ssgi_btn = st.button("🚀 احسب وسجل مؤشر البنك", use_container_width=True, type="primary")
+        calc_ssgi_btn = st.button("📊 احتساب وتسجيل مؤشر (SSGI)", use_container_width=True, type="primary")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_result:
@@ -2979,7 +2979,7 @@ with tab3:
             var2_ig = st.slider("2️⃣ نسبة التحفيز في كفاءة الحوكمة المؤسسية (%)", 0, 50, 15, key="sim_v2", disabled=is_pessimistic)
             var3_sr = st.slider("3️⃣ نسبة التحفيز في تقارير الاستدامة والتمويل الأخضر (%)", 0, 50, 15, key="sim_v3", disabled=is_pessimistic)
 
-            run_sim_btn = st.button("📋 إضافة وتثبيت السيناريو الاستراتيجي", use_container_width=True, type="primary")
+            run_sim_btn = st.button("📈 تشغيل وتثبيت السيناريو", use_container_width=True, type="primary")
 
             if st.button("🗑️ مسح كافة السيناريوهات", use_container_width=True, type="secondary"):
                 st.session_state.simulated_results_dict = {}
@@ -3315,7 +3315,7 @@ with tab4:
                 </div>
                 """), unsafe_allow_html=True)
 
-            generate_decision_btn = st.button("📋 استعراض توصيات البنك المختار", use_container_width=True, type="primary")
+            generate_decision_btn = st.button(" استعراض 🛡️ توليد حزمة القرارات التنفيذية", use_container_width=True, type="primary")
 
             generate_all_decisions_btn = st.button(
                 "⚡ استعراض توصيات كافة البنوك المسجلة",
