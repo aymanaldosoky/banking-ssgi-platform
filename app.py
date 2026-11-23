@@ -28,13 +28,21 @@ except ImportError:
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
 from bank_rag_engine import (
-    BANKS_LIST_AR,
+    BANKS_LIST_AR as _RAW_BANKS_LIST_AR,
     process_rag_gemini_query,
     stream_rag_gemini_query,
     audit_differentiation,
     load_survey_log_from_file,
     render_tab_7_survey,
 )
+
+# إضافة البنك المركزي المصري إلى قائمة البنوك مع الحفاظ على ترتيب باقي العناصر
+BANKS_LIST_AR = list(_RAW_BANKS_LIST_AR)
+if "البنك المركزي المصري" not in BANKS_LIST_AR:
+    if BANKS_LIST_AR and BANKS_LIST_AR[0] == "اختر البنك المصرفي":
+        BANKS_LIST_AR.insert(1, "البنك المركزي المصري")
+    else:
+        BANKS_LIST_AR.insert(0, "البنك المركزي المصري")
 
 # ==============================================================================
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL + Responsive)
@@ -2316,8 +2324,6 @@ def generate_ssgi_evaluation_excel():
         ss.set_column('E:F', 26)
 
     return output.getvalue()
-
-
 # ==============================================================================
 # التبويب الثاني: المؤشر المركب (SSGI) - مطور ومحدث بالكامل
 # ==============================================================================
