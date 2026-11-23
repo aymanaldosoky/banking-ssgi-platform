@@ -27,7 +27,6 @@ except ImportError:
     HAS_PYTHON_DOCX = False
 
 # استيراد محرك الإجابات المستقل المطور وتوابعه البرمجية
-import bank_rag_engine as _bank_rag_engine
 from bank_rag_engine import (
     BANKS_LIST_AR as _RAW_BANKS_LIST_AR,
     process_rag_gemini_query,
@@ -47,15 +46,14 @@ _PRIORITY_BANKS = [
     "بنك فيصل الإسلامي",
 ]
 
-_raw_list = [str(b).strip() for b in _RAW_BANKS_LIST_AR if str(b).strip()]
-_has_placeholder = bool(_raw_list and "اختر" in _raw_list[0])
-_placeholder_label = _raw_list[0] if _has_placeholder else "اختر البنك المصرفي"
-_base_banks = _raw_list[1:] if _has_placeholder else _raw_list
+_raw_list = list(_RAW_BANKS_LIST_AR)
+_has_placeholder = bool(_raw_list and _raw_list[0] == "اختر البنك المصرفي")
+_base_banks = [b for b in _raw_list if b != "اختر البنك المصرفي"]
 
 _ordered_banks = []
 for _p_bank in _PRIORITY_BANKS:
     _matched = next(
-        (b for b in _base_banks if b == _p_bank or _p_bank in b),
+        (b for b in _base_banks if b == _p_bank or b.startswith(_p_bank)),
         _p_bank
     )
     if _matched not in _ordered_banks:
@@ -65,9 +63,7 @@ for _b in _base_banks:
     if _b not in _ordered_banks:
         _ordered_banks.append(_b)
 
-BANKS_LIST_AR = [_placeholder_label] + _ordered_banks
-# تحديث القائمة داخل وحدة المحرك نفسها لضمان ظهور البنك المركزي المصري في كل التبويبات والاستبيان
-_bank_rag_engine.BANKS_LIST_AR = BANKS_LIST_AR
+BANKS_LIST_AR = (["اختر البنك المصرفي"] + _ordered_banks) if _has_placeholder else _ordered_banks
 
 # ==============================================================================
 # إعدادات صفحة Streamlit وتطبيق الهوية البصرية المصرفية (RTL + Responsive)
@@ -85,7 +81,7 @@ CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
 CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والضغط والتبويب النشط)
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
-RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
+RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
 UI_CSS_VERSION = "tabs-v17"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
 
 # أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
@@ -393,14 +389,15 @@ SOUND_ENGINE_JS = """
       var now = ctx.currentTime;
 
       if (kind === 'tab') {
+        // نغمة جرس كريستالي خفيف ("تن" ناعمة ومميزة للتبويبات وبطاقات التنقل)
         var osc1 = ctx.createOscillator();
         var osc2 = ctx.createOscillator();
         var gain = ctx.createGain();
 
         osc1.type = 'sine';
         osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(880, now);
-        osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.09);
+        osc1.frequency.setValueAtTime(880, now);          // A5 نغمة صافية
+        osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.09); // D6 لمسة رنين خفيفة
         osc2.frequency.setValueAtTime(1760, now);
 
         gain.gain.setValueAtTime(0.0001, now);
@@ -417,6 +414,7 @@ SOUND_ENGINE_JS = """
         osc2.stop(now + 0.25);
 
       } else if (kind === 'radio') {
+        // نغمة اختيار خفيفة جداً ("Pop" ناعمة لخيارات الاستبيان والقوائم)
         var oscR = ctx.createOscillator();
         var gainR = ctx.createGain();
         oscR.type = 'sine';
@@ -433,6 +431,7 @@ SOUND_ENGINE_JS = """
         oscR.stop(now + 0.08);
 
       } else {
+        // نقرة لمسية رقيقة ("تك" احترافية لجميع الأزرار والمفاتيح)
         var oscB = ctx.createOscillator();
         var gainB = ctx.createGain();
         oscB.type = 'triangle';
@@ -468,6 +467,7 @@ SOUND_ENGINE_JS = """
       var target = e.target;
       if (!target || !target.closest) return;
 
+      // زر كتم/تفعيل المؤثرات الصوتية
       var soundToggle = target.closest('[data-raseen-sound-toggle]');
       if (soundToggle) {
         var nextState = !isSoundEnabled();
@@ -478,16 +478,19 @@ SOUND_ENGINE_JS = """
         return;
       }
 
+      // 1) التبويبات الرئيسية أو بطاقات الجولة السريعة في الرئيسية
       if (target.closest('[role="tab"], [data-tab-target]')) {
         playUiTone('tab');
         return;
       }
 
+      // 2) كافة الأزرار ومفاتيح التنقل والتحميل والإرسال
       if (target.closest('button, a[kind], [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"], [data-testid="stFormSubmitButton"] button')) {
         playUiTone('button');
         return;
       }
 
+      // 3) خيارات الراديو، مربعات الاختيار، والقوائم المنسدلة
       if (target.closest('div[role="radiogroup"] label, [data-baseweb="checkbox"], [data-baseweb="select"], summary')) {
         playUiTone('radio');
         return;
@@ -598,6 +601,7 @@ TABS_GUARD_JS = """
       }
     });
 
+    /* ربط بطاقات التنقل السريع في الصفحة الرئيسية بالتبويبات المقابلة */
     document.querySelectorAll('[data-tab-target]').forEach(function (card) {
       if (!card.__ssgiNav) {
         card.__ssgiNav = 1;
@@ -709,6 +713,7 @@ def restore_survey_from_url_or_browser():
     if "survey_wizard_step" not in st.session_state:
         st.session_state.survey_wizard_step = 1
 
+    # 1) الاستعادة الفورية من Query Params إذا كانت المسودة موجودة في الرابط
     encoded_draft = st.query_params.get("sdraft", "")
     if encoded_draft and not st.session_state.survey_store:
         try:
@@ -723,6 +728,7 @@ def restore_survey_from_url_or_browser():
         except Exception:
             pass
 
+    # 2) جسر JavaScript لاستعادة المسودة من localStorage إلى الرابط إذا فُقدت جلسة الخادم بعد F5
     has_data = bool(st.session_state.survey_store)
     components.html(
         f"""
@@ -833,6 +839,7 @@ header {{
     padding: 0 !important;
 }}
 
+/* إخفاء إطارات السكربت المخفية دون إيقاف تنفيذ JavaScript في Safari وباقي المتصفحات */
 iframe[height="0"] {{
     position: absolute !important;
     width: 0 !important;
@@ -868,6 +875,7 @@ html, body, [class*="css"] {{
     overflow-x: hidden !important;
 }}
 
+/* إلغاء المسافة الفارغة الكبيرة أعلى الصفحة وضبط العرض الكامل */
 [data-testid="stAppViewContainer"],
 section[data-testid="stMain"],
 .main {{
@@ -887,6 +895,7 @@ section[data-testid="stMain"],
     margin-top: 0 !important;
 }}
 
+/* تصميم زر التحكم بالصوت في الشريط العلوي */
 .sound-toggle-pill {{
     display: inline-flex;
     align-items: center;
@@ -910,6 +919,7 @@ section[data-testid="stMain"],
     transform: translateY(-1px);
 }}
 
+/* تصميم Skeleton Loader ذكي ومخصص */
 @keyframes skeleton-shimmer {{
     0% {{ background-position: -200px 0; }}
     100% {{ background-position: 200px 0; }}
@@ -939,6 +949,7 @@ section[data-testid="stMain"],
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
+/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -966,6 +977,7 @@ div[role="option"] {{
     outline: none !important;
 }}
 
+/* تنسيق حاوية إجابات RAG لضمان سلامة الفقرات والقوائم */
 .rag-response-box {{
     background: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
@@ -988,6 +1000,7 @@ div[role="option"] {{
     margin-bottom: 6px !important;
 }}
 
+/* تصميم بطاقات الصفحة الرئيسية والنموذج البحثي */
 .home-hero-card {{
     background: #FFFFFF;
     border: 1.5px solid {CBE_GOLD};
@@ -1042,6 +1055,7 @@ div[role="option"] {{
     border-color: #14B8A6;
 }}
 
+/* مفاتيح الجولة السريعة التفاعلية (تعمل كأزرار انتقال مباشر للتبويبات) */
 .tour-nav-btn {{
     display: flex;
     align-items: center;
@@ -1111,6 +1125,7 @@ div[role="option"] {{
     color: {CBE_NAVY};
 }}
 
+/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -1159,6 +1174,7 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
+/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -1439,6 +1455,7 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
         doc = Document()
         section = doc.sections[0]
 
+        # الترويسة والتذييل الرسمي
         header = section.header
         hp = header.paragraphs[0]
         hp.text = "المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة (SSGI)"
@@ -1455,6 +1472,7 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
             fp.runs[0].font.size = Pt(9)
             fp.runs[0].font.color.rgb = RGBColor(0x64, 0x74, 0x8B)
 
+        # العنوان الرئيسي والعنوان الفرعي
         h_main = doc.add_heading(clean_text(title), level=0)
         h_main.alignment = WD_ALIGN_PARAGRAPH.CENTER
         if h_main.runs:
@@ -1467,6 +1485,7 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
                 p_sub.runs[0].font.size = Pt(11)
                 p_sub.runs[0].font.color.rgb = RGBColor(0xC5, 0xA0, 0x59)
 
+        # تحليل وسوم HTML الأساسية وتحويلها إلى فقرات وعناوين وقوائم منظمة
         normalized = re.sub(r"<(br|hr)\s*/?>", "\n", html_body, flags=re.IGNORECASE)
         normalized = re.sub(r"</(p|div|h[1-6]|li|tr)>", "\n", normalized, flags=re.IGNORECASE)
         normalized = re.sub(r"<li[^>]*>", "• ", normalized, flags=re.IGNORECASE)
@@ -1600,6 +1619,7 @@ ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
 ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 USER_PASS_HASH = st.secrets.get("user_credentials", {}).get("password_hash", hash_password("123"))
 
+# توكنات مشفرة مشتقة من كلمات المرور لربط الجلسة بالمتصفح بأمان عند الضغط على F5
 ADMIN_SESSION_TOKEN = hashlib.sha256(f"raseen_admin_{ADMIN_PASS_HASH}".encode()).hexdigest()[:24]
 USER_SESSION_TOKEN = hashlib.sha256(f"raseen_user_{USER_PASS_HASH}".encode()).hexdigest()[:24]
 
@@ -1612,6 +1632,7 @@ if "role" not in st.session_state:
 if "survey_submitted_by_user" not in st.session_state:
     st.session_state.survey_submitted_by_user = False
 
+# استعادة الجلسة تلقائياً من Query Params في حال الضغط على F5 أو تحديث المتصفح
 if not st.session_state.authenticated:
     url_token = st.query_params.get("auth", "")
     if url_token == ADMIN_SESSION_TOKEN:
@@ -1718,6 +1739,7 @@ if "draft_generated_state" not in st.session_state:
 if "draft_bank_name" not in st.session_state:
     st.session_state.draft_bank_name = ""
 
+# استعادة بيانات الاستبيان ومرحلته تلقائياً قبل بناء التبويبات لحمايتها من F5 / Refresh
 restore_survey_from_url_or_browser()
 
 # ==============================================================================
@@ -1793,10 +1815,11 @@ else:
     ])
     tab9 = None
 
+# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل + استعادة وتثبيت التبويب النشط
 inject_tabs_css()
 
 # ==============================================================================
-# التبويب التمهيدي: الرئيسية والإطار المنهجي
+# التبويب التمهيدي: الرئيسية والإطار المنهجي (تهيئة الزائر والمحكم فور الدخول)
 # ==============================================================================
 with tab_home:
     st.markdown(f"""
@@ -1957,7 +1980,6 @@ with tab_home:
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
         """, unsafe_allow_html=True)
-
 # ------------------------------------------------------------------------------
 # التبويب الأول: اسأل رصين (مربوط مباشرة بمحرك Gemini Hybrid RAG)
 # ------------------------------------------------------------------------------
@@ -2195,7 +2217,7 @@ def get_ssgi_variables_df():
         ("ثانياً: الحوكمة المؤسسية (IG)", "6. مجلس الإدارة", "6/6 عدد حالات تعارض المصالح المرصودة والمفصح عنها (مؤشر عكسي)"),
 
         ("ثالثاً: تقارير الاستدامة (SR)", "1. الاستراتيجية", "1/1 عدد أهداف التنمية المستدامة المتبناة رسمياً في الاستراتيجية"),
-        ("ثالثاً: تقارير الاستدامة (SR)", "1. الاستراتيجية", "1/2 نسبة الأهداف المحققة من إجمالي الأهداف المخططة"),
+        ("ثانياً: تقارير الاستدامة (SR)", "1. الاستراتيجية", "1/2 نسبة الأهداف المحققة من إجمالي الأهداف المخططة"),
         ("ثالثاً: تقارير الاستدامة (SR)", "1. الاستراتيجية", "1/3 نسبة ميزانية (R&D) والتحول الأخضر إلى إجمالي الميزانية"),
         ("ثالثاً: تقارير الاستدامة (SR)", "1. الاستراتيجية", "1/4 حجم الاستثمار في البنية التحتية المستدامة"),
         ("ثالثاً: تقارير الاستدامة (SR)", "2. التنوع والشمول", "2/1 نسبة تمثيل المرأة في مجلس الإدارة"),
