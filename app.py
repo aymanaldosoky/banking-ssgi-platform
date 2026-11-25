@@ -127,7 +127,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v18"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
+UI_CSS_VERSION = "tabs-v19"   # إصدار محدث لإبطال الكاش فوراً + تحسين وضوح وحجم الخطوط
 
 APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
@@ -218,18 +218,18 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         width: 100% !important;
         max-width: none !important;
         height: auto !important;
-        min-height: 46px !important;
+        min-height: 50px !important;
         margin: 0 !important;
-        padding: 7px 5px !important;
+        padding: 8px 6px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
         border-radius: 8px !important;
         font-family: {APP_FONT} !important;
-        font-weight: 600 !important;
-        font-size: 12px !important;
-        line-height: 1.35 !important;
+        font-weight: 700 !important;
+        font-size: 13.5px !important;
+        line-height: 1.4 !important;
         text-align: center !important;
         white-space: normal !important;
         outline: none !important;
@@ -287,9 +287,9 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         width: auto !important;
         max-width: none !important;
         height: auto !important;
-        min-height: 42px !important;
+        min-height: 46px !important;
         margin: 0 !important;
-        padding: 8px 14px !important;
+        padding: 9px 16px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -297,8 +297,8 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         border-radius: 8px !important;
         font-family: {APP_FONT} !important;
         font-weight: 700 !important;
-        font-size: 13px !important;
-        line-height: 1.4 !important;
+        font-size: 14.5px !important;
+        line-height: 1.45 !important;
         text-align: center !important;
         white-space: nowrap !important;
         outline: none !important;
@@ -834,6 +834,7 @@ CUSTOM_CSS = f"""
 html, body, * {{
     font-feature-settings: "liga" 1, "calt" 1 !important;
     text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
 }}
 
 @font-face {{
@@ -876,6 +877,7 @@ iframe[height="0"] {{
 
 html, body, [class*="css"] {{
     font-family: {APP_FONT} !important;
+    font-size: 16px !important;
     direction: rtl !important;
     text-align: right !important;
     background-color: {CBE_BG} !important;
@@ -888,6 +890,15 @@ html, body, [class*="css"] {{
 .stApp h4, .stApp h5, .stApp h6, .stApp input, .stApp textarea, .stApp select,
 .stApp button, .stApp a, .stApp div[data-baseweb] {{
     font-family: {APP_FONT} !important;
+}}
+
+.stApp p, .stApp li, .stApp label {{
+    font-size: 15.5px !important;
+    line-height: 1.75 !important;
+}}
+
+.stApp input, .stApp textarea, .stApp select, .stApp div[data-baseweb="select"] {{
+    font-size: 15.5px !important;
 }}
 
 .stApp {{
@@ -925,8 +936,8 @@ section[data-testid="stMain"],
     color: {CBE_NAVY};
     border: 1.5px solid {CBE_GOLD};
     border-radius: 50px;
-    padding: 5px 14px;
-    font-size: 12.5px;
+    padding: 6px 16px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     user-select: none;
@@ -994,28 +1005,30 @@ div[role="option"] {{
     text-align: right !important;
     border: none !important;
     outline: none !important;
+    font-size: 15px !important;
 }}
 
 .rag-response-box {{
     background: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
     border-radius: 12px !important;
-    padding: 20px !important;
-    line-height: 1.9 !important;
-    font-size: 14.5px !important;
-    color: #1E293B !important;
+    padding: 22px !important;
+    line-height: 1.95 !important;
+    font-size: 16px !important;
+    color: #0F172A !important;
     box-shadow: 0 4px 15px rgba(0, 43, 73, 0.06) !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
 }}
 
 .rag-response-box ul {{
-    padding-right: 22px !important;
-    margin: 8px 0 !important;
+    padding-right: 24px !important;
+    margin: 10px 0 !important;
 }}
 
 .rag-response-box li {{
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
+    font-size: 16px !important;
 }}
 
 .home-hero-card {{
@@ -1023,8 +1036,8 @@ div[role="option"] {{
     border: 1.5px solid {CBE_GOLD};
     border-right: 6px solid {CBE_NAVY};
     border-radius: 14px;
-    padding: clamp(16px, 3vw, 24px);
-    margin-bottom: 20px;
+    padding: clamp(18px, 3vw, 26px);
+    margin-bottom: 22px;
     box-shadow: 0 4px 18px rgba(0, 43, 73, 0.06);
 }}
 
@@ -1033,7 +1046,7 @@ div[role="option"] {{
     border: 1.5px solid #E2E8F0;
     border-top: 4px solid {CBE_NAVY};
     border-radius: 12px;
-    padding: 18px;
+    padding: 20px;
     height: 100%;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1054,10 +1067,10 @@ div[role="option"] {{
     color: {CBE_NAVY};
     border: 1px solid #CBD5E1;
     border-radius: 20px;
-    padding: 4px 12px;
+    padding: 5px 14px;
     margin: 4px 3px;
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
 }}
 
 .dim-badge.gold {{
@@ -1081,7 +1094,7 @@ div[role="option"] {{
     border: 1.5px solid #E2E8F0;
     border-right: 5px solid {CBE_GOLD};
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     margin-bottom: 12px;
     box-shadow: 0 3px 10px rgba(0, 43, 73, 0.05);
     cursor: pointer;
@@ -1102,16 +1115,16 @@ div[role="option"] {{
 
 .tour-nav-title {{
     color: {CBE_NAVY};
-    font-size: 14.5px;
+    font-size: 16px;
     font-weight: 800;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     transition: color 0.2s ease;
 }}
 
 .tour-nav-desc {{
-    color: #475569;
-    font-size: 13px;
-    line-height: 1.55;
+    color: #334155;
+    font-size: 14.5px;
+    line-height: 1.65;
     transition: color 0.2s ease;
 }}
 
@@ -1121,8 +1134,8 @@ div[role="option"] {{
     color: {CBE_NAVY};
     border: 1px solid {CBE_GOLD};
     border-radius: 50px;
-    padding: 5px 12px;
-    font-size: 12px;
+    padding: 6px 14px;
+    font-size: 13.5px;
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.2s ease;
@@ -1159,26 +1172,26 @@ div[role="option"] {{
 .custom-rtl-table th {{
     background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%) !important;
     color: #F8FAFC !important;
-    padding: 10px 10px !important;
+    padding: 12px 12px !important;
     font-weight: 700 !important;
     border-bottom: 2px solid {CBE_GOLD} !important;
     border-right: none !important;
     border-left: none !important;
     text-align: right !important;
-    font-size: 13px !important;
+    font-size: 14.5px !important;
     white-space: nowrap !important;
 }}
 
 .custom-rtl-table td {{
-    padding: 8px 10px !important;
+    padding: 10px 12px !important;
     border-bottom: 1px solid #F1F5F9 !important;
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;
-    color: #1E293B !important;
-    font-size: 12.5px !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
     text-align: right !important;
-    line-height: 1.5 !important;
+    line-height: 1.6 !important;
 }}
 
 .custom-rtl-table tr:nth-child(even) {{
@@ -1197,6 +1210,7 @@ button[kind="secondaryFormSubmit"] {{
     width: 100% !important;
     border-radius: 50px !important;
     font-family: {APP_FONT} !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
@@ -1211,6 +1225,7 @@ div.stButton > button *,
 div.stDownloadButton > button *,
 div[data-testid="stFormSubmitButton"] > button * {{
     color: inherit !important;
+    font-size: 15px !important;
 }}
 
 div.stButton > button:hover,
@@ -1253,7 +1268,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     background-size: cover !important;
     background-position: center !important;
     color: #FFFFFF !important;
-    padding: clamp(16px, 3vw, 26px) clamp(12px, 3vw, 20px) !important;
+    padding: clamp(18px, 3vw, 28px) clamp(14px, 3vw, 22px) !important;
     border-radius: 16px !important;
     border-bottom: 4px solid {CBE_GOLD} !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.18) !important;
@@ -1264,21 +1279,21 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
 .header-center h1 {{
     color: {CBE_GOLD} !important;
-    font-size: clamp(18px, 4.2vw, 23px) !important;
+    font-size: clamp(20px, 4.5vw, 26px) !important;
     font-weight: 800 !important;
-    line-height: 1.4 !important;
+    line-height: 1.45 !important;
     margin-top: 0 !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
 }}
 
 .header-center h3 {{
-    color: #F1F5F9 !important;
-    font-size: clamp(12.5px, 3vw, 14px) !important;
-    font-weight: 500 !important;
-    line-height: 1.55 !important;
+    color: #F8FAFC !important;
+    font-size: clamp(14px, 3.2vw, 16px) !important;
+    font-weight: 600 !important;
+    line-height: 1.65 !important;
     margin-top: 0 !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 5px !important;
 }}
 
 .ticker-wrap {{
@@ -1302,8 +1317,8 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
 .ticker-item {{
     display: inline-block;
-    padding: 7px 28px;
-    font-size: 13.5px;
+    padding: 8px 30px;
+    font-size: 15px;
     font-weight: bold;
     color: #FFFFFF !important;
     direction: rtl !important;
@@ -1316,8 +1331,8 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
 .footer-copyright {{
     text-align: center;
-    color: #64748B;
-    font-size: 13px;
+    color: #475569;
+    font-size: 14.5px;
     margin-top: 40px;
     border-top: 1px solid #E2E8F0;
     padding-top: 15px;
@@ -1339,11 +1354,11 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     div.stDownloadButton > button,
     div[data-testid="stFormSubmitButton"] > button {{
         width: 100% !important;
-        min-height: 44px !important;
-        font-size: 13.5px !important;
-        padding: 8px 14px !important;
+        min-height: 46px !important;
+        font-size: 15px !important;
+        padding: 9px 16px !important;
         white-space: normal !important;
-        line-height: 1.4 !important;
+        line-height: 1.45 !important;
     }}
 
     input, textarea, select {{
@@ -1361,8 +1376,8 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
     }}
 
     .ticker-item {{
-        font-size: 12.5px !important;
-        padding: 6px 18px !important;
+        font-size: 14px !important;
+        padding: 7px 20px !important;
     }}
 
     .tour-nav-btn {{
@@ -1683,8 +1698,8 @@ if not st.session_state.authenticated:
     with col2:
         st.markdown(f"""
         <div style="background: #FFFFFF; padding: clamp(18px, 4vw, 30px); border-radius: 16px; border: 2px solid {CBE_GOLD}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: right; margin-top: 12px;" dir="rtl">
-            <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; font-size: clamp(18px, 4vw, 22px); margin-bottom: 10px;">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري (رصين)</h2>
-            <p style="color: #475569; text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+            <h2 style="color: {CBE_NAVY}; text-align: center; font-weight: 800; font-size: clamp(20px, 4.2vw, 25px); margin-bottom: 12px;">🏛️ مقترح المنصة الوطنية الذكية لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري (رصين)</h2>
+            <p style="color: #334155; text-align: center; font-size: 16px; line-height: 1.7; margin-bottom: 12px;">
                 إطار تطبيقي مقترح ضمن متطلبات نيل درجة دكتوراه الفلسفة في العلوم البيئية - جامعة عين شمس. يرجى تسجيل الدخول للمتابعة.
             </p>
         </div>
@@ -1769,7 +1784,7 @@ col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
     st.markdown(f"""
     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;" dir="rtl">
-        <div style="text-align: right; font-size: 13px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 6px 12px; display: inline-block;">
+        <div style="text-align: right; font-size: 14.5px; color: {CBE_NAVY}; background: #FFFFFF; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 7px 14px; display: inline-block;">
             👤 مسجل باسم: <b>{st.session_state.username}</b> | <span style="color:#0F766E; font-weight:700;">🟢 الجلسة تعمل الآن</span>
         </div>
         <span class="sound-toggle-pill" data-raseen-sound-toggle="1" role="button" tabindex="0" title="تفعيل أو كتم المؤثرات الصوتية عند النقر">🔊 الصوت: مفعل</span>
@@ -1843,20 +1858,20 @@ inject_tabs_css()
 with tab_home:
     st.markdown(f"""
     <div class="home-hero-card" dir="rtl">
-        <h2 style="color: {CBE_NAVY}; font-weight: 800; font-size: clamp(17px, 3.8vw, 22px); margin-bottom: 10px;">
+        <h2 style="color: {CBE_NAVY}; font-weight: 800; font-size: clamp(19px, 4vw, 24px); margin-bottom: 12px;">
             🏛️ مرحباً بكم في مقترح المنصة الوطنية الذكية لتعزيز حوكمة القطاع المصرفي المصري (رصين)
         </h2>
-        <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
+        <p style="color: #1E293B; font-size: 16px; line-height: 1.9; margin-bottom: 12px;">
             تمثل هذه المنصة التطبيق العملي ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل.
         </p>
-        <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
+        <div style="background: #F8FAFC; border-radius: 10px; padding: 14px 18px; border: 1px solid #E2E8F0; font-size: 15px; line-height: 1.75; color: {CBE_NAVY};">
             <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بمعلومات ذكية موثوقة غير مضللة</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
-    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 14px 0;">
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 20px; margin: 12px 0 16px 0;">
         🧭 خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد)
     </h3>
     """, unsafe_allow_html=True)
@@ -1866,12 +1881,12 @@ with tab_home:
     with col_m1:
         st.markdown(f"""
         <div class="model-pillar-card" dir="rtl">
-            <div style="font-size: 12px; font-weight: 700; color: #64748B; margin-bottom: 4px;">1️⃣ المتغير المستقل (Independent Variable)</div>
-            <h4 style="color: {CBE_NAVY}; font-weight: 800; font-size: 16px; margin-bottom: 8px;">💻 منصات المعلومات الذكية<br><span style="font-size: 12.5px; font-weight: 600; color: #475569;">(Smart Information Platforms)</span></h4>
-            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+            <div style="font-size: 13.5px; font-weight: 700; color: #475569; margin-bottom: 5px;">1️⃣ المتغير المستقل (Independent Variable)</div>
+            <h4 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin-bottom: 10px;">💻 منصات المعلومات الذكية<br><span style="font-size: 14px; font-weight: 600; color: #475569;">(Smart Information Platforms)</span></h4>
+            <p style="font-size: 14.5px; color: #334155; line-height: 1.7; margin-bottom: 14px;">
                 البنية التحتية الرقمية والأنظمة الذكية المسؤولة عن جمع البيانات ومعالجتها وضمان موثوقيتها وأمنها.
             </p>
-            <div style="font-size: 12.5px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
+            <div style="font-size: 14px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
             <div>
                 <span class="dim-badge">جودة المعلومات</span>
                 <span class="dim-badge">الامتثال التقني</span>
@@ -1884,12 +1899,12 @@ with tab_home:
     with col_m2:
         st.markdown(f"""
         <div class="model-pillar-card mediator" dir="rtl">
-            <div style="font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 4px;">2️⃣ المتغير الوسيط (Mediating Variable)</div>
-            <h4 style="color: #92400E; font-weight: 800; font-size: 16px; margin-bottom: 8px;">🌿 تقارير الاستدامة<br><span style="font-size: 12.5px; font-weight: 600; color: #78350F;">(Sustainability Reporting)</span></h4>
-            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+            <div style="font-size: 13.5px; font-weight: 700; color: #B45309; margin-bottom: 5px;">2️⃣ المتغير الوسيط (Mediating Variable)</div>
+            <h4 style="color: #92400E; font-weight: 800; font-size: 18px; margin-bottom: 10px;">🌿 تقارير الاستدامة<br><span style="font-size: 14px; font-weight: 600; color: #78350F;">(Sustainability Reporting)</span></h4>
+            <p style="font-size: 14.5px; color: #334155; line-height: 1.7; margin-bottom: 14px;">
                 آلية الإفصاح المؤسسي والبيئي والاجتماعي التي تنقل أثر البنية الذكية لتعزيز ممارسات الحوكمة الرشيدة.
             </p>
-            <div style="font-size: 12.5px; font-weight: 700; color: #92400E; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
+            <div style="font-size: 14px; font-weight: 700; color: #92400E; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
             <div>
                 <span class="dim-badge gold">الاستراتيجية</span>
                 <span class="dim-badge gold">الأبعاد التشغيلية</span>
@@ -1903,12 +1918,12 @@ with tab_home:
     with col_m3:
         st.markdown(f"""
         <div class="model-pillar-card dependent" dir="rtl">
-            <div style="font-size: 12px; font-weight: 700; color: #0F766E; margin-bottom: 4px;">3️⃣ المتغير التابع (Dependent Variable)</div>
-            <h4 style="color: #115E59; font-weight: 800; font-size: 16px; margin-bottom: 8px;">⚖️ الحوكمة المؤسسية<br><span style="font-size: 12.5px; font-weight: 600; color: #134E4A;">(Institutional Governance)</span></h4>
-            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
+            <div style="font-size: 13.5px; font-weight: 700; color: #0F766E; margin-bottom: 5px;">3️⃣ المتغير التابع (Dependent Variable)</div>
+            <h4 style="color: #115E59; font-weight: 800; font-size: 18px; margin-bottom: 10px;">⚖️ الحوكمة المؤسسية<br><span style="font-size: 14px; font-weight: 600; color: #134E4A;">(Institutional Governance)</span></h4>
+            <p style="font-size: 14.5px; color: #334155; line-height: 1.7; margin-bottom: 14px;">
                 منظومة الضبط والرقابة والشفافية والمساءلة التي تضمن استدامة الأداء المصرفي وحماية حقوق أصحاب المصلحة.
             </p>
-            <div style="font-size: 12.5px; font-weight: 700; color: #115E59; margin-bottom: 6px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
+            <div style="font-size: 14px; font-weight: 700; color: #115E59; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
             <div>
                 <span class="dim-badge teal">الشفافية والإفصاح</span>
                 <span class="dim-badge teal">المتابعة والمساءلة</span>
@@ -1921,16 +1936,16 @@ with tab_home:
         """, unsafe_allow_html=True)
 
     st.markdown(f"""
-    <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
+    <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 14px 18px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 20px 0 24px 0; font-size: 15px; font-weight: 700;" dir="rtl">
         🔄 المسار المنهجي: <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span> ⬅️ <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span> ⬅️ <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
-    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 18px; margin: 10px 0 4px 0;">
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 20px; margin: 12px 0 6px 0;">
         🗺️ جولة سريعة في مكونات وأدوات المنصة
     </h3>
-    <p style="color: #64748B; font-size: 13px; margin-bottom: 14px;">
+    <p style="color: #475569; font-size: 14.5px; margin-bottom: 16px;">
         اختر أي وحدة من وحدات المنصة أدناه للانتقال الفوري إليها:
     </p>
     """, unsafe_allow_html=True)
