@@ -75,6 +75,14 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+# تحميل خطوط Google بالتوازي فور بدء الصفحة لمنع ظهور الحروف منفصلة لحظة التحميل (FOUT)
+st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+""", unsafe_allow_html=True)
+
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
 CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
@@ -84,8 +92,8 @@ CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
 UI_CSS_VERSION = "tabs-v17"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
 
-# أولوية الخطوط: Bahij TheSansArabic ثم Readex Pro ثم Tajawal ثم Cairo
-APP_FONT = "'Bahij TheSansArabic', 'Readex Pro', 'Tajawal', 'Cairo', sans-serif"
+# أولوية الخطوط: Cairo ثم Tajawal ثم Readex Pro ثم خطوط النظام العربية القياسية
+APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
 # ------------------------------------------------------------------------------
 # تنسيق الشريط العلوي (التبويبات): متجاوب 100% بين اللابتوب والموبايل
@@ -810,7 +818,10 @@ def sync_survey_browser_backup():
 
 CUSTOM_CSS = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+html, body, * {{
+    font-feature-settings: "liga" 1, "calt" 1 !important;
+    text-rendering: optimizeLegibility !important;
+}}
 
 @font-face {{
     font-family: 'Bahij TheSansArabic';
