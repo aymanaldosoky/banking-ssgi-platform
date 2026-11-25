@@ -2306,7 +2306,7 @@ def generate_ssgi_evaluation_excel():
             ws.write(0, col_num, value, header_format)
         for i, w in enumerate(df["الوزن النسبي (AHP)"]):
             r = i + 1
-            ws.write_number(r, 4, w, w_fmt)
+            safe_write_number(ws, r, 4, w, w_fmt)
             ws.write_blank(r, 5, None, in_fmt)
             ws.write_formula(r, 6, f'=IF(F{r+1}="","",E{r+1}*F{r+1})', calc_fmt, "")
         ws.data_validation(1, 5, n, 5, {
