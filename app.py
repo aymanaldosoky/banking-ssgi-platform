@@ -110,7 +110,7 @@ components.html(
             var link = doc.createElement('link');
             link.id = 'raseen-gf-arabic-fonts';
             link.rel = 'stylesheet';
-            link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap';
+            link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap';
             head.prepend(link);
         }
     })();
@@ -127,7 +127,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v19"   # إصدار محدث لإبطال الكاش فوراً + تحسين وضوح وحجم الخطوط
+UI_CSS_VERSION = "tabs-v20"   # إصدار محدث لإبطال الكاش فوراً + تكبير وتعريض خط المفاتيح
 
 APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
@@ -218,18 +218,19 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         width: 100% !important;
         max-width: none !important;
         height: auto !important;
-        min-height: 50px !important;
+        min-height: 54px !important;
         margin: 0 !important;
-        padding: 8px 6px !important;
+        padding: 9px 6px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         border: 1.5px solid rgba(197, 160, 89, 0.35) !important;
         border-radius: 8px !important;
         font-family: {APP_FONT} !important;
-        font-weight: 700 !important;
-        font-size: 13.5px !important;
+        font-weight: 800 !important;
+        font-size: 14.5px !important;
         line-height: 1.4 !important;
+        letter-spacing: 0.15px !important;
         text-align: center !important;
         white-space: normal !important;
         outline: none !important;
@@ -241,6 +242,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     html body div[data-testid="stTabs"] button[role="tab"] *,
     html body [role="tablist"] [role="tab"] * {{
         white-space: normal !important;
+        font-weight: 800 !important;
     }}
 }}
 
@@ -287,17 +289,17 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
         width: auto !important;
         max-width: none !important;
         height: auto !important;
-        min-height: 46px !important;
+        min-height: 50px !important;
         margin: 0 !important;
-        padding: 9px 16px !important;
+        padding: 10px 18px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         border: 1.5px solid rgba(197, 160, 89, 0.45) !important;
         border-radius: 8px !important;
         font-family: {APP_FONT} !important;
-        font-weight: 700 !important;
-        font-size: 14.5px !important;
+        font-weight: 800 !important;
+        font-size: 15.5px !important;
         line-height: 1.45 !important;
         text-align: center !important;
         white-space: nowrap !important;
@@ -309,6 +311,7 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     html body [role="tablist"] [role="tab"] * {{
         white-space: nowrap !important;
         display: inline !important;
+        font-weight: 800 !important;
     }}
 
     div[data-testid="stTabs"] button[aria-label*="scroll"],
@@ -321,6 +324,7 @@ div[data-testid="stTabs"] button[role="tab"] *,
 html body [role="tablist"] [role="tab"] * {{
     font-family: {APP_FONT} !important;
     font-size: inherit !important;
+    font-weight: inherit !important;
     line-height: inherit !important;
     text-align: center !important;
     margin: 0 !important;
@@ -363,7 +367,7 @@ html body [role="tablist"] [role="tab"]:hover {{
 html body [data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
 html body [role="tablist"] [role="tab"][aria-selected="true"] {{
     background-color: {CBE_NAVY} !important;
-    font-weight: 800 !important;
+    font-weight: 900 !important;
     border: 2px solid {CBE_GOLD} !important;
     box-shadow: 0 0 12px rgba(197, 160, 89, 0.45) !important;
 }}
@@ -936,8 +940,8 @@ section[data-testid="stMain"],
     color: {CBE_NAVY};
     border: 1.5px solid {CBE_GOLD};
     border-radius: 50px;
-    padding: 6px 16px;
-    font-size: 14px;
+    padding: 7px 18px;
+    font-size: 15px;
     font-weight: 800;
     cursor: pointer;
     user-select: none;
@@ -1115,7 +1119,7 @@ div[role="option"] {{
 
 .tour-nav-title {{
     color: {CBE_NAVY};
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 800;
     margin-bottom: 5px;
     transition: color 0.2s ease;
@@ -1132,11 +1136,11 @@ div[role="option"] {{
     flex-shrink: 0;
     background: #F1F5F9;
     color: {CBE_NAVY};
-    border: 1px solid {CBE_GOLD};
+    border: 1.5px solid {CBE_GOLD};
     border-radius: 50px;
-    padding: 6px 14px;
-    font-size: 13.5px;
-    font-weight: 700;
+    padding: 7px 16px;
+    font-size: 14.5px;
+    font-weight: 800;
     white-space: nowrap;
     transition: all 0.2s ease;
 }}
@@ -1206,15 +1210,23 @@ div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
 button[kind="primaryFormSubmit"],
-button[kind="secondaryFormSubmit"] {{
+button[kind="secondaryFormSubmit"],
+button[data-testid="stBaseButton-primary"],
+button[data-testid="stBaseButton-secondary"],
+button[data-testid="stBaseButton-primaryFormSubmit"],
+button[data-testid="stBaseButton-secondaryFormSubmit"] {{
     width: 100% !important;
+    min-height: 48px !important;
+    padding: 10px 20px !important;
     border-radius: 50px !important;
     font-family: {APP_FONT} !important;
-    font-size: 15px !important;
-    font-weight: 700 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.45 !important;
     background-color: {CBE_NAVY} !important;
     color: #FFFFFF !important;
-    border: 1.5px solid {CBE_GOLD} !important;
+    border: 2px solid {CBE_GOLD} !important;
     transition: all 0.25s ease !important;
     box-shadow: 0 4px 12px rgba(0, 43, 73, 0.15) !important;
     outline: none !important;
@@ -1223,16 +1235,25 @@ button[kind="secondaryFormSubmit"] {{
 
 div.stButton > button *,
 div.stDownloadButton > button *,
-div[data-testid="stFormSubmitButton"] > button * {{
+div[data-testid="stFormSubmitButton"] > button *,
+button[data-testid="stBaseButton-primary"] *,
+button[data-testid="stBaseButton-secondary"] *,
+button[data-testid="stBaseButton-primaryFormSubmit"] *,
+button[data-testid="stBaseButton-secondaryFormSubmit"] * {{
     color: inherit !important;
-    font-size: 15px !important;
+    font-family: {APP_FONT} !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    line-height: 1.45 !important;
 }}
 
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div[data-testid="stFormSubmitButton"] > button:hover,
 button[kind="primaryFormSubmit"]:hover,
-button[kind="secondaryFormSubmit"]:hover {{
+button[kind="secondaryFormSubmit"]:hover,
+button[data-testid="stBaseButton-primary"]:hover,
+button[data-testid="stBaseButton-secondary"]:hover {{
     background-color: #001A33 !important;
     color: {CBE_GOLD_LIGHT} !important;
     border-color: #FFFFFF !important;
@@ -1244,7 +1265,9 @@ div.stButton > button:active,
 div.stDownloadButton > button:active,
 div[data-testid="stFormSubmitButton"] > button:active,
 button[kind="primaryFormSubmit"]:active,
-button[kind="secondaryFormSubmit"]:active {{
+button[kind="secondaryFormSubmit"]:active,
+button[data-testid="stBaseButton-primary"]:active,
+button[data-testid="stBaseButton-secondary"]:active {{
     background-color: {CBE_GOLD} !important;
     color: {CBE_NAVY} !important;
     border-color: {CBE_NAVY} !important;
@@ -1352,13 +1375,23 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 
     div.stButton > button,
     div.stDownloadButton > button,
-    div[data-testid="stFormSubmitButton"] > button {{
+    div[data-testid="stFormSubmitButton"] > button,
+    button[data-testid="stBaseButton-primary"],
+    button[data-testid="stBaseButton-secondary"] {{
         width: 100% !important;
-        min-height: 46px !important;
-        font-size: 15px !important;
-        padding: 9px 16px !important;
+        min-height: 50px !important;
+        font-size: 16.5px !important;
+        font-weight: 800 !important;
+        padding: 10px 18px !important;
         white-space: normal !important;
         line-height: 1.45 !important;
+    }}
+
+    div.stButton > button *,
+    div.stDownloadButton > button *,
+    div[data-testid="stFormSubmitButton"] > button * {{
+        font-size: 16.5px !important;
+        font-weight: 800 !important;
     }}
 
     input, textarea, select {{
