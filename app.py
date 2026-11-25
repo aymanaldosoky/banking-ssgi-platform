@@ -2,6 +2,8 @@ import io
 import os
 import json
 import re
+import math
+import numbers
 import base64
 import hashlib
 import time
@@ -75,7 +77,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# حقن خطوط Google مباشرة داخل <head> الصفحة الأم في اللحظة صفر لمنع تفكك الحروف العربية (FOUT) نهائياً
+# حقن خطوط Google مباشرة داخل <head> الصفحة الأم في اللحظة صفر لمنع تفكك الحروف العربية (FOUT)
 components.html(
     """
     <script>
@@ -124,17 +126,15 @@ CBE_GOLD_LIGHT = "#E2C07D"    # ذهبي فاتح
 CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير والضغط والتبويب النشط)
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
-RAG_CACHE_VERSION = "v2.0"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v17"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
+RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
+UI_CSS_VERSION = "tabs-v18"   # إصدار محدث لإبطال الكاش فوراً + محرك الصوت التفاعلي
 
-# أولوية الخطوط: Cairo ثم Tajawal ثم Readex Pro ثم خطوط النظام العربية القياسية
 APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
 # ------------------------------------------------------------------------------
 # تنسيق الشريط العلوي (التبويبات): متجاوب 100% بين اللابتوب والموبايل
 # ------------------------------------------------------------------------------
 TABS_RULES = f"""
-/* ---- تمدد حاوية التبويبات بعرض الشاشة كاملاً ---- */
 div[data-testid="stTabs"],
 div.stTabs {{
     width: 100% !important;
@@ -153,7 +153,6 @@ div.stTabs [data-baseweb="tabs"] {{
     max-width: 100% !important;
 }}
 
-/* ---- إخفاء الخط الأحمر السفلي لـ BaseWeb نهائياً ---- */
 div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
 div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
     display: none !important;
@@ -163,7 +162,6 @@ div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
     background-color: transparent !important;
 }}
 
-/* ---- التنسيق الأساسي لشريط التبويبات ---- */
 html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
 html body [role="tablist"] {{
     display: flex !important;
@@ -199,7 +197,6 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     direction: rtl !important;
 }}
 
-/* ---- شاشات اللابتوب والكمبيوتر (> 768px): توزيع متساوٍ بعرض الشاشة الكامل ---- */
 @media (min-width: 769px) {{
     html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
     html body [role="tablist"] {{
@@ -247,7 +244,6 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     }}
 }}
 
-/* ---- شاشات الموبايل والتابلت الصغير (<= 768px): تمرير أفقي واضح بلا تقطيع ---- */
 @media (max-width: 768px) {{
     html body div[data-testid="stTabs"] [data-baseweb="tab-list"],
     html body [role="tablist"] {{
@@ -321,7 +317,6 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] [role="tablist"] {{
     }}
 }}
 
-/* ---- تنسيق النصوص والأيقونات داخل التبويبات ---- */
 div[data-testid="stTabs"] button[role="tab"] *,
 html body [role="tablist"] [role="tab"] * {{
     font-family: {APP_FONT} !important;
@@ -333,7 +328,6 @@ html body [role="tablist"] [role="tab"] * {{
 """
 
 TABS_COLOR_RULES = f"""
-/* الوضع الافتراضي: نص أبيض على الزر وكل أبنائه */
 html body [data-baseweb="tab-list"] button[role="tab"],
 html body [data-baseweb="tab-list"] button[role="tab"] *,
 html body [role="tablist"] [role="tab"],
@@ -353,7 +347,6 @@ html body [role="tablist"] [role="tab"] * {{
     background: transparent !important;
 }}
 
-/* تمرير / ضغط / تبويب محدد: نص ذهبي */
 html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
 html body [data-baseweb="tab-list"] button[role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]) *,
 html body [role="tablist"] [role="tab"]:is(:hover, :active, :focus-visible, [aria-selected="true"]),
@@ -432,15 +425,14 @@ SOUND_ENGINE_JS = """
       var now = ctx.currentTime;
 
       if (kind === 'tab') {
-        // نغمة جرس كريستالي خفيف ("تن" ناعمة ومميزة للتبويبات وبطاقات التنقل)
         var osc1 = ctx.createOscillator();
         var osc2 = ctx.createOscillator();
         var gain = ctx.createGain();
 
         osc1.type = 'sine';
         osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(880, now);          // A5 نغمة صافية
-        osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.09); // D6 لمسة رنين خفيفة
+        osc1.frequency.setValueAtTime(880, now);
+        osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.09);
         osc2.frequency.setValueAtTime(1760, now);
 
         gain.gain.setValueAtTime(0.0001, now);
@@ -457,7 +449,6 @@ SOUND_ENGINE_JS = """
         osc2.stop(now + 0.25);
 
       } else if (kind === 'radio') {
-        // نغمة اختيار خفيفة جداً ("Pop" ناعمة لخيارات الاستبيان والقوائم)
         var oscR = ctx.createOscillator();
         var gainR = ctx.createGain();
         oscR.type = 'sine';
@@ -474,7 +465,6 @@ SOUND_ENGINE_JS = """
         oscR.stop(now + 0.08);
 
       } else {
-        // نقرة لمسية رقيقة ("تك" احترافية لجميع الأزرار والمفاتيح)
         var oscB = ctx.createOscillator();
         var gainB = ctx.createGain();
         oscB.type = 'triangle';
@@ -510,7 +500,6 @@ SOUND_ENGINE_JS = """
       var target = e.target;
       if (!target || !target.closest) return;
 
-      // زر كتم/تفعيل المؤثرات الصوتية
       var soundToggle = target.closest('[data-raseen-sound-toggle]');
       if (soundToggle) {
         var nextState = !isSoundEnabled();
@@ -521,19 +510,16 @@ SOUND_ENGINE_JS = """
         return;
       }
 
-      // 1) التبويبات الرئيسية أو بطاقات الجولة السريعة في الرئيسية
       if (target.closest('[role="tab"], [data-tab-target]')) {
         playUiTone('tab');
         return;
       }
 
-      // 2) كافة الأزرار ومفاتيح التنقل والتحميل والإرسال
       if (target.closest('button, a[kind], [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"], [data-testid="stFormSubmitButton"] button')) {
         playUiTone('button');
         return;
       }
 
-      // 3) خيارات الراديو، مربعات الاختيار، والقوائم المنسدلة
       if (target.closest('div[role="radiogroup"] label, [data-baseweb="checkbox"], [data-baseweb="select"], summary')) {
         playUiTone('radio');
         return;
@@ -644,7 +630,6 @@ TABS_GUARD_JS = """
       }
     });
 
-    /* ربط بطاقات التنقل السريع في الصفحة الرئيسية بالتبويبات المقابلة */
     document.querySelectorAll('[data-tab-target]').forEach(function (card) {
       if (!card.__ssgiNav) {
         card.__ssgiNav = 1;
@@ -690,7 +675,7 @@ TABS_GUARD_JS = """
 
 
 def inject_ui_sound_engine():
-    """يحقن محرك المؤثرات الصوتية التفاعلية في الصفحة الأم (يعمل حتى في شاشة الدخول)."""
+    """يحقن محرك المؤثرات الصوتية التفاعلية في الصفحة الأم."""
     components.html(
         f"""
         <script>
@@ -747,20 +732,17 @@ def inject_tabs_css():
 
 
 def restore_survey_from_url_or_browser():
-    """
-    استعادة إجابات الاستبيان ومرحلة المعالج تلقائياً عند الضغط على F5 أو Refresh
-    من رابط الصفحة (sdraft) أو من localStorage بالمتصفح دون فقدان أي بيانات.
-    """
+    """استعادة إجابات الاستبيان ومرحلة المعالج تلقائياً عند الضغط على F5 أو Refresh."""
     if "survey_store" not in st.session_state:
         st.session_state.survey_store = {}
     if "survey_wizard_step" not in st.session_state:
         st.session_state.survey_wizard_step = 1
 
-    # 1) الاستعادة الفورية من Query Params إذا كانت المسودة موجودة في الرابط
     encoded_draft = st.query_params.get("sdraft", "")
     if encoded_draft and not st.session_state.survey_store:
         try:
-            raw_json = base64.urlsafe_b64decode(encoded_draft.encode("utf-8")).decode("utf-8")
+            padded = encoded_draft + "=" * (-len(encoded_draft) % 4)
+            raw_json = base64.urlsafe_b64decode(padded.encode("utf-8")).decode("utf-8")
             parsed = json.loads(raw_json)
             if isinstance(parsed, dict):
                 restored_store = parsed.get("store", {})
@@ -771,7 +753,6 @@ def restore_survey_from_url_or_browser():
         except Exception:
             pass
 
-    # 2) جسر JavaScript لاستعادة المسودة من localStorage إلى الرابط إذا فُقدت جلسة الخادم بعد F5
     has_data = bool(st.session_state.survey_store)
     components.html(
         f"""
@@ -804,10 +785,7 @@ def restore_survey_from_url_or_browser():
 
 
 def sync_survey_browser_backup():
-    """
-    حفظ نسخة احتياطية فورية من إجابات الاستبيان في localStorage بالمتصفح وفي URL
-    لمنع فقدان الإجابات نهائياً في حال الضغط على F5 أو تحديث المستعرض.
-    """
+    """حفظ نسخة احتياطية فورية من إجابات الاستبيان في localStorage بالمتصفح وفي URL."""
     store_data = st.session_state.get("survey_store", {})
     step_val = st.session_state.get("survey_wizard_step", 1)
     is_submitted = bool(store_data.get("submitted_id"))
@@ -885,7 +863,6 @@ header {{
     padding: 0 !important;
 }}
 
-/* إخفاء إطارات السكربت المخفية دون إيقاف تنفيذ JavaScript في Safari وباقي المتصفحات */
 iframe[height="0"] {{
     position: absolute !important;
     width: 0 !important;
@@ -921,7 +898,6 @@ html, body, [class*="css"] {{
     overflow-x: hidden !important;
 }}
 
-/* إلغاء المسافة الفارغة الكبيرة أعلى الصفحة وضبط العرض الكامل */
 [data-testid="stAppViewContainer"],
 section[data-testid="stMain"],
 .main {{
@@ -941,7 +917,6 @@ section[data-testid="stMain"],
     margin-top: 0 !important;
 }}
 
-/* تصميم زر التحكم بالصوت في الشريط العلوي */
 .sound-toggle-pill {{
     display: inline-flex;
     align-items: center;
@@ -965,7 +940,6 @@ section[data-testid="stMain"],
     transform: translateY(-1px);
 }}
 
-/* تصميم Skeleton Loader ذكي ومخصص */
 @keyframes skeleton-shimmer {{
     0% {{ background-position: -200px 0; }}
     100% {{ background-position: 200px 0; }}
@@ -995,7 +969,6 @@ section[data-testid="stMain"],
 .skeleton-body-3 {{ width: 85%; }}
 .skeleton-badge {{ height: 35px; width: 30%; border-radius: 20px; margin-bottom: 15px; }}
 
-/* إزالة أي إطارات رمادية أو تأثيرات عند التنقل بين الأقسام والعناصر والتمرير */
 div.stMarkdown, div.stText, div.stSelectbox, div.stSlider,
 div.stDataFrame, div.stTable, .element-container,
 div[data-testid="stVerticalBlock"],
@@ -1023,7 +996,6 @@ div[role="option"] {{
     outline: none !important;
 }}
 
-/* تنسيق حاوية إجابات RAG لضمان سلامة الفقرات والقوائم */
 .rag-response-box {{
     background: #FFFFFF !important;
     border: 1.5px solid {CBE_GOLD} !important;
@@ -1046,7 +1018,6 @@ div[role="option"] {{
     margin-bottom: 6px !important;
 }}
 
-/* تصميم بطاقات الصفحة الرئيسية والنموذج البحثي */
 .home-hero-card {{
     background: #FFFFFF;
     border: 1.5px solid {CBE_GOLD};
@@ -1101,7 +1072,6 @@ div[role="option"] {{
     border-color: #14B8A6;
 }}
 
-/* مفاتيح الجولة السريعة التفاعلية (تعمل كأزرار انتقال مباشر للتبويبات) */
 .tour-nav-btn {{
     display: flex;
     align-items: center;
@@ -1171,7 +1141,6 @@ div[role="option"] {{
     color: {CBE_NAVY};
 }}
 
-/* تصميم جدول RTL مخصص ونظيف بلا إطارات مشوشة */
 .custom-rtl-table {{
     width: 100% !important;
     border-collapse: collapse !important;
@@ -1220,7 +1189,6 @@ div[role="option"] {{
     background-color: #FEF3C7 !important;
 }}
 
-/* توحيد تصميم الأزرار ومفاتيح التحميل ومفتاح تسجيل الدخول */
 div.stButton > button,
 div.stDownloadButton > button,
 div[data-testid="stFormSubmitButton"] > button,
@@ -1409,23 +1377,42 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-# حقن محرك الصوت التفاعلي فوراً ليشمل شاشة الدخول وجميع التبويبات والمفاتيح
 inject_ui_sound_engine()
 
 # ==============================================================================
-# الدوال المساعدة (تنسيق HTML السليم + تصدير Word .docx أصلي بدون تحذيرات)
+# الدوال المساعدة الآمنة (Excel Numbers + HTML + Word .docx)
 # ==============================================================================
+def to_clean_float(val, default=0.0) -> float:
+    """تحويل آمن لأي قيمة رقمية أو نصية إلى float صالح لـ xlsxwriter دون NaN/Inf/TypeError."""
+    if val is None or isinstance(val, bool):
+        return float(default)
+    if isinstance(val, numbers.Real):
+        f_val = float(val)
+        return float(default) if (math.isnan(f_val) or math.isinf(f_val)) else f_val
+    if isinstance(val, str):
+        cleaned = re.sub(r"[^\d.\-+]", "", val.strip())
+        if not cleaned or cleaned in {"-", "+", "."}:
+            return float(default)
+        try:
+            f_val = float(cleaned)
+            return float(default) if (math.isnan(f_val) or math.isinf(f_val)) else f_val
+        except ValueError:
+            return float(default)
+    return float(default)
+
+
+def safe_write_number(ws, row: int, col: int, val, cell_format=None, default=0.0):
+    """كتابة آمنة للأرقام في أوراق عمل xlsxwriter لمنع TypeError."""
+    ws.write_number(row, col, to_clean_float(val, default=default), cell_format)
+
+
 def flat_html(s: str) -> str:
     """تُستخدم فقط لقوالب HTML الثابتة مثل Skeleton Loader."""
     return " ".join(l.strip() for l in s.splitlines() if l.strip())
 
 
 def format_rag_html(raw_response: str) -> str:
-    """
-    تحويل الرد القادم من محرك RAG إلى HTML منسق يحافظ على الفقرات والنقاط
-    سواء كان الرد بصيغة Markdown أو HTML جزئي أو نص عادي.
-    """
+    """تحويل الرد القادم من محرك RAG إلى HTML منسق يحافظ على الفقرات والنقاط."""
     if not raw_response:
         return "<div class='rag-response-box'>⚠️ لم يتم استرجاع نص للإجابة.</div>"
 
@@ -1493,15 +1480,11 @@ def _set_rtl_paragraph(p):
 
 
 def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes, str, str]:
-    """
-    تحويل المحتوى إلى ملف Word (.docx) أصلي 100% مع ترويسة وتذييل رسمي واتجاه RTL
-    بلا أي رسائل تحذير في Microsoft Word، مع Fallback آمن إلى HTML .doc عند الحاجة.
-    """
+    """تحويل المحتوى إلى ملف Word (.docx) أصلي 100% مع ترويسة وتذييل رسمي واتجاه RTL."""
     if HAS_PYTHON_DOCX:
         doc = Document()
         section = doc.sections[0]
 
-        # الترويسة والتذييل الرسمي
         header = section.header
         hp = header.paragraphs[0]
         hp.text = "المنصة الوطنية الذكية لحوكمة القطاع المصرفي وتقارير الاستدامة (SSGI)"
@@ -1518,7 +1501,6 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
             fp.runs[0].font.size = Pt(9)
             fp.runs[0].font.color.rgb = RGBColor(0x64, 0x74, 0x8B)
 
-        # العنوان الرئيسي والعنوان الفرعي
         h_main = doc.add_heading(clean_text(title), level=0)
         h_main.alignment = WD_ALIGN_PARAGRAPH.CENTER
         if h_main.runs:
@@ -1531,7 +1513,6 @@ def build_native_docx(title: str, subtitle: str, html_body: str) -> tuple[bytes,
                 p_sub.runs[0].font.size = Pt(11)
                 p_sub.runs[0].font.color.rgb = RGBColor(0xC5, 0xA0, 0x59)
 
-        # تحليل وسوم HTML الأساسية وتحويلها إلى فقرات وعناوين وقوائم منظمة
         normalized = re.sub(r"<(br|hr)\s*/?>", "\n", html_body, flags=re.IGNORECASE)
         normalized = re.sub(r"</(p|div|h[1-6]|li|tr)>", "\n", normalized, flags=re.IGNORECASE)
         normalized = re.sub(r"<li[^>]*>", "• ", normalized, flags=re.IGNORECASE)
@@ -1665,20 +1646,27 @@ ADMIN_USER = st.secrets.get("admin_credentials", {}).get("username", "admin")
 ADMIN_PASS_HASH = st.secrets.get("admin_credentials", {}).get("password_hash", hash_password("admin123"))
 USER_PASS_HASH = st.secrets.get("user_credentials", {}).get("password_hash", hash_password("123"))
 
-# توكنات مشفرة مشتقة من كلمات المرور لربط الجلسة بالمتصفح بأمان عند الضغط على F5
 ADMIN_SESSION_TOKEN = hashlib.sha256(f"raseen_admin_{ADMIN_PASS_HASH}".encode()).hexdigest()[:24]
 USER_SESSION_TOKEN = hashlib.sha256(f"raseen_user_{USER_PASS_HASH}".encode()).hexdigest()[:24]
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "username" not in st.session_state:
-    st.session_state.username = ""
-if "role" not in st.session_state:
-    st.session_state.role = ""
-if "survey_submitted_by_user" not in st.session_state:
-    st.session_state.survey_submitted_by_user = False
+_DEFAULT_SESSION_STATE = {
+    "authenticated": False,
+    "username": "",
+    "role": "",
+    "survey_submitted_by_user": False,
+    "history_state": [],
+    "rag_query_history": [],
+    "simulated_results_dict": {},
+    "decision_results_dict": {},
+    "query_text_box": "",
+    "trigger_search": False,
+    "draft_generated_state": False,
+    "draft_bank_name": "",
+}
+for _k, _v in _DEFAULT_SESSION_STATE.items():
+    if _k not in st.session_state:
+        st.session_state[_k] = _v
 
-# استعادة الجلسة تلقائياً من Query Params في حال الضغط على F5 أو تحديث المتصفح
 if not st.session_state.authenticated:
     url_token = st.query_params.get("auth", "")
     if url_token == ADMIN_SESSION_TOKEN:
@@ -1726,70 +1714,56 @@ if not st.session_state.authenticated:
                     log_visitor_action("user", "مستخدم عادي (User)")
                     st.rerun()
                 else:
-                    st.error("⚠️تعذر تسجيل الدخول؛ يرجى التأكد من صحة اسم المستخدم وكلمة المرور والمحاولة مجدداً.")
+                    st.error("⚠️ تعذر تسجيل الدخول؛ يرجى التأكد من صحة اسم المستخدم وكلمة المرور والمحاولة مجدداً.")
     st.stop()
 
 # ==============================================================================
 # دوال تقييم ووصف الأداء للمحاور الثلاثة
 # ==============================================================================
 def get_colored_score_html(score):
-    if score >= 80:
-        return f"{score}% (أداء مرتفع ومنتظم 🟢)"
-    elif score >= 50:
-        return f"{score}% (أداء متوسط يتطلب تعزيزاً 🟡)"
+    val = to_clean_float(score, default=0.0)
+    if val >= 80:
+        return f"{val:g}% (أداء مرتفع ومنتظم 🟢)"
+    elif val >= 50:
+        return f"{val:g}% (أداء متوسط يتطلب تعزيزاً 🟡)"
     else:
-        return f"{score}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
+        return f"{val:g}% (فجوة هيكلية حرجة تستوجب التدخل 🔴)"
 
 
 def describe_sip(val):
-    if val >= 80:
-        return f"منصات المعلومات والبنية التقنية متقدمة للغاية ({val}%) وتتيح تكاملاً تاماً مع أنظمة البنك المركزي والتقارير الرقابية الآلية."
-    elif val >= 50:
-        return f"البنية التقنية متوسطة الكفاءة ({val}%) وتحتاج لتحديث سعات تدفق البيانات وحوكمة الخوارزميات."
+    v = to_clean_float(val, default=0.0)
+    if v >= 80:
+        return f"منصات المعلومات والبنية التقنية متقدمة للغاية ({v:g}%) وتتيح تكاملاً تاماً مع أنظمة البنك المركزي والتقارير الرقابية الآلية."
+    elif v >= 50:
+        return f"البنية التقنية متوسطة الكفاءة ({v:g}%) وتحتاج لتحديث سعات تدفق البيانات وحوكمة الخوارزميات."
     else:
-        return f"تعاني البنية التقنية من فجوة هيكلية حرجة ({val}%) تعيق أتمتة الالتزام والرقابة التنظيمية."
+        return f"تعاني البنية التقنية من فجوة هيكلية حرجة ({v:g}%) تعيق أتمتة الالتزام والرقابة التنظيمية."
 
 
 def describe_ig(val):
-    if val >= 80:
-        return f"حوكمة مؤسسية راسخة ({val}%) مع استقلالية تامة لمجلس الإدارة ولجان المراجعة والامتثال بأعلى معايير الشفافية."
-    elif val >= 50:
-        return f"الحوكمة المؤسسية في نطاق متوازن ({val}%) وتتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين."
+    v = to_clean_float(val, default=0.0)
+    if v >= 80:
+        return f"حوكمة مؤسسية راسخة ({v:g}%) مع استقلالية تامة لمجلس الإدارة ولجان المراجعة والامتثال بأعلى معايير الشفافية."
+    elif v >= 50:
+        return f"الحوكمة المؤسسية في نطاق متوازن ({v:g}%) وتتطلب تفعيل ضوابط تعارض المصالح وتعزيز دور الأعضاء المستقلين."
     else:
-        return f"قصور حاد في الحوكمة المؤسسية ({val}%) يستوجب تدخلاً رقابياً لإعادة هندسة لجان المراجعة وإدارة المخاطر."
+        return f"قصور حاد في الحوكمة المؤسسية ({v:g}%) يستوجب تدخلاً رقابياً لإعادة هندسة لجان المراجعة وإدارة المخاطر."
 
 
 def describe_sr(val):
-    if val >= 80:
-        return f"أداء متميز والتزام ريادي في تقارير الاستدامة والتمويل الأخضر ({val}%) مع دمج فعال لمخاطر المناخ وتوسيع الأصول الخضراء وفق معايير (GRI/ISSB)."
-    elif val >= 50:
-        return f"أداء متوسط في تقارير الاستدامة ({val}%) يستوجب التوسع في محفظة التمويل المستدام ومخاطر المناخ."
+    v = to_clean_float(val, default=0.0)
+    if v >= 80:
+        return f"أداء متميز والتزام ريادي في تقارير الاستدامة والتمويل الأخضر ({v:g}%) مع دمج فعال لمخاطر المناخ وتوسيع الأصول الخضراء وفق معايير (GRI/ISSB)."
+    elif v >= 50:
+        return f"أداء متوسط في تقارير الاستدامة ({v:g}%) يستوجب التوسع في محفظة التمويل المستدام ومخاطر المناخ."
     else:
-        return f"ضعف هيكلي في ملف الاستدامة والتمويل الأخضر ({val}%) يعيق امتثال البنك للمعايير الدولية."
+        return f"ضعف هيكلي في ملف الاستدامة والتمويل الأخضر ({v:g}%) يعيق امتثال البنك للمعايير الدولية."
 
 
-if "history_state" not in st.session_state:
-    st.session_state.history_state = []
-if "rag_query_history" not in st.session_state:
-    st.session_state.rag_query_history = []
-if "simulated_results_dict" not in st.session_state:
-    st.session_state.simulated_results_dict = {}
-if "decision_results_dict" not in st.session_state:
-    st.session_state.decision_results_dict = {}
-if "query_text_box" not in st.session_state:
-    st.session_state.query_text_box = ""
-if "trigger_search" not in st.session_state:
-    st.session_state.trigger_search = False
-if "draft_generated_state" not in st.session_state:
-    st.session_state.draft_generated_state = False
-if "draft_bank_name" not in st.session_state:
-    st.session_state.draft_bank_name = ""
-
-# استعادة بيانات الاستبيان ومرحلته تلقائياً قبل بناء التبويبات لحمايتها من F5 / Refresh
 restore_survey_from_url_or_browser()
 
 # ==============================================================================
-# الهيدر المدمج (بدون مسافات فارغة علوية) والشريط الإخباري
+# الهيدر المدمج والشريط الإخباري
 # ==============================================================================
 col_h1, col_h2 = st.columns([4.5, 1.2])
 with col_h1:
@@ -1832,7 +1806,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# التبويبات الرئيسة (تتمدد بعرض الشاشة الكامل لكل من user و admin)
+# التبويبات الرئيسة
 # ==============================================================================
 if st.session_state.role == "admin":
     tab_home, tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
@@ -1861,11 +1835,10 @@ else:
     ])
     tab9 = None
 
-# حقن وتثبيت تنسيق الشريط العلوي بعرض الشاشة الكامل + استعادة وتثبيت التبويب النشط
 inject_tabs_css()
 
 # ==============================================================================
-# التبويب التمهيدي: الرئيسية والإطار المنهجي (تهيئة الزائر والمحكم فور الدخول)
+# التبويب التمهيدي: الرئيسية والإطار المنهجي
 # ==============================================================================
 with tab_home:
     st.markdown(f"""
@@ -1874,10 +1847,10 @@ with tab_home:
             🏛️ مرحباً بكم في مقترح المنصة الوطنية الذكية لتعزيز حوكمة القطاع المصرفي المصري (رصين)
         </h2>
         <p style="color: #334155; font-size: 14.5px; line-height: 1.85; margin-bottom: 10px;">
-            تمثل هذه المنصة التطبيق العملي ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل .
+            تمثل هذه المنصة التطبيق العملي ضمن أطروحة دكتوراه الفلسفة في العلوم البيئية (جامعة عين شمس)، وتهدف إلى سد الفجوة بين <b>التحول الرقمي الذكي</b> و<b>الامتثال لمعايير الاستدامة البيئية والحوكمة المؤسسية (ESG)</b> في البنوك العاملة بالقطاع المصرفي المصري، بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 وأفضل الممارسات الدولية ومقررات لجنة بازل.
         </p>
         <div style="background: #F8FAFC; border-radius: 10px; padding: 12px 16px; border: 1px solid #E2E8F0; font-size: 13.5px; color: {CBE_NAVY};">
-            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بمعلومات ذكية موثوقة غير مضللة </b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
+            <b>🎯 القيمة المضافة للمنصة:</b> تحويل تقارير الاستدامة والحوكمة من وثائق إفصاح سردية ساكنة إلى <b>منظومة تعتمد على الذكاء الاصطناعي بمعلومات ذكية موثوقة غير مضللة</b> ومؤشرات قياس كمية ومحاكي سياسات استشرافي يدعم متخذي القرار والباحثين.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1949,7 +1922,7 @@ with tab_home:
 
     st.markdown(f"""
     <div style="background: {CBE_NAVY}; color: #FFFFFF; text-align: center; padding: 12px 16px; border-radius: 10px; border: 1.5px solid {CBE_GOLD}; margin: 18px 0 22px 0; font-size: 13.5px; font-weight: 700;" dir="rtl">
-        🔄 المسار المنهجي:   <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span>  ⬅️  <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span>  ⬅️  <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
+        🔄 المسار المنهجي: <span style="color: {CBE_GOLD_BRIGHT};">منصات المعلومات الذكية (4 أبعاد)</span> ⬅️ <span style="color: #FFFFFF;">تقارير الاستدامة (5 أبعاد)</span> ⬅️ <span style="color: {CBE_GOLD_BRIGHT};">الحوكمة المؤسسية (6 أبعاد)</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -2021,7 +1994,7 @@ with tab_home:
         <div class="tour-nav-btn" data-tab-target="8" role="button" tabindex="0" dir="rtl">
             <div>
                 <div class="tour-nav-title">📖 دليل المستخدم</div>
-                <div class="tour-nav-desc">التوثيق المنهجي  للمنصة الوطنية الذكية (رصين) وشرح آليات التشغيل .</div>
+                <div class="tour-nav-desc">التوثيق المنهجي للمنصة الوطنية الذكية (رصين) وشرح آليات التشغيل.</div>
             </div>
             <span class="tour-nav-arrow">انتقال للقسم ⬅️</span>
         </div>
