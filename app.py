@@ -75,13 +75,48 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# تحميل خطوط Google بالتوازي فور بدء الصفحة لمنع ظهور الحروف منفصلة لحظة التحميل (FOUT)
-st.markdown("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-""", unsafe_allow_html=True)
+# حقن خطوط Google مباشرة داخل <head> الصفحة الأم في اللحظة صفر لمنع تفكك الحروف العربية (FOUT) نهائياً
+components.html(
+    """
+    <script>
+    (function() {
+        var doc = window.parent.document;
+        var head = doc.head || doc.getElementsByTagName('head')[0];
+        if (!head) return;
+
+        doc.documentElement.setAttribute('dir', 'rtl');
+        doc.documentElement.setAttribute('lang', 'ar');
+
+        if (!doc.getElementById('raseen-gf-preconnect-1')) {
+            var p1 = doc.createElement('link');
+            p1.id = 'raseen-gf-preconnect-1';
+            p1.rel = 'preconnect';
+            p1.href = 'https://fonts.googleapis.com';
+            head.prepend(p1);
+        }
+
+        if (!doc.getElementById('raseen-gf-preconnect-2')) {
+            var p2 = doc.createElement('link');
+            p2.id = 'raseen-gf-preconnect-2';
+            p2.rel = 'preconnect';
+            p2.href = 'https://fonts.gstatic.com';
+            p2.crossOrigin = 'anonymous';
+            head.prepend(p2);
+        }
+
+        if (!doc.getElementById('raseen-gf-arabic-fonts')) {
+            var link = doc.createElement('link');
+            link.id = 'raseen-gf-arabic-fonts';
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap';
+            head.prepend(link);
+        }
+    })();
+    </script>
+    """,
+    height=0,
+    width=0,
+)
 
 CBE_NAVY = "#002B49"          # أزرق مصرفي عميق
 CBE_GOLD = "#C5A059"          # ذهبي ملكي
