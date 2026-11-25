@@ -4486,9 +4486,10 @@ def load_survey_log_from_cloud():
 
 
 # ------------------------------------------------------------------------------
-# التبويب السابع: الاستبيان الموجه إلى فرق العمل (Dual-Channel: Platform + Kobo)
+# التبويب السابع: الاستبيان الموجه إلى فرق العمل والخبراء (Dual-Channel: Platform + Kobo)
 # ------------------------------------------------------------------------------
 KOBO_SURVEY_URL = "https://ee.kobotoolbox.org/x/eSYulrAD"
+OTHER_ORG_OPTION = "🏛️ جهة غير مصرفية / جامعة / معهد بحثي / أخرى (يرجى التحديد)"
 
 with tab7:
     import base64
@@ -4545,7 +4546,6 @@ with tab7:
         if "survey_wizard_step" not in st.session_state:
             st.session_state.survey_wizard_step = 1
 
-        # 1) الاستعادة الفورية من URL Query Params (الأسرع والأكثر موثوقية عند F5)
         url_draft = st.query_params.get("sdraft", "")
         if url_draft and not st.session_state.survey_store:
             restored_store, restored_step = _decode_survey_draft(url_draft)
@@ -4553,7 +4553,6 @@ with tab7:
                 st.session_state.survey_store.update(restored_store)
                 st.session_state.survey_wizard_step = restored_step
 
-        # 2) جسر localStorage بالمتصفح كنسخة احتياطية ثانية إذا فُتح الرابط بدون معاملات
         has_data = bool(st.session_state.survey_store)
         components.html(
             f"""
@@ -4622,13 +4621,12 @@ with tab7:
             width=0,
         )
 
-    # استعادة البيانات المحفوظة قبل رسم مكونات التبويب
     restore_survey_browser_backup()
 
     st.markdown("""
     <div dir="rtl" style="text-align: right; margin-bottom: 15px;">
-        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 الاستبيان الموجه إلى فرق العمل في البنوك (عينة الدراسة الميدانية)</h3>
-        <p style="color: #475569; font-size: 14px;">استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل والقيادات المصرفية حول محاور المنصة المقترحة وجدواها التطبيقية.</p>
+        <h3 style="color: #002B49; font-weight: 800; margin-bottom: 4px;">📋 الاستبيان الموجه إلى فرق العمل بالبنوك والخبراء (عينة الدراسة الميدانية)</h3>
+        <p style="color: #475569; font-size: 14px;">استمارة الاستبيان الميداني المعتمدة لجمع آراء وتقييمات فرق العمل المصرفية والخبراء الأكاديميين والتقنيين حول محاور المنصة المقترحة وجدواها التطبيقية.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -4735,7 +4733,7 @@ with tab7:
         READINESS_LIKERT = {"منخفض جداً": 1, "منخفض": 2, "متوسط": 3, "مرتفع": 4, "مرتفع جداً": 5}
         readiness_options = list(READINESS_LIKERT.keys())
 
-        # القسم الأول (ثانياً): مؤشرات الجاهزية الرقمية والمؤسسية الحالية بالبنك (وصفية - لا تدخل في SEM)
+        # القسم الأول (ثانياً): مؤشرات الجاهزية الرقمية والمؤسسية الحالية بالبنك (وصفية - للبنوك فقط)
         READINESS_TEXTS = {
             "r1": "(أ) مستوى نضج البنية التحتية الرقمية وتكامل قواعد البيانات بين إدارات البنك.",
             "r2": "(ب) مدى توظيف أدوات الذكاء الاصطناعي وتحليل البيانات المتقدمة في العمليات المصرفية والرقابية.",
@@ -4848,30 +4846,34 @@ with tab7:
             "إدارة المخاطر/ الائتمان": ["IG", "USABILITY"],
         }
 
-        banks_opts = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"]
+        banks_opts = [b for b in BANKS_LIST_AR if b != "اختر البنك المصرفي"] + [OTHER_ORG_OPTION]
         PROFILE_FIELDS = [
-            ("bank", "اسم البنك / المؤسسة المصرفية (إلزامي)", banks_opts),
-            ("spec", "مجال التخصص الوظيفي / الإدارة (إلزامي - يحدد مسار العبارات)", [
+            ("bank", "اسم البنك أو جهة العمل (إلزامي)", banks_opts),
+            ("spec", "مجال التخصص الوظيفي / الأكاديمي (إلزامي - يحدد مسار العبارات)", [
                 "مجلس الإدارة/ الإدارة العليا العامة",
                 "تكنولوجيا المعلومات/ التحول الرقمي",
                 "الحوكمة/ الالتزام/ المراجعة الداخلية",
                 "إدارة المخاطر/ الائتمان",
                 "الاستدامة/ المسؤولية المجتمعية",
+                "باحث أكاديمي / عضو هيئة تدريس / خبير مستقل",
                 "البحث/ التطوير أو أخرى",
             ]),
-            ("org", "طبيعة المؤسسة (إلزامي)", [
+            ("org", "طبيعة المؤسسة / الجهة (إلزامي)", [
                 "بنك قطاع عام/ حكومي", "بنك قطاع خاص مشترك", "بنك إسلامي", "بنك عربي/ أجنبي",
                 "جهة رقابية ك(البنك المركزي / الرقابة المالية)",
-                "مؤسسة أكاديمية أو شركة تكنولوجيا مالية", "أخرى",
+                "جامعة / معهد بحثي / مركز دراسات",
+                "شركة تكنولوجيا مالية / استشارات",
+                "أخرى",
             ]),
-            ("job", "المستوى الوظيفي (إلزامي)", [
+            ("job", "المستوى الوظيفي / الدرجة العلمية (إلزامي)", [
                 "رئيس/ عضو مجلس إدارة", "رئيس قطاع/ مساعد مدير عام", "مدير إدارة/ مدير عام",
+                "أستاذ / أستاذ مساعد / مدرس جامعي أو باحث",
                 "خبير/ مستشار/ كبير أخصائيين", "مستوى إشرافي", "أخرى",
             ]),
             ("sci", "المؤهل العلمي (إلزامي)", [
                 "دكتوراه", "ماجستير", "شهادة مهنية متخصصة مثل: CISA, GRCP", "ليسانس/ بكالوريوس",
             ]),
-            ("exp", "سنوات الخبرة في القطاع المصرفي (إلزامي)", [
+            ("exp", "سنوات الخبرة المهنية أو الأكاديمية (إلزامي)", [
                 "أقل من 5 سنوات", "من 5 إلى 10 سنوات", "من 11 إلى 15 سنة", "أكثر من 15 سنة",
             ]),
         ]
@@ -4885,11 +4887,18 @@ with tab7:
 
         S = st.session_state.survey_store
 
+        # تحديد هل الجهة المختارة مصرفية أم جهة خارجية/أكاديمية
+        selected_bank_choice = S.get("bank")
+        is_external_org = (selected_bank_choice == OTHER_ORG_OPTION)
+
         # مزامنة تلقائية لمسودة الاستبيان مع المتصفح والرابط لحمايتها من F5 / Refresh
         sync_survey_browser_backup()
 
         def _sync(widget_key, store_key):
             S[store_key] = st.session_state.get(widget_key)
+            # إذا غيّر المستخدم الاختيار من "جهة أخرى" إلى بنك، ننظف الحقل النصي المخصص
+            if store_key == "bank" and S.get("bank") != OTHER_ORG_OPTION:
+                S["custom_org_name"] = ""
             token_now = _encode_survey_draft(S, st.session_state.get("survey_wizard_step", 1))
             if token_now:
                 st.query_params["sdraft"] = token_now
@@ -4938,7 +4947,11 @@ with tab7:
 
         def step_titles(k):
             if k == "profile":
-                return "القسم الأول: البيانات الديموغرافية والجاهزية الحالية للبنك (وصفي)"
+                return (
+                    "القسم الأول: البيانات الديموغرافية والتعريفية لجهة العمل"
+                    if is_external_org else
+                    "القسم الأول: البيانات الديموغرافية والجاهزية الحالية للبنك (وصفي)"
+                )
             if k == "final":
                 return "المرحلة الختامية: الأوزان النسبية والملاحظات والإرسال النهائي"
             return f"{SURVEY_AXES[k]['icon']} {SURVEY_AXES[k]['label']}"
@@ -4954,9 +4967,17 @@ with tab7:
 
         def step_complete(k):
             if k == "profile":
-                profile_ok = all(S.get(f) for f, _, _ in PROFILE_FIELDS) and S.get("listed") is not None
+                base_profile_ok = all(S.get(f) for f, _, _ in PROFILE_FIELDS) and S.get("listed") is not None
+                if is_external_org:
+                    custom_name_val = clean_text(
+                        st.session_state.get("w_custom_org_name")
+                        if st.session_state.get("w_custom_org_name") is not None
+                        else S.get("custom_org_name", "")
+                    )
+                    # الجهة غير المصرفية يلزمها إدخال اسم الجهة ولا يُطلب منها تقييم جاهزية البنك
+                    return base_profile_ok and len(custom_name_val) >= 2
                 readiness_ok = all(S.get(rk) is not None for rk in READINESS_TEXTS)
-                return profile_ok and readiness_ok
+                return base_profile_ok and readiness_ok
             if k in SURVEY_AXES:
                 return all(S.get(f"stmt_{n}") is not None for n in SURVEY_AXES[k]["nums"])
             return (
@@ -4965,9 +4986,10 @@ with tab7:
                 and all(S.get(f"stmt_{n}") is not None for n in required_stmts)
             )
 
+        readiness_suffix = " (تقييم خارجي/أكاديمي)" if is_external_org else " + 5 مؤشرات جاهزية"
         route_badge = (
-            "مسار شامل (35 عبارة + 5 مؤشرات جاهزية)" if (current_spec and is_full_assessment)
-            else (f"مسار مخصص للتخصص ({total_req_count} عبارة + 5 مؤشرات جاهزية)" if current_spec else "بانتظار تحديد التخصص")
+            f"مسار شامل (35 عبارة{readiness_suffix})" if (current_spec and is_full_assessment)
+            else (f"مسار مخصص للتخصص ({total_req_count} عبارة{readiness_suffix})" if current_spec else "بانتظار تحديد التخصص")
         )
         progress_txt = (
             f"{route_badge} | الإنجاز: {progress_percentage}% ({answered_count} من {total_req_count})"
@@ -5005,23 +5027,59 @@ with tab7:
                 for i, (skey, label, opts) in enumerate(PROFILE_FIELDS):
                     with (c1 if i % 2 == 0 else c2):
                         sv_select(label, opts, skey)
-                cur = S.get("listed")
-                st.radio("هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)", ["نعم", "لا"],
-                         index=["نعم", "لا"].index(cur) if cur in ["نعم", "لا"] else None, horizontal=True,
-                         key="w_listed", on_change=_sync, args=("w_listed", "listed"))
+                        # إذا اختار المشارك جهة غير مدرجة بقائمة البنوك، تظهر خانة كتابة الجهة فوراً تحت القائمة
+                        if skey == "bank" and S.get("bank") == OTHER_ORG_OPTION:
+                            S["custom_org_name"] = st.text_input(
+                                "✍️ اكتب اسم الجامعة / المعهد البحثي / جهة العمل بالتفصيل (إلزامي):",
+                                value=S.get("custom_org_name", ""),
+                                placeholder="مثال: جامعة عين شمس - كلية الدراسات العليا / معهد التخطيط القومي...",
+                                key="w_custom_org_name",
+                                on_change=_sync,
+                                args=("w_custom_org_name", "custom_org_name"),
+                            )
+
+                listed_options = (
+                    ["نعم", "لا", "غير منطبق (جهة أكاديمية / بحثية / حكومية)"]
+                    if is_external_org else ["نعم", "لا"]
+                )
+                cur_listed = S.get("listed")
+                if cur_listed not in listed_options:
+                    cur_listed = None
+                    S["listed"] = None
+
+                st.radio(
+                    "هل المؤسسة التي تعمل بها مقيدة بالبورصة المصرية؟ (إلزامي)",
+                    listed_options,
+                    index=listed_options.index(cur_listed) if cur_listed in listed_options else None,
+                    horizontal=True,
+                    key="w_listed",
+                    on_change=_sync,
+                    args=("w_listed", "listed"),
+                )
                 S["name"] = st.text_input("الاسم (اختياري)", value=S.get("name", ""),
                                           placeholder="يمكنكم ترك هذا الحقل فارغاً",
                                           key="w_name", on_change=_sync, args=("w_name", "name"))
 
                 st.markdown("<hr style='margin: 18px 0; border-top: 1.5px solid #E2E8F0;'>", unsafe_allow_html=True)
-                st.markdown(f"""
-                <div dir='rtl'>
-                    <h4 style='color:{CBE_NAVY};font-weight:800;margin-bottom:4px;'>🏦 ثانياً: مؤشرات الجاهزية الرقمية والمؤسسية الحالية بالبنك (وصفية)</h4>
-                    <p style='color:#475569;font-size:13px;margin-bottom:12px;'>يرجى تقييم <b>الوضع الراهن في مؤسستكم المصرفية</b> من حيث مستوى النضج والجاهزية (من 1 = منخفض جداً إلى 5 = مرتفع جداً):</p>
-                </div>""", unsafe_allow_html=True)
 
-                for rkey in READINESS_TEXTS:
-                    render_readiness_item(rkey)
+                # التكييف الذكي لقسم الجاهزية بناءً على كون الجهة مصرفية أم خارجية/أكاديمية
+                if is_external_org:
+                    st.markdown(f"""
+                    <div dir='rtl' style='background:#EFF6FF;border:1.5px solid #93C5FD;border-right:5px solid {CBE_NAVY};border-radius:10px;padding:14px 18px;margin-bottom:12px;'>
+                        <h4 style='color:{CBE_NAVY};font-weight:800;margin:0 0 6px 0;'>🎓 مسار التقييم الأكاديمي والخبراء الخارجيين</h4>
+                        <p style='color:#1E3A8A;font-size:13.5px;margin:0;line-height:1.7;'>
+                            نظراً لاختياركم جهة عمل غير مصرفية (جامعة / معهد بحثي / جهة مستقلة)، تم <b>إعفاؤكم تلقائياً</b> من بند «مؤشرات الجاهزية الرقمية الداخلية للبنك» حفاظاً على دقة البيانات المصرفية، وسينتقل تقييمكم مباشرة إلى محاور تقييم <b>المنصة الذكية المقترحة (رصين)</b> وجدواها العلمية والتطبيقية.
+                        </p>
+                    </div>""", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div dir='rtl'>
+                        <h4 style='color:{CBE_NAVY};font-weight:800;margin-bottom:4px;'>🏦 ثانياً: مؤشرات الجاهزية الرقمية والمؤسسية الحالية بالبنك (وصفية)</h4>
+                        <p style='color:#475569;font-size:13px;margin-bottom:12px;'>يرجى تقييم <b>الوضع الراهن في مؤسستكم المصرفية</b> من حيث مستوى النضج والجاهزية (من 1 = منخفض جداً إلى 5 = مرتفع جداً):</p>
+                    </div>""", unsafe_allow_html=True)
+
+                    for rkey in READINESS_TEXTS:
+                        render_readiness_item(rkey)
 
                 st.markdown(f"""
                 <div dir="rtl" style="background:#F8FAFC;border:1.5px solid {CBE_GOLD};border-radius:10px;padding:10px 14px;margin-top:8px;text-align:right;">
@@ -5048,7 +5106,7 @@ with tab7:
         else:  # final
             with st.container(border=True):
                 st.markdown(f"<div dir='rtl'><h4 style='color:{CBE_NAVY};font-weight:800;'>⚖️ الأوزان النسبية للمحاور وملاحظات التطبيق</h4>"
-                            f"<p style='color:#64748B;font-size:13px;'>حدد الوزن المئوي لكل محور من محاور النموذج الثلاثة حسب تقدير خبرتكم المصرفية (المجموع = 100%).</p></div>",
+                            f"<p style='color:#64748B;font-size:13px;'>حدد الوزن المئوي لكل محور من محاور النموذج الثلاثة حسب تقدير خبرتكم المصرفية أو الأكاديمية (المجموع = 100%).</p></div>",
                             unsafe_allow_html=True)
                 cw1, cw2, cw3 = st.columns(3)
                 for col, skey, lbl, dflt in [(cw1, "w_sip", "1. منصات المعلومات الذكية (SIP): (%)", 40),
@@ -5064,7 +5122,7 @@ with tab7:
                     st.success("✅ مجموع الأوزان النسبية صحيح (100%).")
 
                 st.checkbox(
-                    "✔️ أؤكد مراجعة وتحديد الأوزان النسبية أعلاه وفق تقديري المهني (إلزامي لتفعيل الإرسال)",
+                    "✔️ أؤكد مراجعة وتحديد الأوزان النسبية أعلاه وفق تقديري المهني/العلمي (إلزامي لتفعيل الإرسال)",
                     value=bool(S.get("weights_confirmed", False)),
                     key="wi_weights_confirmed",
                     on_change=_sync,
@@ -5078,6 +5136,8 @@ with tab7:
         def _go(delta):
             if "w_name" in st.session_state and st.session_state["w_name"] is not None:
                 S["name"] = st.session_state["w_name"]
+            if "w_custom_org_name" in st.session_state and st.session_state["w_custom_org_name"] is not None:
+                S["custom_org_name"] = st.session_state["w_custom_org_name"]
             if "wi_comments" in st.session_state and st.session_state["wi_comments"] is not None:
                 S["comments"] = st.session_state["wi_comments"]
             st.session_state.survey_wizard_step += delta
@@ -5104,13 +5164,17 @@ with tab7:
                                  disabled=not can_submit, key="submit_survey_final_btn",
                                  help=None if can_submit else "تأكد من أن مجموع الأوزان = 100% وتفعيل مربع التأكيد."):
 
-                        # 1) مؤشرات الجاهزية الحالية للبنك (القسم الأول - وصفي)
-                        readiness_answers = {
-                            f"جاهزية_البنك_{idx}": READINESS_LIKERT.get(S.get(f"r{idx}"))
-                            for idx in range(1, 6)
-                        }
-                        r_vals = [v for v in readiness_answers.values() if v is not None]
-                        avg_readiness = round(sum(r_vals) / len(r_vals), 2) if r_vals else None
+                        # 1) مؤشرات الجاهزية الحالية للبنك (تُسجل None للجهات غير المصرفية لمنع تشويه المتوسطات)
+                        if is_external_org:
+                            readiness_answers = {f"جاهزية_البنك_{idx}": None for idx in range(1, 6)}
+                            avg_readiness = None
+                        else:
+                            readiness_answers = {
+                                f"جاهزية_البنك_{idx}": READINESS_LIKERT.get(S.get(f"r{idx}"))
+                                for idx in range(1, 6)
+                            }
+                            r_vals = [v for v in readiness_answers.values() if v is not None]
+                            avg_readiness = round(sum(r_vals) / len(r_vals), 2) if r_vals else None
 
                         # 2) عبارات تقييم المنصة (1-30) + قابلية الاستخدام والثقة والجدوى (31-35)
                         answers, axis_scores = {}, {ax: [] for ax in SURVEY_AXES}
@@ -5127,17 +5191,33 @@ with tab7:
                         resp_id = f"SRV-{datetime.now().strftime('%y%m%d%H%M%S')}-{uuid.uuid4().hex[:4].upper()}"
                         raw_name = st.session_state.get("w_name") if st.session_state.get("w_name") is not None else S.get("name", "")
                         raw_comments = st.session_state.get("wi_comments") if st.session_state.get("wi_comments") is not None else S.get("comments", "")
+
+                        # استخراج اسم البنك أو اسم الجهة المكتوبة يدوياً
+                        if is_external_org:
+                            raw_custom_org = (
+                                st.session_state.get("w_custom_org_name")
+                                if st.session_state.get("w_custom_org_name") is not None
+                                else S.get("custom_org_name", "")
+                            )
+                            final_entity_name = f"جهة خارجية: {clean_text(raw_custom_org)}"
+                        else:
+                            final_entity_name = clean_text(S.get("bank", ""))
+
                         rec = {
                             "معرف الاستجابة": resp_id,
                             "الاسم (اختياري)": clean_text(raw_name),
-                            "اسم البنك": clean_text(S.get("bank", "")),
+                            "اسم البنك": final_entity_name,
                             "طبيعة المؤسسة": clean_text(S.get("org", "")),
                             "المؤهل العلمي": clean_text(S.get("sci", "")),
                             "مجال التخصص الوظيفي": clean_text(S.get("spec", "")),
                             "المستوى الوظيفي": clean_text(S.get("job", "")),
                             "سنوات الخبرة": S.get("exp", ""),
                             "مقيدة بالبورصة": S.get("listed", ""),
-                            "مسار الاستبيان": "شامل (35 عبارة)" if is_full_assessment else f"مخصص ({total_req_count} عبارة)",
+                            "مسار الاستبيان": (
+                                ("شامل - تقييم خارجي (35 عبارة)" if is_full_assessment else f"مخصص - تقييم خارجي ({total_req_count} عبارة)")
+                                if is_external_org else
+                                ("شامل (35 عبارة)" if is_full_assessment else f"مخصص ({total_req_count} عبارة)")
+                            ),
                             "متوسط الجاهزية الحالية للبنك": avg_readiness,
                             "وزن منصات المعلومات (%)": int(S.get("w_sip", 40)),
                             "وزن الحوكمة المؤسسية (%)": int(S.get("w_ig", 30)),
@@ -5150,7 +5230,6 @@ with tab7:
                         }
                         try:
                             save_survey_to_cloud(rec)
-                            # حفظ نسخة احتياطية محلية في CSV أيضاً
                             try:
                                 current_surveys = load_survey_log_from_file()
                                 current_surveys.append(rec)
