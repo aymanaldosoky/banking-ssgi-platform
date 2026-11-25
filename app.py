@@ -4692,8 +4692,8 @@ with tab7:
         survey_channel = st.radio(
             "وسيلة التعبئة:",
             [
-                "🖥️ النموذج التفاعلي المباشر بالمنصة (حفظ سحابي فوري)",
-                "🌐 نموذج KoboToolbox المدمجة"
+                "🖥️ النموذج التفاعلي المباشر بالمنصة",
+                "🌐 نموذج KoboToolbox المدمج"
             ],
             horizontal=True,
             label_visibility="collapsed",
