@@ -4693,7 +4693,7 @@ with tab7:
             "وسيلة التعبئة:",
             [
                 "🖥️ النموذج التفاعلي المباشر بالمنصة (حفظ سحابي فوري)",
-                "🌐 استمارة KoboToolbox المدمجة (Enketo Web Form)"
+                "🌐 نموذج KoboToolbox المدمجة"
             ],
             horizontal=True,
             label_visibility="collapsed",
