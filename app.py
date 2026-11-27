@@ -4670,7 +4670,7 @@ with tab7:
 
     with st.expander("📚 مصطلحات تعريفية ودليل المسارات حسب التخصص الوظيفي", expanded=False):
         st.markdown(f"""
-        <div dir="rtl" style="text-align: right; line-height: 1.9;">
+        <div dir="rtl" style="text-align: right; line-height: 1.9; padding: 25px;">
             <p><b>أولاً: التعريفات الإجرائية للمحاور المستخدمة في الاستبيان:</b></p>
             <ul>
                 <li><b>منصة المعلومات الذكية (Smart Information Platform - SIP):</b> نظام رقمي متكامل يعتمد على آليات الاسترجاع الذكي المعتمدة على الوثائق المرجعية وتقنيات الذكاء الاصطناعي التوليدي لتحليل البيانات المصرفية.</li>
