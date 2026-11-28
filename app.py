@@ -127,7 +127,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v21"   # إصدار محدث لإبطال الكاش فوراً + تكبير وتعريض خط المفاتيح
+UI_CSS_VERSION = "tabs-v22"   # إصدار محدث لإبطال الكاش فوراً
 
 APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
@@ -377,7 +377,7 @@ TABS_RULES = TABS_RULES + TABS_COLOR_RULES
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 # ==============================================================================
-# بيانات خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد والعناصر الفرعية)
+# بيانات خريطة النموذج البحثي المعتمد للمنصة (المحاور، الأبعاد، العناصر الفرعية، المتغيرات، وحدات القياس)
 # ==============================================================================
 RESEARCH_MODEL_DIMENSIONS = {
     "sip_info_quality": {
@@ -385,9 +385,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "1",
         "title": "جودة المعلومات",
         "theme": "navy",
-        "items": [
-            "1/1 جاهزية البنية التحتية الرقمية.",
-            "1/2 توافر البيانات وقابليتها للمعالجة الآلية."
+        "sub_elements": [
+            {
+                "code": "1/1",
+                "title": "جاهزية البنية التحتية الرقمية",
+                "variables": [
+                    {"name": "نسبة تغطية الفروع بشبكة البيانات المركزية الموحدة", "unit": "%"},
+                    {"name": "سعة التخزين السحابي/المحلي المتاحة للبيانات الضخمة", "unit": "تيرا بايت"}
+                ]
+            },
+            {
+                "code": "1/2",
+                "title": "توافر البيانات وقابليتها للمعالجة الآلية",
+                "variables": [
+                    {"name": "نسبة البيانات المهيكلة (Structured) إلى إجمالي البيانات", "unit": "%"},
+                    {"name": "نسبة اكتمال حقول البيانات في سجلات العملاء (Data Completeness)", "unit": "%"}
+                ]
+            }
         ]
     },
     "sip_integration_privacy": {
@@ -395,9 +409,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "2",
         "title": "التكامل والخصوصية",
         "theme": "navy",
-        "items": [
-            "2/1 الترابط البيني التقني.",
-            "2/2 السيادة الرقمية وأمن المعلومات."
+        "sub_elements": [
+            {
+                "code": "2/1",
+                "title": "الترابط البيني التقني (Interoperability)",
+                "variables": [
+                    {"name": "عدد الأنظمة الفرعية المربوطة بالمنصة المركزية عبر (APIs)", "unit": "عدد"},
+                    {"name": "معدل وقت التشغيل للنظام (System Uptime)", "unit": "%"}
+                ]
+            },
+            {
+                "code": "2/2",
+                "title": "السيادة الرقمية وأمن المعلومات",
+                "variables": [
+                    {"name": "نسبة البيانات المستضافة محلياً (On-Premise) من إجمالي البيانات الحساسة", "unit": "%"},
+                    {"name": "عدد حوادث اختراق البيانات المسجلة سنوياً (يفضل 0)", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "sip_tech_compliance": {
@@ -405,9 +433,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "3",
         "title": "الامتثال التقني",
         "theme": "navy",
-        "items": [
-            "3/1 الامتثال للمعايير القياسية.",
-            "3/2 حوكمة الخوارزميات (أخلاقيات الذكاء الاصطناعي)."
+        "sub_elements": [
+            {
+                "code": "3/1",
+                "title": "الامتثال للمعايير القياسية (ISO)",
+                "variables": [
+                    {"name": "نسبة ضوابط معيار (ISO 27001) المطبقة فعلياً", "unit": "%"},
+                    {"name": "عدد شهادات الامتثال التقني السارية", "unit": "عدد"}
+                ]
+            },
+            {
+                "code": "3/2",
+                "title": "حوكمة الخوارزميات",
+                "variables": [
+                    {"name": "عدد عمليات التدقيق (Audits) المجراة على نماذج الذكاء الاصطناعي", "unit": "عدد"},
+                    {"name": "نسبة النماذج الموثقة بسجلات شرح النتائج (Explainability Logs)", "unit": "%"}
+                ]
+            }
         ]
     },
     "sip_post_monitoring": {
@@ -415,9 +457,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "4",
         "title": "التخطيط والمراقبة بعد النشر",
         "theme": "navy",
-        "items": [
-            "4/1 الرصد والتحليل الآني.",
-            "4/2 دقة وموثوقية المخرجات."
+        "sub_elements": [
+            {
+                "code": "4/1",
+                "title": "الرصد والتحليل الآني",
+                "variables": [
+                    {"name": "متوسط الزمن المستغرق لاكتشاف الخطأ في البيانات (MTTD)", "unit": "دقيقة/ساعة"},
+                    {"name": "عدد التنبيهات الآلية الصحيحة التي أصدرها النظام", "unit": "عدد"}
+                ]
+            },
+            {
+                "code": "4/2",
+                "title": "دقة وموثوقية المخرجات",
+                "variables": [
+                    {"name": "معدل دقة التنبؤات (AI Accuracy Rate) مقارنة بالنتائج الفعلية", "unit": "%"},
+                    {"name": "نسبة التقارير التي تطلبت تصحيحاً يدوياً بعد الصدور", "unit": "%"}
+                ]
+            }
         ]
     },
     "sr_strategy": {
@@ -425,9 +481,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "1",
         "title": "الاستراتيجية",
         "theme": "gold",
-        "items": [
-            "1/1 الدمج الاستراتيجي لأهداف التنمية.",
-            "1/2 التخصيص المالي المستدام."
+        "sub_elements": [
+            {
+                "code": "1/1",
+                "title": "الدمج الاستراتيجي لأهداف التنمية",
+                "variables": [
+                    {"name": "عدد أهداف التنمية المستدامة المتبناة رسمياً في الاستراتيجية", "unit": "عدد"},
+                    {"name": "نسبة الأهداف المحققة من إجمالي الأهداف المخططة", "unit": "%"}
+                ]
+            },
+            {
+                "code": "1/2",
+                "title": "التخصيص المالي المستدام",
+                "variables": [
+                    {"name": "نسبة ميزانية (R&D) والتحول الأخضر إلى إجمالي الميزانية", "unit": "%"},
+                    {"name": "حجم الاستثمار في البنية التحتية المستدامة", "unit": "عملة"}
+                ]
+            }
         ]
     },
     "sr_diversity_inclusion": {
@@ -435,9 +505,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "2",
         "title": "التنوع والشمول",
         "theme": "gold",
-        "items": [
-            "2/1 تنوع الهيكل القيادي.",
-            "2/2 شمول القوى العاملة."
+        "sub_elements": [
+            {
+                "code": "2/1",
+                "title": "تنوع الهيكل القيادي",
+                "variables": [
+                    {"name": "نسبة تمثيل المرأة في مجلس الإدارة", "unit": "%"},
+                    {"name": "نسبة الأعضاء المستقلين في مجلس الإدارة", "unit": "%"}
+                ]
+            },
+            {
+                "code": "2/2",
+                "title": "شمول القوى العاملة",
+                "variables": [
+                    {"name": "نسبة ذوي الهمم من إجمالي القوى العاملة", "unit": "%"},
+                    {"name": "نسبة الموظفين من خارج العاصمة (في الأقاليم)", "unit": "%"}
+                ]
+            }
         ]
     },
     "sr_risk_management": {
@@ -445,9 +529,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "3",
         "title": "إدارة المخاطر",
         "theme": "gold",
-        "items": [
-            "3/1 دمج مخاطر المناخ والحوكمة.",
-            "3/2 المرونة واختبارات الضغط."
+        "sub_elements": [
+            {
+                "code": "3/1",
+                "title": "دمج مخاطر المناخ والحوكمة",
+                "variables": [
+                    {"name": "نسبة محفظة الائتمان التي خضعت لتقييم المخاطر البيئية", "unit": "%"},
+                    {"name": "القيمة المعرضة للخطر (VaR) المرتبطة بالمناخ", "unit": "عملة"}
+                ]
+            },
+            {
+                "code": "3/2",
+                "title": "المرونة واختبارات الضغط",
+                "variables": [
+                    {"name": "عدد سيناريوهات اختبارات الضغط المناخية المنفذة", "unit": "عدد"},
+                    {"name": "نسبة كفاية رأس المال (CAR) بعد احتساب مخاطر المناخ", "unit": "%"}
+                ]
+            }
         ]
     },
     "sr_operational_dims": {
@@ -455,10 +553,31 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "4",
         "title": "الأبعاد التشغيلية",
         "theme": "gold",
-        "items": [
-            "4/1 التمويل والاستثمار المستدام (الاقتصادي).",
-            "4/2 الكفاءة التشغيلية للموارد (البيئي).",
-            "4/3 أثر المسؤولية المجتمعية (الاجتماعي)."
+        "sub_elements": [
+            {
+                "code": "4/1",
+                "title": "التمويل والاستثمار المستدام (اقتصادي)",
+                "variables": [
+                    {"name": "نسبة الأصول الخضراء (Green Asset Ratio - GAR)", "unit": "%"},
+                    {"name": "حجم القروض الموجهة للمشروعات الصغيرة والمتوسطة (SMEs)", "unit": "عملة"}
+                ]
+            },
+            {
+                "code": "4/2",
+                "title": "الكفاءة التشغيلية للموارد (بيئي)",
+                "variables": [
+                    {"name": "إجمالي انبعاثات الكربون (طن مكافئ) لكل موظف", "unit": "طن/موظف"},
+                    {"name": "نسبة استهلاك الطاقة المتجددة من إجمالي الطاقة", "unit": "%"}
+                ]
+            },
+            {
+                "code": "4/3",
+                "title": "أثر المسؤولية المجتمعية (اجتماعي)",
+                "variables": [
+                    {"name": "نسبة الإنفاق على المسؤولية المجتمعية (CSR) من صافي الأرباح", "unit": "%"},
+                    {"name": "عدد المستفيدين المباشرين من مبادرات الشمول المالي", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "sr_metrics_targets": {
@@ -466,9 +585,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "5",
         "title": "المقاييس والأهداف",
         "theme": "gold",
-        "items": [
-            "5/1 أداء تحقيق المستهدفات.",
-            "5/2 المواءمة المعيارية والتوكيد."
+        "sub_elements": [
+            {
+                "code": "5/1",
+                "title": "أداء تحقيق المستهدفات",
+                "variables": [
+                    {"name": "نسبة التغير السنوي في خفض الانبعاثات", "unit": "%"},
+                    {"name": "معدل تحقيق مؤشرات الأداء الرئيسية", "unit": "%"}
+                ]
+            },
+            {
+                "code": "5/2",
+                "title": "المواءمة المعيارية والتوكيد",
+                "variables": [
+                    {"name": "نسبة تغطية مؤشرات (GRI) في التقرير", "unit": "%"},
+                    {"name": "مستوى التوكيد الخارجي (لا يوجد=0، محدود=1، معقول=2)", "unit": "درجة"}
+                ]
+            }
         ]
     },
     "ig_rule_of_law": {
@@ -476,9 +609,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "1",
         "title": "سيادة القانون",
         "theme": "teal",
-        "items": [
-            "1/1 التوافق التشريعي والتنظيمي.",
-            "1/2 الأخلاقيات والسلوك المؤسسي."
+        "sub_elements": [
+            {
+                "code": "1/1",
+                "title": "التوافق التشريعي والتنظيمي",
+                "variables": [
+                    {"name": "نسبة السياسات الداخلية التي تم تحديثها خلال العام الحالي", "unit": "%"},
+                    {"name": "قيمة الغرامات المالية الموقعة من الجهات الرقابية (مؤشر عكسي)", "unit": "عملة"}
+                ]
+            },
+            {
+                "code": "1/2",
+                "title": "الأخلاقيات والسلوك المؤسسي",
+                "variables": [
+                    {"name": "نسبة الموظفين الموقعين على مدونة السلوك الرقمي", "unit": "%"},
+                    {"name": "عدد بلاغات المخالفات الأخلاقية التي تم التحقيق فيها", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "ig_fairness_equality": {
@@ -486,9 +633,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "2",
         "title": "العدالة والمساواة",
         "theme": "teal",
-        "items": [
-            "2/1 العدالة التنظيمية والوظيفية.",
-            "2/2 عدالة حقوق أصحاب المصلحة."
+        "sub_elements": [
+            {
+                "code": "2/1",
+                "title": "العدالة التنظيمية والوظيفية",
+                "variables": [
+                    {"name": "نسبة فجوة الأجور بين الجنسين", "unit": "%"},
+                    {"name": "نسبة الترقيات الداخلية مقارنة بالتعيينات الخارجية", "unit": "%"}
+                ]
+            },
+            {
+                "code": "2/2",
+                "title": "عدالة حقوق أصحاب المصلحة",
+                "variables": [
+                    {"name": "نسبة توزيعات الأرباح إلى صافي الربح", "unit": "%"},
+                    {"name": "عدد القضايا المرفوعة من مساهمين أو عملاء ضد البنك", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "ig_accountability": {
@@ -496,9 +657,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "3",
         "title": "المتابعة والمساءلة",
         "theme": "teal",
-        "items": [
-            "3/1 وضوح هيكل المسؤوليات والصلاحيات.",
-            "3/2 فاعلية آليات الرقابة والتدقيق."
+        "sub_elements": [
+            {
+                "code": "3/1",
+                "title": "وضوح هيكل المسؤوليات",
+                "variables": [
+                    {"name": "نسبة العمليات الموثقة بمصفوفة (RACI) المعتمدة", "unit": "%"},
+                    {"name": "عدد الأوصاف الوظيفية المحدثة للقيادات العليا", "unit": "عدد"}
+                ]
+            },
+            {
+                "code": "3/2",
+                "title": "فاعلية آليات الرقابة والتدقيق",
+                "variables": [
+                    {"name": "نسبة توصيات المراجعة الداخلية التي تم تنفيذها", "unit": "%"},
+                    {"name": "عدد اجتماعات لجان الحوكمة والمخاطر سنوياً", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "ig_participation": {
@@ -506,9 +681,22 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "4",
         "title": "المشاركة",
         "theme": "teal",
-        "items": [
-            "4/1 تفاعل وانخراط أصحاب المصلحة.",
-            "4/2 المشاركة في صنع القرار."
+        "sub_elements": [
+            {
+                "code": "4/1",
+                "title": "تفاعل أصحاب المصلحة",
+                "variables": [
+                    {"name": "معدل الاستجابة لشكاوى العملاء (Response Rate)", "unit": "%"},
+                    {"name": "عدد قنوات التواصل الرقمية الفعالة", "unit": "عدد"}
+                ]
+            },
+            {
+                "code": "4/2",
+                "title": "المشاركة في صنع القرار",
+                "variables": [
+                    {"name": "نسبة القرارات الاستراتيجية التي خضعت لاستطلاع الرأي", "unit": "%"}
+                ]
+            }
         ]
     },
     "ig_transparency": {
@@ -516,9 +704,23 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "5",
         "title": "الشفافية والإفصاح",
         "theme": "teal",
-        "items": [
-            "5/1 جودة ووضوح الإفصاح.",
-            "5/2 توقيت ودورية الإفصاح."
+        "sub_elements": [
+            {
+                "code": "5/1",
+                "title": "جودة ووضوح الإفصاح",
+                "variables": [
+                    {"name": "درجة سهولة القراءة (Readability Score) للتقرير السنوي", "unit": "درجة"},
+                    {"name": "عدد صفحات الإفصاح عن المخاطر غير المالية", "unit": "عدد"}
+                ]
+            },
+            {
+                "code": "5/2",
+                "title": "توقيت ودورية الإفصاح",
+                "variables": [
+                    {"name": "الفجوة الزمنية (بالأيام) بين نهاية السنة المالية وتاريخ نشر التقرير", "unit": "يوم"},
+                    {"name": "عدد الإفصاحات الفورية عن الأحداث الجوهرية خلال العام", "unit": "عدد"}
+                ]
+            }
         ]
     },
     "ig_board": {
@@ -526,10 +728,31 @@ RESEARCH_MODEL_DIMENSIONS = {
         "code": "6",
         "title": "مجلس الإدارة",
         "theme": "teal",
-        "items": [
-            "6/1 كفاءة وفاعلية تشكيل المجلس.",
-            "6/2 نشاط اللجان المنبثقة والرقابة.",
-            "6/3 الاستقلالية وتعارض المصالح."
+        "sub_elements": [
+            {
+                "code": "6/1",
+                "title": "كفاءة وفاعلية تشكيل المجلس",
+                "variables": [
+                    {"name": "نسبة حضور أعضاء مجلس الإدارة للاجتماعات الدورية", "unit": "%"},
+                    {"name": "متوسط سنوات خبرة أعضاء المجلس في العمل المصرفي والاستدامة", "unit": "سنة"}
+                ]
+            },
+            {
+                "code": "6/2",
+                "title": "نشاط اللجان المنبثقة والرقابة",
+                "variables": [
+                    {"name": "عدد الاجتماعات السنوية للجنة الحوكمة والترشيحات والمكافآت", "unit": "عدد"},
+                    {"name": "نسبة التزام المجلس بتقييم الأداء السنوي المستقل (Evaluation)", "unit": "%"}
+                ]
+            },
+            {
+                "code": "6/3",
+                "title": "الاستقلالية وتعارض المصالح",
+                "variables": [
+                    {"name": "نسبة اللجان السيادية (التدقيق والمخاطر) التي يرأسها أعضاء مستقلون", "unit": "%"},
+                    {"name": "عدد حالات تعارض المصالح المرصودة والمفصح عنها (يفضل 0)", "unit": "عدد"}
+                ]
+            }
         ]
     }
 }
@@ -694,7 +917,7 @@ SOUND_ENGINE_JS = """
 """
 
 # ==============================================================================
-# محرك النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية للأبعاد الأساسية
+# محرك النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية والمتغيرات ووحدات القياس
 # ==============================================================================
 DIM_POPOVER_JS = """
 (function () {
@@ -719,8 +942,8 @@ DIM_POPOVER_JS = """
           '<button type="button" id="raseen-dim-modal-close" aria-label="إغلاق">✕</button>' +
         '</div>' +
         '<div id="raseen-dim-modal-body">' +
-          '<div class="raseen-dim-sub-heading">📌 العناصر الفرعية المعتمدة للقياس والتقييم:</div>' +
-          '<ul id="raseen-dim-modal-list"></ul>' +
+          '<div class="raseen-dim-sub-heading">📌 العناصر الفرعية ومؤشرات القياس (المتغيرات ووحدة القياس):</div>' +
+          '<div id="raseen-dim-modal-list"></div>' +
         '</div>' +
         '<div id="raseen-dim-modal-footer">' +
           '<button type="button" id="raseen-dim-modal-ok-btn">إغلاق النافذة ✔️</button>' +
@@ -763,17 +986,34 @@ DIM_POPOVER_JS = """
 
     card.className = 'theme-' + (info.theme || 'navy');
     axisEl.textContent = info.axis;
-    titleEl.textContent = 'البُعد (' + info.code + '): ' + info.title;
+    titleEl.textContent = 'البُعد الأساسي (' + info.code + '): ' + info.title;
 
     listEl.innerHTML = '';
-    (info.items || []).forEach(function (itemText) {
-      var li = D.createElement('li');
-      var parts = itemText.split(' ');
-      var codePart = parts.shift() || '';
-      var textPart = parts.join(' ');
-      li.innerHTML = '<span class="raseen-sub-code">' + codePart + '</span><span class="raseen-sub-text">' + textPart + '</span>';
-      listEl.appendChild(li);
+    (info.sub_elements || []).forEach(function (sub) {
+      var groupBox = D.createElement('div');
+      groupBox.className = 'raseen-sub-group';
+
+      var varsHtml = '';
+      (sub.variables || []).forEach(function (v) {
+        varsHtml +=
+          '<div class="raseen-var-row">' +
+            '<span class="raseen-var-name">🔹 ' + v.name + '</span>' +
+            '<span class="raseen-var-unit">وحدة القياس: <b>' + v.unit + '</b></span>' +
+          '</div>';
+      });
+
+      groupBox.innerHTML =
+        '<div class="raseen-sub-header">' +
+          '<span class="raseen-sub-code">' + sub.code + '</span>' +
+          '<span class="raseen-sub-title">' + sub.title + '</span>' +
+        '</div>' +
+        '<div class="raseen-vars-container">' + varsHtml + '</div>';
+
+      listEl.appendChild(groupBox);
     });
+
+    var bodyEl = D.getElementById('raseen-dim-modal-body');
+    if (bodyEl) bodyEl.scrollTop = 0;
 
     overlay.classList.add('active');
   }
@@ -966,7 +1206,7 @@ def inject_ui_sound_engine():
 
 
 def inject_dim_popover_engine():
-    """يحقن محرك النافذة المنبثقة العائمة للعناصر الفرعية في الصفحة الأم."""
+    """يحقن محرك النافذة المنبثقة العائمة للعناصر الفرعية والمتغيرات في الصفحة الأم."""
     dim_js = DIM_POPOVER_JS.replace(
         "%DIM_DATA%",
         json.dumps(RESEARCH_MODEL_DIMENSIONS, ensure_ascii=False)
@@ -1410,12 +1650,12 @@ div[role="option"] {{
 }}
 
 /* ============================================================================
-   تنسيق النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية للأبعاد
+   تنسيق النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية والمتغيرات ووحدات القياس
    ============================================================================ */
 #raseen-dim-modal-overlay {{
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(15, 23, 42, 0.58);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     display: none;
@@ -1445,7 +1685,10 @@ div[role="option"] {{
 #raseen-dim-modal-card {{
     background: #FFFFFF;
     width: 100%;
-    max-width: 540px;
+    max-width: 660px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
     border-radius: 16px;
     border: 2px solid {CBE_GOLD};
     box-shadow: 0 22px 50px rgba(0, 43, 73, 0.35);
@@ -1463,6 +1706,7 @@ div[role="option"] {{
     justify-content: space-between;
     gap: 12px;
     border-bottom: 3px solid {CBE_GOLD};
+    flex-shrink: 0;
 }}
 
 #raseen-dim-modal-card.theme-gold #raseen-dim-modal-header {{
@@ -1511,8 +1755,10 @@ div[role="option"] {{
 }}
 
 #raseen-dim-modal-body {{
-    padding: 20px 22px;
+    padding: 18px 22px;
     background: #FFFFFF;
+    overflow-y: auto;
+    flex: 1 1 auto;
 }}
 
 .raseen-dim-sub-heading {{
@@ -1523,31 +1769,30 @@ div[role="option"] {{
 }}
 
 #raseen-dim-modal-list {{
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
 }}
 
-#raseen-dim-modal-list li {{
+.raseen-sub-group {{
+    background: #F8FAFC;
+    border: 1.5px solid #E2E8F0;
+    border-right: 4px solid {CBE_GOLD};
+    border-radius: 12px;
+    padding: 13px 15px;
+}}
+
+#raseen-dim-modal-card.theme-teal .raseen-sub-group {{
+    border-right-color: #0F766E;
+}}
+
+.raseen-sub-header {{
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    border-right: 4px solid {CBE_GOLD};
-    border-radius: 10px;
-    padding: 11px 14px;
-    font-size: 15.5px;
-    font-weight: 700;
-    color: #0F172A;
-    line-height: 1.55;
-}}
-
-#raseen-dim-modal-card.theme-teal #raseen-dim-modal-list li {{
-    border-right-color: #0F766E;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #CBD5E1;
 }}
 
 .raseen-sub-code {{
@@ -1571,12 +1816,75 @@ div[role="option"] {{
     color: #CCFBF1;
 }}
 
+.raseen-sub-title {{
+    font-size: 16px;
+    font-weight: 800;
+    color: {CBE_NAVY};
+    line-height: 1.45;
+}}
+
+#raseen-dim-modal-card.theme-gold .raseen-sub-title {{
+    color: #78350F;
+}}
+
+#raseen-dim-modal-card.theme-teal .raseen-sub-title {{
+    color: #115E59;
+}}
+
+.raseen-vars-container {{
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}}
+
+.raseen-var-row {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14.5px;
+}}
+
+.raseen-var-name {{
+    color: #1E293B;
+    font-weight: 600;
+    line-height: 1.5;
+}}
+
+.raseen-var-unit {{
+    flex-shrink: 0;
+    background: #EFF6FF;
+    color: {CBE_NAVY};
+    border: 1px solid #BFDBFE;
+    border-radius: 20px;
+    padding: 3px 11px;
+    font-size: 13px;
+    white-space: nowrap;
+}}
+
+#raseen-dim-modal-card.theme-gold .raseen-var-unit {{
+    background: #FFFBEB;
+    color: #92400E;
+    border-color: #FDE68A;
+}}
+
+#raseen-dim-modal-card.theme-teal .raseen-var-unit {{
+    background: #F0FDFA;
+    color: #115E59;
+    border-color: #99F6E4;
+}}
+
 #raseen-dim-modal-footer {{
     padding: 12px 22px 16px 22px;
     background: #F8FAFC;
     border-top: 1px solid #E2E8F0;
     display: flex;
     justify-content: flex-end;
+    flex-shrink: 0;
 }}
 
 #raseen-dim-modal-ok-btn {{
@@ -1595,6 +1903,16 @@ div[role="option"] {{
 #raseen-dim-modal-ok-btn:hover {{
     background: {CBE_GOLD};
     color: {CBE_NAVY};
+}}
+
+@media (max-width: 640px) {{
+    .raseen-var-row {{
+        flex-direction: column;
+        align-items: flex-start;
+    }}
+    .raseen-var-unit {{
+        align-self: flex-end;
+    }}
 }}
 
 .tour-nav-btn {{
@@ -2417,7 +2735,7 @@ with tab_home:
         🧭 خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد)
     </h3>
     <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">
-        💡 اضغط على أي بُعد أساسي لاستعراض العناصر الفرعية المعتمدة له في نافذة منبثقة:
+        💡 اضغط على أي بُعد أساسي لاستعراض العناصر الفرعية والمتغيرات ووحدات القياس المعتمدة في نافذة منبثقة:
     </p>
     """, unsafe_allow_html=True)
 
@@ -2433,10 +2751,10 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
             <div>
-                <span class="dim-badge" data-dim-key="sip_info_quality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. جودة المعلومات 🔍</span>
-                <span class="dim-badge" data-dim-key="sip_integration_privacy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. التكامل والخصوصية 🔍</span>
-                <span class="dim-badge" data-dim-key="sip_tech_compliance" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. الامتثال التقني 🔍</span>
-                <span class="dim-badge" data-dim-key="sip_post_monitoring" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. التخطيط والمراقبة بعد النشر 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_info_quality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">1. جودة المعلومات 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_integration_privacy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">2. التكامل والخصوصية 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_tech_compliance" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">3. الامتثال التقني 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_post_monitoring" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">4. التخطيط والمراقبة بعد النشر 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2451,11 +2769,11 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: #92400E; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
             <div>
-                <span class="dim-badge gold" data-dim-key="sr_strategy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. الاستراتيجية 🔍</span>
-                <span class="dim-badge gold" data-dim-key="sr_diversity_inclusion" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. التنوع والشمول 🔍</span>
-                <span class="dim-badge gold" data-dim-key="sr_risk_management" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. إدارة المخاطر 🔍</span>
-                <span class="dim-badge gold" data-dim-key="sr_operational_dims" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. الأبعاد التشغيلية 🔍</span>
-                <span class="dim-badge gold" data-dim-key="sr_metrics_targets" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">5. المقاييس والأهداف 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_strategy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">1. الاستراتيجية 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_diversity_inclusion" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">2. التنوع والشمول 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_risk_management" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">3. إدارة المخاطر 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_operational_dims" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">4. الأبعاد التشغيلية 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_metrics_targets" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">5. المقاييس والأهداف 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2470,12 +2788,12 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: #115E59; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
             <div>
-                <span class="dim-badge teal" data-dim-key="ig_rule_of_law" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. سيادة القانون 🔍</span>
-                <span class="dim-badge teal" data-dim-key="ig_fairness_equality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. العدالة والمساواة 🔍</span>
-                <span class="dim-badge teal" data-dim-key="ig_accountability" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. المتابعة والمساءلة 🔍</span>
-                <span class="dim-badge teal" data-dim-key="ig_participation" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. المشاركة 🔍</span>
-                <span class="dim-badge teal" data-dim-key="ig_transparency" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">5. الشفافية والإفصاح 🔍</span>
-                <span class="dim-badge teal" data-dim-key="ig_board" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">6. مجلس الإدارة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_rule_of_law" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">1. سيادة القانون 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_fairness_equality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">2. العدالة والمساواة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_accountability" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">3. المتابعة والمساءلة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_participation" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">4. المشاركة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_transparency" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">5. الشفافية والإفصاح 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_board" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية والمتغيرات">6. مجلس الإدارة 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
