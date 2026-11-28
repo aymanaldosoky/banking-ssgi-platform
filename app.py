@@ -3517,6 +3517,135 @@ with tab2:
             </div>
             """), unsafe_allow_html=True)
 
+            # إعداد الرسوم البيانية أولاً لتضمينها في الواجهة وفي بطاقة التشخيص القياسي المصدّرة
+            curr_records = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
+            if len(curr_records) > 1:
+                df_bench = pd.DataFrame(curr_records)
+                bench_vals = [
+                    round(df_bench["منصات المعلومات (40%)"].mean(), 1),
+                    round(df_bench["الحوكمة المؤسسية (30%)"].mean(), 1),
+                    round(df_bench["تقارير الاستدامة (30%)"].mean(), 1),
+                ]
+                bench_label = f"متوسط القطاع المسجل ({len(curr_records)} بنوك)"
+            else:
+                bench_vals = [75.0, 75.0, 75.0]
+                bench_label = "المعيار الرقابي المستهدف (75%)"
+
+            categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
+
+            fig_radar = go.Figure()
+            fig_radar.add_trace(go.Scatterpolar(
+                r=[d_sip, d_ig, d_sr],
+                theta=categories,
+                fill='toself',
+                name=d_bank,
+                line_color=CBE_GOLD,
+                fillcolor='rgba(197, 160, 89, 0.28)'
+            ))
+            fig_radar.add_trace(go.Scatterpolar(
+                r=bench_vals,
+                theta=categories,
+                fill='none',
+                name=bench_label,
+                line=dict(color=CBE_NAVY, dash='dash', width=2)
+            ))
+            fig_radar.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.28, xanchor="center", x=0.5, font=dict(size=10)),
+                title=dict(text="التحليل الراداري والمقارنة المرجعية", x=0.5, xanchor='center'),
+                font=dict(family="Cairo", size=11),
+                margin=dict(l=25, r=25, t=40, b=45),
+                height=320
+            )
+
+            fig_bar = go.Figure(data=[
+                go.Bar(
+                    name=d_bank,
+                    x=categories,
+                    y=[d_sip, d_ig, d_sr],
+                    marker_color=[CBE_NAVY, CBE_GOLD, "#475569"],
+                    text=[f"{d_sip}%", f"{d_ig}%", f"{d_sr}%"],
+                    textposition="outside"
+                ),
+                go.Bar(
+                    name=bench_label,
+                    x=categories,
+                    y=bench_vals,
+                    marker_color="rgba(148, 163, 184, 0.45)",
+                    text=[f"{v}%" for v in bench_vals],
+                    textposition="outside"
+                )
+            ])
+            fig_bar.update_layout(
+                barmode="group",
+                title=dict(text="أداء البنك مقابل المعيار المرجعي (%)", x=0.5, xanchor='center'),
+                font=dict(family="Cairo", size=11),
+                yaxis=dict(range=[0, 112]),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.28, xanchor="center", x=0.5, font=dict(size=10)),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(l=20, r=20, t=40, b=45),
+                height=320
+            )
+
+            # بناء محتوى بطاقة التشخيص القياسي المصدّرة شاملةً الرسوم البيانية والتنويه الاسترشادي النهائي
+            charts_doc_section = ""
+            try:
+                import base64
+                radar_png_b64 = base64.b64encode(fig_radar.to_image(format="png", width=620, height=380, scale=2)).decode("utf-8")
+                bar_png_b64 = base64.b64encode(fig_bar.to_image(format="png", width=620, height=380, scale=2)).decode("utf-8")
+                charts_doc_section = f"""
+                <hr>
+                <p><b>📊 التمثيل البصري والمقارنة المرجعية للأداء:</b></p>
+                <div style="text-align: center; margin: 10px 0;">
+                    <p style="font-weight: bold; color: #002B49; margin-bottom: 4px;">1. التحليل الراداري والمقارنة المرجعية</p>
+                    <img src="data:image/png;base64,{radar_png_b64}" style="width: 100%; max-width: 520px; height: auto;" />
+                </div>
+                <div style="text-align: center; margin: 10px 0;">
+                    <p style="font-weight: bold; color: #002B49; margin-bottom: 4px;">2. أداء البنك مقابل المعيار المرجعي (%)</p>
+                    <img src="data:image/png;base64,{bar_png_b64}" style="width: 100%; max-width: 520px; height: auto;" />
+                </div>
+                """
+            except Exception:
+                charts_doc_section = f"""
+                <hr>
+                <p><b>📊 ملخص المقارنة المرجعية للأداء ({bench_label}):</b></p>
+                <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; text-align: center;">
+                    <tr style="background-color: #F1F5F9; font-weight: bold;">
+                        <th>المحور</th>
+                        <th>أداء {d_bank}</th>
+                        <th>{bench_label}</th>
+                        <th>الفارق</th>
+                    </tr>
+                    <tr>
+                        <td>منصات المعلومات الذكية (SIP)</td>
+                        <td>{d_sip}%</td>
+                        <td>{bench_vals[0]}%</td>
+                        <td>{round(d_sip - bench_vals[0], 1):+}%</td>
+                    </tr>
+                    <tr>
+                        <td>الحوكمة المؤسسية (IG)</td>
+                        <td>{d_ig}%</td>
+                        <td>{bench_vals[1]}%</td>
+                        <td>{round(d_ig - bench_vals[1], 1):+}%</td>
+                    </tr>
+                    <tr>
+                        <td>تقارير الاستدامة (SR)</td>
+                        <td>{d_sr}%</td>
+                        <td>{bench_vals[2]}%</td>
+                        <td>{round(d_sr - bench_vals[2], 1):+}%</td>
+                    </tr>
+                </table>
+                """
+
+            advisory_disclaimer_html = """
+            <hr>
+            <p style="margin-top: 12px; font-size: 12.5px; color: #475569; background: #F8FAFC; border-right: 4px solid #C5A059; padding: 8px 12px;">
+                <b>تنويه استرشادي:</b> تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف.
+            </p>
+            """
+
             diag_doc_body = f"""
             <ul>
                 <li><b>مؤشر SSGI المركب:</b> {d_final}%</li>
@@ -3526,6 +3655,8 @@ with tab2:
             </ul>
             <hr>
             {detailed_diag}
+            {charts_doc_section}
+            {advisory_disclaimer_html}
             """
             diag_bytes, diag_ext, diag_mime = build_native_docx(
                 f"بطاقة التشخيص القياسي لمؤشر الحوكمة الذكية المستدامة (SSGI) - {d_bank}",
@@ -3545,80 +3676,17 @@ with tab2:
             st.markdown("<br>", unsafe_allow_html=True)
             ch_col1, ch_col2 = st.columns(2)
 
-            curr_records = [r for r in st.session_state.history_state if isinstance(r, dict) and "مؤشر SSGI المركب" in r]
-            if len(curr_records) > 1:
-                df_bench = pd.DataFrame(curr_records)
-                bench_vals = [
-                    round(df_bench["منصات المعلومات (40%)"].mean(), 1),
-                    round(df_bench["الحوكمة المؤسسية (30%)"].mean(), 1),
-                    round(df_bench["تقارير الاستدامة (30%)"].mean(), 1),
-                ]
-                bench_label = f"متوسط القطاع المسجل ({len(curr_records)} بنوك)"
-            else:
-                bench_vals = [75.0, 75.0, 75.0]
-                bench_label = "المعيار الرقابي المستهدف (75%)"
-
-            categories = ['منصات المعلومات (SIP)', 'الحوكمة المؤسسية (IG)', 'تقارير الاستدامة (SR)']
-
             with ch_col1:
-                fig_radar = go.Figure()
-                fig_radar.add_trace(go.Scatterpolar(
-                    r=[d_sip, d_ig, d_sr],
-                    theta=categories,
-                    fill='toself',
-                    name=d_bank,
-                    line_color=CBE_GOLD,
-                    fillcolor='rgba(197, 160, 89, 0.28)'
-                ))
-                fig_radar.add_trace(go.Scatterpolar(
-                    r=bench_vals,
-                    theta=categories,
-                    fill='none',
-                    name=bench_label,
-                    line=dict(color=CBE_NAVY, dash='dash', width=2)
-                ))
-                fig_radar.update_layout(
-                    polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                    showlegend=True,
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.28, xanchor="center", x=0.5, font=dict(size=10)),
-                    title=dict(text="التحليل الراداري والمقارنة المرجعية", x=0.5, xanchor='center'),
-                    font=dict(family="Cairo", size=11),
-                    margin=dict(l=25, r=25, t=40, b=45),
-                    height=320
-                )
                 st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
 
             with ch_col2:
-                fig_bar = go.Figure(data=[
-                    go.Bar(
-                        name=d_bank,
-                        x=categories,
-                        y=[d_sip, d_ig, d_sr],
-                        marker_color=[CBE_NAVY, CBE_GOLD, "#475569"],
-                        text=[f"{d_sip}%", f"{d_ig}%", f"{d_sr}%"],
-                        textposition="outside"
-                    ),
-                    go.Bar(
-                        name=bench_label,
-                        x=categories,
-                        y=bench_vals,
-                        marker_color="rgba(148, 163, 184, 0.45)",
-                        text=[f"{v}%" for v in bench_vals],
-                        textposition="outside"
-                    )
-                ])
-                fig_bar.update_layout(
-                    barmode="group",
-                    title=dict(text="أداء البنك مقابل المعيار المرجعي (%)", x=0.5, xanchor='center'),
-                    font=dict(family="Cairo", size=11),
-                    yaxis=dict(range=[0, 112]),
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.28, xanchor="center", x=0.5, font=dict(size=10)),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    margin=dict(l=20, r=20, t=40, b=45),
-                    height=320
-                )
                 st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False})
+
+            st.markdown(flat_html(f"""
+            <div dir="rtl" style="margin-top: 8px; background: #F8FAFC; border: 1px solid #E2E8F0; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #475569;">
+                ℹ️ <b>تنويه استرشادي:</b> تُعد مخرجات المنصة أداة مساندة لدعم اتخاذ القرار، ويُوصى بمواءمتها مع السياسات الداخلية لكل مصرف.
+            </div>
+            """), unsafe_allow_html=True)
         else:
             st.info("📊 تُحسب قيم المحاور الرئيسة بناءً على المخرجات النهائية لنموذج التقييم التفصيلي (Excel)، أو من خلال تحديد قيمها مباشرة عبر أشرطة التمرير ثم الضغط على زر الحساب.")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -3708,7 +3776,7 @@ with tab2:
     st.markdown("---")
 
     # --------------------------------------------------------------------------
-    # الجدول الثاني: استعراض المصفوفة الهرمية التفاعلية المحدثة بالكامل وجدول أوزان المتغيرات
+    # الجدول الثاني: استعراض المصفوفة الهرمية التفاعلية المحدثة بالكامل (مُدمج بها الأوزان)
     # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية الـ 63 لمؤشر الحوكمة (SSGI)", expanded=False):
         st.markdown(f"""
@@ -3719,7 +3787,7 @@ with tab2:
             <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم 22 متغيراً فرعياً موزعة على 5 أبعاد أساسية (الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف).</li>
         </ul>
         <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 10px 14px; font-size: 14px; color: {CBE_NAVY}; font-weight: 700;">
-            💡 آلية الاستعراض التفاعلي: اضغط على أي <b>بُعد أساسي</b> أدناه لفتح القائمة المنسدلة الخاصة به واستعراض العناصر الفرعية والمتغيرات ووحدات القياس المعتمدة.
+            💡 آلية الاستعراض التفاعلي: اضغط على أي <b>بُعد أساسي</b> أدناه لفتح القائمة المنسدلة الخاصة به واستعراض العناصر الفرعية والمتغيرات ووحدات القياس والأوزان المعتمدة لكل بُعد ومتغير.
         </div>
         </div>
         """, unsafe_allow_html=True)
@@ -3729,7 +3797,8 @@ with tab2:
             {
                 "axis_id": "sip",
                 "axis_title": "أولاً: منصات المعلومات الذكية (SIP — وزن 40%)",
-                "axis_badge": "المتغير المستقل | 4 أبعاد | 16 متغيراً",
+                "axis_weight": 40.0,
+                "axis_badge": "المتغير المستقل | 4 أبعاد | 16 متغيراً | وزن المحور: 40%",
                 "accent": CBE_NAVY,
                 "bg_soft": "#F1F5F9",
                 "border_soft": "#CBD5E1",
@@ -3827,7 +3896,8 @@ with tab2:
             {
                 "axis_id": "ig",
                 "axis_title": "ثانياً: الحوكمة المؤسسية (IG — وزن 30%)",
-                "axis_badge": "المتغير التابع | 6 أبعاد | 25 متغيراً",
+                "axis_weight": 30.0,
+                "axis_badge": "المتغير التابع | 6 أبعاد | 25 متغيراً | وزن المحور: 30%",
                 "accent": "#0F766E",
                 "bg_soft": "#F0FDFA",
                 "border_soft": "#99F6E4",
@@ -3976,7 +4046,8 @@ with tab2:
             {
                 "axis_id": "sr",
                 "axis_title": "ثالثاً: تقارير الاستدامة (SR — وزن 30%)",
-                "axis_badge": "المتغير الوسيط | 5 أبعاد | 22 متغيراً",
+                "axis_weight": 30.0,
+                "axis_badge": "المتغير الوسيط | 5 أبعاد | 22 متغيراً | وزن المحور: 30%",
                 "accent": "#92400E",
                 "bg_soft": "#FFFBEB",
                 "border_soft": "#FDE68A",
@@ -4116,7 +4187,7 @@ with tab2:
             key="ssgi_hierarchy_axis_filter",
         )
 
-        # تنسيق CSS مخصص للقوائم المنسدلة للأبعاد الأساسية والعناصر الفرعية والمتغيرات
+        # تنسيق CSS مخصص للقوائم المنسدلة للأبعاد الأساسية والعناصر الفرعية والمتغيرات والأوزان المدمجة
         hierarchy_accordion_css = f"""
         <style>
         .ssgi-axis-block {{
@@ -4168,6 +4239,7 @@ with tab2:
             padding: 11px 15px;
             background: #F8FAFC;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
@@ -4209,11 +4281,20 @@ with tab2:
         }}
         .ssgi-dim-meta {{
             display: inline-flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 8px;
             font-size: 13px;
             font-weight: 700;
-            opacity: 0.92;
+            opacity: 0.95;
+        }}
+        .ssgi-dim-weight-badge {{
+            background: rgba(197, 160, 89, 0.22);
+            border: 1px solid {CBE_GOLD};
+            border-radius: 14px;
+            padding: 2px 10px;
+            font-size: 12.5px;
+            font-weight: 800;
         }}
         .ssgi-dim-chevron {{
             display: inline-block;
@@ -4276,13 +4357,29 @@ with tab2:
             color: #1E293B;
             font-weight: 600;
         }}
+        .ssgi-var-badges {{
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }}
         .ssgi-unit-tag {{
             background: #EFF6FF;
             color: {CBE_NAVY};
             border: 1px solid #BFDBFE;
             border-radius: 16px;
             padding: 2px 10px;
-            font-size: 12.5px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }}
+        .ssgi-weight-tag {{
+            background: #FFFBEB;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+            border-radius: 16px;
+            padding: 2px 10px;
+            font-size: 12px;
             font-weight: 700;
             white-space: nowrap;
         }}
@@ -4296,10 +4393,25 @@ with tab2:
         }
         target_axis_id = selected_axis_map.get(filter_axis_choice, "all")
 
+        # استخلاص أوزان المتغيرات والأبعاد بدقة من النموذج المعتمد لدمجها مباشرة داخل كل بُعد ومتغير
+        df_w = get_ssgi_variables_df()
+        dim_weight_lookup = {}
+        var_weight_lookup = {}
+        for (_, dim_label), grp in df_w.groupby(["المحور الرئيسي", "البعد الأساسي"], sort=False):
+            clean_dim_key = clean_text(str(dim_label)).split(".")[-1].strip()
+            w_series = grp["الوزن النسبي (AHP)"]
+            dim_weight_lookup[clean_dim_key] = round(float(w_series.sum()) * 100, 2)
+            var_weight_lookup[clean_dim_key] = round(float(w_series.iloc[0]) * 100, 3)
+
         accordion_html = hierarchy_accordion_css + '<div dir="rtl" style="width: 100%;">'
         for axis in SSGI_HIERARCHY_MATRIX:
             if target_axis_id != "all" and axis["axis_id"] != target_axis_id:
                 continue
+
+            axis_total_vars = sum(
+                sum(len(se["variables"]) for se in d["sub_elements"])
+                for d in axis["dimensions"]
+            )
 
             accordion_html += f"""
             <div class="ssgi-axis-block" style="border-top: 4px solid {axis['accent']};">
@@ -4312,6 +4424,9 @@ with tab2:
             for dim in axis["dimensions"]:
                 total_vars = sum(len(se["variables"]) for se in dim["sub_elements"])
                 total_subs = len(dim["sub_elements"])
+                dim_key = clean_text(dim["title"])
+                var_w_pct = var_weight_lookup.get(dim_key, round(axis["axis_weight"] / axis_total_vars, 3))
+                dim_w_pct = dim_weight_lookup.get(dim_key, round(var_w_pct * total_vars, 2))
 
                 accordion_html += f"""
                 <details class="ssgi-dim-dropdown">
@@ -4321,6 +4436,7 @@ with tab2:
                             <span>البُعد الأساسي: {dim['title']}</span>
                         </span>
                         <span class="ssgi-dim-meta">
+                            <span class="ssgi-dim-weight-badge">⚖️ وزن البُعد: {dim_w_pct:.2f}%</span>
                             <span>({total_subs} عناصر فرعية | {total_vars} متغيرات)</span>
                             <span class="ssgi-dim-chevron">▼</span>
                         </span>
@@ -4340,7 +4456,10 @@ with tab2:
                         accordion_html += f"""
                             <div class="ssgi-var-item">
                                 <span class="ssgi-var-label">🔹 {var_name}</span>
-                                <span class="ssgi-unit-tag" style="background: {axis['bg_soft']}; color: {axis['accent']}; border-color: {axis['border_soft']};">وحدة القياس: <b>{unit_name}</b></span>
+                                <span class="ssgi-var-badges">
+                                    <span class="ssgi-weight-tag">⚖️ وزن المتغير: <b>{var_w_pct:.3f}%</b></span>
+                                    <span class="ssgi-unit-tag" style="background: {axis['bg_soft']}; color: {axis['accent']}; border-color: {axis['border_soft']};">وحدة القياس: <b>{unit_name}</b></span>
+                                </span>
                             </div>
                         """
                     accordion_html += "</div>"
@@ -4354,36 +4473,6 @@ with tab2:
 
         accordion_html += "</div>"
         st.markdown(flat_html(accordion_html), unsafe_allow_html=True)
-
-        df_w = get_ssgi_variables_df()
-        w_rows = ""
-        for (axis, dim), g in df_w.groupby(["المحور الرئيسي", "البعد الأساسي"], sort=False):
-            wv = g["الوزن النسبي (AHP)"]
-            w_rows += f"""
-            <tr>
-            <td>{axis}</td>
-            <td>{dim}</td>
-            <td style="text-align: center;">{len(g)}</td>
-            <td style="text-align: center;">{wv.iloc[0]*100:.3f}%</td>
-            <td style="text-align: center;">{wv.sum()*100:.2f}%</td>
-            </tr>"""
-        w_rows += f"""
-            <tr style="font-weight: bold;">
-            <td colspan="2">الإجمالي</td>
-            <td style="text-align: center;">{len(df_w)}</td>
-            <td style="text-align: center;">-</td>
-            <td style="text-align: center;">{df_w['الوزن النسبي (AHP)'].sum()*100:.2f}%</td>
-            </tr>"""
-        st.markdown("<p dir='rtl' style='text-align:right;font-weight:800;color:#002B49;margin-top:14px;'>⚖️ الأوزان المعتمدة للمتغيرات الـ 63</p>", unsafe_allow_html=True)
-        st.markdown(flat_html(f"""
-        <div dir="rtl" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <table class="custom-rtl-table">
-        <thead><tr><th>المحور الرئيسي</th><th>البعد</th><th style="text-align:center;">عدد المتغيرات</th>
-        <th style="text-align:center;">وزن كل متغير</th><th style="text-align:center;">وزن البعد من المؤشر</th></tr></thead>
-        <tbody>{w_rows}</tbody>
-        </table>
-        </div>
-        """), unsafe_allow_html=True)
 
         axes_names_bank = ['منصات المعلومات الذكية (SIP - 40%)', 'الحوكمة المؤسسية (IG - 30%)', 'تقارير الاستدامة (SR - 30%)']
         weights_vals_bank = [40, 30, 30]
