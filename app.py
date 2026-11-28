@@ -127,7 +127,7 @@ CBE_GOLD_BRIGHT = "#F5D076"   # ذهبي مشرق (حالة التمرير وا�
 CBE_NAVY_HOVER = "#003B63"    # أزرق عند التمرير
 CBE_BG = "#F8F9FA"            # خلفية ناعمة
 RAG_CACHE_VERSION = "v2.1"    # تغيير الإصدار يبطل أي ردود مبتورة مخزنة سابقاً في الكاش
-UI_CSS_VERSION = "tabs-v20"   # إصدار محدث لإبطال الكاش فوراً + تكبير وتعريض خط المفاتيح
+UI_CSS_VERSION = "tabs-v21"   # إصدار محدث لإبطال الكاش فوراً + تكبير وتعريض خط المفاتيح
 
 APP_FONT = "'Cairo', 'Tajawal', 'Readex Pro', 'Segoe UI', 'Tahoma', 'Arial', sans-serif"
 
@@ -377,6 +377,164 @@ TABS_RULES = TABS_RULES + TABS_COLOR_RULES
 TABS_CSS = f"<style id='ssgi-tabs-{UI_CSS_VERSION}'>{TABS_RULES}</style>"
 
 # ==============================================================================
+# بيانات خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد والعناصر الفرعية)
+# ==============================================================================
+RESEARCH_MODEL_DIMENSIONS = {
+    "sip_info_quality": {
+        "axis": "أولاً: منصات المعلومات الذكية (SIP) — المتغير المستقل",
+        "code": "1",
+        "title": "جودة المعلومات",
+        "theme": "navy",
+        "items": [
+            "1/1 جاهزية البنية التحتية الرقمية.",
+            "1/2 توافر البيانات وقابليتها للمعالجة الآلية."
+        ]
+    },
+    "sip_integration_privacy": {
+        "axis": "أولاً: منصات المعلومات الذكية (SIP) — المتغير المستقل",
+        "code": "2",
+        "title": "التكامل والخصوصية",
+        "theme": "navy",
+        "items": [
+            "2/1 الترابط البيني التقني.",
+            "2/2 السيادة الرقمية وأمن المعلومات."
+        ]
+    },
+    "sip_tech_compliance": {
+        "axis": "أولاً: منصات المعلومات الذكية (SIP) — المتغير المستقل",
+        "code": "3",
+        "title": "الامتثال التقني",
+        "theme": "navy",
+        "items": [
+            "3/1 الامتثال للمعايير القياسية.",
+            "3/2 حوكمة الخوارزميات (أخلاقيات الذكاء الاصطناعي)."
+        ]
+    },
+    "sip_post_monitoring": {
+        "axis": "أولاً: منصات المعلومات الذكية (SIP) — المتغير المستقل",
+        "code": "4",
+        "title": "التخطيط والمراقبة بعد النشر",
+        "theme": "navy",
+        "items": [
+            "4/1 الرصد والتحليل الآني.",
+            "4/2 دقة وموثوقية المخرجات."
+        ]
+    },
+    "sr_strategy": {
+        "axis": "ثالثاً: تقارير الاستدامة (SR) — المتغير الوسيط",
+        "code": "1",
+        "title": "الاستراتيجية",
+        "theme": "gold",
+        "items": [
+            "1/1 الدمج الاستراتيجي لأهداف التنمية.",
+            "1/2 التخصيص المالي المستدام."
+        ]
+    },
+    "sr_diversity_inclusion": {
+        "axis": "ثالثاً: تقارير الاستدامة (SR) — المتغير الوسيط",
+        "code": "2",
+        "title": "التنوع والشمول",
+        "theme": "gold",
+        "items": [
+            "2/1 تنوع الهيكل القيادي.",
+            "2/2 شمول القوى العاملة."
+        ]
+    },
+    "sr_risk_management": {
+        "axis": "ثالثاً: تقارير الاستدامة (SR) — المتغير الوسيط",
+        "code": "3",
+        "title": "إدارة المخاطر",
+        "theme": "gold",
+        "items": [
+            "3/1 دمج مخاطر المناخ والحوكمة.",
+            "3/2 المرونة واختبارات الضغط."
+        ]
+    },
+    "sr_operational_dims": {
+        "axis": "ثالثاً: تقارير الاستدامة (SR) — المتغير الوسيط",
+        "code": "4",
+        "title": "الأبعاد التشغيلية",
+        "theme": "gold",
+        "items": [
+            "4/1 التمويل والاستثمار المستدام (الاقتصادي).",
+            "4/2 الكفاءة التشغيلية للموارد (البيئي).",
+            "4/3 أثر المسؤولية المجتمعية (الاجتماعي)."
+        ]
+    },
+    "sr_metrics_targets": {
+        "axis": "ثالثاً: تقارير الاستدامة (SR) — المتغير الوسيط",
+        "code": "5",
+        "title": "المقاييس والأهداف",
+        "theme": "gold",
+        "items": [
+            "5/1 أداء تحقيق المستهدفات.",
+            "5/2 المواءمة المعيارية والتوكيد."
+        ]
+    },
+    "ig_rule_of_law": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "1",
+        "title": "سيادة القانون",
+        "theme": "teal",
+        "items": [
+            "1/1 التوافق التشريعي والتنظيمي.",
+            "1/2 الأخلاقيات والسلوك المؤسسي."
+        ]
+    },
+    "ig_fairness_equality": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "2",
+        "title": "العدالة والمساواة",
+        "theme": "teal",
+        "items": [
+            "2/1 العدالة التنظيمية والوظيفية.",
+            "2/2 عدالة حقوق أصحاب المصلحة."
+        ]
+    },
+    "ig_accountability": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "3",
+        "title": "المتابعة والمساءلة",
+        "theme": "teal",
+        "items": [
+            "3/1 وضوح هيكل المسؤوليات والصلاحيات.",
+            "3/2 فاعلية آليات الرقابة والتدقيق."
+        ]
+    },
+    "ig_participation": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "4",
+        "title": "المشاركة",
+        "theme": "teal",
+        "items": [
+            "4/1 تفاعل وانخراط أصحاب المصلحة.",
+            "4/2 المشاركة في صنع القرار."
+        ]
+    },
+    "ig_transparency": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "5",
+        "title": "الشفافية والإفصاح",
+        "theme": "teal",
+        "items": [
+            "5/1 جودة ووضوح الإفصاح.",
+            "5/2 توقيت ودورية الإفصاح."
+        ]
+    },
+    "ig_board": {
+        "axis": "ثانياً: الحوكمة المؤسسية (IG) — المتغير التابع",
+        "code": "6",
+        "title": "مجلس الإدارة",
+        "theme": "teal",
+        "items": [
+            "6/1 كفاءة وفاعلية تشكيل المجلس.",
+            "6/2 نشاط اللجان المنبثقة والرقابة.",
+            "6/3 الاستقلالية وتعارض المصالح."
+        ]
+    }
+}
+
+# ==============================================================================
 # محرك الصوت التفاعلي الفوري (Web Audio API - Zero Latency - Chime & Click)
 # ==============================================================================
 SOUND_ENGINE_JS = """
@@ -524,7 +682,7 @@ SOUND_ENGINE_JS = """
         return;
       }
 
-      if (target.closest('div[role="radiogroup"] label, [data-baseweb="checkbox"], [data-baseweb="select"], summary')) {
+      if (target.closest('div[role="radiogroup"] label, [data-baseweb="checkbox"], [data-baseweb="select"], summary, [data-dim-key]')) {
         playUiTone('radio');
         return;
       }
@@ -532,6 +690,115 @@ SOUND_ENGINE_JS = """
   }
 
   updateToggleBadges();
+})();
+"""
+
+# ==============================================================================
+# محرك النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية للأبعاد الأساسية
+# ==============================================================================
+DIM_POPOVER_JS = """
+(function () {
+  var W = window;
+  var D = document;
+  var DATA = %DIM_DATA%;
+
+  function ensureModalExists() {
+    var existing = D.getElementById('raseen-dim-modal-overlay');
+    if (existing) return existing;
+
+    var overlay = D.createElement('div');
+    overlay.id = 'raseen-dim-modal-overlay';
+    overlay.setAttribute('dir', 'rtl');
+    overlay.innerHTML =
+      '<div id="raseen-dim-modal-card" role="dialog" aria-modal="true" aria-labelledby="raseen-dim-modal-title">' +
+        '<div id="raseen-dim-modal-header">' +
+          '<div>' +
+            '<div id="raseen-dim-modal-axis"></div>' +
+            '<h4 id="raseen-dim-modal-title"></h4>' +
+          '</div>' +
+          '<button type="button" id="raseen-dim-modal-close" aria-label="إغلاق">✕</button>' +
+        '</div>' +
+        '<div id="raseen-dim-modal-body">' +
+          '<div class="raseen-dim-sub-heading">📌 العناصر الفرعية المعتمدة للقياس والتقييم:</div>' +
+          '<ul id="raseen-dim-modal-list"></ul>' +
+        '</div>' +
+        '<div id="raseen-dim-modal-footer">' +
+          '<button type="button" id="raseen-dim-modal-ok-btn">إغلاق النافذة ✔️</button>' +
+        '</div>' +
+      '</div>';
+
+    D.body.appendChild(overlay);
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeDimModal();
+    });
+    D.getElementById('raseen-dim-modal-close').addEventListener('click', closeDimModal);
+    D.getElementById('raseen-dim-modal-ok-btn').addEventListener('click', closeDimModal);
+
+    D.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('active')) {
+        closeDimModal();
+      }
+    });
+
+    return overlay;
+  }
+
+  function closeDimModal() {
+    var overlay = D.getElementById('raseen-dim-modal-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  }
+
+  function openDimModal(dimKey) {
+    var info = DATA[dimKey];
+    if (!info) return;
+
+    var overlay = ensureModalExists();
+    var card = D.getElementById('raseen-dim-modal-card');
+    var axisEl = D.getElementById('raseen-dim-modal-axis');
+    var titleEl = D.getElementById('raseen-dim-modal-title');
+    var listEl = D.getElementById('raseen-dim-modal-list');
+
+    card.className = 'theme-' + (info.theme || 'navy');
+    axisEl.textContent = info.axis;
+    titleEl.textContent = 'البُعد (' + info.code + '): ' + info.title;
+
+    listEl.innerHTML = '';
+    (info.items || []).forEach(function (itemText) {
+      var li = D.createElement('li');
+      var parts = itemText.split(' ');
+      var codePart = parts.shift() || '';
+      var textPart = parts.join(' ');
+      li.innerHTML = '<span class="raseen-sub-code">' + codePart + '</span><span class="raseen-sub-text">' + textPart + '</span>';
+      listEl.appendChild(li);
+    });
+
+    overlay.classList.add('active');
+  }
+
+  if (!W.__raseenDimDelegationBound) {
+    W.__raseenDimDelegationBound = true;
+    D.addEventListener('click', function (e) {
+      var badge = e.target && e.target.closest ? e.target.closest('[data-dim-key]') : null;
+      if (badge) {
+        e.preventDefault();
+        e.stopPropagation();
+        openDimModal(badge.getAttribute('data-dim-key'));
+      }
+    }, true);
+
+    D.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        var badge = e.target && e.target.closest ? e.target.closest('[data-dim-key]') : null;
+        if (badge) {
+          e.preventDefault();
+          openDimModal(badge.getAttribute('data-dim-key'));
+        }
+      }
+    }, true);
+  }
 })();
 """
 
@@ -689,6 +956,30 @@ def inject_ui_sound_engine():
             var sc = doc.createElement('script');
             sc.id = 'raseen-sound-engine-{UI_CSS_VERSION}';
             sc.textContent = {json.dumps(SOUND_ENGINE_JS)};
+            doc.head.appendChild(sc);
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def inject_dim_popover_engine():
+    """يحقن محرك النافذة المنبثقة العائمة للعناصر الفرعية في الصفحة الأم."""
+    dim_js = DIM_POPOVER_JS.replace(
+        "%DIM_DATA%",
+        json.dumps(RESEARCH_MODEL_DIMENSIONS, ensure_ascii=False)
+    )
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            var doc = window.parent.document;
+            doc.querySelectorAll('script[id^="raseen-dim-popover-"]').forEach(function (n) {{ n.remove(); }});
+            var sc = doc.createElement('script');
+            sc.id = 'raseen-dim-popover-{UI_CSS_VERSION}';
+            sc.textContent = {json.dumps(dim_js)};
             doc.head.appendChild(sc);
         }})();
         </script>
@@ -1066,15 +1357,28 @@ div[role="option"] {{
 }}
 
 .dim-badge {{
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: #F1F5F9;
     color: {CBE_NAVY};
     border: 1px solid #CBD5E1;
     border-radius: 20px;
-    padding: 5px 14px;
+    padding: 6px 14px;
     margin: 4px 3px;
     font-size: 14px;
     font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}}
+
+.dim-badge:hover {{
+    background: {CBE_NAVY};
+    color: {CBE_GOLD_BRIGHT};
+    border-color: {CBE_GOLD};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 43, 73, 0.18);
 }}
 
 .dim-badge.gold {{
@@ -1083,10 +1387,214 @@ div[role="option"] {{
     border-color: #F59E0B;
 }}
 
+.dim-badge.gold:hover {{
+    background: #92400E;
+    color: #FEF3C7;
+    border-color: #78350F;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(146, 64, 14, 0.2);
+}}
+
 .dim-badge.teal {{
     background: #CCFBF1;
     color: #115E59;
     border-color: #14B8A6;
+}}
+
+.dim-badge.teal:hover {{
+    background: #115E59;
+    color: #CCFBF1;
+    border-color: #0F766E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(17, 94, 89, 0.2);
+}}
+
+/* ============================================================================
+   تنسيق النافذة المنبثقة العائمة (Floating Modal) للعناصر الفرعية للأبعاد
+   ============================================================================ */
+#raseen-dim-modal-overlay {{
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    padding: 16px;
+    direction: rtl;
+    text-align: right;
+}}
+
+#raseen-dim-modal-overlay.active {{
+    display: flex;
+    animation: raseenFadeIn 0.2s ease-out;
+}}
+
+@keyframes raseenFadeIn {{
+    from {{ opacity: 0; }}
+    to {{ opacity: 1; }}
+}}
+
+@keyframes raseenScaleIn {{
+    from {{ opacity: 0; transform: translateY(14px) scale(0.96); }}
+    to {{ opacity: 1; transform: translateY(0) scale(1); }}
+}}
+
+#raseen-dim-modal-card {{
+    background: #FFFFFF;
+    width: 100%;
+    max-width: 540px;
+    border-radius: 16px;
+    border: 2px solid {CBE_GOLD};
+    box-shadow: 0 22px 50px rgba(0, 43, 73, 0.35);
+    overflow: hidden;
+    font-family: {APP_FONT};
+    animation: raseenScaleIn 0.22s ease-out;
+}}
+
+#raseen-dim-modal-header {{
+    background: linear-gradient(135deg, {CBE_NAVY} 0%, #001A33 100%);
+    color: #FFFFFF;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 3px solid {CBE_GOLD};
+}}
+
+#raseen-dim-modal-card.theme-gold #raseen-dim-modal-header {{
+    background: linear-gradient(135deg, #78350F 0%, #92400E 100%);
+}}
+
+#raseen-dim-modal-card.theme-teal #raseen-dim-modal-header {{
+    background: linear-gradient(135deg, #134E4A 0%, #0F766E 100%);
+}}
+
+#raseen-dim-modal-axis {{
+    font-size: 13px;
+    font-weight: 700;
+    color: {CBE_GOLD_BRIGHT};
+    margin-bottom: 4px;
+}}
+
+#raseen-dim-modal-title {{
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.4;
+}}
+
+#raseen-dim-modal-close {{
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}}
+
+#raseen-dim-modal-close:hover {{
+    background: {CBE_GOLD};
+    color: {CBE_NAVY};
+}}
+
+#raseen-dim-modal-body {{
+    padding: 20px 22px;
+    background: #FFFFFF;
+}}
+
+.raseen-dim-sub-heading {{
+    font-size: 14.5px;
+    font-weight: 800;
+    color: {CBE_NAVY};
+    margin-bottom: 12px;
+}}
+
+#raseen-dim-modal-list {{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}}
+
+#raseen-dim-modal-list li {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-right: 4px solid {CBE_GOLD};
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.55;
+}}
+
+#raseen-dim-modal-card.theme-teal #raseen-dim-modal-list li {{
+    border-right-color: #0F766E;
+}}
+
+.raseen-sub-code {{
+    background: {CBE_NAVY};
+    color: {CBE_GOLD_BRIGHT};
+    font-size: 13.5px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    direction: ltr;
+}}
+
+#raseen-dim-modal-card.theme-gold .raseen-sub-code {{
+    background: #92400E;
+    color: #FEF3C7;
+}}
+
+#raseen-dim-modal-card.theme-teal .raseen-sub-code {{
+    background: #115E59;
+    color: #CCFBF1;
+}}
+
+#raseen-dim-modal-footer {{
+    padding: 12px 22px 16px 22px;
+    background: #F8FAFC;
+    border-top: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: flex-end;
+}}
+
+#raseen-dim-modal-ok-btn {{
+    background: {CBE_NAVY};
+    color: #FFFFFF;
+    border: 1.5px solid {CBE_GOLD};
+    border-radius: 50px;
+    padding: 8px 22px;
+    font-family: {APP_FONT};
+    font-size: 14.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}}
+
+#raseen-dim-modal-ok-btn:hover {{
+    background: {CBE_GOLD};
+    color: {CBE_NAVY};
 }}
 
 .tour-nav-btn {{
@@ -1426,6 +1934,7 @@ div[data-testid="stFormSubmitButton"] > button:focus {{
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 inject_ui_sound_engine()
+inject_dim_popover_engine()
 
 # ==============================================================================
 # الدوال المساعدة الآمنة (Excel Numbers + HTML + Word .docx)
@@ -1904,9 +2413,12 @@ with tab_home:
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
-    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 20px; margin: 12px 0 16px 0;">
+    <h3 style="color: {CBE_NAVY}; font-weight: 800; font-size: 20px; margin: 12px 0 4px 0;">
         🧭 خريطة النموذج البحثي المعتمد للمنصة (المحاور والأبعاد)
     </h3>
+    <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">
+        💡 اضغط على أي بُعد أساسي لاستعراض العناصر الفرعية المعتمدة له في نافذة منبثقة:
+    </p>
     """, unsafe_allow_html=True)
 
     col_m1, col_m2, col_m3 = st.columns(3)
@@ -1921,10 +2433,10 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: {CBE_NAVY}; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (4 أبعاد):</div>
             <div>
-                <span class="dim-badge">جودة المعلومات</span>
-                <span class="dim-badge">الامتثال التقني</span>
-                <span class="dim-badge">التخطيط والمراقبة بعد النشر</span>
-                <span class="dim-badge">التكامل والخصوصية</span>
+                <span class="dim-badge" data-dim-key="sip_info_quality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. جودة المعلومات 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_integration_privacy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. التكامل والخصوصية 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_tech_compliance" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. الامتثال التقني 🔍</span>
+                <span class="dim-badge" data-dim-key="sip_post_monitoring" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. التخطيط والمراقبة بعد النشر 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1939,11 +2451,11 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: #92400E; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (5 أبعاد):</div>
             <div>
-                <span class="dim-badge gold">الاستراتيجية</span>
-                <span class="dim-badge gold">الأبعاد التشغيلية</span>
-                <span class="dim-badge gold">إدارة المخاطر</span>
-                <span class="dim-badge gold">المقاييس والأهداف</span>
-                <span class="dim-badge gold">التنوع والشمول</span>
+                <span class="dim-badge gold" data-dim-key="sr_strategy" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. الاستراتيجية 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_diversity_inclusion" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. التنوع والشمول 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_risk_management" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. إدارة المخاطر 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_operational_dims" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. الأبعاد التشغيلية 🔍</span>
+                <span class="dim-badge gold" data-dim-key="sr_metrics_targets" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">5. المقاييس والأهداف 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1958,12 +2470,12 @@ with tab_home:
             </p>
             <div style="font-size: 14px; font-weight: 700; color: #115E59; margin-bottom: 8px;">الأبعاد الأساسية المعتمدة (6 أبعاد):</div>
             <div>
-                <span class="dim-badge teal">الشفافية والإفصاح</span>
-                <span class="dim-badge teal">المتابعة والمساءلة</span>
-                <span class="dim-badge teal">العدالة والمساواة</span>
-                <span class="dim-badge teal">المشاركة</span>
-                <span class="dim-badge teal">سيادة القانون</span>
-                <span class="dim-badge teal">مجلس الإدارة</span>
+                <span class="dim-badge teal" data-dim-key="ig_rule_of_law" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">1. سيادة القانون 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_fairness_equality" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">2. العدالة والمساواة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_accountability" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">3. المتابعة والمساءلة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_participation" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">4. المشاركة 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_transparency" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">5. الشفافية والإفصاح 🔍</span>
+                <span class="dim-badge teal" data-dim-key="ig_board" role="button" tabindex="0" title="اضغط لعرض العناصر الفرعية">6. مجلس الإدارة 🔍</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
