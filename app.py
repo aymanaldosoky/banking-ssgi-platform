@@ -3708,98 +3708,652 @@ with tab2:
     st.markdown("---")
 
     # --------------------------------------------------------------------------
-    # الجدول الثاني: استعراض المصفوفة الهرمية المحدثة بالكامل وجدول أوزان المتغيرات
+    # الجدول الثاني: استعراض المصفوفة الهرمية التفاعلية المحدثة بالكامل وجدول أوزان المتغيرات
     # --------------------------------------------------------------------------
     with st.expander("📂 استعراض المصفوفة الهرمية والمحاور الرئيسة والأبعاد والعناصر الفرعية الـ 63 لمؤشر الحوكمة (SSGI)", expanded=False):
-        st.markdown("""
-        <div dir="rtl" style="text-align: right; line-height: 1.8;">
+        st.markdown(f"""
+        <div dir="rtl" style="text-align: right; line-height: 1.8; margin-bottom: 10px;">
         <ul>
-            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم 16 متغيراً فرعياً موزعة على 4 أبعاد (جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة).</li>
-            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم 25 متغيراً فرعياً موزعة على 6 أبعاد (سيادة القانون، العدالة، المتابعة، المشاركة، الشفافية، ومجلس الإدارة).</li>
-            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم 22 متغيراً فرعياً موزعة على 5 أبعاد (الاستراتيجية، التنوع، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس).</li>
+            <li><b>منصات المعلومات الذكية (SIP - وزن 40%):</b> يضم 16 متغيراً فرعياً موزعة على 4 أبعاد أساسية (جودة المعلومات، التكامل والخصوصية، الامتثال التقني، والتخطيط والمراقبة بعد النشر).</li>
+            <li><b>الحوكمة المؤسسية (IG - وزن 30%):</b> يضم 25 متغيراً فرعياً موزعة على 6 أبعاد أساسية (سيادة القانون، العدالة والمساواة، المتابعة والمساءلة، المشاركة، الشفافية والإفصاح، ومجلس الإدارة).</li>
+            <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم 22 متغيراً فرعياً موزعة على 5 أبعاد أساسية (الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف).</li>
         </ul>
+        <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 10px 14px; font-size: 14px; color: {CBE_NAVY}; font-weight: 700;">
+            💡 آلية الاستعراض التفاعلي: اضغط على أي <b>بُعد أساسي</b> أدناه لفتح القائمة المنسدلة الخاصة به واستعراض العناصر الفرعية والمتغيرات ووحدات القياس المعتمدة.
+        </div>
         </div>
         """, unsafe_allow_html=True)
 
-        hierarchy_table_html = """
-        <div dir="rtl" style="width: 100%; overflow-x: auto; max-height: 450px; -webkit-overflow-scrolling: touch;">
-        <table class="custom-rtl-table">
-        <thead>
-        <tr>
-        <th style="width: 25%;">المحور الرئيسي</th>
-        <th style="width: 25%;">البعد الأساسي</th>
-        <th style="width: 50%;">العناصر الفرعية (الـ 63 متغيراً التفصيلية)</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-        <td rowspan="4" style="font-weight: bold; color: #002B49; vertical-align: top;">أولاً: منصات المعلومات الذكية (SIP - 40%)</td>
-        <td>1. جودة المعلومات</td>
-        <td>1/1 نسبة تغطية الفروع بشبكة البيانات المركزية.<br>1/2 سعة التخزين السحابي/المحلي.<br>1/3 نسبة البيانات المهيكلة (Structured).<br>1/4 نسبة اكتمال حقول البيانات (Data Completeness).</td>
-        </tr>
-        <tr>
-        <td>2. التكامل والخصوصية</td>
-        <td>2/1 عدد الأنظمة الفرعية المربوطة بـ (APIs).<br>2/2 معدل وقت التشغيل (System Uptime).<br>2/3 نسبة البيانات المستضافة محلياً (On-Premise).<br>2/4 عدد حوادث اختراق البيانات المسجلة.</td>
-        </tr>
-        <tr>
-        <td>3. الامتثال التقني</td>
-        <td>3/1 نسبة ضوابط معيار (ISO 27001).<br>3/2 عدد شهادات الامتثال التقني السارية.<br>3/3 عدد عمليات التدقيق على نماذج الذكاء الاصطناعي.<br>3/4 نسبة النماذج الموثقة بسجلات شرح النتائج.</td>
-        </tr>
-        <tr>
-        <td>4. التخطيط والمراقبة بعد النشر</td>
-        <td>4/1 متوسط الزمن المستغرق لاكتشاف الخطأ (MTTD).<br>4/2 عدد التنبيهات الآلية الصحيحة.<br>4/3 معدل دقة التنبؤات (AI Accuracy Rate).<br>4/4 نسبة التقارير التي تطلبت تصحيحاً يدوياً.</td>
-        </tr>
-        <tr>
-        <td rowspan="6" style="font-weight: bold; color: #002B49; vertical-align: top;">ثانياً: الحوكمة المؤسسية (IG - 30%)</td>
-        <td>1. سيادة القانون</td>
-        <td>1/1 نسبة السياسات الداخلية المحدثة.<br>1/2 قيمة الغرامات المالية الموقعة.<br>1/3 نسبة الموظفين الموقعين على مدونة السلوك.<br>1/4 عدد بلاغات المخالفات الأخلاقية.</td>
-        </tr>
-        <tr>
-        <td>2. العدالة والمساواة</td>
-        <td>2/1 نسبة فجوة الأجور بين الجنسين.<br>2/2 نسبة الترقيات الداخلية مقارنة بالتعيينات.<br>2/3 نسبة توزيعات الأرباح إلى صافي الربح.<br>2/4 عدد القضايا المرفوعة ضد البنك.</td>
-        </tr>
-        <tr>
-        <td>3. المتابعة والمساءلة</td>
-        <td>3/1 نسبة العمليات الموثقة بمصفوفة (RACI).<br>3/2 عدد الأوصاف الوظيفية المحدثة للقيادات.<br>3/3 نسبة توصيات المراجعة الداخلية المنفذة.<br>3/4 عدد اجتماعات لجان الحوكمة والمخاطر.</td>
-        </tr>
-        <tr>
-        <td>4. المشاركة</td>
-        <td>4/1 معدل الاستجابة لشكاوى العملاء.<br>4/2 عدد قنوات التواصل الرقمية الفعالة.<br>4/3 نسبة القرارات الاستراتيجية التي خضعت لاستطلاع الرأي.</td>
-        </tr>
-        <tr>
-        <td>5. الشفافية والإفصاح</td>
-        <td>5/1 درجة سهولة القراءة (Readability Score).<br>5/2 عدد صفحات الإفصاح عن المخاطر غير المالية.<br>5/3 الفجوة الزمنية لنشر التقرير.<br>5/4 عدد الإفصاحات الفورية عن الأحداث الجوهرية.</td>
-        </tr>
-        <tr>
-        <td>6. مجلس الإدارة</td>
-        <td>6/1 نسبة حضور أعضاء مجلس الإدارة.<br>6/2 متوسط سنوات خبرة الأعضاء بالاستدامة.<br>6/3 عدد اجتماعات لجنة الترشيحات والمكافآت.<br>6/4 نسبة التزام المجلس بتقييم الأداء السنوي.<br>6/5 نسبة اللجان السيادية برئاسة أعضاء مستقلين.<br>6/6 عدد حالات تعارض المصالح المرصودة.</td>
-        </tr>
-        <tr>
-        <td rowspan="5" style="font-weight: bold; color: #002B49; vertical-align: top;">ثالثاً: تقارير الاستدامة (SR - 30%)</td>
-        <td>1. الاستراتيجية</td>
-        <td>1/1 عدد أهداف التنمية المستدامة المتبناة.<br>1/2 نسبة الأهداف المحققة من المخطط.<br>1/3 نسبة ميزانية R&D والتحول الأخضر.<br>1/4 حجم الاستثمار في البنية التحتية المستدامة.</td>
-        </tr>
-        <tr>
-        <td>2. التنوع والشمول</td>
-        <td>2/1 نسبة تمثيل المرأة في مجلس الإدارة.<br>2/2 نسبة الأعضاء المستقلين في المجلس.<br>2/3 نسبة ذوي الهمم من إجمالي القوى العاملة.<br>2/4 نسبة الموظفين من خارج العاصمة (الأقاليم).</td>
-        </tr>
-        <tr>
-        <td>3. إدارة المخاطر</td>
-        <td>3/1 نسبة محفظة الائتمان المقيمة بيئياً.<br>3/2 القيمة المعرضة للخطر (VaR) المناخية.<br>3/3 عدد سيناريوهات اختبارات الضغط المناخية.<br>3/4 نسبة كفاية رأس المال (CAR) المناخية.</td>
-        </tr>
-        <tr>
-        <td>4. الأبعاد التشغيلية</td>
-        <td>4/1 نسبة الأصول الخضراء (GAR).<br>4/2 حجم القروض الموجهة للمشروعات الصغرى والمتوسطة.<br>4/3 إجمالي انبعاثات الكربون لكل موظف.<br>4/4 نسبة استهلاك الطاقة المتجددة.<br>4/5 نسبة الإنفاق على (CSR).<br>4/6 عدد المستفيدين من الشمول المالي.</td>
-        </tr>
-        <tr>
-        <td>5. المقاييس والأهداف</td>
-        <td>5/1 نسبة التغير السنوي في خفض الانبعاثات.<br>5/2 معدل تحقيق مؤشرات الأداء الرئيسية.<br>5/3 نسبة تغطية مؤشرات (GRI).<br>5/4 مستوى التوكيد الخارجي.</td>
-        </tr>
-        </tbody>
-        </table>
-        </div>
+        # خريطة البيانات الكاملة للمصفوفة الهرمية (المحاور -> الأبعاد -> العناصر الفرعية -> المتغيرات ووحدات القياس)
+        SSGI_HIERARCHY_MATRIX = [
+            {
+                "axis_id": "sip",
+                "axis_title": "أولاً: منصات المعلومات الذكية (SIP — وزن 40%)",
+                "axis_badge": "المتغير المستقل | 4 أبعاد | 16 متغيراً",
+                "accent": CBE_NAVY,
+                "bg_soft": "#F1F5F9",
+                "border_soft": "#CBD5E1",
+                "dimensions": [
+                    {
+                        "code": "1",
+                        "title": "جودة المعلومات",
+                        "sub_elements": [
+                            {
+                                "code": "1/1",
+                                "title": "جاهزية البنية التحتية الرقمية",
+                                "variables": [
+                                    ("نسبة تغطية الفروع بشبكة البيانات المركزية الموحدة", "%"),
+                                    ("سعة التخزين السحابي/المحلي المتاحة للبيانات الضخمة", "تيرا بايت"),
+                                ],
+                            },
+                            {
+                                "code": "1/2",
+                                "title": "توافر البيانات وقابليتها للمعالجة الآلية",
+                                "variables": [
+                                    ("نسبة البيانات المهيكلة (Structured) إلى إجمالي البيانات", "%"),
+                                    ("نسبة اكتمال حقول البيانات في سجلات العملاء (Data Completeness)", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "2",
+                        "title": "التكامل والخصوصية",
+                        "sub_elements": [
+                            {
+                                "code": "2/1",
+                                "title": "الترابط البيني التقني (Interoperability)",
+                                "variables": [
+                                    ("عدد الأنظمة الفرعية المربوطة بالمنصة المركزية عبر (APIs)", "عدد"),
+                                    ("معدل وقت التشغيل للنظام (System Uptime)", "%"),
+                                ],
+                            },
+                            {
+                                "code": "2/2",
+                                "title": "السيادة الرقمية وأمن المعلومات",
+                                "variables": [
+                                    ("نسبة البيانات المستضافة محلياً (On-Premise) من إجمالي البيانات الحساسة", "%"),
+                                    ("عدد حوادث اختراق البيانات المسجلة سنوياً (يفضل 0)", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "3",
+                        "title": "الامتثال التقني",
+                        "sub_elements": [
+                            {
+                                "code": "3/1",
+                                "title": "الامتثال للمعايير القياسية (ISO)",
+                                "variables": [
+                                    ("نسبة ضوابط معيار (ISO 27001) المطبقة فعلياً", "%"),
+                                    ("عدد شهادات الامتثال التقني السارية", "عدد"),
+                                ],
+                            },
+                            {
+                                "code": "3/2",
+                                "title": "حوكمة الخوارزميات",
+                                "variables": [
+                                    ("عدد عمليات التدقيق (Audits) المجراة على نماذج الذكاء الاصطناعي", "عدد"),
+                                    ("نسبة النماذج الموثقة بسجلات شرح النتائج (Explainability Logs)", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "4",
+                        "title": "التخطيط والمراقبة بعد النشر",
+                        "sub_elements": [
+                            {
+                                "code": "4/1",
+                                "title": "الرصد والتحليل الآني",
+                                "variables": [
+                                    ("متوسط الزمن المستغرق لاكتشاف الخطأ في البيانات (MTTD)", "دقيقة/ساعة"),
+                                    ("عدد التنبيهات الآلية الصحيحة التي أصدرها النظام", "عدد"),
+                                ],
+                            },
+                            {
+                                "code": "4/2",
+                                "title": "دقة وموثوقية المخرجات",
+                                "variables": [
+                                    ("معدل دقة التنبؤات (AI Accuracy Rate) مقارنة بالنتائج الفعلية", "%"),
+                                    ("نسبة التقارير التي تطلبت تصحيحاً يدوياً بعد الصدور", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                "axis_id": "ig",
+                "axis_title": "ثانياً: الحوكمة المؤسسية (IG — وزن 30%)",
+                "axis_badge": "المتغير التابع | 6 أبعاد | 25 متغيراً",
+                "accent": "#0F766E",
+                "bg_soft": "#F0FDFA",
+                "border_soft": "#99F6E4",
+                "dimensions": [
+                    {
+                        "code": "1",
+                        "title": "سيادة القانون",
+                        "sub_elements": [
+                            {
+                                "code": "1/1",
+                                "title": "التوافق التشريعي والتنظيمي",
+                                "variables": [
+                                    ("نسبة السياسات الداخلية التي تم تحديثها خلال العام الحالي", "%"),
+                                    ("قيمة الغرامات المالية الموقعة من الجهات الرقابية (مؤشر عكسي)", "عملة"),
+                                ],
+                            },
+                            {
+                                "code": "1/2",
+                                "title": "الأخلاقيات والسلوك المؤسسي",
+                                "variables": [
+                                    ("نسبة الموظفين الموقعين على مدونة السلوك الرقمي", "%"),
+                                    ("عدد بلاغات المخالفات الأخلاقية التي تم التحقيق فيها", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "2",
+                        "title": "العدالة والمساواة",
+                        "sub_elements": [
+                            {
+                                "code": "2/1",
+                                "title": "العدالة التنظيمية والوظيفية",
+                                "variables": [
+                                    ("نسبة فجوة الأجور بين الجنسين", "%"),
+                                    ("نسبة الترقيات الداخلية مقارنة بالتعيينات الخارجية", "%"),
+                                ],
+                            },
+                            {
+                                "code": "2/2",
+                                "title": "عدالة حقوق أصحاب المصلحة",
+                                "variables": [
+                                    ("نسبة توزيعات الأرباح إلى صافي الربح", "%"),
+                                    ("عدد القضايا المرفوعة من مساهمين أو عملاء ضد البنك", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "3",
+                        "title": "المتابعة والمساءلة",
+                        "sub_elements": [
+                            {
+                                "code": "3/1",
+                                "title": "وضوح هيكل المسؤوليات",
+                                "variables": [
+                                    ("نسبة العمليات الموثقة بمصفوفة (RACI) المعتمدة", "%"),
+                                    ("عدد الأوصاف الوظيفية المحدثة للقيادات العليا", "عدد"),
+                                ],
+                            },
+                            {
+                                "code": "3/2",
+                                "title": "فاعلية آليات الرقابة والتدقيق",
+                                "variables": [
+                                    ("نسبة توصيات المراجعة الداخلية التي تم تنفيذها", "%"),
+                                    ("عدد اجتماعات لجان الحوكمة والمخاطر سنوياً", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "4",
+                        "title": "المشاركة",
+                        "sub_elements": [
+                            {
+                                "code": "4/1",
+                                "title": "تفاعل أصحاب المصلحة",
+                                "variables": [
+                                    ("معدل الاستجابة لشكاوى العملاء (Response Rate)", "%"),
+                                    ("عدد قنوات التواصل الرقمية الفعالة", "عدد"),
+                                ],
+                            },
+                            {
+                                "code": "4/2",
+                                "title": "المشاركة في صنع القرار",
+                                "variables": [
+                                    ("نسبة القرارات الاستراتيجية التي خضعت لاستطلاع الرأي", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "5",
+                        "title": "الشفافية والإفصاح",
+                        "sub_elements": [
+                            {
+                                "code": "5/1",
+                                "title": "جودة ووضوح الإفصاح",
+                                "variables": [
+                                    ("درجة سهولة القراءة (Readability Score) للتقرير السنوي", "درجة"),
+                                    ("عدد صفحات الإفصاح عن المخاطر غير المالية", "عدد"),
+                                ],
+                            },
+                            {
+                                "code": "5/2",
+                                "title": "توقيت ودورية الإفصاح",
+                                "variables": [
+                                    ("الفجوة الزمنية (بالأيام) بين نهاية السنة المالية وتاريخ نشر التقرير", "يوم"),
+                                    ("عدد الإفصاحات الفورية عن الأحداث الجوهرية خلال العام", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "6",
+                        "title": "مجلس الإدارة",
+                        "sub_elements": [
+                            {
+                                "code": "6/1",
+                                "title": "كفاءة وفاعلية تشكيل المجلس",
+                                "variables": [
+                                    ("نسبة حضور أعضاء مجلس الإدارة للاجتماعات الدورية", "%"),
+                                    ("متوسط سنوات خبرة أعضاء المجلس في العمل المصرفي والاستدامة", "سنة"),
+                                ],
+                            },
+                            {
+                                "code": "6/2",
+                                "title": "نشاط اللجان المنبثقة والرقابة",
+                                "variables": [
+                                    ("عدد الاجتماعات السنوية للجنة الحوكمة والترشيحات والمكافآت", "عدد"),
+                                    ("نسبة التزام المجلس بتقييم الأداء السنوي المستقل (Evaluation)", "%"),
+                                ],
+                            },
+                            {
+                                "code": "6/3",
+                                "title": "الاستقلالية وتعارض المصالح",
+                                "variables": [
+                                    ("نسبة اللجان السيادية (التدقيق والمخاطر) التي يرأسها أعضاء مستقلون", "%"),
+                                    ("عدد حالات تعارض المصالح المرصودة والمفصح عنها (يفضل 0)", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                "axis_id": "sr",
+                "axis_title": "ثالثاً: تقارير الاستدامة (SR — وزن 30%)",
+                "axis_badge": "المتغير الوسيط | 5 أبعاد | 22 متغيراً",
+                "accent": "#92400E",
+                "bg_soft": "#FFFBEB",
+                "border_soft": "#FDE68A",
+                "dimensions": [
+                    {
+                        "code": "1",
+                        "title": "الاستراتيجية",
+                        "sub_elements": [
+                            {
+                                "code": "1/1",
+                                "title": "الدمج الاستراتيجي لأهداف التنمية",
+                                "variables": [
+                                    ("عدد أهداف التنمية المستدامة المتبناة رسمياً في الاستراتيجية", "عدد"),
+                                    ("نسبة الأهداف المحققة من إجمالي الأهداف المخططة", "%"),
+                                ],
+                            },
+                            {
+                                "code": "1/2",
+                                "title": "التخصيص المالي المستدام",
+                                "variables": [
+                                    ("نسبة ميزانية (R&D) والتحول الأخضر إلى إجمالي الميزانية", "%"),
+                                    ("حجم الاستثمار في البنية التحتية المستدامة", "عملة"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "2",
+                        "title": "التنوع والشمول",
+                        "sub_elements": [
+                            {
+                                "code": "2/1",
+                                "title": "تنوع الهيكل القيادي",
+                                "variables": [
+                                    ("نسبة تمثيل المرأة في مجلس الإدارة", "%"),
+                                    ("نسبة الأعضاء المستقلين في مجلس الإدارة", "%"),
+                                ],
+                            },
+                            {
+                                "code": "2/2",
+                                "title": "شمول القوى العاملة",
+                                "variables": [
+                                    ("نسبة ذوي الهمم من إجمالي القوى العاملة", "%"),
+                                    ("نسبة الموظفين من خارج العاصمة (في الأقاليم)", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "3",
+                        "title": "إدارة المخاطر",
+                        "sub_elements": [
+                            {
+                                "code": "3/1",
+                                "title": "دمج مخاطر المناخ والحوكمة",
+                                "variables": [
+                                    ("نسبة محفظة الائتمان التي خضعت لتقييم المخاطر البيئية", "%"),
+                                    ("القيمة المعرضة للخطر (VaR) المرتبطة بالمناخ", "عملة"),
+                                ],
+                            },
+                            {
+                                "code": "3/2",
+                                "title": "المرونة واختبارات الضغط",
+                                "variables": [
+                                    ("عدد سيناريوهات اختبارات الضغط المناخية المنفذة", "عدد"),
+                                    ("نسبة كفاية رأس المال (CAR) بعد احتساب مخاطر المناخ", "%"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "4",
+                        "title": "الأبعاد التشغيلية",
+                        "sub_elements": [
+                            {
+                                "code": "4/1",
+                                "title": "التمويل والاستثمار المستدام (اقتصادي)",
+                                "variables": [
+                                    ("نسبة الأصول الخضراء (Green Asset Ratio - GAR)", "%"),
+                                    ("حجم القروض الموجهة للمشروعات الصغيرة والمتوسطة (SMEs)", "عملة"),
+                                ],
+                            },
+                            {
+                                "code": "4/2",
+                                "title": "الكفاءة التشغيلية للموارد (بيئي)",
+                                "variables": [
+                                    ("إجمالي انبعاثات الكربون (طن مكافئ) لكل موظف", "طن/موظف"),
+                                    ("نسبة استهلاك الطاقة المتجددة من إجمالي الطاقة", "%"),
+                                ],
+                            },
+                            {
+                                "code": "4/3",
+                                "title": "أثر المسؤولية المجتمعية (اجتماعي)",
+                                "variables": [
+                                    ("نسبة الإنفاق على المسؤولية المجتمعية (CSR) من صافي الأرباح", "%"),
+                                    ("عدد المستفيدين المباشرين من مبادرات الشمول المالي", "عدد"),
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "code": "5",
+                        "title": "المقاييس والأهداف",
+                        "sub_elements": [
+                            {
+                                "code": "5/1",
+                                "title": "أداء تحقيق المستهدفات",
+                                "variables": [
+                                    ("نسبة التغير السنوي في خفض الانبعاثات", "%"),
+                                    ("معدل تحقيق مؤشرات الأداء الرئيسية", "%"),
+                                ],
+                            },
+                            {
+                                "code": "5/2",
+                                "title": "المواءمة المعيارية والتوكيد",
+                                "variables": [
+                                    ("نسبة تغطية مؤشرات (GRI) في التقرير", "%"),
+                                    ("مستوى التوكيد الخارجي (لا يوجد=0، محدود=1، معقول=2)", "درجة"),
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]
+
+        # أداة تصفية سريعة لاستعراض محور محدد أو جميع المحاور
+        filter_axis_choice = st.radio(
+            "تصفية العرض حسب المحور الرئيسي:",
+            options=[
+                "🌐 عرض جميع المحاور الثلاثة (15 بُعداً)",
+                "💻 أولاً: منصات المعلومات الذكية (SIP)",
+                "⚖️ ثانياً: الحوكمة المؤسسية (IG)",
+                "🌿 ثالثاً: تقارير الاستدامة (SR)",
+            ],
+            horizontal=True,
+            key="ssgi_hierarchy_axis_filter",
+        )
+
+        # تنسيق CSS مخصص للقوائم المنسدلة للأبعاد الأساسية والعناصر الفرعية والمتغيرات
+        hierarchy_accordion_css = f"""
+        <style>
+        .ssgi-axis-block {{
+            background: #FFFFFF;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin: 12px 0 18px 0;
+            box-shadow: 0 3px 12px rgba(0, 43, 73, 0.04);
+            direction: rtl;
+            text-align: right;
+        }}
+        .ssgi-axis-header {{
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid {CBE_GOLD};
+        }}
+        .ssgi-axis-title {{
+            font-size: 17px;
+            font-weight: 800;
+            color: {CBE_NAVY};
+        }}
+        .ssgi-axis-pill {{
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }}
+        details.ssgi-dim-dropdown {{
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #FFFFFF;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }}
+        details.ssgi-dim-dropdown[open] {{
+            border-color: {CBE_GOLD};
+            box-shadow: 0 4px 14px rgba(0, 43, 73, 0.08);
+        }}
+        details.ssgi-dim-dropdown > summary {{
+            list-style: none;
+            cursor: pointer;
+            padding: 11px 15px;
+            background: #F8FAFC;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 15px;
+            color: {CBE_NAVY};
+            user-select: none;
+            transition: background 0.2s ease, color 0.2s ease;
+        }}
+        details.ssgi-dim-dropdown > summary::-webkit-details-marker {{
+            display: none;
+        }}
+        details.ssgi-dim-dropdown > summary:hover {{
+            background: {CBE_NAVY};
+            color: #FFFFFF;
+        }}
+        details.ssgi-dim-dropdown[open] > summary {{
+            background: {CBE_NAVY};
+            color: {CBE_GOLD_BRIGHT};
+            border-bottom: 2px solid {CBE_GOLD};
+        }}
+        .ssgi-dim-summary-right {{
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }}
+        .ssgi-dim-num {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: {CBE_GOLD};
+            color: {CBE_NAVY};
+            font-size: 13.5px;
+            font-weight: 900;
+            padding: 0 6px;
+        }}
+        .ssgi-dim-meta {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0.92;
+        }}
+        .ssgi-dim-chevron {{
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }}
+        details.ssgi-dim-dropdown[open] .ssgi-dim-chevron {{
+            transform: rotate(180deg);
+        }}
+        .ssgi-dim-body {{
+            padding: 14px 16px;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }}
+        .ssgi-sub-card {{
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-right: 4px solid {CBE_GOLD};
+            border-radius: 9px;
+            padding: 11px 14px;
+        }}
+        .ssgi-sub-title-row {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #CBD5E1;
+        }}
+        .ssgi-sub-code-badge {{
+            background: {CBE_NAVY};
+            color: {CBE_GOLD_BRIGHT};
+            font-size: 12.5px;
+            font-weight: 800;
+            padding: 2px 9px;
+            border-radius: 16px;
+            direction: ltr;
+        }}
+        .ssgi-sub-name {{
+            font-size: 14.5px;
+            font-weight: 800;
+            color: {CBE_NAVY};
+        }}
+        .ssgi-var-item {{
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 7px;
+            padding: 7px 11px;
+            margin-top: 6px;
+            font-size: 14px;
+        }}
+        .ssgi-var-label {{
+            color: #1E293B;
+            font-weight: 600;
+        }}
+        .ssgi-unit-tag {{
+            background: #EFF6FF;
+            color: {CBE_NAVY};
+            border: 1px solid #BFDBFE;
+            border-radius: 16px;
+            padding: 2px 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }}
+        </style>
         """
-        st.markdown(flat_html(hierarchy_table_html), unsafe_allow_html=True)
+
+        selected_axis_map = {
+            "💻 أولاً: منصات المعلومات الذكية (SIP)": "sip",
+            "⚖️ ثانياً: الحوكمة المؤسسية (IG)": "ig",
+            "🌿 ثالثاً: تقارير الاستدامة (SR)": "sr",
+        }
+        target_axis_id = selected_axis_map.get(filter_axis_choice, "all")
+
+        accordion_html = hierarchy_accordion_css + '<div dir="rtl" style="width: 100%;">'
+        for axis in SSGI_HIERARCHY_MATRIX:
+            if target_axis_id != "all" and axis["axis_id"] != target_axis_id:
+                continue
+
+            accordion_html += f"""
+            <div class="ssgi-axis-block" style="border-top: 4px solid {axis['accent']};">
+                <div class="ssgi-axis-header">
+                    <span class="ssgi-axis-title" style="color: {axis['accent']};">{axis['axis_title']}</span>
+                    <span class="ssgi-axis-pill" style="background: {axis['bg_soft']}; color: {axis['accent']}; border: 1px solid {axis['border_soft']};">{axis['axis_badge']}</span>
+                </div>
+            """
+
+            for dim in axis["dimensions"]:
+                total_vars = sum(len(se["variables"]) for se in dim["sub_elements"])
+                total_subs = len(dim["sub_elements"])
+
+                accordion_html += f"""
+                <details class="ssgi-dim-dropdown">
+                    <summary>
+                        <span class="ssgi-dim-summary-right">
+                            <span class="ssgi-dim-num">{dim['code']}</span>
+                            <span>البُعد الأساسي: {dim['title']}</span>
+                        </span>
+                        <span class="ssgi-dim-meta">
+                            <span>({total_subs} عناصر فرعية | {total_vars} متغيرات)</span>
+                            <span class="ssgi-dim-chevron">▼</span>
+                        </span>
+                    </summary>
+                    <div class="ssgi-dim-body">
+                """
+
+                for se in dim["sub_elements"]:
+                    accordion_html += f"""
+                        <div class="ssgi-sub-card" style="border-right-color: {axis['accent']};">
+                            <div class="ssgi-sub-title-row">
+                                <span class="ssgi-sub-code-badge" style="background: {axis['accent']}; color: #FFFFFF;">{se['code']}</span>
+                                <span class="ssgi-sub-name" style="color: {axis['accent']};">العنصر الفرعي: {se['title']}</span>
+                            </div>
+                    """
+                    for var_name, unit_name in se["variables"]:
+                        accordion_html += f"""
+                            <div class="ssgi-var-item">
+                                <span class="ssgi-var-label">🔹 {var_name}</span>
+                                <span class="ssgi-unit-tag" style="background: {axis['bg_soft']}; color: {axis['accent']}; border-color: {axis['border_soft']};">وحدة القياس: <b>{unit_name}</b></span>
+                            </div>
+                        """
+                    accordion_html += "</div>"
+
+                accordion_html += """
+                    </div>
+                </details>
+                """
+
+            accordion_html += "</div>"
+
+        accordion_html += "</div>"
+        st.markdown(flat_html(accordion_html), unsafe_allow_html=True)
 
         df_w = get_ssgi_variables_df()
         w_rows = ""
