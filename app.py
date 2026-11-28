@@ -5815,7 +5815,7 @@ with tab6:
 
             <div style="background: #F8FAFC; padding: 18px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 15px; margin-bottom: 15px;">
                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">👥 ثانياً: مؤشرات الأداء المجتمعي (Social Indicators - من المؤشر 10 إلى 20)</h4>
-                <ul style="margin-bottom: 0;">
+                <ul style="margin-bottom: 0;" padding: 7px 14px>
                     <li><b>المؤشر (10):</b> نسبة تعويضات وأجور المديرين التنفيذيين إلى متوسط أجور العاملين بالبنك (Executive-to-Median Worker Pay Ratio).</li>
                     <li><b>المؤشر (11):</b> مؤشر الفجوة في الأجور بين الجنسين (Gender Pay Gap Ratio) لضمان المساواة التامة في العوائد الوظيفية للأعمال المتساوية.</li>
                     <li><b>المؤشر (12):</b> معدل دوران الموظفين واستبقاء الكوادر البشرية (Employee Turnover & Retention Rate).</li>
@@ -5832,7 +5832,7 @@ with tab6:
 
             <div style="background: #F8FAFC; padding: 18px; border-radius: 8px; border-right: 4px solid {CBE_GOLD}; margin-top: 15px; margin-bottom: 15px;">
                 <h4 style="color: {CBE_NAVY}; margin-top: 0;">🏛️ ثالثاً: مؤشرات الحوكمة والشفافية والالتزام (Governance & Transparency - من المؤشر 21 إلى 30)</h4>
-                <ul style="margin-bottom: 0;">
+                <ul style="margin-bottom: 0;" padding: 7px 14px>
                     <li><b>المؤشر (21):</b> التنوع الهيكلي والمهني في تشكيل مجلس الإدارة (Board Diversity & Expertise).</li>
                     <li><b>المؤشر (22):</b> نسبة الأعضاء المستقلين غير التنفيذيين في مجلس الإدارة ولجان المراجعة والترشيحات (Independent Board Members Ratio).</li>
                     <li><b>المؤشر (23):</b> وجود حوافز ومكافآت مرتبطة بتحقيق مستهدفات الاستدامة وخفض الانبعاثات للقيادات التنفيذية (Sustainability-linked Executive Compensation).</li>
@@ -6908,7 +6908,7 @@ with tab8:
             <p style="color: #64748B; font-size: 13.5px; margin: 6px 0 0 0;">نموذج مقترح لتعزيز الحوكمة المؤسسية بالقطاع المصرفي المصري باستخدام منصة معلومات ذكية: بالتطبيق على تقارير الاستدامة</p>
         </div>
         <p style="color: #1E293B; font-size: 14px; margin-bottom: 10px;">
-            <b>1️⃣ الإطار الأكاديمي والرؤية العلمية:</b><br>
+            <b>1️ الإطار الأكاديمي والرؤية العلمية:</b><br>
             تمثل منصة <b>(رصين)</b> التطبيق العملي المقترح ضمن متطلبات نيل درجة <b>دكتوراه الفلسفة في العلوم البيئية – جامعة عين شمس</b>، إعداد الباحث/ <b>أيمن الدسوقي</b> (مدرس مساعد إدارة المعرفة – معهد التخطيط القومي). وتستهدف المنصة توطين حلول الذكاء الاصطناعي والبيانات الضخمة لتعزيز الحوكمة المؤسسية، ودعم السيادة الرقمية، وأتمتة تقييم وتوليد تقارير الاستدامة في البنوك العاملة بالقطاع المصرفي المصري بما يتسق مع توجهات البنك المركزي المصري ورؤية مصر 2030 ومقررات لجنة بازل.
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; text-align: center;">
@@ -6932,7 +6932,7 @@ with tab8:
     </div>
     """), unsafe_allow_html=True)
 
-    with st.expander("2️⃣ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة (9 وحدات تفاعلية)", expanded=True):
+    with st.expander("2️ الدليل التشغيلي المفصل لوحدات وتبويبات المنصة (9 وحدات تفاعلية)", expanded=True):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ul style="margin: 0; padding-right: 20px;">
@@ -6952,7 +6952,7 @@ with tab8:
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("3️⃣ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
+    with st.expander("3️ مسار الاستخدام الموصى به (Workflow) وتدفق البيانات بين الأقسام", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ol style="margin: 0; padding-right: 22px;">
@@ -6966,7 +6966,7 @@ with tab8:
         </div>
         """), unsafe_allow_html=True)
 
-    with st.expander("4️⃣ البنية التقنية وضوابط الخصوصية واستمرارية الجلسة", expanded=False):
+    with st.expander("4️ البنية التقنية وضوابط الخصوصية واستمرارية الجلسة", expanded=False):
         st.markdown(flat_html(f"""
         <div dir="rtl" style="text-align: right; line-height: 1.95; font-size: 14px; color: #1E293B;">
             <ul style="margin: 0; padding-right: 20px;">
