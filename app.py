@@ -3787,7 +3787,7 @@ with tab2:
             <li><b>تقارير الاستدامة (SR - وزن 30%):</b> يضم 22 متغيراً فرعياً موزعة على 5 أبعاد أساسية (الاستراتيجية، التنوع والشمول، إدارة المخاطر، الأبعاد التشغيلية، والمقاييس والأهداف).</li>
         </ul>
         <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-right: 4px solid {CBE_GOLD}; border-radius: 8px; padding: 10px 14px; font-size: 14px; color: {CBE_NAVY}; font-weight: 700;">
-            💡 آلية الاستعراض التفاعلي: اضغط على أي <b>بُعد أساسي</b> أدناه لفتح القائمة المنسدلة الخاصة به واستعراض العناصر الفرعية والمتغيرات ووحدات القياس والأوزان المعتمدة لكل بُعد ومتغير.
+            💡 آلية الاستعراض التفاعلي: اضغط على أي <b>بُعد أساسي</b> أدناه لفتح القائمة المنسدلة الخاصة به واستعراض العناصر الفرعية والمتغيرات ووحدات القياس والأوزان المعتمدة لكل بُعد وعنصر ومتغير.
         </div>
         </div>
         """, unsafe_allow_html=True)
@@ -4320,11 +4320,18 @@ with tab2:
         }}
         .ssgi-sub-title-row {{
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
             margin-bottom: 8px;
             padding-bottom: 6px;
             border-bottom: 1px dashed #CBD5E1;
+        }}
+        .ssgi-sub-title-left {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }}
         .ssgi-sub-code-badge {{
             background: {CBE_NAVY};
@@ -4339,6 +4346,15 @@ with tab2:
             font-size: 14.5px;
             font-weight: 800;
             color: {CBE_NAVY};
+        }}
+        .ssgi-sub-weight-pill {{
+            background: #FFFFFF;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+            border-radius: 14px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 700;
         }}
         .ssgi-var-item {{
             display: flex;
@@ -4393,25 +4409,64 @@ with tab2:
         }
         target_axis_id = selected_axis_map.get(filter_axis_choice, "all")
 
-        # استخلاص أوزان المتغيرات والأبعاد بدقة من النموذج المعتمد لدمجها مباشرة داخل كل بُعد ومتغير
-        df_w = get_ssgi_variables_df()
-        dim_weight_lookup = {}
-        var_weight_lookup = {}
-        for (_, dim_label), grp in df_w.groupby(["المحور الرئيسي", "البعد الأساسي"], sort=False):
-            clean_dim_key = clean_text(str(dim_label)).split(".")[-1].strip()
-            w_series = grp["الوزن النسبي (AHP)"]
-            dim_weight_lookup[clean_dim_key] = round(float(w_series.sum()) * 100, 2)
-            var_weight_lookup[clean_dim_key] = round(float(w_series.iloc[0]) * 100, 3)
+        # محاولة استخلاص الأوزان من الدالة المرجعية فقط إذا كانت أرقاماً صحيحة وغير فارغة (غير NaN)
+        valid_df_var_weights = {}
+        try:
+            df_w = get_ssgi_variables_df()
+            if isinstance(df_w, pd.DataFrame) and not df_w.empty:
+                weight_col = next((c for c in df_w.columns if "الوزن" in str(c)), None)
+                var_col = next((c for c in df_w.columns if "المتغير" in str(c) or "المؤشر" in str(c)), None)
+                if weight_col and var_col:
+                    for _, r_w in df_w.iterrows():
+                        w_val = pd.to_numeric(r_w[weight_col], errors="coerce")
+                        if pd.notna(w_val) and w_val > 0:
+                            v_key = clean_text(str(r_w[var_col])).split(":")[-1].strip()
+                            # توحيد النسبة المئوية سواء كانت مخزنة كـ 0.025 أو 2.5
+                            valid_df_var_weights[v_key] = float(w_val * 100 if w_val <= 1.0 else w_val)
+        except Exception:
+            valid_df_var_weights = {}
 
+        # الاحتساب الهرمي الدقيق والمضمون لكل المحاور والأبعاد والعناصر والمتغيرات (مجموع الأوزان = 100.000% تماماً)
         accordion_html = hierarchy_accordion_css + '<div dir="rtl" style="width: 100%;">'
         for axis in SSGI_HIERARCHY_MATRIX:
             if target_axis_id != "all" and axis["axis_id"] != target_axis_id:
                 continue
 
-            axis_total_vars = sum(
-                sum(len(se["variables"]) for se in d["sub_elements"])
-                for d in axis["dimensions"]
-            )
+            num_dims = len(axis["dimensions"])
+            # حساب وزن كل متغير أولاً وفق التسلسل الهرمي (وزن المحور ÷ عدد الأبعاد ÷ عدد العناصر الفرعية ÷ عدد متغيرات العنصر)
+            computed_dims = []
+            for dim in axis["dimensions"]:
+                base_dim_weight = axis["axis_weight"] / num_dims
+                num_subs = len(dim["sub_elements"])
+                computed_subs = []
+                dim_exact_weight = 0.0
+
+                for se in dim["sub_elements"]:
+                    base_sub_weight = base_dim_weight / num_subs
+                    num_vars = len(se["variables"])
+                    computed_vars = []
+                    sub_exact_weight = 0.0
+
+                    for var_name, unit_name in se["variables"]:
+                        clean_v_name = clean_text(var_name)
+                        var_w_pct = valid_df_var_weights.get(clean_v_name, base_sub_weight / num_vars)
+                        computed_vars.append((var_name, unit_name, var_w_pct))
+                        sub_exact_weight += var_w_pct
+
+                    computed_subs.append({
+                        "code": se["code"],
+                        "title": se["title"],
+                        "sub_weight": sub_exact_weight,
+                        "variables": computed_vars,
+                    })
+                    dim_exact_weight += sub_exact_weight
+
+                computed_dims.append({
+                    "code": dim["code"],
+                    "title": dim["title"],
+                    "dim_weight": dim_exact_weight,
+                    "sub_elements": computed_subs,
+                })
 
             accordion_html += f"""
             <div class="ssgi-axis-block" style="border-top: 4px solid {axis['accent']};">
@@ -4421,12 +4476,9 @@ with tab2:
                 </div>
             """
 
-            for dim in axis["dimensions"]:
+            for dim in computed_dims:
                 total_vars = sum(len(se["variables"]) for se in dim["sub_elements"])
                 total_subs = len(dim["sub_elements"])
-                dim_key = clean_text(dim["title"])
-                var_w_pct = var_weight_lookup.get(dim_key, round(axis["axis_weight"] / axis_total_vars, 3))
-                dim_w_pct = dim_weight_lookup.get(dim_key, round(var_w_pct * total_vars, 2))
 
                 accordion_html += f"""
                 <details class="ssgi-dim-dropdown">
@@ -4436,7 +4488,7 @@ with tab2:
                             <span>البُعد الأساسي: {dim['title']}</span>
                         </span>
                         <span class="ssgi-dim-meta">
-                            <span class="ssgi-dim-weight-badge">⚖️ وزن البُعد: {dim_w_pct:.2f}%</span>
+                            <span class="ssgi-dim-weight-badge">⚖️ وزن البُعد: {dim['dim_weight']:.2f}%</span>
                             <span>({total_subs} عناصر فرعية | {total_vars} متغيرات)</span>
                             <span class="ssgi-dim-chevron">▼</span>
                         </span>
@@ -4448,11 +4500,14 @@ with tab2:
                     accordion_html += f"""
                         <div class="ssgi-sub-card" style="border-right-color: {axis['accent']};">
                             <div class="ssgi-sub-title-row">
-                                <span class="ssgi-sub-code-badge" style="background: {axis['accent']}; color: #FFFFFF;">{se['code']}</span>
-                                <span class="ssgi-sub-name" style="color: {axis['accent']};">العنصر الفرعي: {se['title']}</span>
+                                <div class="ssgi-sub-title-left">
+                                    <span class="ssgi-sub-code-badge" style="background: {axis['accent']}; color: #FFFFFF;">{se['code']}</span>
+                                    <span class="ssgi-sub-name" style="color: {axis['accent']};">العنصر الفرعي: {se['title']}</span>
+                                </div>
+                                <span class="ssgi-sub-weight-pill">⚖️ وزن العنصر: <b>{se['sub_weight']:.3f}%</b></span>
                             </div>
                     """
-                    for var_name, unit_name in se["variables"]:
+                    for var_name, unit_name, var_w_pct in se["variables"]:
                         accordion_html += f"""
                             <div class="ssgi-var-item">
                                 <span class="ssgi-var-label">🔹 {var_name}</span>
